@@ -3,6 +3,7 @@
   "main": "expo-router/entry",
   "version": "0.1.0",
   "dependencies": {
+    "@nem/shared": "workspace:*",
     "expo": "~57.0.30",
     "expo-constants": "~57.0.22",
     "expo-font": "~57.0.4",
