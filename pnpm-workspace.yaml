@@ -2,8 +2,9 @@ packages:
   - apps/*
   - packages/*
 
-# unrs-resolver ships prebuilt native binaries; its postinstall is only a fallback.
+# These ship prebuilt native binaries; their install scripts are only a fallback.
 allowBuilds:
+  '@parcel/watcher': false
   unrs-resolver: false
 
 minimumReleaseAgeExclude:
