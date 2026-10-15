@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+# Expo/Metro cannot follow pnpm's symlinked node_modules reliably, so the
+# whole workspace uses a flat, npm-style layout (also set in .npmrc).
+nodeLinker: hoisted

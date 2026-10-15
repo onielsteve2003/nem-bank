@@ -1,0 +1,19 @@
+{
+  "name": "nem-bank",
+  "private": true,
+  "description": "Nem Bank monorepo: Expo mobile app, staff console, shared packages and contracts.",
+  "packageManager": "pnpm@11.25.0",
+  "engines": {
+    "node": ">=22.12.0",
+    "pnpm": ">=11"
+  },
+  "scripts": {
+    "dev": "pnpm --filter mobile start",
+    "lint": "pnpm -r --if-present run lint",
+    "format": "pnpm -r --if-present run format",
+    "format:check": "pnpm -r --if-present run format:check",
+    "typecheck": "pnpm -r --if-present run typecheck",
+    "test": "pnpm -r --if-present run test",
+    "check": "pnpm lint && pnpm typecheck && pnpm test"
+  }
+}
