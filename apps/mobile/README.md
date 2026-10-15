@@ -13,9 +13,9 @@ Scan the QR code with the iPhone camera (or the Expo Go app on Android). Press `
 
 ## Layout
 
-| Path | Purpose |
-|---|---|
-| `app/` | Expo Router routes. Route files stay thin and render a screen from `src/features`. |
-| `src/features/<domain>/` | Feature code: screens, components, hooks, utils, tests. |
+| Path                     | Purpose                                                                            |
+| ------------------------ | ---------------------------------------------------------------------------------- |
+| `app/`                   | Expo Router routes. Route files stay thin and render a screen from `src/features`. |
+| `src/features/<domain>/` | Feature code: screens, components, hooks, utils, tests.                            |
 
 Only modules bundled in Expo Go are allowed, so the app never needs a custom native build.

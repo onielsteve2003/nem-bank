@@ -1,0 +1,8 @@
+node_modules
+pnpm-lock.yaml
+dist
+web-build
+.expo
+coverage
+context
+CLAUDE.md
