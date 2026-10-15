@@ -1,0 +1,48 @@
+# Local-only planning and AI docs (never push)
+context/
+CLAUDE.md
+
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Expo / React Native
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+*.orig.*
+ios/
+android/
+
+# Builds
+build/
+coverage/
+*.tsbuildinfo
+apps/api/bin/
+apps/api/tmp/
+
+# Python / ML
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+ml/data/raw/
+
+# Env and secrets
+.env
+.env.*
+!.env.example
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea/
+*.log
