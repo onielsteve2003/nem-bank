@@ -25,3 +25,14 @@ pnpm install
 pnpm dev         # start the mobile app (Expo)
 pnpm check       # lint, typecheck and test every workspace
 ```
+
+## API contract
+
+`packages/contracts/openapi.yaml` (OpenAPI 3.1) is the single source of truth for the API. After editing it:
+
+```bash
+pnpm --filter @nem/contracts lint       # Redocly lint
+pnpm --filter @nem/contracts generate   # regenerate src/schema.gen.ts
+```
+
+Import API types from `@nem/contracts`; never hand-write them.

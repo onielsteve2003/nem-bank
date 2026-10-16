@@ -14,6 +14,7 @@ minimumReleaseAgeExclude:
   - babel-preset-expo@57.0.16
   - expo-router@57.0.28
   - expo@57.0.30
+  - '@redocly/cli@2.64.1'
 
 # Expo/Metro cannot follow pnpm's symlinked node_modules reliably, so the
 # whole workspace uses a flat, npm-style layout (also set in .npmrc).

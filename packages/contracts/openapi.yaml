@@ -1,0 +1,251 @@
+openapi: 3.1.0
+info:
+  title: Nem Bank API
+  version: 0.1.0
+  summary: The single source of truth for the Nem Bank HTTP API.
+  description: |
+    Contract-first: TypeScript types (`openapi-typescript`) and the Go server
+    (`oapi-codegen`, Gin strict server) are generated from this file.
+
+    Conventions used by every endpoint:
+    - **Money** is `{ "amount_minor": "150000", "currency": "NGN" }`. Minor units are a
+      string so JavaScript never loses precision.
+    - **Errors** are RFC 9457 `application/problem+json` with a stable `code`.
+    - **Lists** use opaque cursors (`cursor`, `limit`, `next_cursor`).
+    - **IDs** are UUIDv7; **timestamps** are RFC 3339 in UTC.
+    - **Money-moving POSTs** require `Idempotency-Key` and a device signature
+      (`X-Device-Id`, `X-Device-Signature`, `X-Signature-Timestamp`, `X-Nonce`).
+  contact:
+    name: Nem Bank
+    url: https://github.com/onielsteve2003/nem-bank
+servers:
+  - url: http://localhost:8080
+    description: Local development
+tags:
+  - name: system
+    description: Health and service metadata.
+security:
+  - bearerAuth: []
+
+paths:
+  /v1/health:
+    get:
+      tags: [system]
+      operationId: getHealth
+      summary: Service health
+      description: Liveness check. Also used by the uptime monitor to keep the API warm.
+      security: []
+      responses:
+        '200':
+          description: The service is up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Health'
+        '503':
+          $ref: '#/components/responses/ServiceUnavailable'
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: EdDSA-signed access token (10-minute lifetime).
+
+  parameters:
+    IdempotencyKey:
+      name: Idempotency-Key
+      in: header
+      required: true
+      description: UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422.
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DeviceId:
+      name: X-Device-Id
+      in: header
+      required: true
+      description: The bound device that signed the request.
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DeviceSignature:
+      name: X-Device-Signature
+      in: header
+      required: true
+      description: Base64url Ed25519 signature over the canonical request payload.
+      schema:
+        type: string
+        pattern: '^[A-Za-z0-9_-]+$'
+    SignatureTimestamp:
+      name: X-Signature-Timestamp
+      in: header
+      required: true
+      description: When the payload was signed. Must be within ±5 minutes of server time.
+      schema:
+        type: string
+        format: date-time
+    Nonce:
+      name: X-Nonce
+      in: header
+      required: true
+      description: Single-use random value that prevents replay.
+      schema:
+        type: string
+        minLength: 16
+        maxLength: 64
+    Cursor:
+      name: cursor
+      in: query
+      required: false
+      description: Opaque cursor from a previous page's `next_cursor`.
+      schema:
+        type: string
+    Limit:
+      name: limit
+      in: query
+      required: false
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 100
+        default: 20
+
+  schemas:
+    Uuid:
+      type: string
+      format: uuid
+      examples: ['0192f5a4-7c1e-7b3a-9f10-3c5d2e8a4b61']
+    Timestamp:
+      type: string
+      format: date-time
+      description: RFC 3339, UTC.
+    CurrencyCode:
+      type: string
+      description: ISO 4217 code of a supported currency.
+      enum: [NGN, USD, GBP, EUR]
+    Money:
+      type: object
+      required: [amount_minor, currency]
+      properties:
+        amount_minor:
+          type: string
+          description: Signed integer amount in minor units (kobo, cents, pence), as a string.
+          pattern: '^-?(0|[1-9][0-9]*)$'
+          examples: ['150000']
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+    PageInfo:
+      type: object
+      required: [next_cursor]
+      properties:
+        next_cursor:
+          type: [string, 'null']
+          description: Pass as `cursor` to fetch the next page; `null` on the last page.
+    Problem:
+      type: object
+      description: RFC 9457 problem details.
+      required: [type, title, status, code]
+      properties:
+        type:
+          type: string
+          format: uri-reference
+          default: about:blank
+        title:
+          type: string
+        status:
+          type: integer
+          minimum: 400
+          maximum: 599
+        detail:
+          type: string
+        instance:
+          type: string
+          format: uri-reference
+        code:
+          type: string
+          description: Stable machine-readable error code, e.g. `insufficient_funds`.
+          pattern: '^[a-z][a-z0-9_]*$'
+        request_id:
+          type: string
+        errors:
+          type: array
+          description: Field-level validation errors.
+          items:
+            $ref: '#/components/schemas/FieldError'
+    FieldError:
+      type: object
+      required: [field, code, message]
+      properties:
+        field:
+          type: string
+          description: JSON Pointer to the invalid field.
+        code:
+          type: string
+        message:
+          type: string
+    Health:
+      type: object
+      required: [status, version, time]
+      properties:
+        status:
+          type: string
+          enum: [ok]
+        version:
+          type: string
+        time:
+          $ref: '#/components/schemas/Timestamp'
+
+  responses:
+    BadRequest:
+      description: The request is malformed or failed validation.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Unauthorized:
+      description: Missing or invalid access token.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Forbidden:
+      description: Authenticated, but not allowed to do this.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    NotFound:
+      description: The resource does not exist.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Conflict:
+      description: The request conflicts with the current state.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    UnprocessableEntity:
+      description: Semantically invalid, e.g. an idempotency key reused with a different body.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    TooManyRequests:
+      description: Rate limit exceeded.
+      headers:
+        Retry-After:
+          description: Seconds to wait before retrying.
+          schema:
+            type: integer
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    ServiceUnavailable:
+      description: The service is starting up or temporarily unavailable.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'

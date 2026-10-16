@@ -1,0 +1,13 @@
+# https://redocly.com/docs/cli/configuration
+extends:
+  - recommended
+
+rules:
+  # The repo is intentionally unlicensed (ADR-11).
+  info-license: off
+  info-license-strict: off
+  operation-operationId: error
+  operation-4xx-response: off
+  no-unused-components: off
+  # Only a local server exists until the API is deployed (T32.3).
+  no-server-example.com: off

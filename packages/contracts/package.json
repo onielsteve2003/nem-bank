@@ -1,0 +1,25 @@
+{
+  "name": "@nem/contracts",
+  "version": "0.1.0",
+  "private": true,
+  "description": "The Nem Bank OpenAPI contract and the TypeScript types generated from it.",
+  "main": "src/index.ts",
+  "types": "src/index.ts",
+  "scripts": {
+    "generate": "openapi-typescript openapi.yaml -o src/schema.gen.ts && prettier --write src/schema.gen.ts",
+    "check:generated": "pnpm generate && git diff --exit-code -- src/schema.gen.ts",
+    "lint": "redocly lint openapi.yaml && eslint .",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@redocly/cli": "^2.64.1",
+    "eslint": "^9.39.5",
+    "eslint-config-expo": "~57.0.2",
+    "eslint-config-prettier": "^10.1.8",
+    "openapi-typescript": "^7.13.0",
+    "prettier": "^3.9.10",
+    "typescript": "~6.0.3"
+  }
+}
