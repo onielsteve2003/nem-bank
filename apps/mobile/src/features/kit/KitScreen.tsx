@@ -10,6 +10,7 @@ import { ButtonsSection } from './ButtonsSection';
 import { DisplaySection } from './DisplaySection';
 import { FormsSection } from './FormsSection';
 import { KeypadSection } from './KeypadSection';
+import { OverlaysSection } from './OverlaysSection';
 
 // Dev preview of the component kit as it is built. T2.14 turns this into the
 // full gallery with every component in both themes.
@@ -44,6 +45,7 @@ export function KitScreen() {
         >
           <ButtonsSection />
           <DisplaySection />
+          <OverlaysSection />
           <FormsSection />
           <KeypadSection />
         </ScrollView>

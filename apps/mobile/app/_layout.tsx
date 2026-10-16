@@ -1,9 +1,13 @@
+import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useFonts } from 'expo-font';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { StyleSheet } from 'react-native';
+import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
+import { ToastProvider } from '@/components';
 import { FONTS, ThemeProvider, useTheme } from '@/theme';
 
 // Keep the splash up until the fonts are ready, so text never renders in the
@@ -22,10 +26,17 @@ export default function RootLayout() {
 
   if (!ready) return null;
 
+  // Sheets and toasts sit inside the theme so they render in the active scheme.
   return (
-    <ThemeProvider>
-      <ThemedStack />
-    </ThemeProvider>
+    <GestureHandlerRootView style={styles.root}>
+      <ThemeProvider>
+        <BottomSheetModalProvider>
+          <ToastProvider>
+            <ThemedStack />
+          </ToastProvider>
+        </BottomSheetModalProvider>
+      </ThemeProvider>
+    </GestureHandlerRootView>
   );
 }
 
@@ -41,3 +52,5 @@ function ThemedStack() {
     </>
   );
 }
+
+const styles = StyleSheet.create({ root: { flex: 1 } });
