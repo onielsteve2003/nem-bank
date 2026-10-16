@@ -10,6 +10,7 @@ import { ButtonsSection } from './ButtonsSection';
 import { DisplaySection } from './DisplaySection';
 import { FormsSection } from './FormsSection';
 import { KeypadSection } from './KeypadSection';
+import { MoneySection } from './MoneySection';
 import { OverlaysSection } from './OverlaysSection';
 import { StatesSection } from './StatesSection';
 
@@ -51,6 +52,7 @@ export function KitScreen() {
       }
     >
       <ButtonsSection />
+      <MoneySection />
       <DisplaySection />
       <OverlaysSection />
       <StatesSection />
