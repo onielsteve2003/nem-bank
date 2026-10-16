@@ -11,6 +11,16 @@ pnpm dev              # same as: pnpm --filter mobile start
 
 Scan the QR code with the iPhone camera (or the Expo Go app on Android). Press `w` in the terminal to open the web build.
 
+## Open without the dev server (EAS Update)
+
+The app is published to the EAS project [`@onielsteve/nem-bank`](https://expo.dev/accounts/onielsteve/projects/nem-bank) on the `preview` channel:
+
+```bash
+pnpm --filter mobile update:preview --message "what changed"
+```
+
+Open the update page on expo.dev and scan its QR code with the iPhone camera to load it in Expo Go. The runtime version follows the Expo SDK (`exposdk:57.0.0`), so Expo Go can open it.
+
 ## Web demo
 
 ```bash
