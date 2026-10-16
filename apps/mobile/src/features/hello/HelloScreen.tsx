@@ -4,7 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Icon, Text } from '@/components';
-import { env } from '@/lib/env';
+import { devToolsEnabled, env } from '@/lib/env';
 import { useTheme } from '@/theme';
 
 export function HelloScreen() {
@@ -24,14 +24,16 @@ export function HelloScreen() {
         <Text color="textMuted" style={styles.subtitle}>
           Banking that moves at your speed. Simulated money, real engineering.
         </Text>
-        <Button
-          label="Component kit"
-          variant="secondary"
-          size="sm"
-          icon={LayoutGrid}
-          onPress={() => router.push('/kit')}
-          style={{ marginTop: spacing[4] }}
-        />
+        {devToolsEnabled && (
+          <Button
+            label="Design system"
+            variant="secondary"
+            size="sm"
+            icon={LayoutGrid}
+            onPress={() => router.push('/kit')}
+            style={{ marginTop: spacing[4] }}
+          />
+        )}
       </View>
       <Text
         variant="caption"

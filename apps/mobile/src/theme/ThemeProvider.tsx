@@ -43,9 +43,15 @@ export type Props = {
   children: ReactNode;
   /** The persisted preference arrives from the preferences store (T3.10). */
   initialPreference?: ThemePreference;
+  /** Off for nested providers (e.g. a light panel in the gallery) so only the root sets the window colour. */
+  syncSystemUI?: boolean;
 };
 
-export function ThemeProvider({ children, initialPreference = 'system' }: Props) {
+export function ThemeProvider({
+  children,
+  initialPreference = 'system',
+  syncSystemUI = true,
+}: Props) {
   const system = useColorScheme();
   const [preference, setPreference] = useState<ThemePreference>(initialPreference);
   const scheme = resolveScheme(preference, system);
@@ -68,8 +74,8 @@ export function ThemeProvider({ children, initialPreference = 'system' }: Props)
   // The root view shows behind screen transitions and the keyboard; match it to
   // the theme so a theme switch never flashes white.
   useEffect(() => {
-    void SystemUI.setBackgroundColorAsync(theme.colors.background);
-  }, [theme.colors.background]);
+    if (syncSystemUI) void SystemUI.setBackgroundColorAsync(theme.colors.background);
+  }, [syncSystemUI, theme.colors.background]);
 
   return <ThemeContext.Provider value={theme}>{children}</ThemeContext.Provider>;
 }

@@ -39,3 +39,9 @@ export const env: Env = parseEnv({
   EXPO_PUBLIC_API_MODE: process.env.EXPO_PUBLIC_API_MODE,
   EXPO_PUBLIC_API_URL: process.env.EXPO_PUBLIC_API_URL,
 });
+
+/**
+ * Developer screens such as the design system gallery. They ship in dev and in
+ * the mock-bank demo builds, and are hidden from builds wired to the real API.
+ */
+export const devToolsEnabled = __DEV__ || env.apiMode === 'mock';
