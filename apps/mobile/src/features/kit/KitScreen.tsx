@@ -8,6 +8,7 @@ import { useTheme } from '@/theme';
 
 import { ButtonsSection } from './ButtonsSection';
 import { FormsSection } from './FormsSection';
+import { KeypadSection } from './KeypadSection';
 
 // Dev preview of the component kit as it is built. T2.14 turns this into the
 // full gallery with every component in both themes.
@@ -42,6 +43,7 @@ export function KitScreen() {
         >
           <ButtonsSection />
           <FormsSection />
+          <KeypadSection />
         </ScrollView>
       </KeyboardAvoidingView>
     </SafeAreaView>

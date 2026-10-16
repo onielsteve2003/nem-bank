@@ -36,11 +36,11 @@ export function PressableScale({ style, onPressIn, onPressOut, ...rest }: Props)
     <AnimatedPressable
       {...rest}
       onPressIn={(e) => {
-        pressed.value = reduceMotion ? 1 : withSpring(1, motion.spring.snappy);
+        pressed.set(reduceMotion ? 1 : withSpring(1, motion.spring.snappy));
         onPressIn?.(e);
       }}
       onPressOut={(e) => {
-        pressed.value = reduceMotion ? 0 : withSpring(0, motion.spring.snappy);
+        pressed.set(reduceMotion ? 0 : withSpring(0, motion.spring.snappy));
         onPressOut?.(e);
       }}
       style={[style, animatedStyle]}
