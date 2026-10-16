@@ -1,6 +1,8 @@
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ThemeProvider } from '@/theme';
+
 import { HelloScreen } from './HelloScreen';
 
 // Jest has no native safe-area module, so give the provider fixed metrics.
@@ -13,7 +15,9 @@ describe('HelloScreen', () => {
   it('shows the brand name and tagline', async () => {
     await render(
       <SafeAreaProvider initialMetrics={metrics}>
-        <HelloScreen />
+        <ThemeProvider>
+          <HelloScreen />
+        </ThemeProvider>
       </SafeAreaProvider>,
     );
 

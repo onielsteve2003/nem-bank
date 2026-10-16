@@ -3,6 +3,8 @@
   "main": "expo-router/entry",
   "version": "0.1.0",
   "dependencies": {
+    "@expo-google-fonts/inter": "^0.4.2",
+    "@expo-google-fonts/space-grotesk": "^0.4.1",
     "@nem/contracts": "workspace:*",
     "@nem/shared": "workspace:*",
     "expo": "~57.0.30",
