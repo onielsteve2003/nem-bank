@@ -51,6 +51,7 @@ export function Card({
   return (
     <PressableScale
       accessibilityRole="button"
+      accessibilityState={{ disabled: Boolean(rest.disabled) }}
       {...rest}
       onPress={(e) => {
         haptic('tap');

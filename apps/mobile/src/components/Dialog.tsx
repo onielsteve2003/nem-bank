@@ -44,9 +44,12 @@ export function Dialog({
         entering={FadeIn.duration(motion.duration.fast)}
         style={[styles.backdrop, { backgroundColor: colors.overlay, padding: spacing[6] }]}
       >
+        {/* Tap-outside is a shortcut only: the Cancel button is the accessible way out,
+            so screen-reader focus starts on the dialog title, not on the backdrop. */}
         <Pressable
-          accessibilityRole="button"
-          accessibilityLabel={cancelLabel}
+          accessible={false}
+          importantForAccessibility="no"
+          aria-hidden
           style={StyleSheet.absoluteFill}
           onPress={cancel}
         />
