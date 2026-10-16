@@ -5,6 +5,7 @@ export { Badge, badgeCountLabel, MAX_BADGE_COUNT } from './Badge';
 export { BottomSheet } from './BottomSheet';
 export { Button, type ButtonSize, type ButtonVariant } from './Button';
 export { Card, type CardVariant } from './Card';
+export { BarChart, CHART_PALETTE, DonutChart, LineChart, type Datum as ChartDatum } from './charts';
 export { Checkbox } from './Checkbox';
 export { Chip } from './Chip';
 export { Dialog } from './Dialog';
