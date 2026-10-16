@@ -19,5 +19,6 @@ describe('HelloScreen', () => {
 
     expect(screen.getByText('Nem Bank')).toBeOnTheScreen();
     expect(screen.getByText(/Simulated money, real engineering/)).toBeOnTheScreen();
+    expect(screen.getByText('Data: mock bank (on device)')).toBeOnTheScreen();
   });
 });

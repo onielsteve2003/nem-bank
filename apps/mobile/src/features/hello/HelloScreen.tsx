@@ -1,6 +1,8 @@
 import { StyleSheet, Text, useColorScheme, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { env } from '@/lib/env';
+
 // Temporary palette for the foundation milestone. T2.1 replaces it with the
 // Volt Noir design tokens from @nem/shared.
 const PALETTE = {
@@ -20,6 +22,9 @@ export function HelloScreen() {
           Banking that moves at your speed. Simulated money, real engineering.
         </Text>
       </View>
+      <Text style={[styles.footer, { color: colors.muted }]}>
+        Data: {env.apiMode === 'mock' ? 'mock bank (on device)' : env.apiUrl}
+      </Text>
     </SafeAreaView>
   );
 }
@@ -30,4 +35,5 @@ const styles = StyleSheet.create({
   eyebrow: { fontSize: 14, fontWeight: '700', letterSpacing: 2, textTransform: 'uppercase' },
   title: { fontSize: 44, fontWeight: '800', letterSpacing: -1 },
   subtitle: { fontSize: 16, lineHeight: 24, maxWidth: 320 },
+  footer: { fontSize: 12, paddingHorizontal: 24, paddingBottom: 16 },
 });
