@@ -1,5 +1,7 @@
 # Nem Bank
 
+[![CI](https://github.com/onielsteve2003/nem-bank/actions/workflows/ci.yml/badge.svg)](https://github.com/onielsteve2003/nem-bank/actions/workflows/ci.yml) [![CodeQL](https://github.com/onielsteve2003/nem-bank/actions/workflows/codeql.yml/badge.svg)](https://github.com/onielsteve2003/nem-bank/actions/workflows/codeql.yml)
+
 A mobile-first digital bank for Nigerians, with multi-currency wallets, scam and fraud protection, digital ajo and an AI assistant. It's built with React Native (Expo), Go and PostgreSQL.
 
 > 🚧 In development. This is a portfolio project that runs on simulated money; it is not a licensed bank.
