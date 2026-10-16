@@ -14,6 +14,7 @@ import { FormsSection } from './FormsSection';
 import { KeypadSection } from './KeypadSection';
 import { MoneySection } from './MoneySection';
 import { OverlaysSection } from './OverlaysSection';
+import { SpecialSection } from './SpecialSection';
 import { StatesSection } from './StatesSection';
 
 // Dev preview of the component kit as it is built. T2.14 turns this into the
@@ -55,6 +56,7 @@ export function KitScreen() {
     >
       <ButtonsSection />
       <MoneySection />
+      <SpecialSection />
       <CardSection />
       <ChartsSection />
       <DisplaySection />
