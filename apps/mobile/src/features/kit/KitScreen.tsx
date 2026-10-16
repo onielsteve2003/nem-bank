@@ -7,6 +7,7 @@ import { IconButton, Screen, Text } from '@/components';
 import { useTheme } from '@/theme';
 
 import { ButtonsSection } from './ButtonsSection';
+import { CardSection } from './CardSection';
 import { ChartsSection } from './ChartsSection';
 import { DisplaySection } from './DisplaySection';
 import { FormsSection } from './FormsSection';
@@ -54,6 +55,7 @@ export function KitScreen() {
     >
       <ButtonsSection />
       <MoneySection />
+      <CardSection />
       <ChartsSection />
       <DisplaySection />
       <OverlaysSection />

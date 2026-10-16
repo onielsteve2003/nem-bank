@@ -2,6 +2,7 @@ export { AmountInput } from './AmountInput';
 export { Avatar, type AvatarSize } from './Avatar';
 export { avatarInitials } from './avatarInitials';
 export { Badge, badgeCountLabel, MAX_BADGE_COUNT } from './Badge';
+export { BankCard, CARD_ASPECT, type CardNetwork } from './bankCard';
 export { BottomSheet } from './BottomSheet';
 export { Button, type ButtonSize, type ButtonVariant } from './Button';
 export { Card, type CardVariant } from './Card';
