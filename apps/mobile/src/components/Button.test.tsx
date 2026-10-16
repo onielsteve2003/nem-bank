@@ -18,14 +18,14 @@ describe('Button', () => {
   it('presses with a light tap haptic', async () => {
     const onPress = jest.fn();
     await renderThemed(<Button label="Continue" icon={ArrowRight} onPress={onPress} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
     expect(onPress).toHaveBeenCalledTimes(1);
     expect(haptic).toHaveBeenCalledWith('tap');
   });
 
   it('warns with a haptic on danger buttons', async () => {
     await renderThemed(<Button label="Freeze card" variant="danger" onPress={jest.fn()} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Freeze card' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Freeze card' }));
     expect(haptic).toHaveBeenCalledWith('warning');
   });
 
@@ -33,7 +33,7 @@ describe('Button', () => {
     const onPress = jest.fn();
     await renderThemed(<Button label="Send" disabled onPress={onPress} />);
     const button = screen.getByRole('button', { name: 'Send' });
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
     expect(button).toBeDisabled();
   });
@@ -42,7 +42,7 @@ describe('Button', () => {
     const onPress = jest.fn();
     await renderThemed(<Button label="Send" loading onPress={onPress} />);
     const button = screen.getByRole('button', { name: 'Send' });
-    fireEvent.press(button);
+    await fireEvent.press(button);
     expect(onPress).not.toHaveBeenCalled();
     expect(button).toBeBusy();
     expect(screen.getByTestId('button-spinner')).toBeOnTheScreen();
@@ -61,7 +61,7 @@ describe('IconButton', () => {
   it('is announced by its label and presses with a haptic', async () => {
     const onPress = jest.fn();
     await renderThemed(<IconButton icon={X} accessibilityLabel="Close" onPress={onPress} />);
-    fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     expect(onPress).toHaveBeenCalledTimes(1);
     expect(haptic).toHaveBeenCalledWith('tap');
   });
@@ -70,7 +70,7 @@ describe('IconButton', () => {
     await renderThemed(
       <IconButton icon={X} accessibilityLabel="Close" haptic={false} onPress={jest.fn()} />,
     );
-    fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     expect(haptic).not.toHaveBeenCalled();
   });
 });
