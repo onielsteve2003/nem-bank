@@ -1,12 +1,14 @@
-import { Zap } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { LayoutGrid, Zap } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Icon, Text } from '@/components';
+import { Button, Icon, Text } from '@/components';
 import { env } from '@/lib/env';
 import { useTheme } from '@/theme';
 
 export function HelloScreen() {
+  const router = useRouter();
   const { colors, spacing } = useTheme();
 
   return (
@@ -22,6 +24,14 @@ export function HelloScreen() {
         <Text color="textMuted" style={styles.subtitle}>
           Banking that moves at your speed. Simulated money, real engineering.
         </Text>
+        <Button
+          label="Component kit"
+          variant="secondary"
+          size="sm"
+          icon={LayoutGrid}
+          onPress={() => router.push('/kit')}
+          style={{ marginTop: spacing[4] }}
+        />
       </View>
       <Text
         variant="caption"
