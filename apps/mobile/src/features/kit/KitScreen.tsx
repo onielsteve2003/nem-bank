@@ -7,6 +7,7 @@ import { IconButton, Text } from '@/components';
 import { useTheme } from '@/theme';
 
 import { ButtonsSection } from './ButtonsSection';
+import { DisplaySection } from './DisplaySection';
 import { FormsSection } from './FormsSection';
 import { KeypadSection } from './KeypadSection';
 
@@ -42,6 +43,7 @@ export function KitScreen() {
           contentContainerStyle={{ padding: spacing[4], gap: spacing[8] }}
         >
           <ButtonsSection />
+          <DisplaySection />
           <FormsSection />
           <KeypadSection />
         </ScrollView>
