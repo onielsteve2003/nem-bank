@@ -2,7 +2,7 @@
   "name": "@nem/shared",
   "version": "0.1.0",
   "private": true,
-  "description": "Money, currencies, Zod schemas and banking constants shared by the mobile app, console and mock bank.",
+  "description": "Money, currencies, Zod schemas, design tokens and banking constants shared by the mobile app, console and mock bank.",
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
