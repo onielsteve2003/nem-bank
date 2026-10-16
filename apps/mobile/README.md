@@ -11,6 +11,15 @@ pnpm dev              # same as: pnpm --filter mobile start
 
 Scan the QR code with the iPhone camera (or the Expo Go app on Android). Press `w` in the terminal to open the web build.
 
+## Web demo
+
+```bash
+pnpm build:web       # from the repo root: static export to apps/mobile/dist
+npx serve apps/mobile/dist
+```
+
+Vercel builds the same export on every push to `main` (config in the root `vercel.json`).
+
 ## Layout
 
 | Path                     | Purpose                                                                            |

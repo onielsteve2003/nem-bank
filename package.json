@@ -9,6 +9,7 @@
   },
   "scripts": {
     "dev": "pnpm --filter mobile start",
+    "build:web": "pnpm --filter mobile export:web",
     "lint": "pnpm -r --if-present run lint",
     "format": "pnpm -r --if-present run format",
     "format:check": "pnpm -r --if-present run format:check",
