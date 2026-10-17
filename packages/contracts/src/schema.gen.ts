@@ -1167,6 +1167,1896 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/fx/rates': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Current exchange rates
+     * @description Indicative rates from free sources, cached hourly, with the bank's spread applied (FX-5).
+     */
+    get: operations['listFxRates'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fx/rates/{pair}/history': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Rate history for a chart */
+    get: operations['getFxRateHistory'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fx/quotes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get a conversion quote
+     * @description Locks a rate for 60 seconds (FX-1). Give either the amount to sell or the amount to buy.
+     */
+    post: operations['createFxQuote'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fx/conversions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Conversion history */
+    get: operations['listFxConversions'];
+    put?: never;
+    /**
+     * Convert at a quoted rate
+     * @description Posts both legs through the FX position accounts in one ledger entry. An expired quote returns 409 `quote_expired`.
+     */
+    post: operations['convertCurrency'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fx/alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List rate alerts */
+    get: operations['listFxAlerts'];
+    put?: never;
+    /**
+     * Create a rate alert
+     * @description "Tell me when USD/NGN goes above X" (FX-2). Triggers an `fx.alert_triggered` event.
+     */
+    post: operations['createFxAlert'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/fx/alerts/{alert_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a rate alert */
+    delete: operations['deleteFxAlert'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my cards */
+    get: operations['listCards'];
+    put?: never;
+    /**
+     * Create a virtual card
+     * @description Issued by Nem's simulated processor on a test BIN (CARD-1, CARD-7). USD cards need KYC Tier 2+.
+     */
+    post: operations['createCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/physical': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request a physical card
+     * @description Needs a card manufacturing and delivery partner (CARD-8), so it returns 403 `paid_feature_required`.
+     */
+    post: operations['requestPhysicalCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/{card_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a card */
+    get: operations['getCard'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Change card controls
+     * @description Spend limit, online and international toggles, merchant lock and nickname (CARD-4).
+     */
+    patch: operations['updateCardControls'];
+    trace?: never;
+  };
+  '/v1/cards/{card_id}/freeze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Freeze a card */
+    post: operations['freezeCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/{card_id}/unfreeze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Unfreeze a card
+     * @description Cards frozen by the panic button need step-up (SEC-4); send `X-Step-Up-Token` for those.
+     */
+    post: operations['unfreezeCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/{card_id}/reveal': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reveal card details
+     * @description Full PAN and CVV behind biometric step-up. The app hides them after `visible_until` (30 seconds) (CARD-3).
+     */
+    post: operations['revealCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/{card_id}/terminate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Terminate a card
+     * @description Permanent. Pending authorizations still settle (CARD-6).
+     */
+    post: operations['terminateCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/{card_id}/replace': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Replace a card
+     * @description Terminates this card and issues a new number with the same controls.
+     */
+    post: operations['replaceCard'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/cards/{card_id}/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Card transactions
+     * @description Pending authorizations and settled charges (CARD-5).
+     */
+    get: operations['listCardTransactions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/billers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List billers */
+    get: operations['listBillers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/billers/{biller_id}/products': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List a biller's products
+     * @description Data bundles and cable TV plans.
+     */
+    get: operations['listBillerProducts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/detect-network': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Detect a phone's network
+     * @description From the number prefix (BILL-1). Ported numbers may be wrong, so the app lets the customer change it.
+     */
+    post: operations['detectNetwork'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/validate': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Validate a meter or smartcard */
+    post: operations['validateBillCustomer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/payments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List bill payments */
+    get: operations['listBillPayments'];
+    put?: never;
+    /**
+     * Pay a bill
+     * @description Airtime, data, electricity or cable TV through the simulated biller (BILL-4). Failed payments are reversed.
+     */
+    post: operations['payBill'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/payments/{payment_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a bill payment */
+    get: operations['getBillPayment'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/saved': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List saved billers */
+    get: operations['listSavedBillers'];
+    put?: never;
+    /** Save a biller */
+    post: operations['saveBiller'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/saved/{saved_biller_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Remove a saved biller */
+    delete: operations['deleteSavedBiller'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/schedules': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List scheduled bills */
+    get: operations['listBillSchedules'];
+    put?: never;
+    /** Schedule a bill */
+    post: operations['createBillSchedule'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/bills/schedules/{schedule_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Cancel a scheduled bill */
+    delete: operations['cancelBillSchedule'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/summary': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Grow tab overview */
+    get: operations['getSavingsSummary'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/goals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List savings goals */
+    get: operations['listSavingsGoals'];
+    put?: never;
+    /**
+     * Create a savings goal
+     * @description An auto-save rule authorises future debits, so the request is signed (SAV-2).
+     */
+    post: operations['createSavingsGoal'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/goals/{goal_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a savings goal */
+    get: operations['getSavingsGoal'];
+    put?: never;
+    post?: never;
+    /**
+     * Close a savings goal
+     * @description Any balance is paid back to the NGN account first.
+     */
+    delete: operations['closeSavingsGoal'];
+    options?: never;
+    head?: never;
+    /** Edit a savings goal */
+    patch: operations['updateSavingsGoal'];
+    trace?: never;
+  };
+  '/v1/savings/goals/{goal_id}/deposits': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add money to a goal */
+    post: operations['depositToGoal'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/goals/{goal_id}/withdrawals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Withdraw from a goal */
+    post: operations['withdrawFromGoal'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/round-ups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get round-up settings */
+    get: operations['getRoundUps'];
+    /** Change round-up settings */
+    put: operations['setRoundUps'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/locks/quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Price a locked saving
+     * @description Rate, interest at maturity and the early-break penalty, disclosed before locking (SAV-4).
+     */
+    post: operations['quoteLockedSaving'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/locks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List locked savings */
+    get: operations['listLockedSavings'];
+    put?: never;
+    /** Lock money for a fixed term */
+    post: operations['createLockedSaving'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/locks/{lock_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a locked saving */
+    get: operations['getLockedSaving'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/savings/locks/{lock_id}/break': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Break a lock early
+     * @description Pays out the principal plus interest minus the disclosed penalty.
+     */
+    post: operations['breakLockedSaving'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/groups': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my ajo groups */
+    get: operations['listAjoGroups'];
+    put?: never;
+    /**
+     * Create an ajo group
+     * @description The creator joins as the first member and mandates the auto-debits (AJO-1).
+     */
+    post: operations['createAjoGroup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/groups/{group_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get an ajo group
+     * @description Members, payout order, who has paid this cycle and the pot balance (AJO-4).
+     */
+    get: operations['getAjoGroup'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/groups/{group_id}/invites': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Invite members
+     * @description By @nemtag, or share the returned link (AJO-2).
+     */
+    post: operations['inviteToAjoGroup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/invites/{invite_code}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Preview an invite */
+    get: operations['getAjoInvite'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/invites/{invite_code}/accept': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Join a group
+     * @description Accepting mandates the scheduled contributions, so it is signed.
+     */
+    post: operations['acceptAjoInvite'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/groups/{group_id}/start': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start the group
+     * @description Creator only, once every seat is filled. A random-draw rotation is fixed here and shown to everyone.
+     */
+    post: operations['startAjoGroup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/groups/{group_id}/leave': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Leave a group
+     * @description Allowed before the group starts. After it starts, the default rules apply (AJO-5).
+     */
+    post: operations['leaveAjoGroup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/ajo/groups/{group_id}/cycles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Schedule and history */
+    get: operations['listAjoCycles'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/credit/eligibility': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Check loan eligibility
+     * @description Scored by the credit model with reason codes (CRD-1, AI-5). Needs KYC Tier 3.
+     */
+    get: operations['getCreditEligibility'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/credit/offers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Price a loan
+     * @description Total repayment and APR disclosed up front (CRD-2).
+     */
+    post: operations['createLoanOffer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/credit/loans': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my loans */
+    get: operations['listLoans'];
+    put?: never;
+    /**
+     * Accept an offer
+     * @description Disburses the principal into the NGN account (CRD-3).
+     */
+    post: operations['acceptLoanOffer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/credit/loans/{loan_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a loan */
+    get: operations['getLoan'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Turn auto-repay on or off */
+    patch: operations['updateLoan'];
+    trace?: never;
+  };
+  '/v1/credit/loans/{loan_id}/repayments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Repay a loan
+     * @description Any amount up to the outstanding balance; paying early cuts the remaining interest (CRD-4).
+     */
+    post: operations['repayLoan'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/insights/spending': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Spending by category
+     * @description One month, compared with the month before (INS-1).
+     */
+    get: operations['getSpending'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/insights/budgets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List budgets */
+    get: operations['listBudgets'];
+    put?: never;
+    /**
+     * Create a budget
+     * @description Alerts fire at 80% and 100% (INS-2).
+     */
+    post: operations['createBudget'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/insights/budgets/{budget_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a budget */
+    delete: operations['deleteBudget'];
+    options?: never;
+    head?: never;
+    /** Change a budget */
+    patch: operations['updateBudget'];
+    trace?: never;
+  };
+  '/v1/insights/forecast': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Cash-flow forecast to payday
+     * @description Recurrence detection plus exponential smoothing, with a plain explanation (INS-3, AI-4).
+     */
+    get: operations['getCashFlowForecast'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/insights/subscriptions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Detected subscriptions
+     * @description Recurring charges with a link to the card that pays them (INS-4).
+     */
+    get: operations['listDetectedSubscriptions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/insights/money-story': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Monthly Money Story
+     * @description Story-style recap slides for a finished month (INS-5).
+     */
+    get: operations['getMoneyStory'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/checkup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Security checkup */
+    get: operations['getSecurityCheckup'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/sessions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List active sessions */
+    get: operations['listSessions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/sessions/{session_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** End a session */
+    delete: operations['revokeSession'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/limits': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get my own limits */
+    get: operations['getSelfLimits'];
+    /**
+     * Change my own limits
+     * @description Lowering applies at once. Raising needs step-up and takes effect after 24 hours.
+     */
+    put: operations['setSelfLimits'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/panic': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get panic mode */
+    get: operations['getPanicState'];
+    put?: never;
+    /**
+     * Press the panic button
+     * @description Freezes every card and blocks outgoing money in one call (SEC-4). Needs no step-up, on purpose.
+     */
+    post: operations['activatePanic'];
+    /**
+     * Turn panic mode off
+     * @description Unblocks outgoing money. Cards stay frozen until each is unfrozen.
+     */
+    delete: operations['releasePanic'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/duress-pin': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Set a duress PIN
+     * @description Entering it instead of the real PIN shows a decoy low-balance view, silently blocks
+     *     transfers and raises a silent alert (SEC-5). The response never reveals which PIN was used.
+     */
+    put: operations['setDuressPin'];
+    post?: never;
+    /** Remove the duress PIN */
+    delete: operations['removeDuressPin'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/question': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Set my security question
+     * @description Used as a step-up method. The answer is normalised and stored as an Argon2id hash.
+     */
+    put: operations['setSecurityQuestion'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/scam-check': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Check a message, link or account
+     * @description Classifier plus Nigerian scam rules; returns a verdict and reasons (SEC-6, AI-2).
+     */
+    post: operations['checkScam'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/security/alerts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get login and transaction alert settings */
+    get: operations['getAlertPreferences'];
+    /** Change login and transaction alert settings */
+    put: operations['setAlertPreferences'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/kyc': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** My tier, limits and upgrade path */
+    get: operations['getKycOverview'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/kyc/identity': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify a BVN or NIN
+     * @description Checked against sandbox test numbers (KYC-2). Passing it upgrades to Tier 2. The number is field-encrypted at rest.
+     */
+    post: operations['verifyIdentityNumber'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/kyc/documents': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Upload an ID photo, selfie or proof of address */
+    post: operations['uploadKycDocument'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/kyc/prefill': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Read ID fields from a photo
+     * @description Optional, consent-gated vision prefill on sample IDs only (KYC-4, AI-7). 503 means fill the form by hand.
+     */
+    post: operations['prefillFromId'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/kyc/submissions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Submit for Tier 3 review
+     * @description Goes to the console KYC queue (KYC-6). The outcome arrives as a `kyc.updated` event.
+     */
+    post: operations['submitKyc'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/kyc/submissions/{submission_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a KYC submission */
+    get: operations['getKycSubmission'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my disputes */
+    get: operations['listDisputes'];
+    put?: never;
+    /**
+     * Raise a dispute
+     * @description One open dispute per transaction; returns a case number (DSP-1).
+     */
+    post: operations['createDispute'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{dispute_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Track a dispute */
+    get: operations['getDispute'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{dispute_id}/evidence': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add evidence */
+    post: operations['addDisputeEvidence'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/disputes/{dispute_id}/withdraw': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Withdraw a dispute */
+    post: operations['withdrawDispute'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/support/conversations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List support chats */
+    get: operations['listSupportConversations'];
+    put?: never;
+    /** Start a support chat */
+    post: operations['startSupportConversation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/support/conversations/{conversation_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a support chat */
+    get: operations['getSupportConversation'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/support/conversations/{conversation_id}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Chat messages
+     * @description Newest first; new ones arrive as `support.message` events (SUP-1).
+     */
+    get: operations['listSupportMessages'];
+    put?: never;
+    /** Send a chat message */
+    post: operations['sendSupportMessage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/support/attachments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Upload a chat attachment */
+    post: operations['uploadSupportAttachment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/help/articles': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Search the help center */
+    get: operations['searchHelpArticles'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/help/articles/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read a help article */
+    get: operations['getHelpArticle'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Notification inbox */
+    get: operations['listNotifications'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/read': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark notifications as read */
+    post: operations['markNotificationsRead'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/preferences': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get notification preferences */
+    get: operations['getNotificationPreferences'];
+    /**
+     * Change notification preferences
+     * @description Security alerts cannot be switched off entirely; at least one channel stays on.
+     */
+    put: operations['setNotificationPreferences'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/push-tokens': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Register an Expo push token */
+    post: operations['registerPushToken'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/notifications/push-tokens/{device_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Stop push to a device */
+    delete: operations['unregisterPushToken'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/family/dependants': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my dependants */
+    get: operations['listDependants'];
+    put?: never;
+    /**
+     * Add a dependant
+     * @description Creates a child login with kid mode and a linked NGN account (FAM-1).
+     */
+    post: operations['createDependant'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/family/dependants/{dependant_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a dependant */
+    get: operations['getDependant'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Change a dependant's controls
+     * @description Spend limits, the approval threshold and pause (FAM-2).
+     */
+    patch: operations['updateDependantControls'];
+    trace?: never;
+  };
+  '/v1/family/dependants/{dependant_id}/allowance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Set an allowance
+     * @description A recurring transfer from the parent to the dependant.
+     */
+    put: operations['setAllowance'];
+    post?: never;
+    /** Stop an allowance */
+    delete: operations['stopAllowance'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/family/dependants/{dependant_id}/activity': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * A dependant's transactions
+     * @description Read-only view for the parent (FAM-3).
+     */
+    get: operations['listDependantActivity'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/family/approvals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Transfers waiting for my approval
+     * @description Parents see their dependants' requests; dependants see their own.
+     */
+    get: operations['listFamilyApprovals'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/family/approvals/{approval_id}/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Approve a dependant's transfer */
+    post: operations['approveFamilyTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/family/approvals/{approval_id}/decline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Decline a dependant's transfer */
+    post: operations['declineFamilyTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/assistant/conversations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Start an assistant chat */
+    post: operations['startAssistantConversation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/assistant/conversations/{conversation_id}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Assistant chat history */
+    get: operations['listAssistantMessages'];
+    put?: never;
+    /**
+     * Ask the assistant
+     * @description The LLM only sees redacted or aggregated data and calls typed server tools (AI-6, AI-9).
+     *     Money actions come back as `prepared_action` blocks; nothing moves until the customer
+     *     confirms one. 503 `assistant_unavailable` means show the non-AI shortcuts instead.
+     */
+    post: operations['sendAssistantMessage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/assistant/actions/{action_id}/confirm': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Confirm a prepared action
+     * @description The customer reviews the card, then confirms with PIN or biometrics. Runs through the normal endpoint rules (limits, risk, fees).
+     */
+    post: operations['confirmAssistantAction'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/assistant/actions/{action_id}/discard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Discard a prepared action */
+    post: operations['discardAssistantAction'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/users/me/preferences': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get app preferences
+     * @description Appearance, language, low-data mode, auto-lock and AI toggles (FR-SET, AI-8).
+     */
+    get: operations['getPreferences'];
+    /** Change app preferences */
+    put: operations['setPreferences'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/privacy/exports': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Export my data
+     * @description A JSON archive of my data, emailed when ready (SET-5, NDPA 2023).
+     */
+    post: operations['requestDataExport'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/privacy/deletion': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request account deletion
+     * @description Needs a zero balance and step-up. Ledger records are kept for the retention period; profile data is erased.
+     */
+    post: operations['requestAccountDeletion'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/realtime/tickets': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get a WebSocket ticket
+     * @description Connect to `wss://<host>/v1/realtime?ticket=<ticket>` within 30 seconds. Tickets are
+     *     single-use so the access token never appears in a URL. The server sends
+     *     `RealtimeEvent` messages; the client may send `RealtimeClientMessage`.
+     */
+    post: operations['createRealtimeTicket'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -2215,6 +4105,1481 @@ export interface components {
       payee: components['schemas']['ResolvedPayee'] | null;
       amount: components['schemas']['Money'] | null;
     };
+    /**
+     * @description Decimal exchange rate as a string (never a float), up to 8 decimal places.
+     * @example 1612.45
+     */
+    Rate: string;
+    /** @description Hundredths of a percent; 150 = 1.5%. */
+    BasisPoints: number;
+    /** @description Shown behind the AI badge, so every AI result can explain itself (AI-8). */
+    AiMeta: {
+      /** @enum {string} */
+      feature:
+        | 'fraud_scoring'
+        | 'scam_checker'
+        | 'smart_categories'
+        | 'forecast'
+        | 'credit_scoring'
+        | 'assistant'
+        | 'id_prefill';
+      model_version: string;
+      explanation: string;
+      /** @description True when the rules-only fallback produced the result. */
+      fallback_used: boolean;
+    };
+    ReasonCode: {
+      /**
+       * @example regular_salary
+       * @example low_account_age
+       */
+      code: string;
+      /** @enum {string} */
+      impact: 'positive' | 'negative' | 'neutral';
+      message: string;
+    };
+    Attachment: {
+      id: components['schemas']['Uuid'];
+      file_name: string;
+      /** @enum {string} */
+      content_type: 'image/jpeg' | 'image/png' | 'application/pdf';
+      size_bytes: number;
+      /**
+       * Format: uri
+       * @description Short-lived signed URL.
+       */
+      url: string;
+      uploaded_at: components['schemas']['Timestamp'];
+    };
+    FileUpload: {
+      /** @description JPEG, PNG or PDF, at most 5 MB. */
+      file: string;
+      caption?: string;
+    };
+    /** @example USD-NGN */
+    FxPairCode: string;
+    FxRate: {
+      pair: components['schemas']['FxPairCode'];
+      base: components['schemas']['CurrencyCode'];
+      quote: components['schemas']['CurrencyCode'];
+      mid_rate: components['schemas']['Rate'];
+      /** @description Quote currency the customer pays per 1 base unit. */
+      buy_rate: components['schemas']['Rate'];
+      /** @description Quote currency the customer receives per 1 base unit. */
+      sell_rate: components['schemas']['Rate'];
+      spread_bps: components['schemas']['BasisPoints'];
+      /** @enum {string} */
+      source: 'open_er_api' | 'frankfurter' | 'cache';
+      as_of: components['schemas']['Timestamp'];
+    };
+    FxRateList: {
+      data: components['schemas']['FxRate'][];
+      /** @description Always true; rates are hourly, not a live market feed. */
+      indicative: boolean;
+    };
+    FxRatePoint: {
+      at: components['schemas']['Timestamp'];
+      rate: components['schemas']['Rate'];
+    };
+    FxRateHistory: {
+      pair: components['schemas']['FxPairCode'];
+      /** @enum {string} */
+      range: '1D' | '1W' | '1M' | '1Y';
+      points: components['schemas']['FxRatePoint'][];
+    };
+    /** @description Send exactly one of `sell_amount` or `buy_amount`. */
+    FxQuoteRequest: {
+      from_account_id: components['schemas']['Uuid'];
+      to_account_id: components['schemas']['Uuid'];
+      sell_amount?: components['schemas']['Money'];
+      buy_amount?: components['schemas']['Money'];
+    };
+    FxQuote: {
+      quote_id: components['schemas']['Uuid'];
+      from_account_id: components['schemas']['Uuid'];
+      to_account_id: components['schemas']['Uuid'];
+      sell: components['schemas']['Money'];
+      /** @description Rounded down to the minor unit, in the customer's favour never against it. */
+      buy: components['schemas']['Money'];
+      rate: components['schemas']['Rate'];
+      mid_rate: components['schemas']['Rate'];
+      spread_bps: components['schemas']['BasisPoints'];
+      fee: components['schemas']['Money'];
+      /** @description 60 seconds after the quote was made. */
+      expires_at: components['schemas']['Timestamp'];
+    };
+    FxConversionRequest: {
+      quote_id: components['schemas']['Uuid'];
+    };
+    FxConversion: {
+      id: components['schemas']['Uuid'];
+      quote_id: components['schemas']['Uuid'];
+      sell: components['schemas']['Money'];
+      buy: components['schemas']['Money'];
+      rate: components['schemas']['Rate'];
+      fee: components['schemas']['Money'];
+      /** @enum {string} */
+      status: 'completed' | 'failed';
+      debit_transaction_id: components['schemas']['Uuid'];
+      credit_transaction_id: components['schemas']['Uuid'];
+      created_at: components['schemas']['Timestamp'];
+    };
+    FxConversionPage: {
+      data: components['schemas']['FxConversion'][];
+      page: components['schemas']['PageInfo'];
+    };
+    CreateFxAlertRequest: {
+      pair: components['schemas']['FxPairCode'];
+      /** @enum {string} */
+      direction: 'above' | 'below';
+      target_rate: components['schemas']['Rate'];
+    };
+    FxAlert: {
+      id: components['schemas']['Uuid'];
+      pair: components['schemas']['FxPairCode'];
+      /** @enum {string} */
+      direction: 'above' | 'below';
+      target_rate: components['schemas']['Rate'];
+      /** @enum {string} */
+      status: 'active' | 'triggered';
+      created_at: components['schemas']['Timestamp'];
+      triggered_at: components['schemas']['Timestamp'] | null;
+    };
+    FxAlertList: {
+      data: components['schemas']['FxAlert'][];
+    };
+    /**
+     * @description `single_use` closes after one charge; `merchant_locked` only works at one merchant.
+     * @enum {string}
+     */
+    CardType: 'standard' | 'single_use' | 'merchant_locked';
+    /** @enum {string} */
+    CardStatus: 'active' | 'frozen' | 'terminated' | 'used';
+    SpendLimit: {
+      amount: components['schemas']['Money'];
+      /** @enum {string} */
+      period: 'per_transaction' | 'daily' | 'monthly';
+    };
+    MerchantLock: {
+      merchant_id: string;
+      merchant_name: string;
+    };
+    CardControls: {
+      spend_limit: components['schemas']['SpendLimit'] | null;
+      online_enabled: boolean;
+      international_enabled: boolean;
+      merchant_lock: components['schemas']['MerchantLock'] | null;
+    };
+    Card: {
+      id: components['schemas']['Uuid'];
+      account_id: components['schemas']['Uuid'];
+      /** @enum {string} */
+      currency: 'NGN' | 'USD';
+      type: components['schemas']['CardType'];
+      status: components['schemas']['CardStatus'];
+      /**
+       * @description Simulated network branding on a test BIN; not usable outside Nem.
+       * @enum {string}
+       */
+      network: 'nem_verve' | 'nem_visa';
+      last4: string;
+      expiry_month: number;
+      expiry_year: number;
+      name_on_card: string;
+      nickname: string | null;
+      /** @enum {string} */
+      design: 'volt' | 'noir' | 'mint' | 'coral';
+      controls: components['schemas']['CardControls'];
+      /** @description Unfreezing needs step-up when true. */
+      frozen_by_panic: boolean;
+      physical: boolean;
+      created_at: components['schemas']['Timestamp'];
+    };
+    CardList: {
+      data: components['schemas']['Card'][];
+    };
+    CreateCardRequest: {
+      /** @description The NGN account or USD wallet the card spends from. */
+      account_id: components['schemas']['Uuid'];
+      type: components['schemas']['CardType'];
+      nickname?: string;
+      /**
+       * @default volt
+       * @enum {string}
+       */
+      design: 'volt' | 'noir' | 'mint' | 'coral';
+      /** @description Required for `merchant_locked` cards. */
+      merchant_lock?: components['schemas']['MerchantLock'];
+      spend_limit?: components['schemas']['SpendLimit'];
+    };
+    PhysicalCardRequest: {
+      account_id: components['schemas']['Uuid'];
+      delivery_address: components['schemas']['Address'];
+    };
+    UpdateCardRequest: {
+      nickname?: string | null;
+      spend_limit?: components['schemas']['SpendLimit'] | null;
+      online_enabled?: boolean;
+      international_enabled?: boolean;
+      merchant_lock?: components['schemas']['MerchantLock'] | null;
+    };
+    CardSecrets: {
+      card_id: components['schemas']['Uuid'];
+      /** @description Luhn-valid 16-digit test PAN. */
+      pan: string;
+      cvv: string;
+      expiry_month: number;
+      expiry_year: number;
+      visible_until: components['schemas']['Timestamp'];
+    };
+    /** @enum {string} */
+    CardTransactionStatus: 'authorized' | 'settled' | 'reversed' | 'declined';
+    CardTransaction: {
+      id: components['schemas']['Uuid'];
+      card_id: components['schemas']['Uuid'];
+      merchant: {
+        id?: string;
+        name: string;
+        mcc: string;
+        country: string;
+      };
+      /** @description In the merchant's currency. */
+      amount: components['schemas']['Money'];
+      /** @description In the card's currency. */
+      billing_amount: components['schemas']['Money'];
+      status: components['schemas']['CardTransactionStatus'];
+      /** @enum {string|null} */
+      decline_reason:
+        | 'insufficient_funds'
+        | 'card_frozen'
+        | 'limit_exceeded'
+        | 'online_disabled'
+        | 'international_disabled'
+        | 'merchant_not_allowed'
+        | 'card_used'
+        | null;
+      transaction_id?: components['schemas']['Uuid'] | null;
+      authorized_at: components['schemas']['Timestamp'];
+      settled_at: components['schemas']['Timestamp'] | null;
+    };
+    CardTransactionPage: {
+      data: components['schemas']['CardTransaction'][];
+      page: components['schemas']['PageInfo'];
+    };
+    /** @enum {string} */
+    BillCategory: 'airtime' | 'data' | 'electricity' | 'cable_tv';
+    /** @enum {string} */
+    MobileNetwork: 'mtn' | 'airtel' | 'glo' | 'nine_mobile';
+    Biller: {
+      /** @example ikeja-electric-prepaid */
+      id: string;
+      category: components['schemas']['BillCategory'];
+      name: string;
+      network?: components['schemas']['MobileNetwork'] | null;
+      /** Format: uri */
+      logo_url?: string | null;
+      /** @description Meters and smartcards are validated before paying. */
+      requires_validation: boolean;
+      has_products: boolean;
+      min_amount?: components['schemas']['Money'] | null;
+    };
+    BillerList: {
+      data: components['schemas']['Biller'][];
+    };
+    BillerProduct: {
+      id: string;
+      /** @example 1.5GB, 30 days */
+      name: string;
+      amount: components['schemas']['Money'];
+      validity_days: number | null;
+    };
+    BillerProductList: {
+      data: components['schemas']['BillerProduct'][];
+    };
+    DetectNetworkRequest: {
+      phone: components['schemas']['PhoneNumber'];
+    };
+    DetectedNetwork: {
+      phone: components['schemas']['PhoneNumber'];
+      network: components['schemas']['MobileNetwork'] | null;
+    };
+    BillValidationRequest: {
+      biller_id: string;
+      /** @description Meter number or smartcard number. */
+      customer_id: string;
+    };
+    BillValidation: {
+      biller_id: string;
+      customer_id: string;
+      customer_name: string;
+      address?: string | null;
+      current_plan?: string | null;
+    };
+    PayBillRequest: {
+      biller_id: string;
+      product_id?: string;
+      /** @description Phone number, meter number or smartcard number. */
+      customer_id: string;
+      amount: components['schemas']['Money'];
+      source_account_id: components['schemas']['Uuid'];
+      /** @description Save this biller under a nickname. */
+      save_as?: string;
+    };
+    BillPayment: {
+      id: components['schemas']['Uuid'];
+      reference: string;
+      biller_id: string;
+      biller_name: string;
+      category: components['schemas']['BillCategory'];
+      product_name?: string | null;
+      customer_id: string;
+      amount: components['schemas']['Money'];
+      fee: components['schemas']['Money'];
+      /** @enum {string} */
+      status: 'processing' | 'completed' | 'failed' | 'reversed';
+      /** @description Prepaid electricity token, shareable (BILL-2). */
+      token: string | null;
+      /** @example 34.6 kWh */
+      units?: string | null;
+      transaction_id?: components['schemas']['Uuid'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    BillPaymentPage: {
+      data: components['schemas']['BillPayment'][];
+      page: components['schemas']['PageInfo'];
+    };
+    SaveBillerRequest: {
+      biller_id: string;
+      customer_id: string;
+      nickname: string;
+    };
+    SavedBiller: {
+      id: components['schemas']['Uuid'];
+      biller_id: string;
+      biller_name: string;
+      category: components['schemas']['BillCategory'];
+      customer_id: string;
+      customer_name?: string | null;
+      nickname: string;
+      created_at: components['schemas']['Timestamp'];
+    };
+    SavedBillerList: {
+      data: components['schemas']['SavedBiller'][];
+    };
+    CreateBillScheduleRequest: {
+      payment: components['schemas']['PayBillRequest'];
+      frequency: components['schemas']['ScheduleFrequency'];
+      start_at: components['schemas']['Timestamp'];
+    };
+    BillSchedule: {
+      id: components['schemas']['Uuid'];
+      biller_name: string;
+      customer_id: string;
+      amount: components['schemas']['Money'];
+      frequency: components['schemas']['ScheduleFrequency'];
+      /** @enum {string} */
+      status: 'active' | 'paused' | 'cancelled' | 'completed';
+      next_run_at: components['schemas']['Timestamp'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    BillScheduleList: {
+      data: components['schemas']['BillSchedule'][];
+    };
+    SavingsSummary: {
+      total_saved: components['schemas']['Money'];
+      interest_earned: components['schemas']['Money'];
+      goals_count: number;
+      locks_count: number;
+      round_ups_this_month: components['schemas']['Money'];
+    };
+    AutoSaveRule: {
+      amount: components['schemas']['Money'];
+      /** @enum {string} */
+      frequency: 'daily' | 'weekly' | 'monthly';
+      source_account_id: components['schemas']['Uuid'];
+    };
+    SavingsGoal: {
+      id: components['schemas']['Uuid'];
+      name: string;
+      emoji: string;
+      target: components['schemas']['Money'];
+      balance: components['schemas']['Money'];
+      progress_pct: number;
+      target_date: components['schemas']['Date'] | null;
+      auto_save: components['schemas']['AutoSaveRule'] | null;
+      interest_rate_bps: components['schemas']['BasisPoints'];
+      /** @description Accrued daily and posted through the ledger (SAV-5). */
+      interest_earned: components['schemas']['Money'];
+      /** @enum {string} */
+      status: 'active' | 'completed' | 'closed';
+      created_at: components['schemas']['Timestamp'];
+    };
+    SavingsGoalList: {
+      data: components['schemas']['SavingsGoal'][];
+    };
+    CreateSavingsGoalRequest: {
+      name: string;
+      emoji: string;
+      target: components['schemas']['Money'];
+      target_date?: components['schemas']['Date'];
+      auto_save?: components['schemas']['AutoSaveRule'];
+    };
+    UpdateSavingsGoalRequest: {
+      name?: string;
+      emoji?: string;
+      target?: components['schemas']['Money'];
+      target_date?: components['schemas']['Date'] | null;
+      auto_save?: components['schemas']['AutoSaveRule'] | null;
+    };
+    SavingsMovementRequest: {
+      amount: components['schemas']['Money'];
+      /** @description The account money moves from (deposit, repayment) or to (withdrawal). */
+      account_id: components['schemas']['Uuid'];
+    };
+    RoundUpSettings: {
+      enabled: boolean;
+      /**
+       * @description Round spends up to the next ₦100, ₦500 or ₦1,000 (kobo).
+       * @enum {string}
+       */
+      round_to: '10000' | '50000' | '100000';
+      goal_id: components['schemas']['Uuid'] | null;
+      sources: ('card' | 'transfer')[];
+    };
+    LockQuoteRequest: {
+      amount: components['schemas']['Money'];
+      term_days: number;
+    };
+    LockQuote: {
+      amount: components['schemas']['Money'];
+      term_days: number;
+      rate_bps: components['schemas']['BasisPoints'];
+      interest_at_maturity: components['schemas']['Money'];
+      maturity_date: components['schemas']['Date'];
+      /** @description Share of accrued interest forfeited if broken early. */
+      early_break_penalty_bps: components['schemas']['BasisPoints'];
+      early_break_explanation: string;
+    };
+    CreateLockedSavingRequest: {
+      amount: components['schemas']['Money'];
+      term_days: number;
+      source_account_id: components['schemas']['Uuid'];
+      /**
+       * @description The customer saw the penalty disclosure.
+       * @constant
+       */
+      accepted_terms: true;
+    };
+    LockedSaving: {
+      id: components['schemas']['Uuid'];
+      principal: components['schemas']['Money'];
+      term_days: number;
+      rate_bps: components['schemas']['BasisPoints'];
+      start_date: components['schemas']['Date'];
+      maturity_date: components['schemas']['Date'];
+      accrued_interest: components['schemas']['Money'];
+      expected_interest: components['schemas']['Money'];
+      early_break_penalty_bps: components['schemas']['BasisPoints'];
+      /** @enum {string} */
+      status: 'active' | 'matured' | 'broken';
+      paid_out?: components['schemas']['Money'] | null;
+    };
+    LockedSavingList: {
+      data: components['schemas']['LockedSaving'][];
+    };
+    /** @enum {string} */
+    AjoFrequency: 'daily' | 'weekly' | 'monthly';
+    AjoMember: {
+      member: components['schemas']['PartySummary'];
+      /** @description Payout turn; null until a random draw is made at start. */
+      position: number | null;
+      /** @enum {string} */
+      status: 'invited' | 'joined' | 'defaulted' | 'left';
+      has_received_payout: boolean;
+      contributions_paid: number;
+      missed_contributions: number;
+    };
+    AjoGroup: {
+      id: components['schemas']['Uuid'];
+      name: string;
+      contribution: components['schemas']['Money'];
+      frequency: components['schemas']['AjoFrequency'];
+      member_count: number;
+      /** @enum {string} */
+      rotation: 'fixed' | 'random_draw';
+      /** @enum {string} */
+      status: 'forming' | 'active' | 'completed' | 'cancelled';
+      members: components['schemas']['AjoMember'][];
+      current_cycle: number;
+      total_cycles: number;
+      next_contribution_at?: components['schemas']['Timestamp'] | null;
+      next_payout?: {
+        member: components['schemas']['PartySummary'];
+        amount: components['schemas']['Money'];
+        at: components['schemas']['Timestamp'];
+      } | null;
+      /** @description Held in the group's escrow ledger account; only the ledger can pay it out. */
+      pot_balance: components['schemas']['Money'];
+      grace_period_hours: number;
+      /** Format: uri */
+      invite_url?: string | null;
+      created_by: components['schemas']['PartySummary'];
+      created_at: components['schemas']['Timestamp'];
+    };
+    AjoGroupList: {
+      data: components['schemas']['AjoGroup'][];
+    };
+    CreateAjoGroupRequest: {
+      name: string;
+      contribution: components['schemas']['Money'];
+      frequency: components['schemas']['AjoFrequency'];
+      member_count: number;
+      /** @enum {string} */
+      rotation: 'fixed' | 'random_draw';
+      start_date: components['schemas']['Date'];
+      /** @default 24 */
+      grace_period_hours: number;
+      /** @description The account contributions are debited from. */
+      source_account_id: components['schemas']['Uuid'];
+    };
+    AjoInviteRequest: {
+      nemtags?: components['schemas']['Nemtag'][];
+    };
+    AjoInvite: {
+      invite_code: string;
+      /** Format: uri */
+      invite_url: string;
+      expires_at: components['schemas']['Timestamp'];
+      invited: components['schemas']['PartySummary'][];
+    };
+    AjoContribution: {
+      member: components['schemas']['PartySummary'];
+      /** @enum {string} */
+      status: 'pending' | 'paid' | 'late' | 'defaulted';
+      paid_at: components['schemas']['Timestamp'] | null;
+      /** @description Failed auto-debits are retried during the grace period (AJO-5). */
+      attempts: number;
+    };
+    AjoCycle: {
+      number: number;
+      due_at: components['schemas']['Timestamp'];
+      payout_to: components['schemas']['PartySummary'];
+      payout_amount: components['schemas']['Money'];
+      /** @enum {string} */
+      payout_status: 'upcoming' | 'collecting' | 'paid' | 'short_paid';
+      contributions: components['schemas']['AjoContribution'][];
+    };
+    AjoCycleList: {
+      data: components['schemas']['AjoCycle'][];
+    };
+    CreditEligibility: {
+      eligible: boolean;
+      max_amount: components['schemas']['Money'];
+      /** @enum {string} */
+      score_band: 'poor' | 'fair' | 'good' | 'excellent';
+      /** @description Credit decisions always explain themselves. */
+      reasons: components['schemas']['ReasonCode'][];
+      ai: components['schemas']['AiMeta'];
+      checked_at: components['schemas']['Timestamp'];
+    };
+    LoanOfferRequest: {
+      amount: components['schemas']['Money'];
+      /** @enum {integer} */
+      tenor_days: 30 | 60 | 90 | 180;
+    };
+    Installment: {
+      number: number;
+      due_date: components['schemas']['Date'];
+      amount: components['schemas']['Money'];
+      paid: components['schemas']['Money'];
+      /** @enum {string} */
+      status: 'upcoming' | 'due' | 'paid' | 'overdue';
+    };
+    LoanOffer: {
+      offer_id: components['schemas']['Uuid'];
+      principal: components['schemas']['Money'];
+      tenor_days: number;
+      apr_bps: components['schemas']['BasisPoints'];
+      interest: components['schemas']['Money'];
+      fees: components['schemas']['Money'];
+      total_repayment: components['schemas']['Money'];
+      schedule: components['schemas']['Installment'][];
+      expires_at: components['schemas']['Timestamp'];
+    };
+    AcceptLoanRequest: {
+      offer_id: components['schemas']['Uuid'];
+      disbursement_account_id: components['schemas']['Uuid'];
+      auto_repay: boolean;
+    };
+    Loan: {
+      id: components['schemas']['Uuid'];
+      principal: components['schemas']['Money'];
+      outstanding: components['schemas']['Money'];
+      apr_bps: components['schemas']['BasisPoints'];
+      tenor_days: number;
+      /** @enum {string} */
+      status: 'active' | 'overdue' | 'repaid' | 'defaulted';
+      auto_repay: boolean;
+      schedule: components['schemas']['Installment'][];
+      disbursed_at: components['schemas']['Timestamp'];
+      next_due: components['schemas']['Installment'] | null;
+    };
+    LoanList: {
+      data: components['schemas']['Loan'][];
+    };
+    UpdateLoanRequest: {
+      auto_repay: boolean;
+    };
+    CategorySpend: {
+      category: components['schemas']['Category'];
+      amount: components['schemas']['Money'];
+      /** @description Whole percent; shares are rounded so they add up to 100. */
+      share_pct: number;
+      previous_amount: components['schemas']['Money'];
+    };
+    SpendingBreakdown: {
+      month: string;
+      total: components['schemas']['Money'];
+      previous_total: components['schemas']['Money'];
+      categories: components['schemas']['CategorySpend'][];
+    };
+    Budget: {
+      id: components['schemas']['Uuid'];
+      category: components['schemas']['Category'];
+      limit: components['schemas']['Money'];
+      spent: components['schemas']['Money'];
+      /**
+       * @description `warning` from 80%, `exceeded` from 100%.
+       * @enum {string}
+       */
+      status: 'ok' | 'warning' | 'exceeded';
+      alert_at_pct: (80 | 100)[];
+    };
+    BudgetList: {
+      data: components['schemas']['Budget'][];
+    };
+    CreateBudgetRequest: {
+      category: components['schemas']['Category'];
+      limit: components['schemas']['Money'];
+    };
+    UpdateBudgetRequest: {
+      limit: components['schemas']['Money'];
+    };
+    ForecastPoint: {
+      date: components['schemas']['Date'];
+      balance: components['schemas']['Money'];
+      low: components['schemas']['Money'];
+      high: components['schemas']['Money'];
+    };
+    CashFlowForecast: {
+      next_payday: components['schemas']['Date'] | null;
+      projected_balance: components['schemas']['Money'];
+      points: components['schemas']['ForecastPoint'][];
+      /** @example Salary usually lands on the 25th; rent and DSTV leave before then. */
+      explanation: string;
+      /** @description Known recurring items inside the forecast window. */
+      upcoming: {
+        label: string;
+        amount: components['schemas']['Money'];
+        date: components['schemas']['Date'];
+        direction: components['schemas']['Direction'];
+      }[];
+      ai: components['schemas']['AiMeta'];
+    };
+    DetectedSubscription: {
+      id: components['schemas']['Uuid'];
+      merchant: string;
+      amount: components['schemas']['Money'];
+      /** @enum {string} */
+      frequency: 'weekly' | 'monthly' | 'yearly';
+      last_charged_at: components['schemas']['Timestamp'];
+      next_expected_at: components['schemas']['Date'];
+      card_id: components['schemas']['Uuid'] | null;
+    };
+    SubscriptionList: {
+      data: components['schemas']['DetectedSubscription'][];
+      monthly_total: components['schemas']['Money'];
+      ai: components['schemas']['AiMeta'];
+    };
+    StorySlide: {
+      /** @enum {string} */
+      kind:
+        | 'intro'
+        | 'total_spent'
+        | 'top_category'
+        | 'biggest_day'
+        | 'saved'
+        | 'compared'
+        | 'tip'
+        | 'outro';
+      title: string;
+      body: string;
+      amount?: components['schemas']['Money'] | null;
+      category?: components['schemas']['Category'] | null;
+    };
+    MoneyStory: {
+      month: string;
+      slides: components['schemas']['StorySlide'][];
+      /**
+       * Format: uri
+       * @description A privacy-safe image (no balances) for sharing.
+       */
+      share_image_url: string | null;
+    };
+    CheckupItem: {
+      /** @enum {string} */
+      id:
+        | 'pin_set'
+        | 'biometrics_on'
+        | 'security_question_set'
+        | 'duress_pin_set'
+        | 'self_limit_set'
+        | 'kyc_tier_2'
+        | 'single_device'
+        | 'alerts_on';
+      title: string;
+      description: string;
+      done: boolean;
+      points: number;
+    };
+    SecurityCheckup: {
+      score: number;
+      items: components['schemas']['CheckupItem'][];
+    };
+    Session: {
+      id: components['schemas']['Uuid'];
+      device_id: components['schemas']['Uuid'];
+      device_name: string;
+      current: boolean;
+      created_at: components['schemas']['Timestamp'];
+      last_active_at: components['schemas']['Timestamp'];
+      ip_location: string | null;
+    };
+    SessionList: {
+      data: components['schemas']['Session'][];
+    };
+    SelfLimits: {
+      daily_limit: components['schemas']['Money'] | null;
+      single_limit: components['schemas']['Money'] | null;
+      kyc_daily_cap: components['schemas']['Money'];
+      pending_increase: {
+        daily_limit: components['schemas']['Money'] | null;
+        single_limit: components['schemas']['Money'] | null;
+        effective_at: components['schemas']['Timestamp'];
+      } | null;
+    };
+    /** @description `null` removes a self-set limit (the KYC cap still applies). */
+    SetSelfLimitsRequest: {
+      daily_limit: components['schemas']['Money'] | null;
+      single_limit: components['schemas']['Money'] | null;
+    };
+    PanicState: {
+      active: boolean;
+      activated_at: components['schemas']['Timestamp'] | null;
+      cards_frozen: number;
+      outgoing_blocked: boolean;
+    };
+    SecurityQuestionRequest: {
+      question: string;
+      answer: string;
+    };
+    /** @description Content is checked and discarded; it is never stored or sent to an LLM. */
+    ScamCheckRequest: {
+      /** @enum {string} */
+      kind: 'message' | 'link' | 'account_number';
+      content: string;
+    };
+    ScamCheckResult: {
+      /** @enum {string} */
+      verdict: 'looks_safe' | 'suspicious' | 'likely_scam';
+      score: number;
+      reasons: components['schemas']['RiskReason'][];
+      advice: string;
+      /** @description For account numbers, whether other customers have reported it. */
+      reported_account?: boolean | null;
+      ai: components['schemas']['AiMeta'];
+    };
+    AlertPreferences: {
+      login_alerts: boolean;
+      /** @description Always on during a new-device cool-off. */
+      new_device_alerts: boolean;
+      /** @description Alert on debits at or above this amount; zero alerts on every debit. */
+      transaction_alert_threshold: components['schemas']['Money'];
+    };
+    TierInfo: {
+      tier: components['schemas']['KycTier'];
+      daily_limit: components['schemas']['Money'];
+      max_balance: components['schemas']['Money'] | null;
+      requirements: string[];
+      unlocks?: ('fx_wallets' | 'usd_cards' | 'credit' | 'higher_limits')[];
+      current: boolean;
+    };
+    KycOverview: {
+      tier: components['schemas']['KycTier'];
+      status: components['schemas']['KycStatus'];
+      tiers: components['schemas']['TierInfo'][];
+      latest_submission: components['schemas']['KycSubmission'] | null;
+      /** @description Limits are configurable demo values based on CBN guidance. */
+      demo_limits: boolean;
+    };
+    IdentityNumberRequest: {
+      /** @enum {string} */
+      type: 'bvn' | 'nin';
+      number: string;
+    };
+    IdentityVerification: {
+      /** @enum {string} */
+      type: 'bvn' | 'nin';
+      verified: boolean;
+      name_match: components['schemas']['NameMatch'];
+      /** @description True while only sandbox test numbers are accepted. */
+      sandbox: boolean;
+      tier: components['schemas']['KycTier'];
+    };
+    /** @enum {string} */
+    KycDocumentKind: 'id_front' | 'id_back' | 'selfie' | 'proof_of_address';
+    KycDocumentUpload: {
+      kind: components['schemas']['KycDocumentKind'];
+      /** @description JPEG, PNG or PDF, at most 5 MB. */
+      file: string;
+    };
+    KycDocument: {
+      id: components['schemas']['Uuid'];
+      kind: components['schemas']['KycDocumentKind'];
+      /** @enum {string} */
+      status: 'uploaded' | 'accepted' | 'rejected';
+      quality_issues?: ('blurry' | 'glare' | 'cropped' | 'face_not_found')[];
+      uploaded_at: components['schemas']['Timestamp'];
+    };
+    IdPrefillRequest: {
+      document_id: components['schemas']['Uuid'];
+      /** @constant */
+      consent: true;
+    };
+    IdPrefill: {
+      fields: {
+        /** @enum {string|null} */
+        id_type?:
+          'national_id' | 'drivers_licence' | 'international_passport' | 'voters_card' | null;
+        id_number?: string | null;
+        full_name?: string | null;
+        date_of_birth?: components['schemas']['Date'] | null;
+        expiry_date?: components['schemas']['Date'] | null;
+      };
+      confidence?: number;
+      ai: components['schemas']['AiMeta'];
+    };
+    Address: {
+      line1: string;
+      line2?: string;
+      city: string;
+      state: string;
+      postal_code?: string;
+      /** @default NG */
+      country: string;
+    };
+    KycSubmissionRequest: {
+      /** @constant */
+      target_tier: 3;
+      /** @enum {string} */
+      id_type: 'national_id' | 'drivers_licence' | 'international_passport' | 'voters_card';
+      id_number: string;
+      id_expiry_date?: components['schemas']['Date'];
+      document_ids: components['schemas']['Uuid'][];
+      address: components['schemas']['Address'];
+    };
+    KycSubmission: {
+      id: components['schemas']['Uuid'];
+      target_tier: components['schemas']['KycTier'];
+      /** @enum {string} */
+      status: 'pending_review' | 'approved' | 'rejected' | 'resubmit';
+      submitted_at: components['schemas']['Timestamp'];
+      reviewed_at: components['schemas']['Timestamp'] | null;
+      rejection_reason: string | null;
+      resubmit_documents?: components['schemas']['KycDocumentKind'][];
+    };
+    /** @enum {string} */
+    DisputeReason:
+      | 'not_received'
+      | 'wrong_amount'
+      | 'duplicate_charge'
+      | 'unauthorised'
+      | 'goods_not_received'
+      | 'failed_but_debited'
+      | 'other';
+    /** @enum {string} */
+    DisputeStatus:
+      | 'submitted'
+      | 'under_review'
+      | 'awaiting_customer'
+      | 'resolved_refunded'
+      | 'resolved_declined'
+      | 'withdrawn';
+    Dispute: {
+      id: components['schemas']['Uuid'];
+      case_number: string;
+      transaction_id: components['schemas']['Uuid'];
+      reason: components['schemas']['DisputeReason'];
+      description: string;
+      status: components['schemas']['DisputeStatus'];
+      timeline: components['schemas']['TimelineEvent'][];
+      evidence: components['schemas']['Attachment'][];
+      /** @description Posted through the ledger when resolved in the customer's favour. */
+      refund: components['schemas']['Money'] | null;
+      resolution_note?: string | null;
+      created_at: components['schemas']['Timestamp'];
+      resolved_at: components['schemas']['Timestamp'] | null;
+    };
+    DisputePage: {
+      data: components['schemas']['Dispute'][];
+      page: components['schemas']['PageInfo'];
+    };
+    CreateDisputeRequest: {
+      transaction_id: components['schemas']['Uuid'];
+      reason: components['schemas']['DisputeReason'];
+      description: string;
+      attachment_ids?: components['schemas']['Uuid'][];
+    };
+    SupportConversation: {
+      id: components['schemas']['Uuid'];
+      subject: string;
+      /** @enum {string} */
+      status: 'open' | 'waiting_on_customer' | 'resolved';
+      /** @description Agent's first name only. */
+      assigned_agent: string | null;
+      unread_count: number;
+      last_message_at: components['schemas']['Timestamp'];
+      created_at: components['schemas']['Timestamp'];
+    };
+    SupportConversationList: {
+      data: components['schemas']['SupportConversation'][];
+    };
+    StartConversationRequest: {
+      subject: string;
+      message: string;
+      transaction_id?: components['schemas']['Uuid'];
+    };
+    SupportMessage: {
+      id: components['schemas']['Uuid'];
+      conversation_id: components['schemas']['Uuid'];
+      /** @enum {string} */
+      sender: 'customer' | 'agent' | 'system';
+      sender_name?: string | null;
+      body: string;
+      attachments: components['schemas']['Attachment'][];
+      created_at: components['schemas']['Timestamp'];
+      read_at?: components['schemas']['Timestamp'] | null;
+    };
+    SupportMessagePage: {
+      data: components['schemas']['SupportMessage'][];
+      page: components['schemas']['PageInfo'];
+    };
+    SendSupportMessageRequest: {
+      body: string;
+      attachment_ids?: components['schemas']['Uuid'][];
+    };
+    HelpArticle: {
+      slug: string;
+      title: string;
+      category: string;
+      body_markdown: string;
+      updated_at: components['schemas']['Timestamp'];
+    };
+    HelpArticleList: {
+      data: {
+        slug: string;
+        title: string;
+        category: string;
+        excerpt: string;
+      }[];
+    };
+    /** @enum {string} */
+    NotificationCategory:
+      | 'transactions'
+      | 'security'
+      | 'savings'
+      | 'ajo'
+      | 'credit'
+      | 'support'
+      | 'product'
+      | 'marketing';
+    Notification: {
+      id: components['schemas']['Uuid'];
+      category: components['schemas']['NotificationCategory'];
+      title: string;
+      body: string;
+      read: boolean;
+      /** @description In-app route, e.g. `/transfers/0192...`. */
+      deep_link: string | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    NotificationPage: {
+      data: components['schemas']['Notification'][];
+      page: components['schemas']['PageInfo'];
+      unread_count: number;
+    };
+    /** @description Send `ids`, or `all` to mark everything read. */
+    MarkReadRequest: {
+      ids?: components['schemas']['Uuid'][];
+      all?: boolean;
+    };
+    ChannelPreferences: {
+      in_app: boolean;
+      push: boolean;
+      email: boolean;
+    };
+    NotificationPreferences: {
+      /** @description Marketing is off by default (NOT-2). */
+      categories: {
+        transactions: components['schemas']['ChannelPreferences'];
+        security: components['schemas']['ChannelPreferences'];
+        savings: components['schemas']['ChannelPreferences'];
+        ajo: components['schemas']['ChannelPreferences'];
+        credit: components['schemas']['ChannelPreferences'];
+        support: components['schemas']['ChannelPreferences'];
+        product: components['schemas']['ChannelPreferences'];
+        marketing: components['schemas']['ChannelPreferences'];
+      };
+    };
+    PushTokenRequest: {
+      device_id: components['schemas']['Uuid'];
+      expo_push_token: string;
+    };
+    DependantControls: {
+      daily_spend_limit: components['schemas']['Money'];
+      /** @description Transfers above this need the parent's approval (FAM-2). */
+      approval_threshold: components['schemas']['Money'];
+      can_send_to_banks: boolean;
+      paused: boolean;
+    };
+    Allowance: {
+      amount: components['schemas']['Money'];
+      /** @enum {string} */
+      frequency: 'weekly' | 'monthly';
+      /** @description Weekday 1–7 (Monday = 1) or day of month 1–28. */
+      day?: number;
+      source_account_id: components['schemas']['Uuid'];
+      readonly next_run_at?: components['schemas']['Timestamp'] | null;
+    };
+    Dependant: {
+      id: components['schemas']['Uuid'];
+      profile: components['schemas']['PartySummary'];
+      date_of_birth: components['schemas']['Date'];
+      account_id: components['schemas']['Uuid'];
+      balance: components['schemas']['Money'];
+      kid_mode: boolean;
+      controls: components['schemas']['DependantControls'];
+      allowance: components['schemas']['Allowance'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    DependantList: {
+      data: components['schemas']['Dependant'][];
+    };
+    CreateDependantRequest: {
+      first_name: string;
+      last_name: string;
+      date_of_birth: components['schemas']['Date'];
+      nemtag: components['schemas']['Nemtag'];
+      controls: components['schemas']['DependantControls'];
+    };
+    DependantCreated: {
+      dependant: components['schemas']['Dependant'];
+      /** @description Entered on the child's device to bind it. Shown once. */
+      setup_code: string;
+      setup_code_expires_at: components['schemas']['Timestamp'];
+    };
+    UpdateDependantRequest: {
+      kid_mode?: boolean;
+      controls?: components['schemas']['DependantControls'];
+    };
+    /** @enum {string} */
+    ApprovalStatus: 'pending' | 'approved' | 'declined' | 'expired';
+    FamilyApproval: {
+      id: components['schemas']['Uuid'];
+      dependant: components['schemas']['PartySummary'];
+      recipient: components['schemas']['TransferParty'];
+      amount: components['schemas']['Money'];
+      narration: string;
+      status: components['schemas']['ApprovalStatus'];
+      transfer_id?: components['schemas']['Uuid'] | null;
+      created_at: components['schemas']['Timestamp'];
+      expires_at: components['schemas']['Timestamp'];
+    };
+    FamilyApprovalList: {
+      data: components['schemas']['FamilyApproval'][];
+    };
+    AssistantConversation: {
+      id: components['schemas']['Uuid'];
+      created_at: components['schemas']['Timestamp'];
+      ai: components['schemas']['AiMeta'];
+    };
+    AssistantPrompt: {
+      text: string;
+      /** @enum {string} */
+      language?: 'en' | 'pcm';
+    };
+    /** @enum {string} */
+    PreparedActionKind:
+      'transfer' | 'bill_payment' | 'savings_deposit' | 'card_freeze' | 'fx_conversion';
+    /** @description A money action the assistant drafted. It runs only when the customer confirms it. */
+    PreparedAction: {
+      id: components['schemas']['Uuid'];
+      kind: components['schemas']['PreparedActionKind'];
+      /** @example Send ₦5,000 to Mum (@ada_o) for food */
+      summary: string;
+      /** @description The exact request body that confirming will send; its shape follows `kind`. */
+      details:
+        | components['schemas']['CreateTransferRequest']
+        | components['schemas']['PayBillRequest']
+        | components['schemas']['SavingsMovementRequest']
+        | components['schemas']['FxConversionRequest']
+        | {
+            card_id: components['schemas']['Uuid'];
+          };
+      quote?: components['schemas']['TransferQuote'] | null;
+      /** @enum {string} */
+      status: 'prepared' | 'confirmed' | 'discarded' | 'expired' | 'failed';
+      expires_at: components['schemas']['Timestamp'];
+      /** @description What happened after confirming. */
+      result: {
+        /** @enum {string} */
+        resource: 'transfer' | 'bill_payment' | 'savings_goal' | 'card' | 'fx_conversion';
+        id: components['schemas']['Uuid'];
+      } | null;
+    };
+    AssistantTextBlock: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'text';
+      text: string;
+    };
+    AssistantChartBlock: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'chart';
+      /** @enum {string} */
+      chart: 'bar' | 'line' | 'donut';
+      title: string;
+      series: {
+        label: string;
+        amount: components['schemas']['Money'];
+      }[];
+    };
+    AssistantActionBlock: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'prepared_action';
+      action: components['schemas']['PreparedAction'];
+    };
+    AssistantTransactionsBlock: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'transactions';
+      transactions: components['schemas']['Transaction'][];
+    };
+    AssistantBlock:
+      | components['schemas']['AssistantTextBlock']
+      | components['schemas']['AssistantChartBlock']
+      | components['schemas']['AssistantActionBlock']
+      | components['schemas']['AssistantTransactionsBlock'];
+    AssistantMessage: {
+      id: components['schemas']['Uuid'];
+      /** @enum {string} */
+      role: 'user' | 'assistant';
+      blocks: components['schemas']['AssistantBlock'][];
+      created_at: components['schemas']['Timestamp'];
+      ai?: components['schemas']['AiMeta'] | null;
+    };
+    AssistantMessagePage: {
+      data: components['schemas']['AssistantMessage'][];
+      page: components['schemas']['PageInfo'];
+    };
+    Preferences: {
+      /** @enum {string} */
+      appearance: 'system' | 'dark' | 'light';
+      /**
+       * @description English or Nigerian Pidgin (SET-2).
+       * @enum {string}
+       */
+      language: 'en' | 'pcm';
+      low_data_mode: boolean;
+      /** @enum {integer} */
+      auto_lock_seconds: 30 | 60 | 120 | 300;
+      hide_balances: boolean;
+      /** @description Every AI feature can be switched off; the non-AI fallback takes over. */
+      ai: {
+        smart_categories: boolean;
+        forecast: boolean;
+        scam_checker: boolean;
+        assistant: boolean;
+        id_prefill: boolean;
+      };
+    };
+    PrivacyRequest: {
+      id: components['schemas']['Uuid'];
+      /** @enum {string} */
+      kind: 'export' | 'deletion';
+      /** @enum {string} */
+      status: 'received' | 'processing' | 'completed' | 'rejected';
+      requested_at: components['schemas']['Timestamp'];
+      completes_by: components['schemas']['Timestamp'];
+    };
+    RealtimeTicket: {
+      ticket: string;
+      /**
+       * Format: uri
+       * @example wss://api.nem.example/v1/realtime
+       */
+      url: string;
+      expires_at: components['schemas']['Timestamp'];
+    };
+    /** @description Every server event. `id` is the outbox event ID, so clients can drop duplicates. */
+    RealtimeEventBase: {
+      id: components['schemas']['Uuid'];
+      type: string;
+      occurred_at: components['schemas']['Timestamp'];
+    };
+    BalanceUpdatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'account.balance_updated';
+      data: {
+        account_id: components['schemas']['Uuid'];
+        ledger_balance: components['schemas']['Money'];
+        available_balance: components['schemas']['Money'];
+      };
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'account.balance_updated';
+    };
+    TransactionCreatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'transaction.created';
+      data: components['schemas']['Transaction'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'transaction.created';
+    };
+    TransferUpdatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'transfer.updated';
+      data: components['schemas']['Transfer'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'transfer.updated';
+    };
+    MoneyRequestReceivedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'money_request.received';
+      data: components['schemas']['MoneyRequest'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'money_request.received';
+    };
+    CardAuthorizationEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'card.authorization';
+      data: components['schemas']['CardTransaction'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'card.authorization';
+    };
+    FxAlertTriggeredEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'fx.alert_triggered';
+      data: {
+        alert: components['schemas']['FxAlert'];
+        rate: components['schemas']['Rate'];
+      };
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'fx.alert_triggered';
+    };
+    KycUpdatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'kyc.updated';
+      data: {
+        tier: components['schemas']['KycTier'];
+        status: components['schemas']['KycStatus'];
+        submission: components['schemas']['KycSubmission'] | null;
+      };
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'kyc.updated';
+    };
+    StatementReadyEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'statement.ready';
+      data: components['schemas']['Statement'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'statement.ready';
+    };
+    AjoUpdatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'ajo.updated';
+      data: components['schemas']['AjoGroup'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'ajo.updated';
+    };
+    FamilyApprovalRequestedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'family.approval_requested';
+      data: components['schemas']['FamilyApproval'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'family.approval_requested';
+    };
+    DisputeUpdatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'dispute.updated';
+      data: components['schemas']['Dispute'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'dispute.updated';
+    };
+    SupportMessageEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'support.message';
+      data: components['schemas']['SupportMessage'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'support.message';
+    };
+    SupportTypingEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'support.typing';
+      data: {
+        conversation_id: components['schemas']['Uuid'];
+        /** @enum {string} */
+        sender: 'customer' | 'agent';
+        typing: boolean;
+      };
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'support.typing';
+    };
+    NotificationCreatedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'notification.created';
+      data: components['schemas']['Notification'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'notification.created';
+    };
+    SecurityPanicChangedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'security.panic_changed';
+      data: components['schemas']['PanicState'];
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'security.panic_changed';
+    };
+    SessionRevokedEvent: components['schemas']['RealtimeEventBase'] & {
+      /** @constant */
+      type: 'session.revoked';
+      data: {
+        session_id: components['schemas']['Uuid'];
+        device_id: components['schemas']['Uuid'];
+        /** @enum {string} */
+        reason:
+          'user_revoked' | 'device_revoked' | 'password_reset' | 'refresh_reuse' | 'staff_action';
+      };
+    } & {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      type: 'session.revoked';
+    };
+    /** @description Every message the server sends over the WebSocket. */
+    RealtimeEvent:
+      | components['schemas']['BalanceUpdatedEvent']
+      | components['schemas']['TransactionCreatedEvent']
+      | components['schemas']['TransferUpdatedEvent']
+      | components['schemas']['MoneyRequestReceivedEvent']
+      | components['schemas']['CardAuthorizationEvent']
+      | components['schemas']['FxAlertTriggeredEvent']
+      | components['schemas']['KycUpdatedEvent']
+      | components['schemas']['StatementReadyEvent']
+      | components['schemas']['AjoUpdatedEvent']
+      | components['schemas']['FamilyApprovalRequestedEvent']
+      | components['schemas']['DisputeUpdatedEvent']
+      | components['schemas']['SupportMessageEvent']
+      | components['schemas']['SupportTypingEvent']
+      | components['schemas']['NotificationCreatedEvent']
+      | components['schemas']['SecurityPanicChangedEvent']
+      | components['schemas']['SessionRevokedEvent'];
+    /** @description Messages the app may send over the WebSocket. */
+    RealtimeClientMessage:
+      | {
+          /** @constant */
+          type: 'ping';
+        }
+      | {
+          /** @constant */
+          type: 'support.typing';
+          conversation_id: components['schemas']['Uuid'];
+          typing: boolean;
+        }
+      | {
+          /** @constant */
+          type: 'resume';
+          last_event_id: components['schemas']['Uuid'];
+        };
   };
   responses: {
     /** @description The request is malformed or failed validation. */
@@ -2309,6 +5674,24 @@ export interface components {
         'application/problem+json': components['schemas']['Problem'];
       };
     };
+    /** @description The upload is larger than 5 MB. */
+    PayloadTooLarge: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
+    /** @description Only JPEG, PNG and PDF uploads are accepted. */
+    UnsupportedMediaType: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
   };
   parameters: {
     /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
@@ -2344,6 +5727,28 @@ export interface components {
     SplitBillId: components['schemas']['Uuid'];
     PaymentLinkId: components['schemas']['Uuid'];
     PaymentLinkSlug: string;
+    /** @description Base and quote currency, e.g. `USD-NGN`. */
+    FxPair: components['schemas']['FxPairCode'];
+    AlertId: components['schemas']['Uuid'];
+    CardId: components['schemas']['Uuid'];
+    BillerId: string;
+    BillPaymentId: components['schemas']['Uuid'];
+    SavedBillerId: components['schemas']['Uuid'];
+    GoalId: components['schemas']['Uuid'];
+    LockId: components['schemas']['Uuid'];
+    AjoGroupId: components['schemas']['Uuid'];
+    InviteCode: string;
+    LoanId: components['schemas']['Uuid'];
+    /** @description Calendar month `YYYY-MM` in Africa/Lagos; defaults to the current month. */
+    Month: string;
+    BudgetId: components['schemas']['Uuid'];
+    SessionId: components['schemas']['Uuid'];
+    SubmissionId: components['schemas']['Uuid'];
+    DisputeId: components['schemas']['Uuid'];
+    ConversationId: components['schemas']['Uuid'];
+    DependantId: components['schemas']['Uuid'];
+    ApprovalId: components['schemas']['Uuid'];
+    ActionId: components['schemas']['Uuid'];
   };
   requestBodies: never;
   headers: never;
@@ -4253,6 +7658,3262 @@ export interface operations {
         };
       };
       400: components['responses']['BadRequest'];
+    };
+  };
+  listFxRates: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Buy and sell rates for every supported pair. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxRateList'];
+        };
+      };
+    };
+  };
+  getFxRateHistory: {
+    parameters: {
+      query: {
+        range: '1D' | '1W' | '1M' | '1Y';
+      };
+      header?: never;
+      path: {
+        /** @description Base and quote currency, e.g. `USD-NGN`. */
+        pair: components['parameters']['FxPair'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Mid-rate points, oldest first (FX-2). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxRateHistory'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  createFxQuote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FxQuoteRequest'];
+      };
+    };
+    responses: {
+      /** @description The locked quote. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxQuote'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      403: components['responses']['Forbidden'];
+    };
+  };
+  listFxConversions: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Conversions, newest first (FX-4). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxConversionPage'];
+        };
+      };
+    };
+  };
+  convertCurrency: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FxConversionRequest'];
+      };
+    };
+    responses: {
+      /** @description Both balances have been updated. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxConversion'];
+        };
+      };
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  listFxAlerts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Active and recently triggered alerts. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxAlertList'];
+        };
+      };
+    };
+  };
+  createFxAlert: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateFxAlertRequest'];
+      };
+    };
+    responses: {
+      /** @description The alert. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxAlert'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  deleteFxAlert: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        alert_id: components['parameters']['AlertId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deleted. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listCards: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every card, terminated cards last. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CardList'];
+        };
+      };
+    };
+  };
+  createCard: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateCardRequest'];
+      };
+    };
+    responses: {
+      /** @description The new card (details hidden until revealed). */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+      409: components['responses']['Conflict'];
+    };
+  };
+  requestPhysicalCard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PhysicalCardRequest'];
+      };
+    };
+    responses: {
+      /** @description The card was ordered. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      403: components['responses']['PaidFeatureRequired'];
+    };
+  };
+  getCard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The card and its controls. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateCardControls: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateCardRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated card. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  freezeCard: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The frozen card. New authorizations are declined. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  unfreezeCard: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description Send when the quote said step-up is needed, to skip the cooling-off delay. */
+        'X-Step-Up-Token'?: components['parameters']['OptionalStepUpTokenHeader'];
+      };
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The active card. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+      409: components['responses']['Conflict'];
+    };
+  };
+  revealCard: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The card secrets. Never cached or logged. */
+      200: {
+        headers: {
+          /** @description Always `no-store`. */
+          'Cache-Control'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CardSecrets'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  terminateCard: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The terminated card. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  replaceCard: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The replacement card. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Card'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listCardTransactions: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        card_id: components['parameters']['CardId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CardTransactionPage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listBillers: {
+    parameters: {
+      query?: {
+        category?: components['schemas']['BillCategory'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Billers in the category. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillerList'];
+        };
+      };
+    };
+  };
+  listBillerProducts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        biller_id: components['parameters']['BillerId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Products, cheapest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillerProductList'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  detectNetwork: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DetectNetworkRequest'];
+      };
+    };
+    responses: {
+      /** @description The likely network. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DetectedNetwork'];
+        };
+      };
+    };
+  };
+  validateBillCustomer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BillValidationRequest'];
+      };
+    };
+    responses: {
+      /** @description The customer on the biller's side. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillValidation'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listBillPayments: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillPaymentPage'];
+        };
+      };
+    };
+  };
+  payBill: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayBillRequest'];
+      };
+    };
+    responses: {
+      /** @description The payment. Electricity tokens appear once `status` is `completed`. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillPayment'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getBillPayment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        payment_id: components['parameters']['BillPaymentId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The payment. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillPayment'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listSavedBillers: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Saved meters, smartcards and numbers (BILL-3). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavedBillerList'];
+        };
+      };
+    };
+  };
+  saveBiller: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SaveBillerRequest'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavedBiller'];
+        };
+      };
+    };
+  };
+  deleteSavedBiller: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        saved_biller_id: components['parameters']['SavedBillerId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Removed. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listBillSchedules: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Scheduled bills. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillScheduleList'];
+        };
+      };
+    };
+  };
+  createBillSchedule: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBillScheduleRequest'];
+      };
+    };
+    responses: {
+      /** @description The schedule. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BillSchedule'];
+        };
+      };
+    };
+  };
+  cancelBillSchedule: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: components['parameters']['ScheduleId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Cancelled. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getSavingsSummary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Total saved and interest earned (SAV-1). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsSummary'];
+        };
+      };
+    };
+  };
+  listSavingsGoals: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Goals, active first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsGoalList'];
+        };
+      };
+    };
+  };
+  createSavingsGoal: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSavingsGoalRequest'];
+      };
+    };
+    responses: {
+      /** @description The goal. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsGoal'];
+        };
+      };
+    };
+  };
+  getSavingsGoal: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        goal_id: components['parameters']['GoalId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The goal with progress. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsGoal'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  closeSavingsGoal: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        goal_id: components['parameters']['GoalId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Closed. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateSavingsGoal: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        goal_id: components['parameters']['GoalId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateSavingsGoalRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated goal. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsGoal'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  depositToGoal: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        goal_id: components['parameters']['GoalId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SavingsMovementRequest'];
+      };
+    };
+    responses: {
+      /** @description The goal after the deposit. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsGoal'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  withdrawFromGoal: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        goal_id: components['parameters']['GoalId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SavingsMovementRequest'];
+      };
+    };
+    responses: {
+      /** @description The goal after the withdrawal. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SavingsGoal'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getRoundUps: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The round-up rule (SAV-3). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RoundUpSettings'];
+        };
+      };
+    };
+  };
+  setRoundUps: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RoundUpSettings'];
+      };
+    };
+    responses: {
+      /** @description The saved rule. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RoundUpSettings'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  quoteLockedSaving: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LockQuoteRequest'];
+      };
+    };
+    responses: {
+      /** @description The terms. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LockQuote'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  listLockedSavings: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Active locks first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LockedSavingList'];
+        };
+      };
+    };
+  };
+  createLockedSaving: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateLockedSavingRequest'];
+      };
+    };
+    responses: {
+      /** @description The lock. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LockedSaving'];
+        };
+      };
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getLockedSaving: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        lock_id: components['parameters']['LockId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The lock with accrued interest. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LockedSaving'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  breakLockedSaving: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        lock_id: components['parameters']['LockId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The broken lock. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LockedSaving'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listAjoGroups: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Groups I created or joined. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoGroupList'];
+        };
+      };
+    };
+  };
+  createAjoGroup: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateAjoGroupRequest'];
+      };
+    };
+    responses: {
+      /** @description The group, in `forming` status. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoGroup'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  getAjoGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group_id: components['parameters']['AjoGroupId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The group. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoGroup'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  inviteToAjoGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group_id: components['parameters']['AjoGroupId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AjoInviteRequest'];
+      };
+    };
+    responses: {
+      /** @description The invite link. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoInvite'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getAjoInvite: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        invite_code: components['parameters']['InviteCode'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The group's terms, so the invitee knows what they agree to. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoGroup'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  acceptAjoInvite: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        invite_code: components['parameters']['InviteCode'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayFromAccountRequest'];
+      };
+    };
+    responses: {
+      /** @description The group I joined. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoGroup'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  startAjoGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group_id: components['parameters']['AjoGroupId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The active group with its payout order. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoGroup'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  leaveAjoGroup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group_id: components['parameters']['AjoGroupId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Left the group. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listAjoCycles: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        group_id: components['parameters']['AjoGroupId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every cycle, past and upcoming. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AjoCycleList'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getCreditEligibility: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Eligibility and why. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CreditEligibility'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  createLoanOffer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoanOfferRequest'];
+      };
+    };
+    responses: {
+      /** @description The offer. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LoanOffer'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  listLoans: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Active loans first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LoanList'];
+        };
+      };
+    };
+  };
+  acceptLoanOffer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AcceptLoanRequest'];
+      };
+    };
+    responses: {
+      /** @description The disbursed loan. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Loan'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getLoan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        loan_id: components['parameters']['LoanId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The loan and its schedule. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Loan'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateLoan: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        loan_id: components['parameters']['LoanId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateLoanRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated loan. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Loan'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  repayLoan: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        loan_id: components['parameters']['LoanId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SavingsMovementRequest'];
+      };
+    };
+    responses: {
+      /** @description The loan after the repayment. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Loan'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getSpending: {
+    parameters: {
+      query?: {
+        /** @description Calendar month `YYYY-MM` in Africa/Lagos; defaults to the current month. */
+        month?: components['parameters']['Month'];
+        currency?: components['schemas']['CurrencyCode'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The breakdown. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SpendingBreakdown'];
+        };
+      };
+    };
+  };
+  listBudgets: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Budgets with this month's spend. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BudgetList'];
+        };
+      };
+    };
+  };
+  createBudget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBudgetRequest'];
+      };
+    };
+    responses: {
+      /** @description The budget. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Budget'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  deleteBudget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        budget_id: components['parameters']['BudgetId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deleted. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateBudget: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        budget_id: components['parameters']['BudgetId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateBudgetRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated budget. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Budget'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getCashFlowForecast: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The forecast. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CashFlowForecast'];
+        };
+      };
+    };
+  };
+  listDetectedSubscriptions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Subscriptions, next charge first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SubscriptionList'];
+        };
+      };
+    };
+  };
+  getMoneyStory: {
+    parameters: {
+      query?: {
+        /** @description Calendar month `YYYY-MM` in Africa/Lagos; defaults to the current month. */
+        month?: components['parameters']['Month'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The slides. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MoneyStory'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getSecurityCheckup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A score with actionable items (SEC-1). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SecurityCheckup'];
+        };
+      };
+    };
+  };
+  listSessions: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Sessions across my devices (SEC-2). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SessionList'];
+        };
+      };
+    };
+  };
+  revokeSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        session_id: components['parameters']['SessionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The session's refresh token was revoked. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getSelfLimits: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Self-set limits below the KYC cap (SEC-3). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SelfLimits'];
+        };
+      };
+    };
+  };
+  setSelfLimits: {
+    parameters: {
+      query?: never;
+      header?: {
+        /** @description Send when the quote said step-up is needed, to skip the cooling-off delay. */
+        'X-Step-Up-Token'?: components['parameters']['OptionalStepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetSelfLimitsRequest'];
+      };
+    };
+    responses: {
+      /** @description The limits, with any pending increase. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SelfLimits'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getPanicState: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Whether panic mode is on. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PanicState'];
+        };
+      };
+    };
+  };
+  activatePanic: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Panic mode is on. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PanicState'];
+        };
+      };
+    };
+  };
+  releasePanic: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Panic mode is off. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PanicState'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  setDuressPin: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetPinRequest'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  removeDuressPin: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Removed. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  setSecurityQuestion: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SecurityQuestionRequest'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  checkScam: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ScamCheckRequest'];
+      };
+    };
+    responses: {
+      /** @description The verdict. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScamCheckResult'];
+        };
+      };
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  getAlertPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Alert settings (SEC-7). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AlertPreferences'];
+        };
+      };
+    };
+  };
+  setAlertPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AlertPreferences'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AlertPreferences'];
+        };
+      };
+    };
+  };
+  getKycOverview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The tier screen (KYC-1). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycOverview'];
+        };
+      };
+    };
+  };
+  verifyIdentityNumber: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IdentityNumberRequest'];
+      };
+    };
+    responses: {
+      /** @description The result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['IdentityVerification'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  uploadKycDocument: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['KycDocumentUpload'];
+      };
+    };
+    responses: {
+      /** @description The stored document. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycDocument'];
+        };
+      };
+      413: components['responses']['PayloadTooLarge'];
+      415: components['responses']['UnsupportedMediaType'];
+    };
+  };
+  prefillFromId: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['IdPrefillRequest'];
+      };
+    };
+    responses: {
+      /** @description Suggested fields for the customer to confirm. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['IdPrefill'];
+        };
+      };
+      503: components['responses']['ServiceUnavailable'];
+    };
+  };
+  submitKyc: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['KycSubmissionRequest'];
+      };
+    };
+    responses: {
+      /** @description The submission, pending review. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycSubmission'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getKycSubmission: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        submission_id: components['parameters']['SubmissionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The submission and its review status (KYC-5). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycSubmission'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listDisputes: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DisputePage'];
+        };
+      };
+    };
+  };
+  createDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDisputeRequest'];
+      };
+    };
+    responses: {
+      /** @description The dispute. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dispute'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dispute_id: components['parameters']['DisputeId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The dispute and its timeline (DSP-2). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dispute'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  addDisputeEvidence: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dispute_id: components['parameters']['DisputeId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['FileUpload'];
+      };
+    };
+    responses: {
+      /** @description The dispute with the new evidence. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dispute'];
+        };
+      };
+      409: components['responses']['Conflict'];
+      413: components['responses']['PayloadTooLarge'];
+    };
+  };
+  withdrawDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dispute_id: components['parameters']['DisputeId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The withdrawn dispute. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dispute'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listSupportConversations: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Open chats first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportConversationList'];
+        };
+      };
+    };
+  };
+  startSupportConversation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StartConversationRequest'];
+      };
+    };
+    responses: {
+      /** @description The chat. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportConversation'];
+        };
+      };
+    };
+  };
+  getSupportConversation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The chat. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportConversation'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listSupportMessages: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of messages. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportMessagePage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  sendSupportMessage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SendSupportMessageRequest'];
+      };
+    };
+    responses: {
+      /** @description The sent message. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportMessage'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  uploadSupportAttachment: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'multipart/form-data': components['schemas']['FileUpload'];
+      };
+    };
+    responses: {
+      /** @description Reference it in `attachment_ids`. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Attachment'];
+        };
+      };
+      413: components['responses']['PayloadTooLarge'];
+    };
+  };
+  searchHelpArticles: {
+    parameters: {
+      query?: {
+        q?: string;
+        category?: string;
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Matching FAQ articles (SUP-2). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HelpArticleList'];
+        };
+      };
+    };
+  };
+  getHelpArticle: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The article. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HelpArticle'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listNotifications: {
+    parameters: {
+      query?: {
+        unread_only?: boolean;
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first, with the unread count (NOT-1). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotificationPage'];
+        };
+      };
+    };
+  };
+  markNotificationsRead: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['MarkReadRequest'];
+      };
+    };
+    responses: {
+      /** @description Marked. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getNotificationPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Channels per category (NOT-2). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotificationPreferences'];
+        };
+      };
+    };
+  };
+  setNotificationPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['NotificationPreferences'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NotificationPreferences'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  registerPushToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PushTokenRequest'];
+      };
+    };
+    responses: {
+      /** @description Registered for this device. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  unregisterPushToken: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        device_id: components['parameters']['DeviceIdPath'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Unregistered. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listDependants: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Dependants with balances. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DependantList'];
+        };
+      };
+    };
+  };
+  createDependant: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateDependantRequest'];
+      };
+    };
+    responses: {
+      /** @description The dependant, with a one-time setup code for their device. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DependantCreated'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getDependant: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dependant_id: components['parameters']['DependantId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The dependant and their controls. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dependant'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateDependantControls: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dependant_id: components['parameters']['DependantId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateDependantRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated dependant. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dependant'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  setAllowance: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        dependant_id: components['parameters']['DependantId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Allowance'];
+      };
+    };
+    responses: {
+      /** @description The dependant with the allowance. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Dependant'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  stopAllowance: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dependant_id: components['parameters']['DependantId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Stopped. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  listDependantActivity: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        dependant_id: components['parameters']['DependantId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionPage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listFamilyApprovals: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['ApprovalStatus'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Pending first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FamilyApprovalList'];
+        };
+      };
+    };
+  };
+  approveFamilyTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        approval_id: components['parameters']['ApprovalId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Approved; the transfer goes out. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FamilyApproval'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  declineFamilyTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        approval_id: components['parameters']['ApprovalId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Declined; the hold is released. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FamilyApproval'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  startAssistantConversation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description An empty conversation. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AssistantConversation'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  listAssistantMessages: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Oldest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AssistantMessagePage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  sendAssistantMessage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['AssistantPrompt'];
+      };
+    };
+    responses: {
+      /** @description The assistant's reply. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AssistantMessage'];
+        };
+      };
+      429: components['responses']['TooManyRequests'];
+      503: components['responses']['ServiceUnavailable'];
+    };
+  };
+  confirmAssistantAction: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        action_id: components['parameters']['ActionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The action ran. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PreparedAction'];
+        };
+      };
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  discardAssistantAction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        action_id: components['parameters']['ActionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Discarded. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PreparedAction'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The preferences. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Preferences'];
+        };
+      };
+    };
+  };
+  setPreferences: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['Preferences'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Preferences'];
+        };
+      };
+    };
+  };
+  requestDataExport: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The export is being prepared. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PrivacyRequest'];
+        };
+      };
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  requestAccountDeletion: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request was accepted. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PrivacyRequest'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  createRealtimeTicket: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The ticket. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['RealtimeTicket'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
     };
   };
 }

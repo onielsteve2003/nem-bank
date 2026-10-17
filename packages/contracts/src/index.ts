@@ -27,3 +27,12 @@ export type Transfer = Schemas['Transfer'];
 export type TransferStatus = Schemas['TransferStatus'];
 export type RiskAssessment = Schemas['RiskAssessment'];
 export type Beneficiary = Schemas['Beneficiary'];
+export type Card = Schemas['Card'];
+export type FxQuote = Schemas['FxQuote'];
+export type AiMeta = Schemas['AiMeta'];
+
+// Realtime: what the WebSocket pushes, narrowed by `type`.
+export type RealtimeEvent = Schemas['RealtimeEvent'];
+export type RealtimeEventType = RealtimeEvent['type'];
+export type RealtimeEventOf<T extends RealtimeEventType> = Extract<RealtimeEvent, { type: T }>;
+export type RealtimeClientMessage = Schemas['RealtimeClientMessage'];
