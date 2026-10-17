@@ -3057,8 +3057,1256 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/admin/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Staff login, step 1
+     * @description Password first; TOTP is always required next (ADM-1). First login returns an enrolment URI.
+     */
+    post: operations['staffLogin'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/auth/totp': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Staff login, step 2 */
+    post: operations['staffVerifyTotp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Staff logout */
+    post: operations['staffLogout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** The signed-in staff member */
+    get: operations['getStaffMe'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/dashboard': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Dashboard KPIs
+     * @description Users, volume by currency, transfers by status, fraud hold rate and FX P&L (ADM-2).
+     */
+    get: operations['getAdminDashboard'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/customers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Search customers
+     * @description By name, email, phone, @nemtag or account number. Every search is audit-logged.
+     */
+    get: operations['searchCustomers'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/customers/{user_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Customer 360
+     * @description Profile, accounts, KYC, devices, recent transactions, notes and flags (ADM-3). PII is masked for the support role.
+     */
+    get: operations['getCustomer360'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/customers/{user_id}/notes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Add a note */
+    post: operations['addCustomerNote'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/customers/{user_id}/freeze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Freeze a customer
+     * @description Blocks logins and outgoing money at once. Takes effect immediately; unfreezing needs a second approver.
+     */
+    post: operations['freezeCustomer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/customers/{user_id}/unfreeze': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request an unfreeze
+     * @description Maker-checker (ADM-10). Creates an approval request; another staff member must approve it.
+     */
+    post: operations['requestCustomerUnfreeze'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/customers/{user_id}/limit-overrides': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request a limit override
+     * @description Maker-checker (ADM-10). Temporarily raises one customer's limits above their tier.
+     */
+    post: operations['requestLimitOverride'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/kyc/reviews': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * KYC review queue
+     * @description Oldest first, so nobody waits too long (ADM-4).
+     */
+    get: operations['listKycReviews'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/kyc/reviews/{submission_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Review a KYC submission
+     * @description Documents come as short-lived signed URLs. Opening one is audit-logged.
+     */
+    get: operations['getKycReview'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/kyc/reviews/{submission_id}/decision': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Approve, reject or ask for resubmission
+     * @description The customer's tier updates in realtime (`kyc.updated`).
+     */
+    post: operations['decideKycReview'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/fraud/cases': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Fraud case queue
+     * @description Held transfers with risk reasons, highest score first (ADM-5).
+     */
+    get: operations['listFraudCases'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/fraud/cases/{case_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a fraud case */
+    get: operations['getFraudCase'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/fraud/cases/{case_id}/assign': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Take a fraud case */
+    post: operations['assignFraudCase'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/fraud/cases/{case_id}/decision': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Release or reject a held transfer
+     * @description The label feeds model retraining (ADM-5). The customer is notified either way.
+     */
+    post: operations['decideFraudCase'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/disputes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Dispute queue */
+    get: operations['listAdminDisputes'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/disputes/{dispute_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a dispute */
+    get: operations['getAdminDispute'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/disputes/{dispute_id}/decision': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resolve a dispute
+     * @description Refunds post through the ledger. Refunds above the configured threshold go to maker-checker and return 202.
+     */
+    post: operations['decideDispute'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/support/conversations': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Support agent inbox
+     * @description The agent view of customer chats (ADM-6).
+     */
+    get: operations['listAgentConversations'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/support/conversations/{conversation_id}/messages': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Read a customer chat */
+    get: operations['listAgentMessages'];
+    put?: never;
+    /**
+     * Reply to a customer
+     * @description Assigns the conversation to the replying agent if it was unassigned.
+     */
+    post: operations['sendAgentMessage'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/support/conversations/{conversation_id}/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Mark a chat resolved */
+    post: operations['resolveConversation'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/accounts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List ledger accounts
+     * @description Customer, system (fees, FX positions, interest expense, escrow) and suspense accounts (ADM-7).
+     */
+    get: operations['listLedgerAccounts'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/accounts/{ledger_account_id}/postings': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Postings on a ledger account */
+    get: operations['listLedgerPostings'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/entries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List journal entries */
+    get: operations['listJournalEntries'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/entries/{entry_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a journal entry */
+    get: operations['getJournalEntry'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/trial-balance': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Trial balance
+     * @description Proves every currency sums to zero across all ledger accounts (ADM-7).
+     */
+    get: operations['getTrialBalance'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/reconciliation': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Daily reconciliation report
+     * @description Ledger versus partner settlement files (sandbox) for one day.
+     */
+    get: operations['getReconciliationReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/ledger/adjustments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Request a manual adjustment
+     * @description Maker-checker (ADM-10). The postings must balance per currency, or 422 `unbalanced_entry`.
+     */
+    post: operations['requestLedgerAdjustment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/config': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Bank configuration
+     * @description Fees, limits, FX spreads and cooling-off rules (ADM-8).
+     */
+    get: operations['getBankConfig'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/config/changes': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Propose a configuration change
+     * @description Maker-checker (ADM-10). Applies once approved.
+     */
+    post: operations['requestConfigChange'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/feature-flags': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Feature flags
+     * @description Including the paid-feature toggles (PRD §11).
+     */
+    get: operations['listFeatureFlags'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/feature-flags/{flag_key}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Turn a flag on or off
+     * @description Paid-feature flags return 409 `partner_not_configured` until an adapter is connected.
+     */
+    patch: operations['updateFeatureFlag'];
+    trace?: never;
+  };
+  '/v1/admin/audit-log': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Audit log
+     * @description Every staff action and every sensitive customer action, hash-chained (ADM-9).
+     */
+    get: operations['listAuditLog'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/audit-log/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify the hash chain
+     * @description Recomputes every hash in the range and reports the first break, if any.
+     */
+    post: operations['verifyAuditLog'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/approvals': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Maker-checker queue */
+    get: operations['listApprovalRequests'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/approvals/{approval_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get an approval request */
+    get: operations['getApprovalRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/approvals/{approval_id}/approve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Approve as checker
+     * @description The checker must be a different staff member from the maker (403 `same_staff`).
+     */
+    post: operations['approveRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/approvals/{approval_id}/reject': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reject as checker */
+    post: operations['rejectRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/simulators/merchant/charges': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Charge a virtual card
+     * @description The Merchant Simulator (ADM-11). Runs a real authorization through the card processor and places a hold.
+     */
+    post: operations['simulateCardCharge'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/simulators/merchant/charges/{authorization_id}/capture': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Settle an authorization */
+    post: operations['captureSimulatedCharge'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/simulators/merchant/charges/{authorization_id}/reverse': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Reverse an authorization */
+    post: operations['reverseSimulatedCharge'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/admin/simulators/bank-partner': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Bank Partner Simulator settings */
+    get: operations['getBankPartnerSimulator'];
+    /** Change Bank Partner Simulator settings */
+    put: operations['setBankPartnerSimulator'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/demo/fund': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Fund a demo wallet
+     * @description Demo users only (DEMO-1). Posts from the demo funding account through the ledger.
+     */
+    post: operations['demoFundWallet'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/demo/inbound-transfer': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Simulate an incoming transfer
+     * @description An NGN transfer from another bank or a USD/GBP/EUR payment into a wallet (FX-3). EMTL applies to NGN inflows of ₦10,000 or more.
+     */
+    post: operations['demoInboundTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/demo/fail-next-transfer': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Make the next bank transfer fail
+     * @description The next interbank transfer fails at the partner and is auto-reversed, to show TRF-7.
+     */
+    post: operations['demoFailNextTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/demo/time-travel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Move the demo clock forward
+     * @description Runs interest accrual, ajo cycles, schedules and loan due dates for the skipped days.
+     */
+    post: operations['demoTimeTravel'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/demo/reset': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset demo data
+     * @description Re-seeds the persona from scratch. Other demo users are not affected.
+     */
+    post: operations['demoReset'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/api-keys': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List API keys
+     * @description Business customers manage their own keys in the developer portal (DEV-1).
+     */
+    get: operations['listApiKeys'];
+    put?: never;
+    /**
+     * Create an API key
+     * @description The secret is shown once and stored only as a hash. Sandbox keys start with `nem_test_`.
+     */
+    post: operations['createApiKey'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/api-keys/{key_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke an API key
+     * @description Takes effect within a minute everywhere.
+     */
+    delete: operations['revokeApiKey'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/webhooks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List webhook endpoints */
+    get: operations['listWebhookEndpoints'];
+    put?: never;
+    /**
+     * Add a webhook endpoint
+     * @description HTTPS only. The signing secret is shown once (DEV-3).
+     */
+    post: operations['createWebhookEndpoint'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/webhooks/{endpoint_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a webhook endpoint */
+    get: operations['getWebhookEndpoint'];
+    put?: never;
+    post?: never;
+    /** Delete a webhook endpoint */
+    delete: operations['deleteWebhookEndpoint'];
+    options?: never;
+    head?: never;
+    /** Change a webhook endpoint */
+    patch: operations['updateWebhookEndpoint'];
+    trace?: never;
+  };
+  '/v1/developer/webhooks/{endpoint_id}/rotate-secret': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotate the signing secret
+     * @description The old secret keeps signing alongside the new one for 24 hours.
+     */
+    post: operations['rotateWebhookSecret'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/webhooks/{endpoint_id}/test': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Send a test event */
+    post: operations['sendTestWebhook'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/webhooks/{endpoint_id}/deliveries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Delivery log */
+    get: operations['listWebhookDeliveries'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/webhook-deliveries/{delivery_id}/replay': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Replay a delivery
+     * @description Sends the same event again with the same `Nem-Event-Id`, so receivers can deduplicate.
+     */
+    post: operations['replayWebhookDelivery'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/developer/sandbox/payments': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Simulate a customer payment
+     * @description Pays one of my payment links from a sandbox payer so I can test webhooks end to end (DEV-2).
+     */
+    post: operations['simulateSandboxPayment'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/partner-webhooks/{partner}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Receive a partner callback
+     * @description Status callbacks from sandbox partners (interbank rail, biller, inbound foreign currency).
+     *     HMAC-SHA256 signed with a timestamp; deduplicated by `Partner-Event-Id`.
+     */
+    post: operations['receivePartnerWebhook'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
-export type webhooks = Record<string, never>;
+export interface webhooks {
+  'payment_link.paid': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * payment_link.paid
+     * @description A payment link received a payment. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+     */
+    post: operations['onPaymentLinkPaid'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  'transfer.completed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * transfer.completed
+     * @description A transfer from your account completed. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+     */
+    post: operations['onTransferCompleted'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  'transfer.failed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * transfer.failed
+     * @description A transfer failed at the partner. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+     */
+    post: operations['onTransferFailed'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  'transfer.reversed': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * transfer.reversed
+     * @description A failed transfer was reversed and the money returned. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+     */
+    post: operations['onTransferReversed'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  'account.credited': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * account.credited
+     * @description Money arrived in one of your accounts. `data.object` is the Transaction. Respond 2xx within 10 seconds; anything else is retried.
+     */
+    post: operations['onAccountCredited'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+}
 export interface components {
   schemas: {
     /**
@@ -5580,6 +6828,696 @@ export interface components {
           type: 'resume';
           last_event_id: components['schemas']['Uuid'];
         };
+    /** @enum {string} */
+    StaffRole: 'support' | 'compliance' | 'finance' | 'admin';
+    Staff: {
+      id: components['schemas']['Uuid'];
+      name: string;
+      email: components['schemas']['Email'];
+      roles: components['schemas']['StaffRole'][];
+      totp_enrolled: boolean;
+      last_login_at: components['schemas']['Timestamp'] | null;
+    };
+    StaffLoginRequest: {
+      email: components['schemas']['Email'];
+      password: components['schemas']['Password'];
+    };
+    StaffLoginChallenge: {
+      challenge_id: components['schemas']['Uuid'];
+      expires_at: components['schemas']['Timestamp'];
+      /** @description Present on first login; scan the URI into an authenticator app. */
+      totp_enrolment: {
+        otpauth_uri: string;
+      } | null;
+    };
+    StaffTotpRequest: {
+      challenge_id: components['schemas']['Uuid'];
+      code: string;
+    };
+    StaffSession: {
+      access_token: string;
+      expires_at: components['schemas']['Timestamp'];
+      staff: components['schemas']['Staff'];
+    };
+    StaffRef: {
+      id: components['schemas']['Uuid'];
+      name: string;
+    };
+    ReasonRequest: {
+      reason: string;
+    };
+    CurrencyVolume: {
+      currency: components['schemas']['CurrencyCode'];
+      inflow: components['schemas']['Money'];
+      outflow: components['schemas']['Money'];
+      count: number;
+    };
+    AdminDashboard: {
+      period_from: components['schemas']['Date'];
+      period_to: components['schemas']['Date'];
+      users_total: number;
+      users_new: number;
+      users_active_30d: number;
+      volume: components['schemas']['CurrencyVolume'][];
+      transfers_by_status: {
+        status: components['schemas']['TransferStatus'];
+        count: number;
+      }[];
+      fraud_hold_rate_bps: components['schemas']['BasisPoints'];
+      /** @description Spread income per currency, from the FX position accounts. */
+      fx_pnl: components['schemas']['Money'][];
+      queues: {
+        kyc_pending: number;
+        fraud_open: number;
+        disputes_open: number;
+        support_open: number;
+        approvals_pending: number;
+      };
+    };
+    CustomerSummary: {
+      user_id: components['schemas']['Uuid'];
+      name: string;
+      email_masked: string;
+      phone_masked: string;
+      nemtag: string | null;
+      kyc_tier: components['schemas']['KycTier'];
+      /** @enum {string} */
+      status: 'active' | 'frozen' | 'closed';
+      created_at: components['schemas']['Timestamp'];
+    };
+    CustomerSummaryPage: {
+      data: components['schemas']['CustomerSummary'][];
+      page: components['schemas']['PageInfo'];
+    };
+    StaffNote: {
+      id: components['schemas']['Uuid'];
+      author: components['schemas']['StaffRef'];
+      body: string;
+      created_at: components['schemas']['Timestamp'];
+    };
+    CreateNoteRequest: {
+      body: string;
+    };
+    Customer360: {
+      customer: components['schemas']['CustomerSummary'];
+      /** @description Hidden from the support role. */
+      date_of_birth?: components['schemas']['Date'] | null;
+      accounts: components['schemas']['Account'][];
+      kyc: {
+        tier: components['schemas']['KycTier'];
+        status: components['schemas']['KycStatus'];
+        latest_submission: components['schemas']['KycSubmission'] | null;
+      };
+      devices: components['schemas']['Device'][];
+      recent_transactions: components['schemas']['Transaction'][];
+      notes: components['schemas']['StaffNote'][];
+      flags: (
+        | 'frozen'
+        | 'duress_triggered'
+        | 'fraud_watch'
+        | 'new_device_cool_off'
+        | 'limit_override'
+        | 'demo'
+      )[];
+      panic: components['schemas']['PanicState'];
+      open_cases: {
+        fraud: number;
+        disputes: number;
+        support: number;
+      };
+    };
+    LimitOverrideRequest: {
+      daily_limit: components['schemas']['Money'];
+      expires_at: components['schemas']['Timestamp'];
+      reason: string;
+    };
+    /** @enum {string} */
+    MakerCheckerStatus: 'pending' | 'approved' | 'rejected' | 'expired';
+    /** @description A sensitive action proposed by one staff member and approved by another (ADM-10). */
+    ApprovalRequest: {
+      id: components['schemas']['Uuid'];
+      /** @enum {string} */
+      action:
+        | 'customer_unfreeze'
+        | 'limit_override'
+        | 'ledger_adjustment'
+        | 'config_change'
+        | 'dispute_refund';
+      status: components['schemas']['MakerCheckerStatus'];
+      maker: components['schemas']['StaffRef'];
+      checker: components['schemas']['StaffRef'] | null;
+      reason: string;
+      summary: string;
+      /** @description The state before the change, for the checker's diff. */
+      before: {
+        [key: string]: unknown;
+      } | null;
+      after: {
+        [key: string]: unknown;
+      } | null;
+      rejection_reason?: string | null;
+      created_at: components['schemas']['Timestamp'];
+      decided_at: components['schemas']['Timestamp'] | null;
+      expires_at: components['schemas']['Timestamp'];
+    };
+    ApprovalRequestPage: {
+      data: components['schemas']['ApprovalRequest'][];
+      page: components['schemas']['PageInfo'];
+    };
+    KycReview: {
+      submission: components['schemas']['KycSubmission'];
+      customer: components['schemas']['CustomerSummary'];
+      documents: (components['schemas']['KycDocument'] & {
+        /**
+         * Format: uri
+         * @description Signed URL valid for 5 minutes.
+         */
+        url: string;
+      })[];
+      identity_checks: components['schemas']['IdentityVerification'][];
+      id_type: string;
+      id_number_masked: string;
+      address: components['schemas']['Address'];
+      reviewer: components['schemas']['StaffRef'] | null;
+    };
+    KycReviewPage: {
+      data: {
+        submission: components['schemas']['KycSubmission'];
+        customer: components['schemas']['CustomerSummary'];
+        waiting_hours: number;
+      }[];
+      page: components['schemas']['PageInfo'];
+    };
+    /** @description `reason` is required to reject or ask for resubmission; it is shown to the customer. */
+    KycDecisionRequest: {
+      /** @enum {string} */
+      decision: 'approve' | 'reject' | 'resubmit';
+      reason?: string;
+      resubmit_documents?: components['schemas']['KycDocumentKind'][];
+    };
+    /** @enum {string} */
+    FraudCaseStatus: 'open' | 'in_review' | 'released' | 'rejected';
+    /**
+     * @description Ground truth for retraining the fraud model.
+     * @enum {string}
+     */
+    FraudLabel: 'fraud' | 'legitimate' | 'unsure';
+    FraudCase: {
+      id: components['schemas']['Uuid'];
+      status: components['schemas']['FraudCaseStatus'];
+      transfer: components['schemas']['Transfer'];
+      risk: components['schemas']['RiskAssessment'];
+      customer: components['schemas']['CustomerSummary'];
+      /** @description Context the reviewer needs without opening the customer 360. */
+      signals?: {
+        device_age_hours?: number;
+        beneficiary_age_hours?: number | null;
+        transfers_last_24h?: number;
+        average_transfer?: components['schemas']['Money'];
+      };
+      assignee: components['schemas']['StaffRef'] | null;
+      label: components['schemas']['FraudLabel'] | null;
+      note: string | null;
+      created_at: components['schemas']['Timestamp'];
+      closed_at: components['schemas']['Timestamp'] | null;
+    };
+    FraudCasePage: {
+      data: components['schemas']['FraudCase'][];
+      page: components['schemas']['PageInfo'];
+    };
+    FraudDecisionRequest: {
+      /** @enum {string} */
+      decision: 'release' | 'reject';
+      label: components['schemas']['FraudLabel'];
+      note?: string;
+      /** @description Optional plain-language note for the customer. */
+      customer_message?: string;
+    };
+    AdminDispute: {
+      dispute: components['schemas']['Dispute'];
+      customer: components['schemas']['CustomerSummary'];
+      transaction: components['schemas']['TransactionDetail'];
+      assignee: components['schemas']['StaffRef'] | null;
+    };
+    AdminDisputePage: {
+      data: components['schemas']['AdminDispute'][];
+      page: components['schemas']['PageInfo'];
+    };
+    DisputeDecisionRequest: {
+      /** @enum {string} */
+      outcome: 'refund' | 'decline' | 'request_info';
+      /** @description Required for `refund`; at most the disputed amount. */
+      refund_amount?: components['schemas']['Money'];
+      /** @description Shown to the customer. */
+      note: string;
+    };
+    AgentConversation: {
+      conversation: components['schemas']['SupportConversation'];
+      customer: components['schemas']['CustomerSummary'];
+      waiting_minutes: number;
+    };
+    AgentConversationPage: {
+      data: components['schemas']['AgentConversation'][];
+      page: components['schemas']['PageInfo'];
+    };
+    /** @enum {string} */
+    LedgerOwnerType: 'customer' | 'system';
+    /**
+     * @description Customer kinds plus system accounts: fee income, FX positions (one per currency),
+     *     interest expense, ajo escrow, card settlement, partner settlement, levy payable,
+     *     demo funding and suspense.
+     * @enum {string}
+     */
+    LedgerAccountKind:
+      | 'customer_current'
+      | 'customer_wallet'
+      | 'customer_savings'
+      | 'customer_locked'
+      | 'customer_loan'
+      | 'fee_income'
+      | 'fx_position'
+      | 'interest_expense'
+      | 'interest_income'
+      | 'ajo_escrow'
+      | 'card_settlement'
+      | 'partner_settlement'
+      | 'levy_payable'
+      | 'demo_funding'
+      | 'suspense';
+    LedgerAccount: {
+      id: components['schemas']['Uuid'];
+      owner_type: components['schemas']['LedgerOwnerType'];
+      owner_id: components['schemas']['Uuid'] | null;
+      kind: components['schemas']['LedgerAccountKind'];
+      currency: components['schemas']['CurrencyCode'];
+      name?: string;
+      balance: components['schemas']['Money'];
+      available: components['schemas']['Money'];
+      /** @description Optimistic version, bumped on every posting. */
+      version: number;
+      created_at: components['schemas']['Timestamp'];
+    };
+    LedgerAccountPage: {
+      data: components['schemas']['LedgerAccount'][];
+      page: components['schemas']['PageInfo'];
+    };
+    Posting: {
+      id: components['schemas']['Uuid'];
+      entry_id: components['schemas']['Uuid'];
+      account_id: components['schemas']['Uuid'];
+      /** @description Signed; credits are positive, debits negative. */
+      amount: components['schemas']['Money'];
+      balance_after?: components['schemas']['Money'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    PostingPage: {
+      data: components['schemas']['Posting'][];
+      page: components['schemas']['PageInfo'];
+    };
+    /** @enum {string} */
+    JournalEntryKind:
+      | 'transfer_internal'
+      | 'transfer_external'
+      | 'transfer_reversal'
+      | 'fee'
+      | 'levy'
+      | 'fx_conversion'
+      | 'card_authorization'
+      | 'card_settlement'
+      | 'card_reversal'
+      | 'bill_payment'
+      | 'savings'
+      | 'interest_accrual'
+      | 'ajo_contribution'
+      | 'ajo_payout'
+      | 'loan_disbursement'
+      | 'loan_repayment'
+      | 'dispute_refund'
+      | 'demo_funding'
+      | 'manual_adjustment';
+    JournalEntry: {
+      id: components['schemas']['Uuid'];
+      kind: components['schemas']['JournalEntryKind'];
+      reference: string;
+      idempotency_key: string | null;
+      postings: components['schemas']['Posting'][];
+      metadata: {
+        [key: string]: unknown;
+      };
+      /** @description Set for manual adjustments. */
+      approval_id?: components['schemas']['Uuid'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    JournalEntryPage: {
+      data: components['schemas']['JournalEntry'][];
+      page: components['schemas']['PageInfo'];
+    };
+    TrialBalanceLine: {
+      currency: components['schemas']['CurrencyCode'];
+      total_debits: components['schemas']['Money'];
+      total_credits: components['schemas']['Money'];
+      /** @description Must be zero. */
+      net: components['schemas']['Money'];
+      balanced: boolean;
+      accounts: number;
+    };
+    TrialBalance: {
+      as_of: components['schemas']['Timestamp'];
+      /** @description True only when every currency nets to zero. */
+      balanced: boolean;
+      currencies: components['schemas']['TrialBalanceLine'][];
+      generated_in_ms: number;
+    };
+    ReconciliationItem: {
+      reference: string;
+      ledger_amount: components['schemas']['Money'] | null;
+      partner_amount: components['schemas']['Money'] | null;
+      /** @enum {string} */
+      status: 'matched' | 'missing_in_ledger' | 'missing_at_partner' | 'amount_mismatch';
+    };
+    ReconciliationReport: {
+      date: components['schemas']['Date'];
+      partner: string;
+      matched: number;
+      unmatched: number;
+      /** @description Unmatched items only. */
+      items: components['schemas']['ReconciliationItem'][];
+      generated_at: components['schemas']['Timestamp'];
+    };
+    LedgerAdjustmentRequest: {
+      reason: string;
+      reference?: string;
+      postings: {
+        account_id: components['schemas']['Uuid'];
+        /** @description Signed. All postings must sum to zero per currency. */
+        amount: components['schemas']['Money'];
+      }[];
+    };
+    FeeBand: {
+      /** @description Upper bound of the band; null for the last band. */
+      up_to: components['schemas']['Money'] | null;
+      fee: components['schemas']['Money'];
+    };
+    TierLimit: {
+      tier: components['schemas']['KycTier'];
+      daily_limit: components['schemas']['Money'];
+      max_balance: components['schemas']['Money'] | null;
+    };
+    BankConfig: {
+      version: number;
+      fees: {
+        internal_transfer: components['schemas']['Money'];
+        external_transfer_bands: components['schemas']['FeeBand'][];
+        emtl: components['schemas']['Money'];
+        emtl_threshold: components['schemas']['Money'];
+      };
+      limits: components['schemas']['TierLimit'][];
+      /** @description Spread per pair, e.g. `{ "USD-NGN": 150 }`. */
+      fx_spreads_bps: {
+        [key: string]: components['schemas']['BasisPoints'];
+      };
+      cooling_off: {
+        new_beneficiary_threshold: components['schemas']['Money'];
+        delay_minutes: number;
+      };
+      new_device: {
+        cool_off_hours: number;
+        daily_limit: components['schemas']['Money'];
+      };
+      updated_at: components['schemas']['Timestamp'];
+    };
+    ConfigChangeRequest: {
+      /** @enum {string} */
+      section: 'fees' | 'limits' | 'fx_spreads_bps' | 'cooling_off' | 'new_device';
+      /** @description The full new value of the section. */
+      value: Record<string, never> | unknown[];
+      reason: string;
+      /** @description The config version the change was made against; stale changes get 409. */
+      base_version: number;
+    };
+    FeatureFlag: {
+      /** @example international_transfers */
+      key: string;
+      description: string;
+      enabled: boolean;
+      /** @description Needs a paid partner; turning it on needs a connected adapter. */
+      paid_feature: boolean;
+      updated_at: components['schemas']['Timestamp'];
+      updated_by: components['schemas']['StaffRef'] | null;
+    };
+    FeatureFlagList: {
+      data: components['schemas']['FeatureFlag'][];
+    };
+    UpdateFeatureFlagRequest: {
+      enabled: boolean;
+      reason: string;
+    };
+    AuditEntry: {
+      seq: number;
+      id: components['schemas']['Uuid'];
+      at: components['schemas']['Timestamp'];
+      actor: {
+        /** @enum {string} */
+        type: 'staff' | 'customer' | 'system';
+        id: string | null;
+        name: string | null;
+      };
+      /**
+       * @example kyc.approve
+       * @example customer.freeze
+       * @example ledger.adjustment.approve
+       */
+      action: string;
+      resource: {
+        type: string;
+        id: string;
+      };
+      /** @description Never contains PII; IDs only. */
+      metadata: {
+        [key: string]: unknown;
+      };
+      ip?: string | null;
+      prev_hash: string;
+      /** @description SHA-256 over `prev_hash` and the canonical entry. */
+      hash: string;
+    };
+    AuditEntryPage: {
+      data: components['schemas']['AuditEntry'][];
+      page: components['schemas']['PageInfo'];
+    };
+    AuditVerifyRequest: {
+      from_seq?: number;
+      to_seq?: number;
+    };
+    AuditVerification: {
+      valid: boolean;
+      checked: number;
+      first_broken_seq: number | null;
+      head_seq: number;
+      head_hash: string;
+      verified_at: components['schemas']['Timestamp'];
+    };
+    SimulatedChargeRequest: {
+      pan: string;
+      expiry_month: number;
+      expiry_year: number;
+      cvv: string;
+      amount: components['schemas']['Money'];
+      merchant: {
+        id: string;
+        name: string;
+        mcc: string;
+        country: string;
+      };
+      /** @enum {string} */
+      channel: 'online' | 'in_store';
+      /**
+       * @description Settle immediately instead of leaving an authorization hold.
+       * @default false
+       */
+      capture: boolean;
+    };
+    CaptureRequest: {
+      /** @description Capture less than authorized (e.g. a final bill); defaults to the full amount. */
+      amount?: components['schemas']['Money'];
+    };
+    BankPartnerSimulator: {
+      failure_rate_bps: components['schemas']['BasisPoints'];
+      min_delay_seconds: number;
+      max_delay_seconds: number;
+      /**
+       * @description How Confirmation of Payee answers in the sandbox.
+       * @enum {string}
+       */
+      name_check: 'realistic' | 'always_match' | 'always_no_match';
+      timeout_rate_bps?: components['schemas']['BasisPoints'];
+    };
+    DemoFundRequest: {
+      account_id: components['schemas']['Uuid'];
+      amount: components['schemas']['Money'];
+    };
+    DemoInboundRequest: {
+      account_id: components['schemas']['Uuid'];
+      amount: components['schemas']['Money'];
+      sender_name: string;
+      sender_bank?: string;
+      narration?: string;
+    };
+    DemoTimeTravelRequest: {
+      days: number;
+    };
+    DemoClock: {
+      now: components['schemas']['Timestamp'];
+      offset_days: number;
+    };
+    /** @enum {string} */
+    ApiKeyScope:
+      | 'accounts_read'
+      | 'transactions_read'
+      | 'transfers_read'
+      | 'payment_links_write'
+      | 'webhooks_manage';
+    ApiKey: {
+      id: components['schemas']['Uuid'];
+      name: string;
+      /**
+       * @description The first characters of the key, for recognising it.
+       * @example nem_test_7Hq2
+       */
+      prefix: string;
+      scopes: components['schemas']['ApiKeyScope'][];
+      /**
+       * @description Only sandbox exists in v1 (DEV-2).
+       * @enum {string}
+       */
+      environment: 'sandbox';
+      created_at: components['schemas']['Timestamp'];
+      last_used_at: components['schemas']['Timestamp'] | null;
+      revoked_at: components['schemas']['Timestamp'] | null;
+    };
+    ApiKeyList: {
+      data: components['schemas']['ApiKey'][];
+    };
+    CreateApiKeyRequest: {
+      name: string;
+      scopes: components['schemas']['ApiKeyScope'][];
+    };
+    ApiKeyCreated: {
+      key: components['schemas']['ApiKey'];
+      /** @description Shown once. Stored only as a SHA-256 hash. */
+      secret: string;
+    };
+    /** @enum {string} */
+    WebhookEventType:
+      | 'payment_link.paid'
+      | 'transfer.completed'
+      | 'transfer.failed'
+      | 'transfer.reversed'
+      | 'account.credited'
+      | 'test.ping';
+    WebhookEndpoint: {
+      id: components['schemas']['Uuid'];
+      /** Format: uri */
+      url: string;
+      description?: string | null;
+      events: components['schemas']['WebhookEventType'][];
+      /**
+       * @description Endpoints are disabled automatically after 3 days of failures.
+       * @enum {string}
+       */
+      status: 'active' | 'disabled';
+      /** @example whsec_3Fk9 */
+      secret_prefix: string;
+      consecutive_failures: number;
+      created_at: components['schemas']['Timestamp'];
+    };
+    WebhookEndpointList: {
+      data: components['schemas']['WebhookEndpoint'][];
+    };
+    CreateWebhookEndpointRequest: {
+      /** Format: uri */
+      url: string;
+      description?: string;
+      events: components['schemas']['WebhookEventType'][];
+    };
+    UpdateWebhookEndpointRequest: {
+      /** Format: uri */
+      url?: string;
+      description?: string | null;
+      events?: components['schemas']['WebhookEventType'][];
+      /** @enum {string} */
+      status?: 'active' | 'disabled';
+    };
+    WebhookEndpointCreated: {
+      endpoint: components['schemas']['WebhookEndpoint'];
+      /** @description Shown once. */
+      signing_secret: string;
+    };
+    /** @enum {string} */
+    WebhookDeliveryStatus: 'pending' | 'succeeded' | 'retrying' | 'failed';
+    WebhookDelivery: {
+      id: components['schemas']['Uuid'];
+      endpoint_id: components['schemas']['Uuid'];
+      event_id: components['schemas']['Uuid'];
+      event_type: components['schemas']['WebhookEventType'];
+      /** @description Retries back off exponentially (1 min, 5 min, 30 min, 2 h, 6 h, 12 h, 24 h). */
+      attempt: number;
+      status: components['schemas']['WebhookDeliveryStatus'];
+      response_status: number | null;
+      response_body_excerpt?: string | null;
+      duration_ms: number | null;
+      request_body?: components['schemas']['WebhookEvent'];
+      next_retry_at: components['schemas']['Timestamp'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    WebhookDeliveryPage: {
+      data: components['schemas']['WebhookDelivery'][];
+      page: components['schemas']['PageInfo'];
+    };
+    SandboxPaymentRequest: {
+      payment_link_id: components['schemas']['Uuid'];
+      /** @description Required for open-amount links. */
+      amount?: components['schemas']['Money'];
+      /** @default Sandbox Payer */
+      payer_name: string;
+    };
+    /** @description The body Nem POSTs to developer webhook endpoints. */
+    WebhookEvent: {
+      id: components['schemas']['Uuid'];
+      type: components['schemas']['WebhookEventType'];
+      created_at: components['schemas']['Timestamp'];
+      /** @constant */
+      livemode: false;
+      data: {
+        /** @description The resource the event is about, in the same shape as the API returns it. */
+        object:
+          | components['schemas']['Transfer']
+          | components['schemas']['Transaction']
+          | components['schemas']['PaymentLink']
+          | {
+              /** @constant */
+              message: 'ping';
+            };
+      };
+    };
+    PartnerCallback: {
+      /** @enum {string} */
+      event_type:
+        | 'transfer.settled'
+        | 'transfer.failed'
+        | 'bill.completed'
+        | 'bill.failed'
+        | 'inbound.credit';
+      /** @description Nem's reference for outbound events; the partner's for inbound credits. */
+      reference: string;
+      occurred_at: components['schemas']['Timestamp'];
+      amount?: components['schemas']['Money'];
+      account_number?: string;
+      failure_code?: string | null;
+      payload?: {
+        [key: string]: unknown;
+      };
+    };
   };
   responses: {
     /** @description The request is malformed or failed validation. */
@@ -5749,6 +7687,23 @@ export interface components {
     DependantId: components['schemas']['Uuid'];
     ApprovalId: components['schemas']['Uuid'];
     ActionId: components['schemas']['Uuid'];
+    UserId: components['schemas']['Uuid'];
+    CaseId: components['schemas']['Uuid'];
+    LedgerAccountId: components['schemas']['Uuid'];
+    EntryId: components['schemas']['Uuid'];
+    FlagKey: string;
+    AuthorizationId: components['schemas']['Uuid'];
+    KeyId: components['schemas']['Uuid'];
+    EndpointId: components['schemas']['Uuid'];
+    DeliveryId: components['schemas']['Uuid'];
+    /**
+     * @description `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+     *     signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+     *     `v1=` value is included.
+     */
+    WebhookSignature: string;
+    /** @description Same value on every retry and replay, for deduplication. */
+    WebhookEventId: components['schemas']['Uuid'];
   };
   requestBodies: never;
   headers: never;
@@ -10914,6 +12869,1836 @@ export interface operations {
         };
       };
       401: components['responses']['Unauthorized'];
+    };
+  };
+  staffLogin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StaffLoginRequest'];
+      };
+    };
+    responses: {
+      /** @description Send the TOTP code next. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaffLoginChallenge'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  staffVerifyTotp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StaffTotpRequest'];
+      };
+    };
+    responses: {
+      /** @description A staff session (8-hour lifetime, no refresh). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaffSession'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  staffLogout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The staff session was revoked. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  getStaffMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Profile and roles. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Staff'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  getAdminDashboard: {
+    parameters: {
+      query?: {
+        /** @description Inclusive start date. */
+        from?: components['parameters']['FromDate'];
+        /** @description Inclusive end date. */
+        to?: components['parameters']['ToDate'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The KPIs for the period. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminDashboard'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  searchCustomers: {
+    parameters: {
+      query: {
+        q: string;
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Matching customers. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CustomerSummaryPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getCustomer360: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The customer. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Customer360'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  addCustomerNote: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateNoteRequest'];
+      };
+    };
+    responses: {
+      /** @description The note. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StaffNote'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  freezeCustomer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReasonRequest'];
+      };
+    };
+    responses: {
+      /** @description The customer is frozen. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Customer360'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  requestCustomerUnfreeze: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReasonRequest'];
+      };
+    };
+    responses: {
+      /** @description Waiting for a checker. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  requestLimitOverride: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        user_id: components['parameters']['UserId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LimitOverrideRequest'];
+      };
+    };
+    responses: {
+      /** @description Waiting for a checker. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  listKycReviews: {
+    parameters: {
+      query?: {
+        status?: 'pending_review' | 'approved' | 'rejected' | 'resubmit';
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of submissions. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycReviewPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getKycReview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        submission_id: components['parameters']['SubmissionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The submission with documents and checks. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycReview'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  decideKycReview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        submission_id: components['parameters']['SubmissionId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['KycDecisionRequest'];
+      };
+    };
+    responses: {
+      /** @description The decided submission. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['KycReview'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listFraudCases: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['FraudCaseStatus'];
+        assigned_to_me?: boolean;
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of cases. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FraudCasePage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getFraudCase: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        case_id: components['parameters']['CaseId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The case with the transfer, risk reasons and customer context. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FraudCase'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  assignFraudCase: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        case_id: components['parameters']['CaseId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The case, now assigned to me. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FraudCase'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  decideFraudCase: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        case_id: components['parameters']['CaseId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['FraudDecisionRequest'];
+      };
+    };
+    responses: {
+      /** @description The closed case. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FraudCase'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listAdminDisputes: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['DisputeStatus'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Oldest open first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminDisputePage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getAdminDispute: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        dispute_id: components['parameters']['DisputeId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The dispute with the transaction and customer. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminDispute'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  decideDispute: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        dispute_id: components['parameters']['DisputeId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DisputeDecisionRequest'];
+      };
+    };
+    responses: {
+      /** @description The resolved dispute. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AdminDispute'];
+        };
+      };
+      /** @description The refund is waiting for a checker. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listAgentConversations: {
+    parameters: {
+      query?: {
+        status?: 'open' | 'waiting_on_customer' | 'resolved';
+        assigned_to_me?: boolean;
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Conversations, longest waiting first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentConversationPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  listAgentMessages: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportMessagePage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  sendAgentMessage: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SendSupportMessageRequest'];
+      };
+    };
+    responses: {
+      /** @description The sent message. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SupportMessage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  resolveConversation: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        conversation_id: components['parameters']['ConversationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The resolved conversation. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AgentConversation'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listLedgerAccounts: {
+    parameters: {
+      query?: {
+        owner_type?: components['schemas']['LedgerOwnerType'];
+        owner_id?: components['schemas']['Uuid'];
+        currency?: components['schemas']['CurrencyCode'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of ledger accounts. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['LedgerAccountPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  listLedgerPostings: {
+    parameters: {
+      query?: {
+        /** @description Inclusive start date. */
+        from?: components['parameters']['FromDate'];
+        /** @description Inclusive end date. */
+        to?: components['parameters']['ToDate'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        ledger_account_id: components['parameters']['LedgerAccountId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first, with running balances. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PostingPage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listJournalEntries: {
+    parameters: {
+      query?: {
+        kind?: components['schemas']['JournalEntryKind'];
+        reference?: string;
+        /** @description Inclusive start date. */
+        from?: components['parameters']['FromDate'];
+        /** @description Inclusive end date. */
+        to?: components['parameters']['ToDate'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['JournalEntryPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getJournalEntry: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        entry_id: components['parameters']['EntryId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The entry with every posting. Postings sum to zero per currency. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['JournalEntry'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getTrialBalance: {
+    parameters: {
+      query?: {
+        /** @description Defaults to now. */
+        as_of?: components['schemas']['Timestamp'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Totals per currency. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TrialBalance'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getReconciliationReport: {
+    parameters: {
+      query: {
+        date: components['schemas']['Date'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Matched and unmatched items. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ReconciliationReport'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  requestLedgerAdjustment: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LedgerAdjustmentRequest'];
+      };
+    };
+    responses: {
+      /** @description Waiting for a checker. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getBankConfig: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The live configuration. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BankConfig'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  requestConfigChange: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ConfigChangeRequest'];
+      };
+    };
+    responses: {
+      /** @description Waiting for a checker. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  listFeatureFlags: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every flag. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FeatureFlagList'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  updateFeatureFlag: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        flag_key: components['parameters']['FlagKey'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateFeatureFlagRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated flag. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FeatureFlag'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listAuditLog: {
+    parameters: {
+      query?: {
+        actor_id?: components['schemas']['Uuid'];
+        action?: string;
+        resource_id?: string;
+        /** @description Inclusive start date. */
+        from?: components['parameters']['FromDate'];
+        /** @description Inclusive end date. */
+        to?: components['parameters']['ToDate'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuditEntryPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  verifyAuditLog: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['AuditVerifyRequest'];
+      };
+    };
+    responses: {
+      /** @description The result. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuditVerification'];
+        };
+      };
+    };
+  };
+  listApprovalRequests: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['MakerCheckerStatus'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Pending first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequestPage'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  getApprovalRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        approval_id: components['parameters']['ApprovalId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request with a before/after diff. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  approveRequest: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        approval_id: components['parameters']['ApprovalId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Approved and applied. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+      409: components['responses']['Conflict'];
+    };
+  };
+  rejectRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        approval_id: components['parameters']['ApprovalId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ReasonRequest'];
+      };
+    };
+    responses: {
+      /** @description Rejected; nothing changed. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApprovalRequest'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  simulateCardCharge: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SimulatedChargeRequest'];
+      };
+    };
+    responses: {
+      /** @description The authorization result, approved or declined. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CardTransaction'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  captureSimulatedCharge: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        authorization_id: components['parameters']['AuthorizationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['CaptureRequest'];
+      };
+    };
+    responses: {
+      /** @description Settled; the hold became a posting. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CardTransaction'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  reverseSimulatedCharge: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        authorization_id: components['parameters']['AuthorizationId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Reversed; the hold was released. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['CardTransaction'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  getBankPartnerSimulator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Failure rate, delays and name-check behaviour of the sandbox interbank rail. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BankPartnerSimulator'];
+        };
+      };
+    };
+  };
+  setBankPartnerSimulator: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['BankPartnerSimulator'];
+      };
+    };
+    responses: {
+      /** @description Saved. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BankPartnerSimulator'];
+        };
+      };
+    };
+  };
+  demoFundWallet: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DemoFundRequest'];
+      };
+    };
+    responses: {
+      /** @description The credit transaction. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transaction'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  demoInboundTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DemoInboundRequest'];
+      };
+    };
+    responses: {
+      /** @description The credit transaction. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transaction'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  demoFailNextTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Armed. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  demoTimeTravel: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DemoTimeTravelRequest'];
+      };
+    };
+    responses: {
+      /** @description The new demo date. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DemoClock'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  demoReset: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Reset. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  listApiKeys: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Keys, newest first. Secrets are never returned again. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiKeyList'];
+        };
+      };
+    };
+  };
+  createApiKey: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateApiKeyRequest'];
+      };
+    };
+    responses: {
+      /** @description The key and its one-time secret. */
+      201: {
+        headers: {
+          /** @description Always `no-store`. */
+          'Cache-Control'?: string;
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ApiKeyCreated'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  revokeApiKey: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        key_id: components['parameters']['KeyId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Revoked. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listWebhookEndpoints: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every endpoint. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookEndpointList'];
+        };
+      };
+    };
+  };
+  createWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateWebhookEndpointRequest'];
+      };
+    };
+    responses: {
+      /** @description The endpoint and its one-time signing secret. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookEndpointCreated'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        endpoint_id: components['parameters']['EndpointId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The endpoint. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookEndpoint'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  deleteWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        endpoint_id: components['parameters']['EndpointId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deleted; pending retries are cancelled. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateWebhookEndpoint: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        endpoint_id: components['parameters']['EndpointId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateWebhookEndpointRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated endpoint. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookEndpoint'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  rotateWebhookSecret: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        endpoint_id: components['parameters']['EndpointId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The new one-time secret. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookEndpointCreated'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  sendTestWebhook: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        endpoint_id: components['parameters']['EndpointId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The queued delivery. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookDelivery'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listWebhookDeliveries: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['WebhookDeliveryStatus'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path: {
+        endpoint_id: components['parameters']['EndpointId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookDeliveryPage'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  replayWebhookDelivery: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        delivery_id: components['parameters']['DeliveryId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The new delivery attempt. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['WebhookDelivery'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  simulateSandboxPayment: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SandboxPaymentRequest'];
+      };
+    };
+    responses: {
+      /** @description The resulting transfer. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  receivePartnerWebhook: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description `t=<unix seconds>,v1=<hex HMAC-SHA256 of "t.body">`. */
+        'Partner-Signature': string;
+        'Partner-Event-Id': string;
+      };
+      path: {
+        partner: 'sandbox_nip' | 'sandbox_biller' | 'sandbox_fx_inbound' | 'paystack_test';
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PartnerCallback'];
+      };
+    };
+    responses: {
+      /** @description Accepted (also returned for duplicates). */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  onPaymentLinkPaid: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+         *     signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+         *     `v1=` value is included.
+         */
+        'Nem-Signature': components['parameters']['WebhookSignature'];
+        /** @description Same value on every retry and replay, for deduplication. */
+        'Nem-Event-Id': components['parameters']['WebhookEventId'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebhookEvent'];
+      };
+    };
+    responses: {
+      /** @description Acknowledged. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  onTransferCompleted: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+         *     signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+         *     `v1=` value is included.
+         */
+        'Nem-Signature': components['parameters']['WebhookSignature'];
+        /** @description Same value on every retry and replay, for deduplication. */
+        'Nem-Event-Id': components['parameters']['WebhookEventId'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebhookEvent'];
+      };
+    };
+    responses: {
+      /** @description Acknowledged. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  onTransferFailed: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+         *     signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+         *     `v1=` value is included.
+         */
+        'Nem-Signature': components['parameters']['WebhookSignature'];
+        /** @description Same value on every retry and replay, for deduplication. */
+        'Nem-Event-Id': components['parameters']['WebhookEventId'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebhookEvent'];
+      };
+    };
+    responses: {
+      /** @description Acknowledged. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  onTransferReversed: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+         *     signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+         *     `v1=` value is included.
+         */
+        'Nem-Signature': components['parameters']['WebhookSignature'];
+        /** @description Same value on every retry and replay, for deduplication. */
+        'Nem-Event-Id': components['parameters']['WebhookEventId'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebhookEvent'];
+      };
+    };
+    responses: {
+      /** @description Acknowledged. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+    };
+  };
+  onAccountCredited: {
+    parameters: {
+      query?: never;
+      header: {
+        /**
+         * @description `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+         *     signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+         *     `v1=` value is included.
+         */
+        'Nem-Signature': components['parameters']['WebhookSignature'];
+        /** @description Same value on every retry and replay, for deduplication. */
+        'Nem-Event-Id': components['parameters']['WebhookEventId'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['WebhookEvent'];
+      };
+    };
+    responses: {
+      /** @description Acknowledged. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
     };
   };
 }

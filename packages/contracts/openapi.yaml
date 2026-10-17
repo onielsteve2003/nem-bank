@@ -22,6 +22,11 @@ info:
     - **Step-up** actions also require `X-Step-Up-Token`, issued by `POST /v1/auth/step-up/{step_up_id}/verify`.
     - Every response carries `X-Request-Id`; problems repeat it as `request_id`.
 
+    Staff endpoints (`/v1/admin`) use `staffAuth`. `x-roles` lists the staff roles allowed and
+    `x-maker-checker: true` marks actions that need a second approver. Developer API keys work on
+    the operations that list `apiKeyAuth`, limited by `x-api-key-scope`. Outbound developer
+    events are described under `webhooks`.
+
     All money is simulated. External rails run in sandbox mode.
   contact:
     name: Nem Bank
@@ -84,6 +89,20 @@ tags:
     description: Nem Assistant, which prepares actions the customer confirms (AI-6).
   - name: realtime
     description: WebSocket tickets and the event schemas pushed to clients.
+  - name: admin-auth
+    description: Staff login with mandatory TOTP (ADM-1).
+  - name: admin
+    description: Staff console — dashboard, customers, KYC, fraud, disputes, support, config, audit and maker-checker (FR-ADM).
+  - name: admin-ledger
+    description: Ledger explorer, trial balance, reconciliation and manual adjustments (ADM-7).
+  - name: admin-simulators
+    description: Merchant and Bank Partner simulators (ADM-11).
+  - name: demo
+    description: Demo Controls for demo personas only (DEMO-1).
+  - name: developer
+    description: API keys, webhook endpoints, delivery log and sandbox (FR-DEV).
+  - name: partners
+    description: Signed callbacks from sandbox partners.
 security:
   - bearerAuth: []
 
@@ -614,6 +633,10 @@ paths:
     get:
       tags: [accounts]
       operationId: listAccounts
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: accounts_read
       summary: List my accounts
       description: The NGN account plus any open foreign-currency wallets.
       responses:
@@ -651,6 +674,10 @@ paths:
     get:
       tags: [accounts]
       operationId: getAccount
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: accounts_read
       summary: Get an account
       parameters:
         - $ref: '#/components/parameters/AccountId'
@@ -686,6 +713,10 @@ paths:
     get:
       tags: [transactions]
       operationId: listTransactions
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: transactions_read
       summary: List transactions
       description: Newest first, filterable and searchable (ACC-5).
       parameters:
@@ -737,6 +768,10 @@ paths:
     get:
       tags: [transactions]
       operationId: getTransaction
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: transactions_read
       summary: Get a transaction
       description: Detail with status timeline, fees and what the customer can do next (ACC-6).
       parameters:
@@ -1018,6 +1053,10 @@ paths:
     get:
       tags: [transfers]
       operationId: getTransfer
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: transfers_read
       summary: Track a transfer
       description: The status timeline (TRF-7). Live updates arrive as `transfer.updated` events.
       parameters:
@@ -1468,6 +1507,10 @@ paths:
     get:
       tags: [payment-links]
       operationId: listPaymentLinks
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: payment_links_write
       summary: List my payment links
       parameters:
         - $ref: '#/components/parameters/Cursor'
@@ -1482,6 +1525,10 @@ paths:
     post:
       tags: [payment-links]
       operationId: createPaymentLink
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: payment_links_write
       summary: Create a payment link
       requestBody:
         required: true
@@ -1502,6 +1549,10 @@ paths:
     get:
       tags: [payment-links]
       operationId: getPaymentLink
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: payment_links_write
       summary: Get a payment link
       parameters:
         - $ref: '#/components/parameters/PaymentLinkId'
@@ -1517,6 +1568,10 @@ paths:
     patch:
       tags: [payment-links]
       operationId: updatePaymentLink
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      x-api-key-scope: payment_links_write
       summary: Edit or deactivate a payment link
       parameters:
         - $ref: '#/components/parameters/PaymentLinkId'
@@ -3981,6 +4036,1617 @@ paths:
                 $ref: '#/components/schemas/RealtimeTicket'
         '401':
           $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------- admin: auth
+  /v1/admin/auth/login:
+    post:
+      tags: [admin-auth]
+      operationId: staffLogin
+      summary: Staff login, step 1
+      description: Password first; TOTP is always required next (ADM-1). First login returns an enrolment URI.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffLoginRequest'
+      responses:
+        '200':
+          description: Send the TOTP code next.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffLoginChallenge'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/admin/auth/totp:
+    post:
+      tags: [admin-auth]
+      operationId: staffVerifyTotp
+      summary: Staff login, step 2
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StaffTotpRequest'
+      responses:
+        '200':
+          description: A staff session (8-hour lifetime, no refresh).
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/admin/auth/logout:
+    post:
+      tags: [admin-auth]
+      operationId: staffLogout
+      summary: Staff logout
+      security:
+        - staffAuth: []
+      responses:
+        '204':
+          description: The staff session was revoked.
+  /v1/admin/me:
+    get:
+      tags: [admin-auth]
+      operationId: getStaffMe
+      summary: The signed-in staff member
+      security:
+        - staffAuth: []
+      responses:
+        '200':
+          description: Profile and roles.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Staff'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  # ---------------------------------------------------------------- admin: dashboard and customers
+  /v1/admin/dashboard:
+    get:
+      tags: [admin]
+      operationId: getAdminDashboard
+      summary: Dashboard KPIs
+      description: Users, volume by currency, transfers by status, fraud hold rate and FX P&L (ADM-2).
+      security:
+        - staffAuth: []
+      x-roles: [support, compliance, finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: The KPIs for the period.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDashboard'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/customers:
+    get:
+      tags: [admin]
+      operationId: searchCustomers
+      summary: Search customers
+      description: By name, email, phone, @nemtag or account number. Every search is audit-logged.
+      security:
+        - staffAuth: []
+      x-roles: [support, compliance, finance, admin]
+      parameters:
+        - name: q
+          in: query
+          required: true
+          schema:
+            type: string
+            minLength: 2
+            maxLength: 100
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Matching customers.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CustomerSummaryPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/customers/{user_id}:
+    get:
+      tags: [admin]
+      operationId: getCustomer360
+      summary: Customer 360
+      description: Profile, accounts, KYC, devices, recent transactions, notes and flags (ADM-3). PII is masked for the support role.
+      security:
+        - staffAuth: []
+      x-roles: [support, compliance, finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      responses:
+        '200':
+          description: The customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer360'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/customers/{user_id}/notes:
+    post:
+      tags: [admin]
+      operationId: addCustomerNote
+      summary: Add a note
+      security:
+        - staffAuth: []
+      x-roles: [support, compliance, finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateNoteRequest'
+      responses:
+        '201':
+          description: The note.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StaffNote'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/customers/{user_id}/freeze:
+    post:
+      tags: [admin]
+      operationId: freezeCustomer
+      summary: Freeze a customer
+      description: Blocks logins and outgoing money at once. Takes effect immediately; unfreezing needs a second approver.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: The customer is frozen.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Customer360'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/customers/{user_id}/unfreeze:
+    post:
+      tags: [admin]
+      operationId: requestCustomerUnfreeze
+      summary: Request an unfreeze
+      description: Maker-checker (ADM-10). Creates an approval request; another staff member must approve it.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      x-maker-checker: true
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '202':
+          description: Waiting for a checker.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/customers/{user_id}/limit-overrides:
+    post:
+      tags: [admin]
+      operationId: requestLimitOverride
+      summary: Request a limit override
+      description: Maker-checker (ADM-10). Temporarily raises one customer's limits above their tier.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      x-maker-checker: true
+      parameters:
+        - $ref: '#/components/parameters/UserId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LimitOverrideRequest'
+      responses:
+        '202':
+          description: Waiting for a checker.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- admin: kyc
+  /v1/admin/kyc/reviews:
+    get:
+      tags: [admin]
+      operationId: listKycReviews
+      summary: KYC review queue
+      description: Oldest first, so nobody waits too long (ADM-4).
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending_review, approved, rejected, resubmit]
+            default: pending_review
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of submissions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycReviewPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/kyc/reviews/{submission_id}:
+    get:
+      tags: [admin]
+      operationId: getKycReview
+      summary: Review a KYC submission
+      description: Documents come as short-lived signed URLs. Opening one is audit-logged.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/SubmissionId'
+      responses:
+        '200':
+          description: The submission with documents and checks.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycReview'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/kyc/reviews/{submission_id}/decision:
+    post:
+      tags: [admin]
+      operationId: decideKycReview
+      summary: Approve, reject or ask for resubmission
+      description: The customer's tier updates in realtime (`kyc.updated`).
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/SubmissionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/KycDecisionRequest'
+      responses:
+        '200':
+          description: The decided submission.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/KycReview'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- admin: fraud
+  /v1/admin/fraud/cases:
+    get:
+      tags: [admin]
+      operationId: listFraudCases
+      summary: Fraud case queue
+      description: Held transfers with risk reasons, highest score first (ADM-5).
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/FraudCaseStatus'
+        - name: assigned_to_me
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of cases.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudCasePage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/fraud/cases/{case_id}:
+    get:
+      tags: [admin]
+      operationId: getFraudCase
+      summary: Get a fraud case
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: The case with the transfer, risk reasons and customer context.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudCase'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/fraud/cases/{case_id}/assign:
+    post:
+      tags: [admin]
+      operationId: assignFraudCase
+      summary: Take a fraud case
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+      responses:
+        '200':
+          description: The case, now assigned to me.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudCase'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/fraud/cases/{case_id}/decision:
+    post:
+      tags: [admin]
+      operationId: decideFraudCase
+      summary: Release or reject a held transfer
+      description: The label feeds model retraining (ADM-5). The customer is notified either way.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/CaseId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/FraudDecisionRequest'
+      responses:
+        '200':
+          description: The closed case.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FraudCase'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- admin: disputes and support
+  /v1/admin/disputes:
+    get:
+      tags: [admin]
+      operationId: listAdminDisputes
+      summary: Dispute queue
+      security:
+        - staffAuth: []
+      x-roles: [support, compliance, admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/DisputeStatus'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Oldest open first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDisputePage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/disputes/{dispute_id}:
+    get:
+      tags: [admin]
+      operationId: getAdminDispute
+      summary: Get a dispute
+      security:
+        - staffAuth: []
+      x-roles: [support, compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+      responses:
+        '200':
+          description: The dispute with the transaction and customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDispute'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/disputes/{dispute_id}/decision:
+    post:
+      tags: [admin]
+      operationId: decideDispute
+      summary: Resolve a dispute
+      description: Refunds post through the ledger. Refunds above the configured threshold go to maker-checker and return 202.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - $ref: '#/components/parameters/DisputeId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DisputeDecisionRequest'
+      responses:
+        '200':
+          description: The resolved dispute.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AdminDispute'
+        '202':
+          description: The refund is waiting for a checker.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/support/conversations:
+    get:
+      tags: [admin]
+      operationId: listAgentConversations
+      summary: Support agent inbox
+      description: The agent view of customer chats (ADM-6).
+      security:
+        - staffAuth: []
+      x-roles: [support, admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [open, waiting_on_customer, resolved]
+        - name: assigned_to_me
+          in: query
+          schema:
+            type: boolean
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Conversations, longest waiting first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConversationPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/support/conversations/{conversation_id}/messages:
+    get:
+      tags: [admin]
+      operationId: listAgentMessages
+      summary: Read a customer chat
+      security:
+        - staffAuth: []
+      x-roles: [support, admin]
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportMessagePage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    post:
+      tags: [admin]
+      operationId: sendAgentMessage
+      summary: Reply to a customer
+      description: Assigns the conversation to the replying agent if it was unassigned.
+      security:
+        - staffAuth: []
+      x-roles: [support, admin]
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SendSupportMessageRequest'
+      responses:
+        '201':
+          description: The sent message.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SupportMessage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/support/conversations/{conversation_id}/resolve:
+    post:
+      tags: [admin]
+      operationId: resolveConversation
+      summary: Mark a chat resolved
+      security:
+        - staffAuth: []
+      x-roles: [support, admin]
+      parameters:
+        - $ref: '#/components/parameters/ConversationId'
+      responses:
+        '200':
+          description: The resolved conversation.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AgentConversation'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- admin: ledger
+  /v1/admin/ledger/accounts:
+    get:
+      tags: [admin-ledger]
+      operationId: listLedgerAccounts
+      summary: List ledger accounts
+      description: Customer, system (fees, FX positions, interest expense, escrow) and suspense accounts (ADM-7).
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - name: owner_type
+          in: query
+          schema:
+            $ref: '#/components/schemas/LedgerOwnerType'
+        - name: owner_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: currency
+          in: query
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of ledger accounts.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LedgerAccountPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/ledger/accounts/{ledger_account_id}/postings:
+    get:
+      tags: [admin-ledger]
+      operationId: listLedgerPostings
+      summary: Postings on a ledger account
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/LedgerAccountId'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Newest first, with running balances.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PostingPage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/ledger/entries:
+    get:
+      tags: [admin-ledger]
+      operationId: listJournalEntries
+      summary: List journal entries
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - name: kind
+          in: query
+          schema:
+            $ref: '#/components/schemas/JournalEntryKind'
+        - name: reference
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntryPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/ledger/entries/{entry_id}:
+    get:
+      tags: [admin-ledger]
+      operationId: getJournalEntry
+      summary: Get a journal entry
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/EntryId'
+      responses:
+        '200':
+          description: The entry with every posting. Postings sum to zero per currency.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/JournalEntry'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/ledger/trial-balance:
+    get:
+      tags: [admin-ledger]
+      operationId: getTrialBalance
+      summary: Trial balance
+      description: Proves every currency sums to zero across all ledger accounts (ADM-7).
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - name: as_of
+          in: query
+          description: Defaults to now.
+          schema:
+            $ref: '#/components/schemas/Timestamp'
+      responses:
+        '200':
+          description: Totals per currency.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TrialBalance'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/ledger/reconciliation:
+    get:
+      tags: [admin-ledger]
+      operationId: getReconciliationReport
+      summary: Daily reconciliation report
+      description: Ledger versus partner settlement files (sandbox) for one day.
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - name: date
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Date'
+      responses:
+        '200':
+          description: Matched and unmatched items.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ReconciliationReport'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/ledger/adjustments:
+    post:
+      tags: [admin-ledger]
+      operationId: requestLedgerAdjustment
+      summary: Request a manual adjustment
+      description: Maker-checker (ADM-10). The postings must balance per currency, or 422 `unbalanced_entry`.
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      x-maker-checker: true
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LedgerAdjustmentRequest'
+      responses:
+        '202':
+          description: Waiting for a checker.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- admin: config, audit, approvals
+  /v1/admin/config:
+    get:
+      tags: [admin]
+      operationId: getBankConfig
+      summary: Bank configuration
+      description: Fees, limits, FX spreads and cooling-off rules (ADM-8).
+      security:
+        - staffAuth: []
+      x-roles: [finance, compliance, admin]
+      responses:
+        '200':
+          description: The live configuration.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankConfig'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/config/changes:
+    post:
+      tags: [admin]
+      operationId: requestConfigChange
+      summary: Propose a configuration change
+      description: Maker-checker (ADM-10). Applies once approved.
+      security:
+        - staffAuth: []
+      x-roles: [finance, compliance, admin]
+      x-maker-checker: true
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ConfigChangeRequest'
+      responses:
+        '202':
+          description: Waiting for a checker.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/admin/feature-flags:
+    get:
+      tags: [admin]
+      operationId: listFeatureFlags
+      summary: Feature flags
+      description: Including the paid-feature toggles (PRD §11).
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      responses:
+        '200':
+          description: Every flag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureFlagList'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/feature-flags/{flag_key}:
+    patch:
+      tags: [admin]
+      operationId: updateFeatureFlag
+      summary: Turn a flag on or off
+      description: Paid-feature flags return 409 `partner_not_configured` until an adapter is connected.
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      parameters:
+        - $ref: '#/components/parameters/FlagKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateFeatureFlagRequest'
+      responses:
+        '200':
+          description: The updated flag.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FeatureFlag'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/audit-log:
+    get:
+      tags: [admin]
+      operationId: listAuditLog
+      summary: Audit log
+      description: Every staff action and every sensitive customer action, hash-chained (ADM-9).
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      parameters:
+        - name: actor_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: action
+          in: query
+          schema:
+            type: string
+        - name: resource_id
+          in: query
+          schema:
+            type: string
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditEntryPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/audit-log/verify:
+    post:
+      tags: [admin]
+      operationId: verifyAuditLog
+      summary: Verify the hash chain
+      description: Recomputes every hash in the range and reports the first break, if any.
+      security:
+        - staffAuth: []
+      x-roles: [compliance, admin]
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/AuditVerifyRequest'
+      responses:
+        '200':
+          description: The result.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuditVerification'
+  /v1/admin/approvals:
+    get:
+      tags: [admin]
+      operationId: listApprovalRequests
+      summary: Maker-checker queue
+      security:
+        - staffAuth: []
+      x-roles: [compliance, finance, admin]
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/MakerCheckerStatus'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Pending first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequestPage'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/admin/approvals/{approval_id}:
+    get:
+      tags: [admin]
+      operationId: getApprovalRequest
+      summary: Get an approval request
+      security:
+        - staffAuth: []
+      x-roles: [compliance, finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/ApprovalId'
+      responses:
+        '200':
+          description: The request with a before/after diff.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/admin/approvals/{approval_id}/approve:
+    post:
+      tags: [admin]
+      operationId: approveRequest
+      summary: Approve as checker
+      description: The checker must be a different staff member from the maker (403 `same_staff`).
+      security:
+        - staffAuth: []
+      x-roles: [compliance, finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/ApprovalId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Approved and applied.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/approvals/{approval_id}/reject:
+    post:
+      tags: [admin]
+      operationId: rejectRequest
+      summary: Reject as checker
+      security:
+        - staffAuth: []
+      x-roles: [compliance, finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/ApprovalId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ReasonRequest'
+      responses:
+        '200':
+          description: Rejected; nothing changed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApprovalRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+
+  # ---------------------------------------------------------------- admin: simulators
+  /v1/admin/simulators/merchant/charges:
+    post:
+      tags: [admin-simulators]
+      operationId: simulateCardCharge
+      summary: Charge a virtual card
+      description: The Merchant Simulator (ADM-11). Runs a real authorization through the card processor and places a hold.
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SimulatedChargeRequest'
+      responses:
+        '201':
+          description: The authorization result, approved or declined.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardTransaction'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/admin/simulators/merchant/charges/{authorization_id}/capture:
+    post:
+      tags: [admin-simulators]
+      operationId: captureSimulatedCharge
+      summary: Settle an authorization
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CaptureRequest'
+      responses:
+        '200':
+          description: Settled; the hold became a posting.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardTransaction'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/simulators/merchant/charges/{authorization_id}/reverse:
+    post:
+      tags: [admin-simulators]
+      operationId: reverseSimulatedCharge
+      summary: Reverse an authorization
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      parameters:
+        - $ref: '#/components/parameters/AuthorizationId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: Reversed; the hold was released.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CardTransaction'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/admin/simulators/bank-partner:
+    get:
+      tags: [admin-simulators]
+      operationId: getBankPartnerSimulator
+      summary: Bank Partner Simulator settings
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      responses:
+        '200':
+          description: Failure rate, delays and name-check behaviour of the sandbox interbank rail.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankPartnerSimulator'
+    put:
+      tags: [admin-simulators]
+      operationId: setBankPartnerSimulator
+      summary: Change Bank Partner Simulator settings
+      security:
+        - staffAuth: []
+      x-roles: [admin]
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/BankPartnerSimulator'
+      responses:
+        '200':
+          description: Saved.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankPartnerSimulator'
+
+  # ---------------------------------------------------------------- demo controls
+  /v1/demo/fund:
+    post:
+      tags: [demo]
+      operationId: demoFundWallet
+      summary: Fund a demo wallet
+      description: Demo users only (DEMO-1). Posts from the demo funding account through the ledger.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoFundRequest'
+      responses:
+        '201':
+          description: The credit transaction.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/demo/inbound-transfer:
+    post:
+      tags: [demo]
+      operationId: demoInboundTransfer
+      summary: Simulate an incoming transfer
+      description: An NGN transfer from another bank or a USD/GBP/EUR payment into a wallet (FX-3). EMTL applies to NGN inflows of ₦10,000 or more.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoInboundRequest'
+      responses:
+        '201':
+          description: The credit transaction.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transaction'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/demo/fail-next-transfer:
+    post:
+      tags: [demo]
+      operationId: demoFailNextTransfer
+      summary: Make the next bank transfer fail
+      description: The next interbank transfer fails at the partner and is auto-reversed, to show TRF-7.
+      responses:
+        '204':
+          description: Armed.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/demo/time-travel:
+    post:
+      tags: [demo]
+      operationId: demoTimeTravel
+      summary: Move the demo clock forward
+      description: Runs interest accrual, ajo cycles, schedules and loan due dates for the skipped days.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoTimeTravelRequest'
+      responses:
+        '200':
+          description: The new demo date.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DemoClock'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/demo/reset:
+    post:
+      tags: [demo]
+      operationId: demoReset
+      summary: Reset demo data
+      description: Re-seeds the persona from scratch. Other demo users are not affected.
+      responses:
+        '204':
+          description: Reset.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ---------------------------------------------------------------- developer platform
+  /v1/developer/api-keys:
+    get:
+      tags: [developer]
+      operationId: listApiKeys
+      summary: List API keys
+      description: Business customers manage their own keys in the developer portal (DEV-1).
+      responses:
+        '200':
+          description: Keys, newest first. Secrets are never returned again.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyList'
+    post:
+      tags: [developer]
+      operationId: createApiKey
+      summary: Create an API key
+      description: The secret is shown once and stored only as a hash. Sandbox keys start with `nem_test_`.
+      parameters:
+        - $ref: '#/components/parameters/StepUpTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateApiKeyRequest'
+      responses:
+        '201':
+          description: The key and its one-time secret.
+          headers:
+            Cache-Control:
+              description: Always `no-store`.
+              schema:
+                type: string
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ApiKeyCreated'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/developer/api-keys/{key_id}:
+    delete:
+      tags: [developer]
+      operationId: revokeApiKey
+      summary: Revoke an API key
+      description: Takes effect within a minute everywhere.
+      parameters:
+        - $ref: '#/components/parameters/KeyId'
+      responses:
+        '204':
+          description: Revoked.
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/developer/webhooks:
+    get:
+      tags: [developer]
+      operationId: listWebhookEndpoints
+      summary: List webhook endpoints
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      responses:
+        '200':
+          description: Every endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointList'
+    post:
+      tags: [developer]
+      operationId: createWebhookEndpoint
+      summary: Add a webhook endpoint
+      description: HTTPS only. The signing secret is shown once (DEV-3).
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateWebhookEndpointRequest'
+      responses:
+        '201':
+          description: The endpoint and its one-time signing secret.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointCreated'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/developer/webhooks/{endpoint_id}:
+    get:
+      tags: [developer]
+      operationId: getWebhookEndpoint
+      summary: Get a webhook endpoint
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EndpointId'
+      responses:
+        '200':
+          description: The endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpoint'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [developer]
+      operationId: updateWebhookEndpoint
+      summary: Change a webhook endpoint
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EndpointId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateWebhookEndpointRequest'
+      responses:
+        '200':
+          description: The updated endpoint.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpoint'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [developer]
+      operationId: deleteWebhookEndpoint
+      summary: Delete a webhook endpoint
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EndpointId'
+      responses:
+        '204':
+          description: Deleted; pending retries are cancelled.
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/developer/webhooks/{endpoint_id}/rotate-secret:
+    post:
+      tags: [developer]
+      operationId: rotateWebhookSecret
+      summary: Rotate the signing secret
+      description: The old secret keeps signing alongside the new one for 24 hours.
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EndpointId'
+      responses:
+        '200':
+          description: The new one-time secret.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookEndpointCreated'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/developer/webhooks/{endpoint_id}/test:
+    post:
+      tags: [developer]
+      operationId: sendTestWebhook
+      summary: Send a test event
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EndpointId'
+      responses:
+        '202':
+          description: The queued delivery.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDelivery'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/developer/webhooks/{endpoint_id}/deliveries:
+    get:
+      tags: [developer]
+      operationId: listWebhookDeliveries
+      summary: Delivery log
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/EndpointId'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/WebhookDeliveryStatus'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDeliveryPage'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/developer/webhook-deliveries/{delivery_id}/replay:
+    post:
+      tags: [developer]
+      operationId: replayWebhookDelivery
+      summary: Replay a delivery
+      description: Sends the same event again with the same `Nem-Event-Id`, so receivers can deduplicate.
+      security:
+        - bearerAuth: []
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/DeliveryId'
+      responses:
+        '202':
+          description: The new delivery attempt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WebhookDelivery'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/developer/sandbox/payments:
+    post:
+      tags: [developer]
+      operationId: simulateSandboxPayment
+      summary: Simulate a customer payment
+      description: Pays one of my payment links from a sandbox payer so I can test webhooks end to end (DEV-2).
+      security:
+        - apiKeyAuth: []
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SandboxPaymentRequest'
+      responses:
+        '201':
+          description: The resulting transfer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+
+  # ---------------------------------------------------------------- partner callbacks (inbound webhooks)
+  /v1/partner-webhooks/{partner}:
+    post:
+      tags: [partners]
+      operationId: receivePartnerWebhook
+      summary: Receive a partner callback
+      description: |
+        Status callbacks from sandbox partners (interbank rail, biller, inbound foreign currency).
+        HMAC-SHA256 signed with a timestamp; deduplicated by `Partner-Event-Id`.
+      security: []
+      parameters:
+        - name: partner
+          in: path
+          required: true
+          schema:
+            type: string
+            enum: [sandbox_nip, sandbox_biller, sandbox_fx_inbound, paystack_test]
+        - name: Partner-Signature
+          in: header
+          required: true
+          description: '`t=<unix seconds>,v1=<hex HMAC-SHA256 of "t.body">`.'
+          schema:
+            type: string
+        - name: Partner-Event-Id
+          in: header
+          required: true
+          schema:
+            type: string
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PartnerCallback'
+      responses:
+        '200':
+          description: Accepted (also returned for duplicates).
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+webhooks:
+  payment_link.paid:
+    post:
+      tags: [developer]
+      operationId: onPaymentLinkPaid
+      summary: payment_link.paid
+      description: A payment link received a payment. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/WebhookSignature'
+        - $ref: '#/components/parameters/WebhookEventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged.
+  transfer.completed:
+    post:
+      tags: [developer]
+      operationId: onTransferCompleted
+      summary: transfer.completed
+      description: A transfer from your account completed. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/WebhookSignature'
+        - $ref: '#/components/parameters/WebhookEventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged.
+  transfer.failed:
+    post:
+      tags: [developer]
+      operationId: onTransferFailed
+      summary: transfer.failed
+      description: A transfer failed at the partner. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/WebhookSignature'
+        - $ref: '#/components/parameters/WebhookEventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged.
+  transfer.reversed:
+    post:
+      tags: [developer]
+      operationId: onTransferReversed
+      summary: transfer.reversed
+      description: A failed transfer was reversed and the money returned. `data.object` is the Transfer. Respond 2xx within 10 seconds; anything else is retried.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/WebhookSignature'
+        - $ref: '#/components/parameters/WebhookEventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged.
+  account.credited:
+    post:
+      tags: [developer]
+      operationId: onAccountCredited
+      summary: account.credited
+      description: Money arrived in one of your accounts. `data.object` is the Transaction. Respond 2xx within 10 seconds; anything else is retried.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/WebhookSignature'
+        - $ref: '#/components/parameters/WebhookEventId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/WebhookEvent'
+      responses:
+        '200':
+          description: Acknowledged.
 components:
   securitySchemes:
     bearerAuth:
@@ -3988,6 +5654,15 @@ components:
       scheme: bearer
       bearerFormat: JWT
       description: EdDSA-signed access token (10-minute lifetime).
+    staffAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: Console staff token, issued only after TOTP (8-hour lifetime). Audience `console`; customer tokens are rejected.
+    apiKeyAuth:
+      type: http
+      scheme: bearer
+      description: Developer API key (`nem_test_…`) sent as a bearer token. Scoped and revocable (DEV-1).
 
   parameters:
     IdempotencyKey:
@@ -4270,6 +5945,78 @@ components:
       name: action_id
       in: path
       required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    UserId:
+      name: user_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    CaseId:
+      name: case_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    LedgerAccountId:
+      name: ledger_account_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    EntryId:
+      name: entry_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    FlagKey:
+      name: flag_key
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z][a-z0-9_]{2,50}$'
+    AuthorizationId:
+      name: authorization_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    KeyId:
+      name: key_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    EndpointId:
+      name: endpoint_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DeliveryId:
+      name: delivery_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    WebhookSignature:
+      name: Nem-Signature
+      in: header
+      required: true
+      description: |
+        `t=<unix seconds>,v1=<hex HMAC-SHA256>`, signed over `<t>.<raw body>` with the endpoint's
+        signing secret. Reject if `t` is more than 5 minutes old. During secret rotation a second
+        `v1=` value is included.
+      schema:
+        type: string
+    WebhookEventId:
+      name: Nem-Event-Id
+      in: header
+      required: true
+      description: Same value on every retry and replay, for deduplication.
       schema:
         $ref: '#/components/schemas/Uuid'
   schemas:
@@ -9371,6 +11118,1430 @@ components:
               const: resume
             last_event_id:
               $ref: '#/components/schemas/Uuid'
+
+    # ------------------------------------------------------------ admin: staff
+    StaffRole:
+      type: string
+      enum: [support, compliance, finance, admin]
+    Staff:
+      type: object
+      required: [id, name, email, roles, totp_enrolled, last_login_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+        email:
+          $ref: '#/components/schemas/Email'
+        roles:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/StaffRole'
+        totp_enrolled:
+          type: boolean
+        last_login_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    StaffLoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          $ref: '#/components/schemas/Email'
+        password:
+          $ref: '#/components/schemas/Password'
+    StaffLoginChallenge:
+      type: object
+      required: [challenge_id, expires_at, totp_enrolment]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        totp_enrolment:
+          description: Present on first login; scan the URI into an authenticator app.
+          oneOf:
+            - type: object
+              required: [otpauth_uri]
+              properties:
+                otpauth_uri:
+                  type: string
+                  pattern: '^otpauth://totp/'
+            - type: 'null'
+    StaffTotpRequest:
+      type: object
+      required: [challenge_id, code]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+    StaffSession:
+      type: object
+      required: [access_token, expires_at, staff]
+      properties:
+        access_token:
+          type: string
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        staff:
+          $ref: '#/components/schemas/Staff'
+    StaffRef:
+      type: object
+      required: [id, name]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+    ReasonRequest:
+      type: object
+      required: [reason]
+      properties:
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+
+    # ------------------------------------------------------------ admin: dashboard and customers
+    CurrencyVolume:
+      type: object
+      required: [currency, inflow, outflow, count]
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        inflow:
+          $ref: '#/components/schemas/Money'
+        outflow:
+          $ref: '#/components/schemas/Money'
+        count:
+          type: integer
+          minimum: 0
+    AdminDashboard:
+      type: object
+      required:
+        [
+          period_from,
+          period_to,
+          users_total,
+          users_new,
+          users_active_30d,
+          volume,
+          transfers_by_status,
+          fraud_hold_rate_bps,
+          fx_pnl,
+          queues,
+        ]
+      properties:
+        period_from:
+          $ref: '#/components/schemas/Date'
+        period_to:
+          $ref: '#/components/schemas/Date'
+        users_total:
+          type: integer
+        users_new:
+          type: integer
+        users_active_30d:
+          type: integer
+        volume:
+          type: array
+          items:
+            $ref: '#/components/schemas/CurrencyVolume'
+        transfers_by_status:
+          type: array
+          items:
+            type: object
+            required: [status, count]
+            properties:
+              status:
+                $ref: '#/components/schemas/TransferStatus'
+              count:
+                type: integer
+        fraud_hold_rate_bps:
+          $ref: '#/components/schemas/BasisPoints'
+        fx_pnl:
+          type: array
+          description: Spread income per currency, from the FX position accounts.
+          items:
+            $ref: '#/components/schemas/Money'
+        queues:
+          type: object
+          required: [kyc_pending, fraud_open, disputes_open, support_open, approvals_pending]
+          properties:
+            kyc_pending:
+              type: integer
+            fraud_open:
+              type: integer
+            disputes_open:
+              type: integer
+            support_open:
+              type: integer
+            approvals_pending:
+              type: integer
+    CustomerSummary:
+      type: object
+      required: [user_id, name, email_masked, phone_masked, nemtag, kyc_tier, status, created_at]
+      properties:
+        user_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+        email_masked:
+          type: string
+        phone_masked:
+          type: string
+        nemtag:
+          type: [string, 'null']
+        kyc_tier:
+          $ref: '#/components/schemas/KycTier'
+        status:
+          type: string
+          enum: [active, frozen, closed]
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    CustomerSummaryPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/CustomerSummary'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    StaffNote:
+      type: object
+      required: [id, author, body, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        author:
+          $ref: '#/components/schemas/StaffRef'
+        body:
+          type: string
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    CreateNoteRequest:
+      type: object
+      required: [body]
+      properties:
+        body:
+          type: string
+          minLength: 1
+          maxLength: 2000
+    Customer360:
+      type: object
+      required:
+        [customer, accounts, kyc, devices, recent_transactions, notes, flags, panic, open_cases]
+      properties:
+        customer:
+          $ref: '#/components/schemas/CustomerSummary'
+        date_of_birth:
+          description: Hidden from the support role.
+          oneOf:
+            - $ref: '#/components/schemas/Date'
+            - type: 'null'
+        accounts:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+        kyc:
+          type: object
+          required: [tier, status, latest_submission]
+          properties:
+            tier:
+              $ref: '#/components/schemas/KycTier'
+            status:
+              $ref: '#/components/schemas/KycStatus'
+            latest_submission:
+              oneOf:
+                - $ref: '#/components/schemas/KycSubmission'
+                - type: 'null'
+        devices:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+        recent_transactions:
+          type: array
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/Transaction'
+        notes:
+          type: array
+          items:
+            $ref: '#/components/schemas/StaffNote'
+        flags:
+          type: array
+          items:
+            type: string
+            enum: [frozen, duress_triggered, fraud_watch, new_device_cool_off, limit_override, demo]
+        panic:
+          $ref: '#/components/schemas/PanicState'
+        open_cases:
+          type: object
+          required: [fraud, disputes, support]
+          properties:
+            fraud:
+              type: integer
+            disputes:
+              type: integer
+            support:
+              type: integer
+    LimitOverrideRequest:
+      type: object
+      required: [daily_limit, expires_at, reason]
+      properties:
+        daily_limit:
+          $ref: '#/components/schemas/Money'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+
+    # ------------------------------------------------------------ admin: maker-checker
+    MakerCheckerStatus:
+      type: string
+      enum: [pending, approved, rejected, expired]
+    ApprovalRequest:
+      type: object
+      required:
+        [
+          id,
+          action,
+          status,
+          maker,
+          checker,
+          reason,
+          summary,
+          before,
+          after,
+          created_at,
+          decided_at,
+          expires_at,
+        ]
+      description: A sensitive action proposed by one staff member and approved by another (ADM-10).
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        action:
+          type: string
+          enum:
+            [customer_unfreeze, limit_override, ledger_adjustment, config_change, dispute_refund]
+        status:
+          $ref: '#/components/schemas/MakerCheckerStatus'
+        maker:
+          $ref: '#/components/schemas/StaffRef'
+        checker:
+          oneOf:
+            - $ref: '#/components/schemas/StaffRef'
+            - type: 'null'
+        reason:
+          type: string
+        summary:
+          type: string
+        before:
+          description: The state before the change, for the checker's diff.
+          type: [object, 'null']
+          additionalProperties: true
+        after:
+          type: [object, 'null']
+          additionalProperties: true
+        rejection_reason:
+          type: [string, 'null']
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        decided_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    ApprovalRequestPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApprovalRequest'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    # ------------------------------------------------------------ admin: kyc
+    KycReview:
+      type: object
+      required:
+        [
+          submission,
+          customer,
+          documents,
+          identity_checks,
+          id_type,
+          id_number_masked,
+          address,
+          reviewer,
+        ]
+      properties:
+        submission:
+          $ref: '#/components/schemas/KycSubmission'
+        customer:
+          $ref: '#/components/schemas/CustomerSummary'
+        documents:
+          type: array
+          items:
+            allOf:
+              - $ref: '#/components/schemas/KycDocument'
+              - type: object
+                required: [url]
+                properties:
+                  url:
+                    type: string
+                    format: uri
+                    description: Signed URL valid for 5 minutes.
+        identity_checks:
+          type: array
+          items:
+            $ref: '#/components/schemas/IdentityVerification'
+        id_type:
+          type: string
+        id_number_masked:
+          type: string
+        address:
+          $ref: '#/components/schemas/Address'
+        reviewer:
+          oneOf:
+            - $ref: '#/components/schemas/StaffRef'
+            - type: 'null'
+    KycReviewPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            type: object
+            required: [submission, customer, waiting_hours]
+            properties:
+              submission:
+                $ref: '#/components/schemas/KycSubmission'
+              customer:
+                $ref: '#/components/schemas/CustomerSummary'
+              waiting_hours:
+                type: integer
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    KycDecisionRequest:
+      type: object
+      required: [decision]
+      description: '`reason` is required to reject or ask for resubmission; it is shown to the customer.'
+      properties:
+        decision:
+          type: string
+          enum: [approve, reject, resubmit]
+        reason:
+          type: string
+          maxLength: 500
+        resubmit_documents:
+          type: array
+          items:
+            $ref: '#/components/schemas/KycDocumentKind'
+
+    # ------------------------------------------------------------ admin: fraud
+    FraudCaseStatus:
+      type: string
+      enum: [open, in_review, released, rejected]
+    FraudLabel:
+      type: string
+      description: Ground truth for retraining the fraud model.
+      enum: [fraud, legitimate, unsure]
+    FraudCase:
+      type: object
+      required: [id, status, transfer, risk, customer, assignee, label, note, created_at, closed_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        status:
+          $ref: '#/components/schemas/FraudCaseStatus'
+        transfer:
+          $ref: '#/components/schemas/Transfer'
+        risk:
+          $ref: '#/components/schemas/RiskAssessment'
+        customer:
+          $ref: '#/components/schemas/CustomerSummary'
+        signals:
+          type: object
+          description: Context the reviewer needs without opening the customer 360.
+          properties:
+            device_age_hours:
+              type: integer
+            beneficiary_age_hours:
+              type: [integer, 'null']
+            transfers_last_24h:
+              type: integer
+            average_transfer:
+              $ref: '#/components/schemas/Money'
+        assignee:
+          oneOf:
+            - $ref: '#/components/schemas/StaffRef'
+            - type: 'null'
+        label:
+          oneOf:
+            - $ref: '#/components/schemas/FraudLabel'
+            - type: 'null'
+        note:
+          type: [string, 'null']
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        closed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    FraudCasePage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FraudCase'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    FraudDecisionRequest:
+      type: object
+      required: [decision, label]
+      properties:
+        decision:
+          type: string
+          enum: [release, reject]
+        label:
+          $ref: '#/components/schemas/FraudLabel'
+        note:
+          type: string
+          maxLength: 1000
+        customer_message:
+          type: string
+          maxLength: 300
+          description: Optional plain-language note for the customer.
+
+    # ------------------------------------------------------------ admin: disputes and support
+    AdminDispute:
+      type: object
+      required: [dispute, customer, transaction, assignee]
+      properties:
+        dispute:
+          $ref: '#/components/schemas/Dispute'
+        customer:
+          $ref: '#/components/schemas/CustomerSummary'
+        transaction:
+          $ref: '#/components/schemas/TransactionDetail'
+        assignee:
+          oneOf:
+            - $ref: '#/components/schemas/StaffRef'
+            - type: 'null'
+    AdminDisputePage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AdminDispute'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    DisputeDecisionRequest:
+      type: object
+      required: [outcome, note]
+      properties:
+        outcome:
+          type: string
+          enum: [refund, decline, request_info]
+        refund_amount:
+          description: Required for `refund`; at most the disputed amount.
+          $ref: '#/components/schemas/Money'
+        note:
+          type: string
+          minLength: 5
+          maxLength: 1000
+          description: Shown to the customer.
+    AgentConversation:
+      type: object
+      required: [conversation, customer, waiting_minutes]
+      properties:
+        conversation:
+          $ref: '#/components/schemas/SupportConversation'
+        customer:
+          $ref: '#/components/schemas/CustomerSummary'
+        waiting_minutes:
+          type: integer
+          minimum: 0
+    AgentConversationPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AgentConversation'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+
+    # ------------------------------------------------------------ admin: ledger
+    LedgerOwnerType:
+      type: string
+      enum: [customer, system]
+    LedgerAccountKind:
+      type: string
+      description: |
+        Customer kinds plus system accounts: fee income, FX positions (one per currency),
+        interest expense, ajo escrow, card settlement, partner settlement, levy payable,
+        demo funding and suspense.
+      enum:
+        - customer_current
+        - customer_wallet
+        - customer_savings
+        - customer_locked
+        - customer_loan
+        - fee_income
+        - fx_position
+        - interest_expense
+        - interest_income
+        - ajo_escrow
+        - card_settlement
+        - partner_settlement
+        - levy_payable
+        - demo_funding
+        - suspense
+    LedgerAccount:
+      type: object
+      required: [id, owner_type, owner_id, kind, currency, balance, available, version, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        owner_type:
+          $ref: '#/components/schemas/LedgerOwnerType'
+        owner_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        kind:
+          $ref: '#/components/schemas/LedgerAccountKind'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        name:
+          type: string
+        balance:
+          $ref: '#/components/schemas/Money'
+        available:
+          $ref: '#/components/schemas/Money'
+        version:
+          type: integer
+          description: Optimistic version, bumped on every posting.
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    LedgerAccountPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/LedgerAccount'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    Posting:
+      type: object
+      required: [id, entry_id, account_id, amount, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        entry_id:
+          $ref: '#/components/schemas/Uuid'
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          description: Signed; credits are positive, debits negative.
+          $ref: '#/components/schemas/Money'
+        balance_after:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    PostingPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Posting'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    JournalEntryKind:
+      type: string
+      enum:
+        - transfer_internal
+        - transfer_external
+        - transfer_reversal
+        - fee
+        - levy
+        - fx_conversion
+        - card_authorization
+        - card_settlement
+        - card_reversal
+        - bill_payment
+        - savings
+        - interest_accrual
+        - ajo_contribution
+        - ajo_payout
+        - loan_disbursement
+        - loan_repayment
+        - dispute_refund
+        - demo_funding
+        - manual_adjustment
+    JournalEntry:
+      type: object
+      required: [id, kind, reference, idempotency_key, postings, created_at, metadata]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        kind:
+          $ref: '#/components/schemas/JournalEntryKind'
+        reference:
+          type: string
+        idempotency_key:
+          type: [string, 'null']
+        postings:
+          type: array
+          minItems: 2
+          items:
+            $ref: '#/components/schemas/Posting'
+        metadata:
+          type: object
+          additionalProperties: true
+        approval_id:
+          description: Set for manual adjustments.
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    JournalEntryPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/JournalEntry'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    TrialBalanceLine:
+      type: object
+      required: [currency, total_debits, total_credits, net, balanced, accounts]
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        total_debits:
+          $ref: '#/components/schemas/Money'
+        total_credits:
+          $ref: '#/components/schemas/Money'
+        net:
+          description: Must be zero.
+          $ref: '#/components/schemas/Money'
+        balanced:
+          type: boolean
+        accounts:
+          type: integer
+          minimum: 0
+    TrialBalance:
+      type: object
+      required: [as_of, balanced, currencies, generated_in_ms]
+      properties:
+        as_of:
+          $ref: '#/components/schemas/Timestamp'
+        balanced:
+          type: boolean
+          description: True only when every currency nets to zero.
+        currencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/TrialBalanceLine'
+        generated_in_ms:
+          type: integer
+    ReconciliationItem:
+      type: object
+      required: [reference, ledger_amount, partner_amount, status]
+      properties:
+        reference:
+          type: string
+        ledger_amount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        partner_amount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        status:
+          type: string
+          enum: [matched, missing_in_ledger, missing_at_partner, amount_mismatch]
+    ReconciliationReport:
+      type: object
+      required: [date, partner, matched, unmatched, items, generated_at]
+      properties:
+        date:
+          $ref: '#/components/schemas/Date'
+        partner:
+          type: string
+        matched:
+          type: integer
+        unmatched:
+          type: integer
+        items:
+          type: array
+          description: Unmatched items only.
+          items:
+            $ref: '#/components/schemas/ReconciliationItem'
+        generated_at:
+          $ref: '#/components/schemas/Timestamp'
+    LedgerAdjustmentRequest:
+      type: object
+      required: [reason, postings]
+      properties:
+        reason:
+          type: string
+          minLength: 10
+          maxLength: 500
+        reference:
+          type: string
+          maxLength: 60
+        postings:
+          type: array
+          minItems: 2
+          items:
+            type: object
+            required: [account_id, amount]
+            properties:
+              account_id:
+                $ref: '#/components/schemas/Uuid'
+              amount:
+                description: Signed. All postings must sum to zero per currency.
+                $ref: '#/components/schemas/Money'
+
+    # ------------------------------------------------------------ admin: config and flags
+    FeeBand:
+      type: object
+      required: [up_to, fee]
+      properties:
+        up_to:
+          description: Upper bound of the band; null for the last band.
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        fee:
+          $ref: '#/components/schemas/Money'
+    TierLimit:
+      type: object
+      required: [tier, daily_limit, max_balance]
+      properties:
+        tier:
+          $ref: '#/components/schemas/KycTier'
+        daily_limit:
+          $ref: '#/components/schemas/Money'
+        max_balance:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+    BankConfig:
+      type: object
+      required: [version, fees, limits, fx_spreads_bps, cooling_off, new_device, updated_at]
+      properties:
+        version:
+          type: integer
+        fees:
+          type: object
+          required: [internal_transfer, external_transfer_bands, emtl, emtl_threshold]
+          properties:
+            internal_transfer:
+              $ref: '#/components/schemas/Money'
+            external_transfer_bands:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeeBand'
+            emtl:
+              $ref: '#/components/schemas/Money'
+            emtl_threshold:
+              $ref: '#/components/schemas/Money'
+        limits:
+          type: array
+          items:
+            $ref: '#/components/schemas/TierLimit'
+        fx_spreads_bps:
+          type: object
+          description: 'Spread per pair, e.g. `{ "USD-NGN": 150 }`.'
+          additionalProperties:
+            $ref: '#/components/schemas/BasisPoints'
+        cooling_off:
+          type: object
+          required: [new_beneficiary_threshold, delay_minutes]
+          properties:
+            new_beneficiary_threshold:
+              $ref: '#/components/schemas/Money'
+            delay_minutes:
+              type: integer
+        new_device:
+          type: object
+          required: [cool_off_hours, daily_limit]
+          properties:
+            cool_off_hours:
+              type: integer
+            daily_limit:
+              $ref: '#/components/schemas/Money'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    ConfigChangeRequest:
+      type: object
+      required: [section, value, reason, base_version]
+      properties:
+        section:
+          type: string
+          enum: [fees, limits, fx_spreads_bps, cooling_off, new_device]
+        value:
+          description: The full new value of the section.
+          type: [object, array]
+        reason:
+          type: string
+          minLength: 5
+          maxLength: 500
+        base_version:
+          type: integer
+          description: The config version the change was made against; stale changes get 409.
+    FeatureFlag:
+      type: object
+      required: [key, description, enabled, paid_feature, updated_at, updated_by]
+      properties:
+        key:
+          type: string
+          examples: ['international_transfers']
+        description:
+          type: string
+        enabled:
+          type: boolean
+        paid_feature:
+          type: boolean
+          description: Needs a paid partner; turning it on needs a connected adapter.
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_by:
+          oneOf:
+            - $ref: '#/components/schemas/StaffRef'
+            - type: 'null'
+    FeatureFlagList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeatureFlag'
+    UpdateFeatureFlagRequest:
+      type: object
+      required: [enabled, reason]
+      properties:
+        enabled:
+          type: boolean
+        reason:
+          type: string
+          maxLength: 500
+
+    # ------------------------------------------------------------ admin: audit
+    AuditEntry:
+      type: object
+      required: [seq, id, at, actor, action, resource, metadata, prev_hash, hash]
+      properties:
+        seq:
+          type: integer
+          minimum: 1
+        id:
+          $ref: '#/components/schemas/Uuid'
+        at:
+          $ref: '#/components/schemas/Timestamp'
+        actor:
+          type: object
+          required: [type, id, name]
+          properties:
+            type:
+              type: string
+              enum: [staff, customer, system]
+            id:
+              type: [string, 'null']
+            name:
+              type: [string, 'null']
+        action:
+          type: string
+          examples: ['kyc.approve', 'customer.freeze', 'ledger.adjustment.approve']
+        resource:
+          type: object
+          required: [type, id]
+          properties:
+            type:
+              type: string
+            id:
+              type: string
+        metadata:
+          type: object
+          description: Never contains PII; IDs only.
+          additionalProperties: true
+        ip:
+          type: [string, 'null']
+        prev_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        hash:
+          type: string
+          description: SHA-256 over `prev_hash` and the canonical entry.
+          pattern: '^[0-9a-f]{64}$'
+    AuditEntryPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/AuditEntry'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    AuditVerifyRequest:
+      type: object
+      properties:
+        from_seq:
+          type: integer
+          minimum: 1
+        to_seq:
+          type: integer
+          minimum: 1
+    AuditVerification:
+      type: object
+      required: [valid, checked, first_broken_seq, head_seq, head_hash, verified_at]
+      properties:
+        valid:
+          type: boolean
+        checked:
+          type: integer
+        first_broken_seq:
+          type: [integer, 'null']
+        head_seq:
+          type: integer
+        head_hash:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        verified_at:
+          $ref: '#/components/schemas/Timestamp'
+
+    # ------------------------------------------------------------ admin: simulators
+    SimulatedChargeRequest:
+      type: object
+      required: [pan, expiry_month, expiry_year, cvv, amount, merchant, channel]
+      properties:
+        pan:
+          type: string
+          pattern: '^[0-9]{16}$'
+          writeOnly: true
+        expiry_month:
+          type: integer
+          minimum: 1
+          maximum: 12
+        expiry_year:
+          type: integer
+        cvv:
+          type: string
+          pattern: '^[0-9]{3}$'
+          writeOnly: true
+        amount:
+          $ref: '#/components/schemas/Money'
+        merchant:
+          type: object
+          required: [id, name, mcc, country]
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            mcc:
+              type: string
+              pattern: '^[0-9]{4}$'
+            country:
+              type: string
+              pattern: '^[A-Z]{2}$'
+        channel:
+          type: string
+          enum: [online, in_store]
+        capture:
+          type: boolean
+          default: false
+          description: Settle immediately instead of leaving an authorization hold.
+    CaptureRequest:
+      type: object
+      properties:
+        amount:
+          description: Capture less than authorized (e.g. a final bill); defaults to the full amount.
+          $ref: '#/components/schemas/Money'
+    BankPartnerSimulator:
+      type: object
+      required: [failure_rate_bps, min_delay_seconds, max_delay_seconds, name_check]
+      properties:
+        failure_rate_bps:
+          $ref: '#/components/schemas/BasisPoints'
+        min_delay_seconds:
+          type: integer
+          minimum: 0
+          maximum: 300
+        max_delay_seconds:
+          type: integer
+          minimum: 0
+          maximum: 600
+        name_check:
+          type: string
+          description: How Confirmation of Payee answers in the sandbox.
+          enum: [realistic, always_match, always_no_match]
+        timeout_rate_bps:
+          $ref: '#/components/schemas/BasisPoints'
+
+    # ------------------------------------------------------------ demo controls
+    DemoFundRequest:
+      type: object
+      required: [account_id, amount]
+      properties:
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          $ref: '#/components/schemas/Money'
+    DemoInboundRequest:
+      type: object
+      required: [account_id, amount, sender_name]
+      properties:
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          $ref: '#/components/schemas/Money'
+        sender_name:
+          type: string
+          maxLength: 60
+        sender_bank:
+          type: string
+          maxLength: 60
+        narration:
+          type: string
+          maxLength: 100
+    DemoTimeTravelRequest:
+      type: object
+      required: [days]
+      properties:
+        days:
+          type: integer
+          minimum: 1
+          maximum: 365
+    DemoClock:
+      type: object
+      required: [now, offset_days]
+      properties:
+        now:
+          $ref: '#/components/schemas/Timestamp'
+        offset_days:
+          type: integer
+          minimum: 0
+
+    # ------------------------------------------------------------ developer
+    ApiKeyScope:
+      type: string
+      enum: [accounts_read, transactions_read, transfers_read, payment_links_write, webhooks_manage]
+    ApiKey:
+      type: object
+      required: [id, name, prefix, scopes, environment, created_at, last_used_at, revoked_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+        prefix:
+          type: string
+          description: The first characters of the key, for recognising it.
+          examples: ['nem_test_7Hq2']
+        scopes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ApiKeyScope'
+        environment:
+          type: string
+          description: Only sandbox exists in v1 (DEV-2).
+          enum: [sandbox]
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        last_used_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        revoked_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    ApiKeyList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ApiKey'
+    CreateApiKeyRequest:
+      type: object
+      required: [name, scopes]
+      properties:
+        name:
+          type: string
+          maxLength: 40
+        scopes:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/ApiKeyScope'
+    ApiKeyCreated:
+      type: object
+      required: [key, secret]
+      properties:
+        key:
+          $ref: '#/components/schemas/ApiKey'
+        secret:
+          type: string
+          description: Shown once. Stored only as a SHA-256 hash.
+          pattern: '^nem_test_[A-Za-z0-9]{32}$'
+    WebhookEventType:
+      type: string
+      enum:
+        [
+          payment_link.paid,
+          transfer.completed,
+          transfer.failed,
+          transfer.reversed,
+          account.credited,
+          test.ping,
+        ]
+    WebhookEndpoint:
+      type: object
+      required: [id, url, events, status, secret_prefix, consecutive_failures, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        url:
+          type: string
+          format: uri
+          pattern: '^https://'
+        description:
+          type: [string, 'null']
+        events:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+        status:
+          type: string
+          description: Endpoints are disabled automatically after 3 days of failures.
+          enum: [active, disabled]
+        secret_prefix:
+          type: string
+          examples: ['whsec_3Fk9']
+        consecutive_failures:
+          type: integer
+          minimum: 0
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    WebhookEndpointList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookEndpoint'
+    CreateWebhookEndpointRequest:
+      type: object
+      required: [url, events]
+      properties:
+        url:
+          type: string
+          format: uri
+          pattern: '^https://'
+          maxLength: 500
+        description:
+          type: string
+          maxLength: 100
+        events:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+    UpdateWebhookEndpointRequest:
+      type: object
+      minProperties: 1
+      properties:
+        url:
+          type: string
+          format: uri
+          pattern: '^https://'
+          maxLength: 500
+        description:
+          type: [string, 'null']
+          maxLength: 100
+        events:
+          type: array
+          minItems: 1
+          items:
+            $ref: '#/components/schemas/WebhookEventType'
+        status:
+          type: string
+          enum: [active, disabled]
+    WebhookEndpointCreated:
+      type: object
+      required: [endpoint, signing_secret]
+      properties:
+        endpoint:
+          $ref: '#/components/schemas/WebhookEndpoint'
+        signing_secret:
+          type: string
+          description: Shown once.
+          pattern: '^whsec_[A-Za-z0-9]{32}$'
+    WebhookDeliveryStatus:
+      type: string
+      enum: [pending, succeeded, retrying, failed]
+    WebhookDelivery:
+      type: object
+      required:
+        [
+          id,
+          endpoint_id,
+          event_id,
+          event_type,
+          attempt,
+          status,
+          response_status,
+          duration_ms,
+          next_retry_at,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        endpoint_id:
+          $ref: '#/components/schemas/Uuid'
+        event_id:
+          $ref: '#/components/schemas/Uuid'
+        event_type:
+          $ref: '#/components/schemas/WebhookEventType'
+        attempt:
+          type: integer
+          minimum: 1
+          maximum: 8
+          description: Retries back off exponentially (1 min, 5 min, 30 min, 2 h, 6 h, 12 h, 24 h).
+        status:
+          $ref: '#/components/schemas/WebhookDeliveryStatus'
+        response_status:
+          type: [integer, 'null']
+        response_body_excerpt:
+          type: [string, 'null']
+          maxLength: 500
+        duration_ms:
+          type: [integer, 'null']
+        request_body:
+          $ref: '#/components/schemas/WebhookEvent'
+        next_retry_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    WebhookDeliveryPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/WebhookDelivery'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SandboxPaymentRequest:
+      type: object
+      required: [payment_link_id]
+      properties:
+        payment_link_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          description: Required for open-amount links.
+          $ref: '#/components/schemas/Money'
+        payer_name:
+          type: string
+          maxLength: 60
+          default: Sandbox Payer
+    WebhookEvent:
+      type: object
+      required: [id, type, created_at, livemode, data]
+      description: The body Nem POSTs to developer webhook endpoints.
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        type:
+          $ref: '#/components/schemas/WebhookEventType'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        livemode:
+          type: boolean
+          const: false
+        data:
+          type: object
+          required: [object]
+          properties:
+            object:
+              description: The resource the event is about, in the same shape as the API returns it.
+              anyOf:
+                - $ref: '#/components/schemas/Transfer'
+                - $ref: '#/components/schemas/Transaction'
+                - $ref: '#/components/schemas/PaymentLink'
+                - type: object
+                  required: [message]
+                  properties:
+                    message:
+                      type: string
+                      const: ping
+
+    # ------------------------------------------------------------ partners
+    PartnerCallback:
+      type: object
+      required: [event_type, reference, occurred_at]
+      properties:
+        event_type:
+          type: string
+          enum: [transfer.settled, transfer.failed, bill.completed, bill.failed, inbound.credit]
+        reference:
+          type: string
+          description: Nem's reference for outbound events; the partner's for inbound credits.
+        occurred_at:
+          $ref: '#/components/schemas/Timestamp'
+        amount:
+          $ref: '#/components/schemas/Money'
+        account_number:
+          type: string
+        failure_code:
+          type: [string, 'null']
+        payload:
+          type: object
+          additionalProperties: true
   responses:
     BadRequest:
       description: The request is malformed or failed validation.

@@ -1,7 +1,7 @@
 // Every API type comes from here. Never hand-write a type that duplicates the contract.
-import type { components, operations, paths } from './schema.gen';
+import type { components, operations, paths, webhooks } from './schema.gen';
 
-export type { components, operations, paths };
+export type { components, operations, paths, webhooks };
 
 type Schemas = components['schemas'];
 
@@ -36,3 +36,13 @@ export type RealtimeEvent = Schemas['RealtimeEvent'];
 export type RealtimeEventType = RealtimeEvent['type'];
 export type RealtimeEventOf<T extends RealtimeEventType> = Extract<RealtimeEvent, { type: T }>;
 export type RealtimeClientMessage = Schemas['RealtimeClientMessage'];
+
+// Staff console and developer platform.
+export type Staff = Schemas['Staff'];
+export type StaffRole = Schemas['StaffRole'];
+export type ApprovalRequest = Schemas['ApprovalRequest'];
+export type TrialBalance = Schemas['TrialBalance'];
+export type JournalEntry = Schemas['JournalEntry'];
+export type AuditEntry = Schemas['AuditEntry'];
+export type ApiKey = Schemas['ApiKey'];
+export type WebhookEvent = Schemas['WebhookEvent'];
