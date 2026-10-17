@@ -138,13 +138,15 @@ export function settleExternalTransfer(
   ledger: Ledger,
   holdId: string,
   idempotencyKey: string,
+  metadata: Record<string, unknown> = {},
 ): JournalEntry {
   const hold = ledger.state.holds[holdId];
   if (!hold) throw problem(404, 'hold_not_found', 'Hold not found');
   // The idempotency key makes a duplicate partner callback replay, not double-settle.
   const seen = ledger.state.idempotency[idempotencyKey];
   if (seen) return ledger.state.entries.find((e) => e.id === seen.entryId)!;
-  return ledger.post({ ...settlementEntry(ledger, hold), idempotencyKey });
+  const entry = settlementEntry(ledger, hold);
+  return ledger.post({ ...entry, idempotencyKey, metadata: { ...metadata, ...entry.metadata } });
 }
 
 function settlementEntry(ledger: Ledger, hold: Hold) {
@@ -270,6 +272,7 @@ export function convertFx(
     reference: string;
     idempotencyKey: string;
     toTier: KycTier;
+    metadata?: Record<string, unknown>;
   },
 ): { entry: JournalEntry; buy: Money } {
   const to = ledger.account(input.toAccountId);
@@ -296,7 +299,7 @@ export function convertFx(
       { accountId: ledger.systemAccount('fx_position', to.currency).id, amount: negate(buy) },
       { accountId: to.id, amount: buy },
     ],
-    metadata: { rate: input.rate },
+    metadata: { ...input.metadata, rate: input.rate },
   });
   return { entry, buy };
 }
