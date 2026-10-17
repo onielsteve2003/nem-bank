@@ -8,6 +8,7 @@ import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ToastProvider } from '@/components';
+import { RepositoryProvider } from '@/data';
 import { FONTS, ThemeProvider, useTheme } from '@/theme';
 
 // Keep the splash up until the fonts are ready, so text never renders in the
@@ -29,13 +30,15 @@ export default function RootLayout() {
   // Sheets and toasts sit inside the theme so they render in the active scheme.
   return (
     <GestureHandlerRootView style={styles.root}>
-      <ThemeProvider>
-        <BottomSheetModalProvider>
-          <ToastProvider>
-            <ThemedStack />
-          </ToastProvider>
-        </BottomSheetModalProvider>
-      </ThemeProvider>
+      <RepositoryProvider>
+        <ThemeProvider>
+          <BottomSheetModalProvider>
+            <ToastProvider>
+              <ThemedStack />
+            </ToastProvider>
+          </BottomSheetModalProvider>
+        </ThemeProvider>
+      </RepositoryProvider>
     </GestureHandlerRootView>
   );
 }
