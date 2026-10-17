@@ -24,6 +24,1149 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/auth/signup': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start sign-up
+     * @description Validates the customer's details (18+, +234 phone, consent) and emails a 6-digit OTP (AUTH-1, AUTH-2).
+     */
+    post: operations['startSignup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/signup/complete': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Finish sign-up
+     * @description Sets the password and binds the first device. Returns a session.
+     */
+    post: operations['completeSignup'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/otp/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Verify an email OTP
+     * @description Codes expire after 10 minutes and allow 5 attempts.
+     */
+    post: operations['verifyOtp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/otp/resend': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Resend an email OTP
+     * @description Allowed once the 60-second cooldown in `resend_available_at` has passed.
+     */
+    post: operations['resendOtp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/login': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Log in with a password
+     * @description Email or phone plus password (AUTH-7). Logging in from an unknown device binds it and
+     *     starts the 24-hour new-device cool-off (AUTH-8): `device.cool_off_until` is set and
+     *     the customer's other devices are alerted.
+     */
+    post: operations['login'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/device-challenge': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Get a device-login challenge
+     * @description First step of biometric quick login on a trusted device.
+     */
+    post: operations['createDeviceChallenge'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/login/device': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Quick login with the device key
+     * @description The app unlocks the device key with Face ID or fingerprint and signs the challenge (AUTH-5, AUTH-7).
+     */
+    post: operations['loginWithDevice'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/demo': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start a demo session
+     * @description One tap into a seeded persona with 6 months of history (AUTH-11). Demo users are isolated and reset nightly.
+     */
+    post: operations['startDemoSession'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/refresh': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Rotate tokens
+     * @description Refresh tokens rotate on every use. Reusing an old one revokes the whole token family.
+     */
+    post: operations['refreshSession'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/logout': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Log out */
+    post: operations['logout'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/password/forgot': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start a password reset
+     * @description Always returns 202 so the response never reveals whether the email exists (AUTH-9).
+     */
+    post: operations['forgotPassword'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/password/reset': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset the password
+     * @description Revokes every session and starts the new-device cool-off on all devices.
+     */
+    post: operations['resetPassword'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/step-up': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Start step-up verification
+     * @description Asks for extra proof before a sensitive action (risky transfer, unfreeze, PIN reset, card reveal).
+     */
+    post: operations['startStepUp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/auth/step-up/{step_up_id}/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Complete step-up verification */
+    post: operations['verifyStepUp'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/users/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get my profile */
+    get: operations['getMe'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Update my profile
+     * @description Legal names change only through KYC; this edits display fields.
+     */
+    patch: operations['updateMe'];
+    trace?: never;
+  };
+  '/v1/users/nemtags/{nemtag}/availability': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Check whether a @nemtag is free */
+    get: operations['checkNemtag'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/users/me/nemtag': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /** Claim my @nemtag */
+    put: operations['setNemtag'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/users/me/pin': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    /**
+     * Set my transaction PIN
+     * @description First-time setup only. Weak PINs (1234, 0000, repeated digits, date-of-birth digits) return 422 `weak_pin` (AUTH-4).
+     */
+    put: operations['setPin'];
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/users/me/pin/verify': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Check my transaction PIN
+     * @description Five wrong tries lock the PIN with escalating backoff (AUTH-4).
+     */
+    post: operations['verifyPin'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/users/me/pin/reset': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Reset my transaction PIN
+     * @description Needs step-up verification (AUTH-9).
+     */
+    post: operations['resetPin'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/devices': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my bound devices */
+    get: operations['listDevices'];
+    put?: never;
+    /**
+     * Bind a new device key
+     * @description Registers a new Ed25519 public key. Needs step-up and starts the 24-hour cool-off on the new device.
+     */
+    post: operations['bindDevice'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/devices/{device_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /**
+     * Revoke a device
+     * @description Removes the device key and ends its sessions (SEC-2).
+     */
+    delete: operations['revokeDevice'];
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/accounts': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List my accounts
+     * @description The NGN account plus any open foreign-currency wallets.
+     */
+    get: operations['listAccounts'];
+    put?: never;
+    /**
+     * Open a foreign-currency wallet
+     * @description USD, GBP and EUR wallets need KYC Tier 2+ (KYC-7); lower tiers get 403 `kyc_tier_required`.
+     */
+    post: operations['openAccount'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/accounts/{account_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get an account */
+    get: operations['getAccount'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/accounts/{account_id}/holds': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List active holds
+     * @description Card authorizations and pending transfers that make up `ledger_balance − available_balance` (ACC-3).
+     */
+    get: operations['listAccountHolds'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transactions': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List transactions
+     * @description Newest first, filterable and searchable (ACC-5).
+     */
+    get: operations['listTransactions'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transactions/{transaction_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a transaction
+     * @description Detail with status timeline, fees and what the customer can do next (ACC-6).
+     */
+    get: operations['getTransaction'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /**
+     * Recategorise a transaction
+     * @description The correction also trains smart categories for this customer (AI-3).
+     */
+    patch: operations['updateTransaction'];
+    trace?: never;
+  };
+  '/v1/transactions/{transaction_id}/receipt': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get a receipt
+     * @description JSON for the in-app receipt, or a PDF with `Accept application/pdf` (ACC-7).
+     */
+    get: operations['getReceipt'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my statements */
+    get: operations['listStatements'];
+    put?: never;
+    /**
+     * Request an official statement
+     * @description Generated in the background; poll or wait for the `statement.ready` event (ACC-8).
+     */
+    post: operations['requestStatement'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{statement_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a statement */
+    get: operations['getStatement'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/statements/{statement_id}/download': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Download a statement PDF */
+    get: operations['downloadStatement'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/statements/{verification_code}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Verify a statement (public)
+     * @description The page the statement QR links to. Shows only masked details so the link is safe to share with an embassy.
+     */
+    get: operations['verifyStatement'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/banks': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * List Nigerian banks
+     * @description CBN bank codes for the bank picker (TRF-2). Cache for a day.
+     */
+    get: operations['listBanks'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/payees/resolve': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Look up a payee
+     * @description Resolves a @nemtag, phone or account number to a name. For other banks it runs
+     *     Confirmation of Payee and returns `match`, `close_match` or `no_match` (TRF-3).
+     */
+    post: operations['resolvePayee'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transfers/quote': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Price a transfer
+     * @description Fee, levy, remaining daily limit and any cooling-off, shown before the customer confirms (TRF-4, TRF-8).
+     */
+    post: operations['quoteTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transfers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List transfers */
+    get: operations['listTransfers'];
+    put?: never;
+    /**
+     * Send money
+     * @description Device-signed and idempotent: a double tap never double-debits (TRF-5). The risk
+     *     engine decides the outcome (TRF-6):
+     *     - `allow` → `completed` for Nem users, `processing` for other banks.
+     *     - `step_up` → `pending_step_up`; finish with `POST /v1/transfers/{transfer_id}/step-up`.
+     *     - `hold` → `held_for_review` with plain-language reasons.
+     *     A first transfer above the cooling-off threshold to a new beneficiary becomes `delayed`
+     *     unless a step-up token is sent.
+     */
+    post: operations['createTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transfers/{transfer_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Track a transfer
+     * @description The status timeline (TRF-7). Live updates arrive as `transfer.updated` events.
+     */
+    get: operations['getTransfer'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transfers/{transfer_id}/step-up': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Release a transfer after step-up
+     * @description Moves a `pending_step_up` or `delayed` transfer forward once the customer passes step-up.
+     */
+    post: operations['stepUpTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transfers/{transfer_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Cancel a waiting transfer
+     * @description Only `pending_step_up`, `delayed` and `held_for_review` transfers can be cancelled; the hold is released.
+     */
+    post: operations['cancelTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/transfers/international': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Send money abroad
+     * @description Fully designed but needs a licensed remittance partner (TRF-14). Returns 403
+     *     `paid_feature_required` until the `international_transfers` flag is enabled.
+     */
+    post: operations['createInternationalTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/scheduled-transfers': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List scheduled transfers */
+    get: operations['listScheduledTransfers'];
+    put?: never;
+    /**
+     * Schedule a transfer
+     * @description One-off or recurring (daily, weekly, monthly). Signed, because it authorises future debits (TRF-9).
+     */
+    post: operations['createScheduledTransfer'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/scheduled-transfers/{schedule_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a scheduled transfer */
+    get: operations['getScheduledTransfer'];
+    put?: never;
+    post?: never;
+    /** Cancel a schedule */
+    delete: operations['cancelScheduledTransfer'];
+    options?: never;
+    head?: never;
+    /** Pause, resume or edit a schedule */
+    patch: operations['updateScheduledTransfer'];
+    trace?: never;
+  };
+  '/v1/beneficiaries': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List beneficiaries */
+    get: operations['listBeneficiaries'];
+    put?: never;
+    /**
+     * Save a beneficiary
+     * @description New beneficiaries start a cooling-off window (TRF-8).
+     */
+    post: operations['createBeneficiary'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/beneficiaries/{beneficiary_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    post?: never;
+    /** Delete a beneficiary */
+    delete: operations['deleteBeneficiary'];
+    options?: never;
+    head?: never;
+    /** Rename or favourite a beneficiary */
+    patch: operations['updateBeneficiary'];
+    trace?: never;
+  };
+  '/v1/money-requests': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List money requests */
+    get: operations['listMoneyRequests'];
+    put?: never;
+    /** Request money from a Nem user */
+    post: operations['createMoneyRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/money-requests/{request_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a money request */
+    get: operations['getMoneyRequest'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/money-requests/{request_id}/pay': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Pay an incoming request
+     * @description Creates a normal transfer, so limits, fees and risk checks all apply.
+     */
+    post: operations['payMoneyRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/money-requests/{request_id}/decline': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Decline an incoming request */
+    post: operations['declineMoneyRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/money-requests/{request_id}/cancel': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /** Cancel a request I sent */
+    post: operations['cancelMoneyRequest'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/split-bills': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List split bills */
+    get: operations['listSplitBills'];
+    put?: never;
+    /**
+     * Split a bill
+     * @description Equal or custom shares; one money request goes to each participant (TRF-11). Custom shares must add up to the total.
+     */
+    post: operations['createSplitBill'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/split-bills/{split_bill_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a split bill */
+    get: operations['getSplitBill'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/split-bills/{split_bill_id}/remind': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Remind unpaid participants
+     * @description At most one reminder per participant per 24 hours.
+     */
+    post: operations['remindSplitBill'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/payment-links': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** List my payment links */
+    get: operations['listPaymentLinks'];
+    put?: never;
+    /** Create a payment link */
+    post: operations['createPaymentLink'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/payment-links/{link_id}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /** Get a payment link */
+    get: operations['getPaymentLink'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    /** Edit or deactivate a payment link */
+    patch: operations['updatePaymentLink'];
+    trace?: never;
+  };
+  '/v1/public/payment-links/{slug}': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Open a pay page (public)
+     * @description What the public web pay page shows. Only the payee's display name is exposed.
+     */
+    get: operations['getPublicPaymentLink'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/public/payment-links/{slug}/pay': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Pay a payment link
+     * @description The payer signs in to Nem on the pay page and pays from one of their accounts.
+     */
+    post: operations['payPaymentLink'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/qr/me': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * Get my receive QR
+     * @description A server-signed payload, optionally with a fixed amount.
+     */
+    get: operations['getMyQr'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
+  '/v1/qr/decode': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Decode a scanned QR
+     * @description Checks the server signature and expiry, then resolves the payee. Pay with `POST /v1/transfers`.
+     */
+    post: operations['decodeQr'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
 }
 export type webhooks = Record<string, never>;
 export interface components {
@@ -39,10 +1182,20 @@ export interface components {
      */
     Timestamp: string;
     /**
+     * Format: date
+     * @description Calendar date in Africa/Lagos.
+     */
+    Date: string;
+    /**
      * @description ISO 4217 code of a supported currency.
      * @enum {string}
      */
     CurrencyCode: 'NGN' | 'USD' | 'GBP' | 'EUR';
+    /**
+     * @description Non-negative integer amount in minor units, as a string.
+     * @example 500000
+     */
+    MinorUnits: string;
     Money: {
       /**
        * @description Signed integer amount in minor units (kobo, cents, pence), as a string.
@@ -51,6 +1204,30 @@ export interface components {
       amount_minor: string;
       currency: components['schemas']['CurrencyCode'];
     };
+    /**
+     * @description Nigerian mobile number in E.164.
+     * @example +2348031234567
+     */
+    PhoneNumber: string;
+    /** Format: email */
+    Email: string;
+    /**
+     * @description Unique handle for receiving money, without the leading `@`.
+     * @example tolu_a
+     */
+    Nemtag: string;
+    /** @description 10-digit NUBAN account number. */
+    Nuban: string;
+    /** @description CBN bank code. */
+    BankCode: string;
+    /** @description 4-digit transaction PIN. Only sent over TLS; stored as an Argon2id hash. */
+    Pin: string;
+    /** @enum {integer} */
+    KycTier: 1 | 2 | 3;
+    /** @enum {string} */
+    KycStatus: 'not_started' | 'pending_review' | 'approved' | 'rejected' | 'resubmit';
+    /** @enum {string} */
+    Platform: 'ios' | 'android' | 'web';
     PageInfo: {
       /** @description Pass as `cursor` to fetch the next page; `null` on the last page. */
       next_cursor: string | null;
@@ -67,11 +1244,20 @@ export interface components {
       detail?: string;
       /** Format: uri-reference */
       instance?: string;
-      /** @description Stable machine-readable error code, e.g. `insufficient_funds`. */
+      /**
+       * @description Stable machine-readable error code. Common codes: `validation_failed`,
+       *     `insufficient_funds`, `limit_exceeded`, `kyc_tier_required`, `weak_pin`,
+       *     `pin_locked`, `invalid_otp`, `otp_expired`, `idempotency_conflict`,
+       *     `invalid_signature`, `step_up_required`, `account_frozen`,
+       *     `outgoing_blocked`, `paid_feature_required`, `rate_limited`.
+       */
       code: string;
       request_id?: string;
       /** @description Field-level validation errors. */
       errors?: components['schemas']['FieldError'][];
+      /** @description The gated feature, present when `code` is `paid_feature_required`. */
+      feature?: string;
+      retry_at?: components['schemas']['Timestamp'];
     };
     FieldError: {
       /** @description JSON Pointer to the invalid field. */
@@ -84,6 +1270,950 @@ export interface components {
       status: 'ok';
       version: string;
       time: components['schemas']['Timestamp'];
+    };
+    /** @description NDPA 2023 consent record. */
+    Consent: {
+      terms_version: string;
+      privacy_version: string;
+      accepted_at: components['schemas']['Timestamp'];
+    };
+    SignupRequest: {
+      first_name: string;
+      last_name: string;
+      email: components['schemas']['Email'];
+      phone: components['schemas']['PhoneNumber'];
+      date_of_birth: components['schemas']['Date'];
+      consent: components['schemas']['Consent'];
+    };
+    OtpChallenge: {
+      challenge_id: components['schemas']['Uuid'];
+      /**
+       * @description SMS needs a paid provider, so only email is live.
+       * @enum {string}
+       */
+      channel: 'email';
+      /** @example t***@gmail.com */
+      destination_masked: string;
+      expires_at: components['schemas']['Timestamp'];
+      resend_available_at: components['schemas']['Timestamp'];
+      attempts_remaining: number;
+    };
+    SignupStarted: {
+      signup_id: components['schemas']['Uuid'];
+      otp: components['schemas']['OtpChallenge'];
+    };
+    OtpVerifyRequest: {
+      challenge_id: components['schemas']['Uuid'];
+      code: string;
+    };
+    OtpVerified: {
+      verification_token: string;
+      expires_at: components['schemas']['Timestamp'];
+    };
+    OtpResendRequest: {
+      challenge_id: components['schemas']['Uuid'];
+    };
+    /** @description Checked for strength and known-breached patterns (AUTH-3); stored as Argon2id. */
+    Password: string;
+    DeviceRegistration: {
+      /** @example Tolu's iPhone */
+      name: string;
+      platform: components['schemas']['Platform'];
+      /** @description Base64url raw 32-byte Ed25519 public key. */
+      public_key: string;
+      app_version?: string;
+      /** @description False on the web demo, where the key lives in memory. */
+      hardware_backed?: boolean;
+    };
+    SignupCompleteRequest: {
+      signup_id: components['schemas']['Uuid'];
+      verification_token: string;
+      password: components['schemas']['Password'];
+      device: components['schemas']['DeviceRegistration'];
+    };
+    AuthSession: {
+      access_token: string;
+      access_token_expires_at: components['schemas']['Timestamp'];
+      refresh_token: string;
+      refresh_token_expires_at: components['schemas']['Timestamp'];
+      /** @enum {string} */
+      token_type: 'Bearer';
+      user: components['schemas']['User'];
+      device: components['schemas']['Device'];
+    };
+    /** @description Send `device_id` from a trusted device, or `device` to bind a new one. */
+    LoginRequest: {
+      /** @description Email or +234 phone number. */
+      identifier: string;
+      password: components['schemas']['Password'];
+      device_id?: components['schemas']['Uuid'];
+      device?: components['schemas']['DeviceRegistration'];
+    };
+    DeviceChallengeRequest: {
+      device_id: components['schemas']['Uuid'];
+    };
+    DeviceChallenge: {
+      challenge_id: components['schemas']['Uuid'];
+      nonce: string;
+      expires_at: components['schemas']['Timestamp'];
+    };
+    DeviceLoginRequest: {
+      device_id: components['schemas']['Uuid'];
+      challenge_id: components['schemas']['Uuid'];
+      /** @description Base64url Ed25519 signature over the nonce. */
+      signature: string;
+    };
+    DemoSessionRequest: {
+      /**
+       * @description Which seeded persona to load.
+       * @default tolu
+       * @enum {string}
+       */
+      persona: 'tolu' | 'mama_ngozi' | 'emeka' | 'bisi';
+    };
+    RefreshRequest: {
+      refresh_token: string;
+    };
+    LogoutRequest: {
+      /** @default false */
+      all_devices: boolean;
+    };
+    ForgotPasswordRequest: {
+      email: components['schemas']['Email'];
+    };
+    ResetPasswordRequest: {
+      challenge_id: components['schemas']['Uuid'];
+      code: string;
+      new_password: components['schemas']['Password'];
+    };
+    /** @enum {string} */
+    StepUpPurpose:
+      | 'transfer'
+      | 'new_beneficiary'
+      | 'device_bind'
+      | 'pin_reset'
+      | 'card_reveal'
+      | 'unfreeze'
+      | 'limit_increase'
+      | 'account_deletion';
+    /** @enum {string} */
+    StepUpMethod: 'email_otp' | 'security_question' | 'pin' | 'device_signature';
+    StepUpStartRequest: {
+      purpose: components['schemas']['StepUpPurpose'];
+      resource_id?: components['schemas']['Uuid'];
+    };
+    StepUpChallenge: {
+      step_up_id: components['schemas']['Uuid'];
+      purpose: components['schemas']['StepUpPurpose'];
+      /** @description Every method listed must be passed. */
+      methods: components['schemas']['StepUpMethod'][];
+      security_question?: string | null;
+      otp?: components['schemas']['OtpChallenge'] | null;
+      expires_at: components['schemas']['Timestamp'];
+    };
+    StepUpVerifyRequest: {
+      otp_code?: string;
+      security_answer?: string;
+      pin?: components['schemas']['Pin'];
+      /** @description Device signature over `step_up_id`. */
+      signature?: string;
+    };
+    StepUpToken: {
+      step_up_token: string;
+      purpose: components['schemas']['StepUpPurpose'];
+      expires_at: components['schemas']['Timestamp'];
+    };
+    User: {
+      id: components['schemas']['Uuid'];
+      first_name: string;
+      last_name: string;
+      preferred_name?: string | null;
+      email: components['schemas']['Email'];
+      phone: components['schemas']['PhoneNumber'];
+      date_of_birth: components['schemas']['Date'];
+      nemtag: components['schemas']['Nemtag'] | null;
+      /** Format: uri */
+      avatar_url?: string | null;
+      kyc_tier: components['schemas']['KycTier'];
+      kyc_status: components['schemas']['KycStatus'];
+      has_pin: boolean;
+      /** @description Demo personas show the "Demo money" badge (DEMO-2). */
+      is_demo: boolean;
+      /** @description True for family dependants, who get kid mode (FAM-1). */
+      is_dependant?: boolean;
+      created_at: components['schemas']['Timestamp'];
+    };
+    UpdateUserRequest: {
+      preferred_name?: string | null;
+    };
+    NemtagAvailability: {
+      nemtag: components['schemas']['Nemtag'];
+      available: boolean;
+      suggestions: components['schemas']['Nemtag'][];
+    };
+    SetNemtagRequest: {
+      nemtag: components['schemas']['Nemtag'];
+    };
+    SetPinRequest: {
+      pin: components['schemas']['Pin'];
+    };
+    VerifyPinRequest: {
+      pin: components['schemas']['Pin'];
+    };
+    PinVerification: {
+      valid: boolean;
+      attempts_remaining: number;
+      locked_until: components['schemas']['Timestamp'] | null;
+    };
+    Device: {
+      id: components['schemas']['Uuid'];
+      name: string;
+      platform: components['schemas']['Platform'];
+      /** @description True for the device making this request. */
+      current: boolean;
+      /** @description False while the new-device cool-off is running. */
+      trusted: boolean;
+      hardware_backed: boolean;
+      /** @description First 16 hex characters of SHA-256 of the public key. */
+      key_fingerprint: string;
+      bound_at: components['schemas']['Timestamp'];
+      last_seen_at: components['schemas']['Timestamp'];
+      /** @description Reduced outgoing limits apply until this time (AUTH-8). */
+      cool_off_until: components['schemas']['Timestamp'] | null;
+      /** @description Coarse city from the IP, e.g. "Lagos, NG". */
+      location_hint?: string | null;
+    };
+    DeviceList: {
+      data: components['schemas']['Device'][];
+    };
+    /**
+     * @description The NGN current account, or a foreign-currency wallet.
+     * @enum {string}
+     */
+    AccountKind: 'ngn_current' | 'fx_wallet';
+    /** @enum {string} */
+    AccountStatus: 'active' | 'frozen' | 'closed';
+    NubanDetails: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      scheme: 'nuban';
+      bank_name: string;
+      bank_code: components['schemas']['BankCode'];
+      account_number: components['schemas']['Nuban'];
+      account_name: string;
+      demo: boolean;
+    };
+    UsAchDetails: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      scheme: 'us_ach';
+      bank_name: string;
+      account_number: string;
+      routing_number: string;
+      /** @enum {string} */
+      account_type: 'checking';
+      account_name: string;
+      demo: boolean;
+    };
+    UkFpsDetails: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      scheme: 'uk_fps';
+      bank_name: string;
+      sort_code: string;
+      account_number: string;
+      account_name: string;
+      demo: boolean;
+    };
+    IbanDetails: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      scheme: 'iban';
+      bank_name: string;
+      iban: string;
+      bic: string;
+      account_name: string;
+      demo: boolean;
+    };
+    /** @description How to pay into the account. Foreign details are simulated and labelled "Demo details" (ACC-2). */
+    ReceivingDetails:
+      | components['schemas']['NubanDetails']
+      | components['schemas']['UsAchDetails']
+      | components['schemas']['UkFpsDetails']
+      | components['schemas']['IbanDetails'];
+    Account: {
+      id: components['schemas']['Uuid'];
+      currency: components['schemas']['CurrencyCode'];
+      kind: components['schemas']['AccountKind'];
+      status: components['schemas']['AccountStatus'];
+      nickname?: string | null;
+      ledger_balance: components['schemas']['Money'];
+      /** @description Ledger balance minus active holds. Never negative. */
+      available_balance: components['schemas']['Money'];
+      /** @description KYC tier balance cap, or null when unlimited. */
+      max_balance?: components['schemas']['Money'] | null;
+      receiving_details: components['schemas']['ReceivingDetails'];
+      opened_at: components['schemas']['Timestamp'];
+    };
+    AccountList: {
+      data: components['schemas']['Account'][];
+    };
+    OpenAccountRequest: {
+      /** @enum {string} */
+      currency: 'USD' | 'GBP' | 'EUR';
+    };
+    /** @enum {string} */
+    HoldReason:
+      | 'card_authorization'
+      | 'pending_transfer'
+      | 'delayed_transfer'
+      | 'fraud_review'
+      | 'ajo_contribution'
+      | 'dispute';
+    Hold: {
+      id: components['schemas']['Uuid'];
+      account_id: components['schemas']['Uuid'];
+      amount: components['schemas']['Money'];
+      reason: components['schemas']['HoldReason'];
+      reference: string;
+      description?: string;
+      created_at: components['schemas']['Timestamp'];
+      expires_at: components['schemas']['Timestamp'] | null;
+    };
+    HoldList: {
+      data: components['schemas']['Hold'][];
+      total: components['schemas']['Money'];
+    };
+    /** @enum {string} */
+    TransactionType:
+      | 'transfer_in'
+      | 'transfer_out'
+      | 'card_payment'
+      | 'card_refund'
+      | 'bill_payment'
+      | 'fx_conversion'
+      | 'savings'
+      | 'ajo'
+      | 'loan_disbursement'
+      | 'loan_repayment'
+      | 'interest'
+      | 'fee'
+      | 'levy'
+      | 'reversal'
+      | 'deposit'
+      | 'dispute_refund';
+    /** @enum {string} */
+    TransactionStatus: 'pending' | 'completed' | 'failed' | 'reversed';
+    /** @enum {string} */
+    Direction: 'credit' | 'debit';
+    /** @enum {string} */
+    Category:
+      | 'food'
+      | 'groceries'
+      | 'transport'
+      | 'airtime_data'
+      | 'bills_utilities'
+      | 'shopping'
+      | 'entertainment'
+      | 'subscriptions'
+      | 'health'
+      | 'education'
+      | 'rent_housing'
+      | 'family'
+      | 'transfers'
+      | 'salary_income'
+      | 'savings'
+      | 'fees_charges'
+      | 'cash'
+      | 'other';
+    /**
+     * @description Who set the category. `model` carries an AI badge (AI-3).
+     * @enum {string}
+     */
+    CategorySource: 'rules' | 'model' | 'user';
+    Counterparty: {
+      name: string;
+      nemtag?: string | null;
+      bank_name?: string | null;
+      /** @example ******4821 */
+      account_number_masked?: string | null;
+      merchant_id?: string | null;
+    };
+    Transaction: {
+      id: components['schemas']['Uuid'];
+      account_id: components['schemas']['Uuid'];
+      type: components['schemas']['TransactionType'];
+      direction: components['schemas']['Direction'];
+      status: components['schemas']['TransactionStatus'];
+      /** @description Always positive; `direction` gives the sign. */
+      amount: components['schemas']['Money'];
+      fee?: components['schemas']['Money'] | null;
+      balance_after?: components['schemas']['Money'] | null;
+      narration: string;
+      /** @example NEM20261017A8F3K2 */
+      reference: string;
+      category: components['schemas']['Category'];
+      category_source: components['schemas']['CategorySource'];
+      counterparty: components['schemas']['Counterparty'];
+      transfer_id?: components['schemas']['Uuid'] | null;
+      card_id?: components['schemas']['Uuid'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    TimelineEvent: {
+      status: string;
+      /** @example At recipient bank */
+      label: string;
+      at: components['schemas']['Timestamp'];
+      detail?: string | null;
+    };
+    FeeLine: {
+      /** @enum {string} */
+      code:
+        | 'transfer_fee'
+        | 'emtl'
+        | 'fx_spread'
+        | 'fx_fee'
+        | 'card_fee'
+        | 'bill_fee'
+        | 'early_break_penalty';
+      /** @example Electronic Money Transfer Levy */
+      label: string;
+      amount: components['schemas']['Money'];
+    };
+    TransactionDetail: components['schemas']['Transaction'] & {
+      timeline: components['schemas']['TimelineEvent'][];
+      fees: components['schemas']['FeeLine'][];
+      journal_entry_id: components['schemas']['Uuid'];
+      can_dispute: boolean;
+      can_repeat: boolean;
+      dispute_id?: components['schemas']['Uuid'] | null;
+    };
+    TransactionPage: {
+      data: components['schemas']['Transaction'][];
+      page: components['schemas']['PageInfo'];
+    };
+    UpdateTransactionRequest: {
+      category: components['schemas']['Category'];
+      /**
+       * @description Also recategorise past and future transactions with this counterparty.
+       * @default false
+       */
+      apply_to_similar: boolean;
+    };
+    ReceiptParty: {
+      name: string;
+      account_number_masked: string;
+      bank_name: string;
+    };
+    Receipt: {
+      transaction_id: components['schemas']['Uuid'];
+      reference: string;
+      status: components['schemas']['TransactionStatus'];
+      amount: components['schemas']['Money'];
+      fee: components['schemas']['Money'];
+      from: components['schemas']['ReceiptParty'];
+      to: components['schemas']['ReceiptParty'];
+      narration: string;
+      created_at: components['schemas']['Timestamp'];
+      completed_at?: components['schemas']['Timestamp'] | null;
+      verification_code: string;
+    };
+    /** @description Periods up to 12 months. */
+    StatementRequest: {
+      account_id: components['schemas']['Uuid'];
+      from: components['schemas']['Date'];
+      to: components['schemas']['Date'];
+    };
+    Statement: {
+      id: components['schemas']['Uuid'];
+      account_id: components['schemas']['Uuid'];
+      currency: components['schemas']['CurrencyCode'];
+      period_from: components['schemas']['Date'];
+      period_to: components['schemas']['Date'];
+      /** @enum {string} */
+      status: 'generating' | 'ready' | 'failed';
+      opening_balance?: components['schemas']['Money'] | null;
+      closing_balance?: components['schemas']['Money'] | null;
+      /** @description Hash of the PDF, printed on it and checked by the verification page. */
+      sha256?: string | null;
+      verification_code?: string | null;
+      /** Format: uri */
+      verification_url?: string | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    StatementPage: {
+      data: components['schemas']['Statement'][];
+      page: components['schemas']['PageInfo'];
+    };
+    StatementVerification: {
+      valid: boolean;
+      /** @example T*** A****** */
+      account_name_masked: string;
+      account_number_masked: string;
+      currency: components['schemas']['CurrencyCode'];
+      period_from: components['schemas']['Date'];
+      period_to: components['schemas']['Date'];
+      sha256: string;
+      issued_at: components['schemas']['Timestamp'];
+      /** @description Always true in v1; the page carries the demo disclaimer. */
+      demo: boolean;
+    };
+    Bank: {
+      code: components['schemas']['BankCode'];
+      name: string;
+      short_name?: string | null;
+      /** Format: uri */
+      logo_url?: string | null;
+    };
+    BankList: {
+      data: components['schemas']['Bank'][];
+    };
+    NemPayeeQuery: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'nem';
+      /** @description @nemtag, +234 phone or Nem account number. */
+      query: string;
+    };
+    BankPayeeQuery: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'bank';
+      bank_code: components['schemas']['BankCode'];
+      account_number: components['schemas']['Nuban'];
+      /** @description The name the customer typed, compared by Confirmation of Payee. */
+      expected_name?: string;
+    };
+    PayeeQuery: components['schemas']['NemPayeeQuery'] | components['schemas']['BankPayeeQuery'];
+    /** @description Confirmation of Payee outcome. */
+    NameMatch: {
+      /** @enum {string} */
+      result: 'match' | 'close_match' | 'no_match';
+      confidence: number;
+      expected_name?: string | null;
+    };
+    ResolvedPayee: {
+      /** @enum {string} */
+      kind: 'nem' | 'bank';
+      name: string;
+      nemtag?: string | null;
+      user_id?: components['schemas']['Uuid'] | null;
+      /** Format: uri */
+      avatar_url?: string | null;
+      bank_code: components['schemas']['BankCode'];
+      bank_name: string;
+      account_number: components['schemas']['Nuban'];
+      name_match?: components['schemas']['NameMatch'] | null;
+      is_saved_beneficiary: boolean;
+      beneficiary_id?: components['schemas']['Uuid'] | null;
+    };
+    NemDestination: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'nem';
+      account_number: components['schemas']['Nuban'];
+    };
+    BankDestination: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'bank';
+      bank_code: components['schemas']['BankCode'];
+      account_number: components['schemas']['Nuban'];
+      /** @description The name returned by Confirmation of Payee. */
+      account_name: string;
+    };
+    BeneficiaryDestination: {
+      /**
+       * @description discriminator enum property added by openapi-typescript
+       * @enum {string}
+       */
+      kind: 'beneficiary';
+      beneficiary_id: components['schemas']['Uuid'];
+    };
+    TransferDestination:
+      | components['schemas']['NemDestination']
+      | components['schemas']['BankDestination']
+      | components['schemas']['BeneficiaryDestination'];
+    TransferQuoteRequest: {
+      source_account_id: components['schemas']['Uuid'];
+      destination: components['schemas']['TransferDestination'];
+      amount: components['schemas']['Money'];
+    };
+    LimitStatus: {
+      kyc_tier: components['schemas']['KycTier'];
+      /** @description The lower of the KYC cap, the self-set limit and any cool-off limit. */
+      daily_limit: components['schemas']['Money'];
+      used_today: components['schemas']['Money'];
+      remaining_today: components['schemas']['Money'];
+      /** @description True when the customer's own limit (SEC-3) is the binding one. */
+      self_set: boolean;
+      cool_off_active: boolean;
+    };
+    /** @description New-beneficiary cooling-off (TRF-8). */
+    CoolingOff: {
+      /** @enum {string} */
+      reason: 'new_beneficiary' | 'new_device';
+      delay_minutes: number;
+      step_up_skips_delay: boolean;
+    };
+    TransferQuote: {
+      quote_id: components['schemas']['Uuid'];
+      amount: components['schemas']['Money'];
+      /** @description Sum of `fees`. */
+      fee: components['schemas']['Money'];
+      fees: components['schemas']['FeeLine'][];
+      total_debit: components['schemas']['Money'];
+      limits: components['schemas']['LimitStatus'];
+      cooling_off: components['schemas']['CoolingOff'] | null;
+      rail: components['schemas']['TransferRail'];
+      expires_at: components['schemas']['Timestamp'];
+    };
+    /**
+     * @description `internal` posts in one ledger transaction; `interbank` runs the sandbox NIP saga.
+     * @enum {string}
+     */
+    TransferRail: 'internal' | 'interbank';
+    CreateTransferRequest: {
+      source_account_id: components['schemas']['Uuid'];
+      destination: components['schemas']['TransferDestination'];
+      amount: components['schemas']['Money'];
+      narration?: string;
+      /** @description The quote the customer saw; rejected with 409 `quote_expired` if stale. */
+      quote_id?: components['schemas']['Uuid'];
+      /** @default false */
+      save_beneficiary: boolean;
+      category?: components['schemas']['Category'];
+    };
+    /**
+     * @description `created → risk_checked → processing → completed | failed → reversed`, plus
+     *     `pending_step_up`, `delayed` (cooling-off), `held_for_review`, `rejected` and `cancelled`.
+     * @enum {string}
+     */
+    TransferStatus:
+      | 'created'
+      | 'risk_checked'
+      | 'pending_step_up'
+      | 'delayed'
+      | 'held_for_review'
+      | 'processing'
+      | 'completed'
+      | 'failed'
+      | 'reversed'
+      | 'rejected'
+      | 'cancelled';
+    /** @enum {string} */
+    RiskDecision: 'allow' | 'step_up' | 'hold';
+    RiskReason: {
+      /**
+       * @example new_device
+       * @example amount_unusual
+       * @example new_beneficiary
+       * @example velocity
+       */
+      code: string;
+      /** @enum {string} */
+      severity: 'low' | 'medium' | 'high';
+      /** @description Plain-language reason shown to the customer. */
+      message: string;
+    };
+    /** @description Rules plus the fraud model (AI-1). Scores are 0 (safe) to 1 (risky). */
+    RiskAssessment: {
+      decision: components['schemas']['RiskDecision'];
+      score: number;
+      reasons: components['schemas']['RiskReason'][];
+      model_version: string;
+    };
+    TransferParty: {
+      name: string;
+      nemtag?: string | null;
+      bank_code: components['schemas']['BankCode'];
+      bank_name: string;
+      account_number_masked: string;
+    };
+    Reversal: {
+      reason: string;
+      reversed_at: components['schemas']['Timestamp'];
+      transaction_id: components['schemas']['Uuid'];
+    };
+    Transfer: {
+      id: components['schemas']['Uuid'];
+      reference: string;
+      status: components['schemas']['TransferStatus'];
+      rail: components['schemas']['TransferRail'];
+      source_account_id: components['schemas']['Uuid'];
+      recipient: components['schemas']['TransferParty'];
+      amount: components['schemas']['Money'];
+      fee: components['schemas']['Money'];
+      total_debit: components['schemas']['Money'];
+      narration: string;
+      risk: components['schemas']['RiskAssessment'] | null;
+      /** @description Present when `status` is `pending_step_up`. */
+      step_up_id?: components['schemas']['Uuid'] | null;
+      /** @description When a `delayed` transfer will go out. */
+      release_at?: components['schemas']['Timestamp'] | null;
+      timeline: components['schemas']['TimelineEvent'][];
+      reversal?: components['schemas']['Reversal'] | null;
+      transaction_id?: components['schemas']['Uuid'] | null;
+      created_at: components['schemas']['Timestamp'];
+      updated_at: components['schemas']['Timestamp'];
+    };
+    TransferPage: {
+      data: components['schemas']['Transfer'][];
+      page: components['schemas']['PageInfo'];
+    };
+    InternationalTransferRequest: {
+      source_account_id: components['schemas']['Uuid'];
+      amount: components['schemas']['Money'];
+      recipient_name: string;
+      recipient_country: string;
+      recipient_iban_or_account: string;
+      recipient_bic?: string;
+      /** @enum {string} */
+      purpose: 'family_support' | 'education' | 'medical' | 'business' | 'other';
+    };
+    /** @enum {string} */
+    ScheduleFrequency: 'once' | 'daily' | 'weekly' | 'monthly';
+    ScheduledRun: {
+      at: components['schemas']['Timestamp'];
+      status: components['schemas']['TransferStatus'];
+      transfer_id?: components['schemas']['Uuid'] | null;
+    };
+    ScheduledTransfer: {
+      id: components['schemas']['Uuid'];
+      source_account_id: components['schemas']['Uuid'];
+      recipient: components['schemas']['TransferParty'];
+      amount: components['schemas']['Money'];
+      narration: string;
+      frequency: components['schemas']['ScheduleFrequency'];
+      /** @enum {string} */
+      status: 'active' | 'paused' | 'cancelled' | 'completed';
+      next_run_at: components['schemas']['Timestamp'] | null;
+      ends_on?: components['schemas']['Date'] | null;
+      run_count: number;
+      last_run?: components['schemas']['ScheduledRun'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    ScheduledTransferPage: {
+      data: components['schemas']['ScheduledTransfer'][];
+      page: components['schemas']['PageInfo'];
+    };
+    CreateScheduledTransferRequest: {
+      source_account_id: components['schemas']['Uuid'];
+      destination: components['schemas']['TransferDestination'];
+      amount: components['schemas']['Money'];
+      narration?: string;
+      frequency: components['schemas']['ScheduleFrequency'];
+      start_at: components['schemas']['Timestamp'];
+      ends_on?: components['schemas']['Date'];
+    };
+    UpdateScheduledTransferRequest: {
+      /** @enum {string} */
+      status?: 'active' | 'paused';
+      amount?: components['schemas']['Money'];
+      next_run_at?: components['schemas']['Timestamp'];
+    };
+    Beneficiary: {
+      id: components['schemas']['Uuid'];
+      /** @enum {string} */
+      kind: 'nem' | 'bank';
+      name: string;
+      nickname?: string | null;
+      nemtag?: string | null;
+      bank_code: components['schemas']['BankCode'];
+      bank_name: string;
+      account_number: components['schemas']['Nuban'];
+      favourite: boolean;
+      /** @description Large first transfers need step-up or wait until this time. */
+      cooling_off_until: components['schemas']['Timestamp'] | null;
+      last_paid_at?: components['schemas']['Timestamp'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    BeneficiaryPage: {
+      data: components['schemas']['Beneficiary'][];
+      page: components['schemas']['PageInfo'];
+    };
+    CreateBeneficiaryRequest: {
+      destination:
+        components['schemas']['NemDestination'] | components['schemas']['BankDestination'];
+      nickname?: string;
+      /** @default false */
+      favourite: boolean;
+    };
+    UpdateBeneficiaryRequest: {
+      nickname?: string | null;
+      favourite?: boolean;
+    };
+    PartySummary: {
+      user_id: components['schemas']['Uuid'];
+      name: string;
+      nemtag: string | null;
+      /** Format: uri */
+      avatar_url?: string | null;
+    };
+    /** @enum {string} */
+    MoneyRequestDirection: 'incoming' | 'outgoing';
+    /** @enum {string} */
+    MoneyRequestStatus: 'pending' | 'paid' | 'declined' | 'cancelled' | 'expired';
+    MoneyRequest: {
+      id: components['schemas']['Uuid'];
+      /** @description Relative to the signed-in customer. */
+      direction: components['schemas']['MoneyRequestDirection'];
+      requester: components['schemas']['PartySummary'];
+      payer: components['schemas']['PartySummary'];
+      amount: components['schemas']['Money'];
+      note: string;
+      status: components['schemas']['MoneyRequestStatus'];
+      split_bill_id?: components['schemas']['Uuid'] | null;
+      transfer_id?: components['schemas']['Uuid'] | null;
+      created_at: components['schemas']['Timestamp'];
+      expires_at: components['schemas']['Timestamp'];
+      responded_at?: components['schemas']['Timestamp'] | null;
+    };
+    MoneyRequestPage: {
+      data: components['schemas']['MoneyRequest'][];
+      page: components['schemas']['PageInfo'];
+    };
+    CreateMoneyRequestRequest: {
+      payer_nemtag: components['schemas']['Nemtag'];
+      amount: components['schemas']['Money'];
+      note?: string;
+      /** @default 7 */
+      expires_in_days: number;
+    };
+    PayFromAccountRequest: {
+      source_account_id: components['schemas']['Uuid'];
+    };
+    SplitShare: {
+      participant: components['schemas']['PartySummary'];
+      amount: components['schemas']['Money'];
+      status: components['schemas']['MoneyRequestStatus'];
+      money_request_id?: components['schemas']['Uuid'] | null;
+      last_reminded_at?: components['schemas']['Timestamp'] | null;
+    };
+    SplitBill: {
+      id: components['schemas']['Uuid'];
+      title: string;
+      total: components['schemas']['Money'];
+      /** @enum {string} */
+      split: 'equal' | 'custom';
+      shares: components['schemas']['SplitShare'][];
+      paid_total: components['schemas']['Money'];
+      created_at: components['schemas']['Timestamp'];
+    };
+    SplitBillPage: {
+      data: components['schemas']['SplitBill'][];
+      page: components['schemas']['PageInfo'];
+    };
+    SplitParticipant: {
+      nemtag: components['schemas']['Nemtag'];
+      /** @description Required when `split` is `custom`. */
+      amount?: components['schemas']['Money'];
+    };
+    CreateSplitBillRequest: {
+      title: string;
+      total: components['schemas']['Money'];
+      /** @enum {string} */
+      split: 'equal' | 'custom';
+      /**
+       * @description Count the creator as a participant when splitting equally. Equal splits give any
+       *     remainder kobo to the creator, so the shares always add up to the total.
+       * @default true
+       */
+      include_self: boolean;
+      participants: components['schemas']['SplitParticipant'][];
+    };
+    /** @enum {string} */
+    PaymentLinkAmountMode: 'fixed' | 'open';
+    PaymentLink: {
+      id: components['schemas']['Uuid'];
+      slug: string;
+      /** Format: uri */
+      url: string;
+      account_id: components['schemas']['Uuid'];
+      title: string;
+      note?: string | null;
+      amount_mode: components['schemas']['PaymentLinkAmountMode'];
+      /** @description Set for `fixed` links. */
+      amount: components['schemas']['Money'] | null;
+      /** @enum {string} */
+      status: 'active' | 'inactive' | 'expired';
+      payments_count: number;
+      total_received: components['schemas']['Money'];
+      expires_at?: components['schemas']['Timestamp'] | null;
+      created_at: components['schemas']['Timestamp'];
+    };
+    PaymentLinkPage: {
+      data: components['schemas']['PaymentLink'][];
+      page: components['schemas']['PageInfo'];
+    };
+    CreatePaymentLinkRequest: {
+      account_id: components['schemas']['Uuid'];
+      title: string;
+      note?: string;
+      amount_mode: components['schemas']['PaymentLinkAmountMode'];
+      /** @description Required for `fixed` links. */
+      amount?: components['schemas']['Money'];
+      expires_at?: components['schemas']['Timestamp'];
+    };
+    UpdatePaymentLinkRequest: {
+      title?: string;
+      note?: string | null;
+      /** @enum {string} */
+      status?: 'active' | 'inactive';
+    };
+    PublicPaymentLink: {
+      slug: string;
+      title: string;
+      note?: string | null;
+      payee_name: string;
+      amount_mode: components['schemas']['PaymentLinkAmountMode'];
+      amount: components['schemas']['Money'] | null;
+      currency: components['schemas']['CurrencyCode'];
+      /** @enum {string} */
+      status: 'active' | 'inactive' | 'expired';
+      demo: boolean;
+    };
+    PayPaymentLinkRequest: {
+      source_account_id: components['schemas']['Uuid'];
+      /** @description Required for `open` links. */
+      amount?: components['schemas']['Money'];
+      note?: string;
+    };
+    QrCode: {
+      /** @description `nem1.<base64url claims>.<base64url server signature>`. */
+      payload: string;
+      account_id: components['schemas']['Uuid'];
+      amount: components['schemas']['Money'] | null;
+      /** @description Fixed-amount codes expire after 15 minutes; open codes do not. */
+      expires_at: components['schemas']['Timestamp'] | null;
+      /** @description Which server signing key was used (keys rotate). */
+      key_id: string;
+    };
+    QrDecodeRequest: {
+      payload: string;
+    };
+    DecodedQr: {
+      valid: boolean;
+      /** @enum {string|null} */
+      invalid_reason: 'expired' | 'bad_signature' | 'unknown_account' | 'not_nem_qr' | null;
+      payee: components['schemas']['ResolvedPayee'] | null;
+      amount: components['schemas']['Money'] | null;
     };
   };
   responses: {
@@ -114,6 +2244,15 @@ export interface components {
         'application/problem+json': components['schemas']['Problem'];
       };
     };
+    /** @description The feature needs a paid partner and is switched off (PRD §11). `code` is `paid_feature_required`. */
+    PaidFeatureRequired: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
     /** @description The resource does not exist. */
     NotFound: {
       headers: {
@@ -134,6 +2273,15 @@ export interface components {
     };
     /** @description Semantically invalid, e.g. an idempotency key reused with a different body. */
     UnprocessableEntity: {
+      headers: {
+        [name: string]: unknown;
+      };
+      content: {
+        'application/problem+json': components['schemas']['Problem'];
+      };
+    };
+    /** @description Locked after too many wrong attempts. `retry_at` says when to try again. */
+    Locked: {
       headers: {
         [name: string]: unknown;
       };
@@ -173,9 +2321,29 @@ export interface components {
     SignatureTimestamp: string;
     /** @description Single-use random value that prevents replay. */
     Nonce: string;
+    /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+    StepUpTokenHeader: string;
+    /** @description Send when the quote said step-up is needed, to skip the cooling-off delay. */
+    OptionalStepUpTokenHeader: string;
     /** @description Opaque cursor from a previous page's `next_cursor`. */
     Cursor: string;
     Limit: number;
+    /** @description Inclusive start date. */
+    FromDate: components['schemas']['Date'];
+    /** @description Inclusive end date. */
+    ToDate: components['schemas']['Date'];
+    StepUpId: components['schemas']['Uuid'];
+    DeviceIdPath: components['schemas']['Uuid'];
+    AccountId: components['schemas']['Uuid'];
+    TransactionId: components['schemas']['Uuid'];
+    StatementId: components['schemas']['Uuid'];
+    TransferId: components['schemas']['Uuid'];
+    ScheduleId: components['schemas']['Uuid'];
+    BeneficiaryId: components['schemas']['Uuid'];
+    MoneyRequestId: components['schemas']['Uuid'];
+    SplitBillId: components['schemas']['Uuid'];
+    PaymentLinkId: components['schemas']['Uuid'];
+    PaymentLinkSlug: string;
   };
   requestBodies: never;
   headers: never;
@@ -202,6 +2370,1889 @@ export interface operations {
         };
       };
       503: components['responses']['ServiceUnavailable'];
+    };
+  };
+  startSignup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignupRequest'];
+      };
+    };
+    responses: {
+      /** @description Sign-up started; an OTP was emailed. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SignupStarted'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      409: components['responses']['Conflict'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  completeSignup: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SignupCompleteRequest'];
+      };
+    };
+    responses: {
+      /** @description The account was created and the device bound. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSession'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  verifyOtp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OtpVerifyRequest'];
+      };
+    };
+    responses: {
+      /** @description The code is correct. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OtpVerified'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      422: components['responses']['UnprocessableEntity'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  resendOtp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OtpResendRequest'];
+      };
+    };
+    responses: {
+      /** @description A new code was sent. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OtpChallenge'];
+        };
+      };
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  login: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['LoginRequest'];
+      };
+    };
+    responses: {
+      /** @description Logged in. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSession'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  createDeviceChallenge: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeviceChallengeRequest'];
+      };
+    };
+    responses: {
+      /** @description Sign `nonce` with the device key. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeviceChallenge'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  loginWithDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeviceLoginRequest'];
+      };
+    };
+    responses: {
+      /** @description Logged in. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSession'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  startDemoSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['DemoSessionRequest'];
+      };
+    };
+    responses: {
+      /** @description A demo session. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSession'];
+        };
+      };
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  refreshSession: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['RefreshRequest'];
+      };
+    };
+    responses: {
+      /** @description New tokens. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AuthSession'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  logout: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: {
+      content: {
+        'application/json': components['schemas']['LogoutRequest'];
+      };
+    };
+    responses: {
+      /** @description The session (or every session) was revoked. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  forgotPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ForgotPasswordRequest'];
+      };
+    };
+    responses: {
+      /** @description If the email is registered, a code was sent. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['OtpChallenge'];
+        };
+      };
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  resetPassword: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['ResetPasswordRequest'];
+      };
+    };
+    responses: {
+      /** @description The password was changed. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  startStepUp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StepUpStartRequest'];
+      };
+    };
+    responses: {
+      /** @description The checks the customer must pass. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StepUpChallenge'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  verifyStepUp: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        step_up_id: components['parameters']['StepUpId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StepUpVerifyRequest'];
+      };
+    };
+    responses: {
+      /** @description Pass `step_up_token` as `X-Step-Up-Token` on the protected request. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StepUpToken'];
+        };
+      };
+      404: components['responses']['NotFound'];
+      422: components['responses']['UnprocessableEntity'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  getMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The signed-in customer. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['User'];
+        };
+      };
+      401: components['responses']['Unauthorized'];
+    };
+  };
+  updateMe: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateUserRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated profile. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['User'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  checkNemtag: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        nemtag: components['schemas']['Nemtag'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Availability, with suggestions when taken. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['NemtagAvailability'];
+        };
+      };
+    };
+  };
+  setNemtag: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetNemtagRequest'];
+      };
+    };
+    responses: {
+      /** @description The tag is now mine. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['User'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  setPin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetPinRequest'];
+      };
+    };
+    responses: {
+      /** @description The PIN was set. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  verifyPin: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['VerifyPinRequest'];
+      };
+    };
+    responses: {
+      /** @description The result and the attempts left. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PinVerification'];
+        };
+      };
+      423: components['responses']['Locked'];
+    };
+  };
+  resetPin: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['SetPinRequest'];
+      };
+    };
+    responses: {
+      /** @description The PIN was replaced. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components['responses']['Forbidden'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  listDevices: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Every device bound to the account. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DeviceList'];
+        };
+      };
+    };
+  };
+  bindDevice: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DeviceRegistration'];
+      };
+    };
+    responses: {
+      /** @description The device is bound. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Device'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  revokeDevice: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        device_id: components['parameters']['DeviceIdPath'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The device was revoked. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listAccounts: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description All accounts, NGN first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['AccountList'];
+        };
+      };
+    };
+  };
+  openAccount: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['OpenAccountRequest'];
+      };
+    };
+    responses: {
+      /** @description The wallet was opened. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Account'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+      409: components['responses']['Conflict'];
+    };
+  };
+  getAccount: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        account_id: components['parameters']['AccountId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The account with balances and receiving details. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Account'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listAccountHolds: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        account_id: components['parameters']['AccountId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Active holds, newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['HoldList'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listTransactions: {
+    parameters: {
+      query?: {
+        account_id?: components['schemas']['Uuid'];
+        /** @description One or more types, comma-separated. */
+        type?: components['schemas']['TransactionType'][];
+        currency?: components['schemas']['CurrencyCode'];
+        status?: components['schemas']['TransactionStatus'];
+        category?: components['schemas']['Category'];
+        /** @description Inclusive start date. */
+        from?: components['parameters']['FromDate'];
+        /** @description Inclusive end date. */
+        to?: components['parameters']['ToDate'];
+        /** @description Free-text search over counterparty, narration and reference. */
+        q?: string;
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description A page of transactions. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionPage'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  getTransaction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transaction_id: components['parameters']['TransactionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The transaction. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionDetail'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateTransaction: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transaction_id: components['parameters']['TransactionId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateTransactionRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated transaction. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransactionDetail'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getReceipt: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transaction_id: components['parameters']['TransactionId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The receipt. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Receipt'];
+          'application/pdf': string;
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listStatements: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Statements, newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StatementPage'];
+        };
+      };
+    };
+  };
+  requestStatement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['StatementRequest'];
+      };
+    };
+    responses: {
+      /** @description Generation has started. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Statement'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  getStatement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        statement_id: components['parameters']['StatementId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The statement and its status. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Statement'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  downloadStatement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        statement_id: components['parameters']['StatementId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The PDF, with the verification hash and QR on every page. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/pdf': string;
+        };
+      };
+      404: components['responses']['NotFound'];
+      409: components['responses']['Conflict'];
+    };
+  };
+  verifyStatement: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        verification_code: string;
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The statement is genuine. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['StatementVerification'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listBanks: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Banks sorted by name. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BankList'];
+        };
+      };
+    };
+  };
+  resolvePayee: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayeeQuery'];
+      };
+    };
+    responses: {
+      /** @description The payee. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ResolvedPayee'];
+        };
+      };
+      404: components['responses']['NotFound'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  quoteTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['TransferQuoteRequest'];
+      };
+    };
+    responses: {
+      /** @description The quote. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransferQuote'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  listTransfers: {
+    parameters: {
+      query?: {
+        status?: components['schemas']['TransferStatus'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Transfers, newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['TransferPage'];
+        };
+      };
+    };
+  };
+  createTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+        /** @description Send when the quote said step-up is needed, to skip the cooling-off delay. */
+        'X-Step-Up-Token'?: components['parameters']['OptionalStepUpTokenHeader'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateTransferRequest'];
+      };
+    };
+    responses: {
+      /** @description The transfer was accepted. Check `status`. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+      401: components['responses']['Unauthorized'];
+      403: components['responses']['Forbidden'];
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  getTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        transfer_id: components['parameters']['TransferId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The transfer. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  stepUpTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+        /** @description Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose. */
+        'X-Step-Up-Token': components['parameters']['StepUpTokenHeader'];
+      };
+      path: {
+        transfer_id: components['parameters']['TransferId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The transfer after step-up. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      403: components['responses']['Forbidden'];
+      409: components['responses']['Conflict'];
+    };
+  };
+  cancelTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+      };
+      path: {
+        transfer_id: components['parameters']['TransferId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The cancelled transfer. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  createInternationalTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['InternationalTransferRequest'];
+      };
+    };
+    responses: {
+      /** @description The transfer was accepted. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      403: components['responses']['PaidFeatureRequired'];
+    };
+  };
+  listScheduledTransfers: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Schedules, next run first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduledTransferPage'];
+        };
+      };
+    };
+  };
+  createScheduledTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateScheduledTransferRequest'];
+      };
+    };
+    responses: {
+      /** @description The schedule. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduledTransfer'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  getScheduledTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: components['parameters']['ScheduleId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The schedule. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduledTransfer'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  cancelScheduledTransfer: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        schedule_id: components['parameters']['ScheduleId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description No future runs will happen. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateScheduledTransfer: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        schedule_id: components['parameters']['ScheduleId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateScheduledTransferRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated schedule. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['ScheduledTransfer'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listBeneficiaries: {
+    parameters: {
+      query?: {
+        favourite?: boolean;
+        q?: string;
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Favourites first, then most recently paid. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['BeneficiaryPage'];
+        };
+      };
+    };
+  };
+  createBeneficiary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateBeneficiaryRequest'];
+      };
+    };
+    responses: {
+      /** @description The beneficiary. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Beneficiary'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  deleteBeneficiary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        beneficiary_id: components['parameters']['BeneficiaryId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Deleted. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updateBeneficiary: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        beneficiary_id: components['parameters']['BeneficiaryId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdateBeneficiaryRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated beneficiary. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Beneficiary'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  listMoneyRequests: {
+    parameters: {
+      query: {
+        direction: components['schemas']['MoneyRequestDirection'];
+        status?: components['schemas']['MoneyRequestStatus'];
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Requests, newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MoneyRequestPage'];
+        };
+      };
+    };
+  };
+  createMoneyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateMoneyRequestRequest'];
+      };
+    };
+    responses: {
+      /** @description The request was sent. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MoneyRequest'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getMoneyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: components['parameters']['MoneyRequestId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The request. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MoneyRequest'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  payMoneyRequest: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        request_id: components['parameters']['MoneyRequestId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayFromAccountRequest'];
+      };
+    };
+    responses: {
+      /** @description The transfer that pays the request. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  declineMoneyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: components['parameters']['MoneyRequestId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The declined request. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MoneyRequest'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  cancelMoneyRequest: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        request_id: components['parameters']['MoneyRequestId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The cancelled request. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['MoneyRequest'];
+        };
+      };
+      409: components['responses']['Conflict'];
+    };
+  };
+  listSplitBills: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Split bills I created, newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SplitBillPage'];
+        };
+      };
+    };
+  };
+  createSplitBill: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreateSplitBillRequest'];
+      };
+    };
+    responses: {
+      /** @description The split bill and its requests. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SplitBill'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getSplitBill: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        split_bill_id: components['parameters']['SplitBillId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Who has paid and who hasn't. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['SplitBill'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  remindSplitBill: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        split_bill_id: components['parameters']['SplitBillId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Reminders were queued. */
+      202: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      429: components['responses']['TooManyRequests'];
+    };
+  };
+  listPaymentLinks: {
+    parameters: {
+      query?: {
+        /** @description Opaque cursor from a previous page's `next_cursor`. */
+        cursor?: components['parameters']['Cursor'];
+        limit?: components['parameters']['Limit'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description Links, newest first. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaymentLinkPage'];
+        };
+      };
+    };
+  };
+  createPaymentLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['CreatePaymentLinkRequest'];
+      };
+    };
+    responses: {
+      /** @description The link, ready to share. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaymentLink'];
+        };
+      };
+      400: components['responses']['BadRequest'];
+    };
+  };
+  getPaymentLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        link_id: components['parameters']['PaymentLinkId'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The link with its totals. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaymentLink'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  updatePaymentLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        link_id: components['parameters']['PaymentLinkId'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['UpdatePaymentLinkRequest'];
+      };
+    };
+    responses: {
+      /** @description The updated link. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PaymentLink'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  getPublicPaymentLink: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path: {
+        slug: components['parameters']['PaymentLinkSlug'];
+      };
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The pay page details. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['PublicPaymentLink'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  payPaymentLink: {
+    parameters: {
+      query?: never;
+      header: {
+        /** @description UUIDv7 chosen by the client. Replays return the stored response; the same key with a different body returns 422. */
+        'Idempotency-Key': components['parameters']['IdempotencyKey'];
+        /** @description The bound device that signed the request. */
+        'X-Device-Id': components['parameters']['DeviceId'];
+        /** @description Base64url Ed25519 signature over the canonical request payload. */
+        'X-Device-Signature': components['parameters']['DeviceSignature'];
+        /** @description When the payload was signed. Must be within ±5 minutes of server time. */
+        'X-Signature-Timestamp': components['parameters']['SignatureTimestamp'];
+        /** @description Single-use random value that prevents replay. */
+        'X-Nonce': components['parameters']['Nonce'];
+      };
+      path: {
+        slug: components['parameters']['PaymentLinkSlug'];
+      };
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['PayPaymentLinkRequest'];
+      };
+    };
+    responses: {
+      /** @description The transfer that pays the link. */
+      201: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['Transfer'];
+        };
+      };
+      409: components['responses']['Conflict'];
+      422: components['responses']['UnprocessableEntity'];
+    };
+  };
+  getMyQr: {
+    parameters: {
+      query: {
+        account_id: components['schemas']['Uuid'];
+        amount_minor?: components['schemas']['MinorUnits'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The payload to render as a QR. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['QrCode'];
+        };
+      };
+      404: components['responses']['NotFound'];
+    };
+  };
+  decodeQr: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['QrDecodeRequest'];
+      };
+    };
+    responses: {
+      /** @description The decoded QR. `valid` is false for tampered or expired codes. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['DecodedQr'];
+        };
+      };
+      400: components['responses']['BadRequest'];
     };
   };
 }

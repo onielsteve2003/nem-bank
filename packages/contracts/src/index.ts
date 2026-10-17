@@ -5,9 +5,25 @@ export type { components, operations, paths };
 
 type Schemas = components['schemas'];
 
+/** Any schema in the contract by name, e.g. `Schema<'Transfer'>`. */
+export type Schema<Name extends keyof Schemas> = Schemas[Name];
+
+// Shared building blocks.
 export type Money = Schemas['Money'];
 export type CurrencyCode = Schemas['CurrencyCode'];
 export type Problem = Schemas['Problem'];
 export type FieldError = Schemas['FieldError'];
 export type PageInfo = Schemas['PageInfo'];
 export type Health = Schemas['Health'];
+
+// Core banking resources used across features.
+export type User = Schemas['User'];
+export type Device = Schemas['Device'];
+export type AuthSession = Schemas['AuthSession'];
+export type Account = Schemas['Account'];
+export type Transaction = Schemas['Transaction'];
+export type TransactionDetail = Schemas['TransactionDetail'];
+export type Transfer = Schemas['Transfer'];
+export type TransferStatus = Schemas['TransferStatus'];
+export type RiskAssessment = Schemas['RiskAssessment'];
+export type Beneficiary = Schemas['Beneficiary'];

@@ -1,7 +1,7 @@
 openapi: 3.1.0
 info:
   title: Nem Bank API
-  version: 0.1.0
+  version: 1.0.0
   summary: The single source of truth for the Nem Bank HTTP API.
   description: |
     Contract-first: TypeScript types (`openapi-typescript`) and the Go server
@@ -11,10 +11,18 @@ info:
     - **Money** is `{ "amount_minor": "150000", "currency": "NGN" }`. Minor units are a
       string so JavaScript never loses precision.
     - **Errors** are RFC 9457 `application/problem+json` with a stable `code`.
-    - **Lists** use opaque cursors (`cursor`, `limit`, `next_cursor`).
-    - **IDs** are UUIDv7; **timestamps** are RFC 3339 in UTC.
+    - **Lists** use opaque cursors (`cursor`, `limit`, `next_cursor`) and return
+      `{ "data": [...], "page": { "next_cursor": ... } }`.
+    - **IDs** are UUIDv7; **timestamps** are RFC 3339 in UTC; **dates** are `YYYY-MM-DD`
+      in Africa/Lagos.
     - **Money-moving POSTs** require `Idempotency-Key` and a device signature
       (`X-Device-Id`, `X-Device-Signature`, `X-Signature-Timestamp`, `X-Nonce`).
+      The signature covers the canonical payload
+      `METHOD\npath\ntimestamp\nnonce\nsha256(body)`.
+    - **Step-up** actions also require `X-Step-Up-Token`, issued by `POST /v1/auth/step-up/{step_up_id}/verify`.
+    - Every response carries `X-Request-Id`; problems repeat it as `request_id`.
+
+    All money is simulated. External rails run in sandbox mode.
   contact:
     name: Nem Bank
     url: https://github.com/onielsteve2003/nem-bank
@@ -24,6 +32,28 @@ servers:
 tags:
   - name: system
     description: Health and service metadata.
+  - name: auth
+    description: Sign up, login, tokens, password reset and step-up verification (FR-AUTH).
+  - name: users
+    description: The signed-in customer's profile, @nemtag and transaction PIN.
+  - name: devices
+    description: Device binding with Ed25519 keys and the new-device cool-off (AUTH-6, AUTH-8).
+  - name: accounts
+    description: NGN account and USD, GBP, EUR wallets with available vs ledger balances (FR-ACC).
+  - name: transactions
+    description: Transaction history, detail, categories and receipts (ACC-5 to ACC-7).
+  - name: statements
+    description: Official PDF statements with a public verification page (ACC-8).
+  - name: transfers
+    description: Payee lookup, Confirmation of Payee, quotes, transfers and schedules (FR-TRF).
+  - name: beneficiaries
+    description: Saved recipients with new-beneficiary cooling-off (TRF-8).
+  - name: money-requests
+    description: Requests between Nem users and split bills (TRF-10, TRF-11).
+  - name: payment-links
+    description: Shareable payment links and the public pay page (TRF-12).
+  - name: qr
+    description: Server-signed QR payloads to receive and pay (TRF-13).
 security:
   - bearerAuth: []
 
@@ -44,6 +74,1533 @@ paths:
                 $ref: '#/components/schemas/Health'
         '503':
           $ref: '#/components/responses/ServiceUnavailable'
+
+  # ---------------------------------------------------------------- auth
+  /v1/auth/signup:
+    post:
+      tags: [auth]
+      operationId: startSignup
+      summary: Start sign-up
+      description: Validates the customer's details (18+, +234 phone, consent) and emails a 6-digit OTP (AUTH-1, AUTH-2).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupRequest'
+      responses:
+        '201':
+          description: Sign-up started; an OTP was emailed.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignupStarted'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/signup/complete:
+    post:
+      tags: [auth]
+      operationId: completeSignup
+      summary: Finish sign-up
+      description: Sets the password and binds the first device. Returns a session.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SignupCompleteRequest'
+      responses:
+        '201':
+          description: The account was created and the device bound.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/auth/otp/verify:
+    post:
+      tags: [auth]
+      operationId: verifyOtp
+      summary: Verify an email OTP
+      description: Codes expire after 10 minutes and allow 5 attempts.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpVerifyRequest'
+      responses:
+        '200':
+          description: The code is correct.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpVerified'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/otp/resend:
+    post:
+      tags: [auth]
+      operationId: resendOtp
+      summary: Resend an email OTP
+      description: Allowed once the 60-second cooldown in `resend_available_at` has passed.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OtpResendRequest'
+      responses:
+        '200':
+          description: A new code was sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpChallenge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/login:
+    post:
+      tags: [auth]
+      operationId: login
+      summary: Log in with a password
+      description: |
+        Email or phone plus password (AUTH-7). Logging in from an unknown device binds it and
+        starts the 24-hour new-device cool-off (AUTH-8): `device.cool_off_until` is set and
+        the customer's other devices are alerted.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: Logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/device-challenge:
+    post:
+      tags: [auth]
+      operationId: createDeviceChallenge
+      summary: Get a device-login challenge
+      description: First step of biometric quick login on a trusted device.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceChallengeRequest'
+      responses:
+        '201':
+          description: Sign `nonce` with the device key.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceChallenge'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/auth/login/device:
+    post:
+      tags: [auth]
+      operationId: loginWithDevice
+      summary: Quick login with the device key
+      description: The app unlocks the device key with Face ID or fingerprint and signs the challenge (AUTH-5, AUTH-7).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceLoginRequest'
+      responses:
+        '200':
+          description: Logged in.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/auth/demo:
+    post:
+      tags: [auth]
+      operationId: startDemoSession
+      summary: Start a demo session
+      description: One tap into a seeded persona with 6 months of history (AUTH-11). Demo users are isolated and reset nightly.
+      security: []
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoSessionRequest'
+      responses:
+        '201':
+          description: A demo session.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/refresh:
+    post:
+      tags: [auth]
+      operationId: refreshSession
+      summary: Rotate tokens
+      description: Refresh tokens rotate on every use. Reusing an old one revokes the whole token family.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/RefreshRequest'
+      responses:
+        '200':
+          description: New tokens.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AuthSession'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/auth/logout:
+    post:
+      tags: [auth]
+      operationId: logout
+      summary: Log out
+      requestBody:
+        required: false
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LogoutRequest'
+      responses:
+        '204':
+          description: The session (or every session) was revoked.
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/auth/password/forgot:
+    post:
+      tags: [auth]
+      operationId: forgotPassword
+      summary: Start a password reset
+      description: Always returns 202 so the response never reveals whether the email exists (AUTH-9).
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ForgotPasswordRequest'
+      responses:
+        '202':
+          description: If the email is registered, a code was sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/OtpChallenge'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/auth/password/reset:
+    post:
+      tags: [auth]
+      operationId: resetPassword
+      summary: Reset the password
+      description: Revokes every session and starts the new-device cool-off on all devices.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/ResetPasswordRequest'
+      responses:
+        '204':
+          description: The password was changed.
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/auth/step-up:
+    post:
+      tags: [auth]
+      operationId: startStepUp
+      summary: Start step-up verification
+      description: Asks for extra proof before a sensitive action (risky transfer, unfreeze, PIN reset, card reveal).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StepUpStartRequest'
+      responses:
+        '201':
+          description: The checks the customer must pass.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StepUpChallenge'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+  /v1/auth/step-up/{step_up_id}/verify:
+    post:
+      tags: [auth]
+      operationId: verifyStepUp
+      summary: Complete step-up verification
+      parameters:
+        - $ref: '#/components/parameters/StepUpId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StepUpVerifyRequest'
+      responses:
+        '200':
+          description: Pass `step_up_token` as `X-Step-Up-Token` on the protected request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StepUpToken'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  # ---------------------------------------------------------------- users
+  /v1/users/me:
+    get:
+      tags: [users]
+      operationId: getMe
+      summary: Get my profile
+      responses:
+        '200':
+          description: The signed-in customer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+    patch:
+      tags: [users]
+      operationId: updateMe
+      summary: Update my profile
+      description: Legal names change only through KYC; this edits display fields.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateUserRequest'
+      responses:
+        '200':
+          description: The updated profile.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/users/nemtags/{nemtag}/availability:
+    get:
+      tags: [users]
+      operationId: checkNemtag
+      summary: Check whether a @nemtag is free
+      parameters:
+        - name: nemtag
+          in: path
+          required: true
+          schema:
+            $ref: '#/components/schemas/Nemtag'
+      responses:
+        '200':
+          description: Availability, with suggestions when taken.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/NemtagAvailability'
+  /v1/users/me/nemtag:
+    put:
+      tags: [users]
+      operationId: setNemtag
+      summary: Claim my @nemtag
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetNemtagRequest'
+      responses:
+        '200':
+          description: The tag is now mine.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/users/me/pin:
+    put:
+      tags: [users]
+      operationId: setPin
+      summary: Set my transaction PIN
+      description: First-time setup only. Weak PINs (1234, 0000, repeated digits, date-of-birth digits) return 422 `weak_pin` (AUTH-4).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPinRequest'
+      responses:
+        '204':
+          description: The PIN was set.
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/users/me/pin/verify:
+    post:
+      tags: [users]
+      operationId: verifyPin
+      summary: Check my transaction PIN
+      description: Five wrong tries lock the PIN with escalating backoff (AUTH-4).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/VerifyPinRequest'
+      responses:
+        '200':
+          description: The result and the attempts left.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PinVerification'
+        '423':
+          $ref: '#/components/responses/Locked'
+  /v1/users/me/pin/reset:
+    post:
+      tags: [users]
+      operationId: resetPin
+      summary: Reset my transaction PIN
+      description: Needs step-up verification (AUTH-9).
+      parameters:
+        - $ref: '#/components/parameters/StepUpTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetPinRequest'
+      responses:
+        '204':
+          description: The PIN was replaced.
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- devices
+  /v1/devices:
+    get:
+      tags: [devices]
+      operationId: listDevices
+      summary: List my bound devices
+      responses:
+        '200':
+          description: Every device bound to the account.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DeviceList'
+    post:
+      tags: [devices]
+      operationId: bindDevice
+      summary: Bind a new device key
+      description: Registers a new Ed25519 public key. Needs step-up and starts the 24-hour cool-off on the new device.
+      parameters:
+        - $ref: '#/components/parameters/StepUpTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DeviceRegistration'
+      responses:
+        '201':
+          description: The device is bound.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Device'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+  /v1/devices/{device_id}:
+    delete:
+      tags: [devices]
+      operationId: revokeDevice
+      summary: Revoke a device
+      description: Removes the device key and ends its sessions (SEC-2).
+      parameters:
+        - $ref: '#/components/parameters/DeviceIdPath'
+      responses:
+        '204':
+          description: The device was revoked.
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- accounts
+  /v1/accounts:
+    get:
+      tags: [accounts]
+      operationId: listAccounts
+      summary: List my accounts
+      description: The NGN account plus any open foreign-currency wallets.
+      responses:
+        '200':
+          description: All accounts, NGN first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/AccountList'
+    post:
+      tags: [accounts]
+      operationId: openAccount
+      summary: Open a foreign-currency wallet
+      description: USD, GBP and EUR wallets need KYC Tier 2+ (KYC-7); lower tiers get 403 `kyc_tier_required`.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/OpenAccountRequest'
+      responses:
+        '201':
+          description: The wallet was opened.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/accounts/{account_id}:
+    get:
+      tags: [accounts]
+      operationId: getAccount
+      summary: Get an account
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: The account with balances and receiving details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Account'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/accounts/{account_id}/holds:
+    get:
+      tags: [accounts]
+      operationId: listAccountHolds
+      summary: List active holds
+      description: Card authorizations and pending transfers that make up `ledger_balance − available_balance` (ACC-3).
+      parameters:
+        - $ref: '#/components/parameters/AccountId'
+      responses:
+        '200':
+          description: Active holds, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/HoldList'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- transactions
+  /v1/transactions:
+    get:
+      tags: [transactions]
+      operationId: listTransactions
+      summary: List transactions
+      description: Newest first, filterable and searchable (ACC-5).
+      parameters:
+        - name: account_id
+          in: query
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: type
+          in: query
+          description: One or more types, comma-separated.
+          style: form
+          explode: false
+          schema:
+            type: array
+            items:
+              $ref: '#/components/schemas/TransactionType'
+        - name: currency
+          in: query
+          schema:
+            $ref: '#/components/schemas/CurrencyCode'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransactionStatus'
+        - name: category
+          in: query
+          schema:
+            $ref: '#/components/schemas/Category'
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+        - name: q
+          in: query
+          description: Free-text search over counterparty, narration and reference.
+          schema:
+            type: string
+            maxLength: 100
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: A page of transactions.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionPage'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/transactions/{transaction_id}:
+    get:
+      tags: [transactions]
+      operationId: getTransaction
+      summary: Get a transaction
+      description: Detail with status timeline, fees and what the customer can do next (ACC-6).
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: The transaction.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [transactions]
+      operationId: updateTransaction
+      summary: Recategorise a transaction
+      description: The correction also trains smart categories for this customer (AI-3).
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTransactionRequest'
+      responses:
+        '200':
+          description: The updated transaction.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransactionDetail'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/transactions/{transaction_id}/receipt:
+    get:
+      tags: [transactions]
+      operationId: getReceipt
+      summary: Get a receipt
+      description: JSON for the in-app receipt, or a PDF with `Accept application/pdf` (ACC-7).
+      parameters:
+        - $ref: '#/components/parameters/TransactionId'
+      responses:
+        '200':
+          description: The receipt.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Receipt'
+            application/pdf:
+              schema:
+                type: string
+                contentMediaType: application/pdf
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- statements
+  /v1/statements:
+    get:
+      tags: [statements]
+      operationId: listStatements
+      summary: List my statements
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Statements, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementPage'
+    post:
+      tags: [statements]
+      operationId: requestStatement
+      summary: Request an official statement
+      description: Generated in the background; poll or wait for the `statement.ready` event (ACC-8).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/StatementRequest'
+      responses:
+        '202':
+          description: Generation has started.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statement'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/statements/{statement_id}:
+    get:
+      tags: [statements]
+      operationId: getStatement
+      summary: Get a statement
+      parameters:
+        - $ref: '#/components/parameters/StatementId'
+      responses:
+        '200':
+          description: The statement and its status.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Statement'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/statements/{statement_id}/download:
+    get:
+      tags: [statements]
+      operationId: downloadStatement
+      summary: Download a statement PDF
+      parameters:
+        - $ref: '#/components/parameters/StatementId'
+      responses:
+        '200':
+          description: The PDF, with the verification hash and QR on every page.
+          content:
+            application/pdf:
+              schema:
+                type: string
+                contentMediaType: application/pdf
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/public/statements/{verification_code}:
+    get:
+      tags: [statements]
+      operationId: verifyStatement
+      summary: Verify a statement (public)
+      description: The page the statement QR links to. Shows only masked details so the link is safe to share with an embassy.
+      security: []
+      parameters:
+        - name: verification_code
+          in: path
+          required: true
+          schema:
+            type: string
+            pattern: '^[A-Z0-9]{12}$'
+      responses:
+        '200':
+          description: The statement is genuine.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/StatementVerification'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- transfers
+  /v1/banks:
+    get:
+      tags: [transfers]
+      operationId: listBanks
+      summary: List Nigerian banks
+      description: CBN bank codes for the bank picker (TRF-2). Cache for a day.
+      responses:
+        '200':
+          description: Banks sorted by name.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BankList'
+  /v1/payees/resolve:
+    post:
+      tags: [transfers]
+      operationId: resolvePayee
+      summary: Look up a payee
+      description: |
+        Resolves a @nemtag, phone or account number to a name. For other banks it runs
+        Confirmation of Payee and returns `match`, `close_match` or `no_match` (TRF-3).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayeeQuery'
+      responses:
+        '200':
+          description: The payee.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResolvedPayee'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/transfers/quote:
+    post:
+      tags: [transfers]
+      operationId: quoteTransfer
+      summary: Price a transfer
+      description: Fee, levy, remaining daily limit and any cooling-off, shown before the customer confirms (TRF-4, TRF-8).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/TransferQuoteRequest'
+      responses:
+        '200':
+          description: The quote.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferQuote'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/transfers:
+    get:
+      tags: [transfers]
+      operationId: listTransfers
+      summary: List transfers
+      parameters:
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/TransferStatus'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Transfers, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TransferPage'
+    post:
+      tags: [transfers]
+      operationId: createTransfer
+      summary: Send money
+      description: |
+        Device-signed and idempotent: a double tap never double-debits (TRF-5). The risk
+        engine decides the outcome (TRF-6):
+        - `allow` → `completed` for Nem users, `processing` for other banks.
+        - `step_up` → `pending_step_up`; finish with `POST /v1/transfers/{transfer_id}/step-up`.
+        - `hold` → `held_for_review` with plain-language reasons.
+        A first transfer above the cooling-off threshold to a new beneficiary becomes `delayed`
+        unless a step-up token is sent.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+        - $ref: '#/components/parameters/OptionalStepUpTokenHeader'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTransferRequest'
+      responses:
+        '201':
+          description: The transfer was accepted. Check `status`.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+  /v1/transfers/{transfer_id}:
+    get:
+      tags: [transfers]
+      operationId: getTransfer
+      summary: Track a transfer
+      description: The status timeline (TRF-7). Live updates arrive as `transfer.updated` events.
+      parameters:
+        - $ref: '#/components/parameters/TransferId'
+      responses:
+        '200':
+          description: The transfer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/transfers/{transfer_id}/step-up:
+    post:
+      tags: [transfers]
+      operationId: stepUpTransfer
+      summary: Release a transfer after step-up
+      description: Moves a `pending_step_up` or `delayed` transfer forward once the customer passes step-up.
+      parameters:
+        - $ref: '#/components/parameters/TransferId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+        - $ref: '#/components/parameters/StepUpTokenHeader'
+      responses:
+        '200':
+          description: The transfer after step-up.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '403':
+          $ref: '#/components/responses/Forbidden'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/transfers/{transfer_id}/cancel:
+    post:
+      tags: [transfers]
+      operationId: cancelTransfer
+      summary: Cancel a waiting transfer
+      description: Only `pending_step_up`, `delayed` and `held_for_review` transfers can be cancelled; the hold is released.
+      parameters:
+        - $ref: '#/components/parameters/TransferId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+      responses:
+        '200':
+          description: The cancelled transfer.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/transfers/international:
+    post:
+      tags: [transfers]
+      operationId: createInternationalTransfer
+      summary: Send money abroad
+      description: |
+        Fully designed but needs a licensed remittance partner (TRF-14). Returns 403
+        `paid_feature_required` until the `international_transfers` flag is enabled.
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/InternationalTransferRequest'
+      responses:
+        '201':
+          description: The transfer was accepted.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '403':
+          $ref: '#/components/responses/PaidFeatureRequired'
+  /v1/scheduled-transfers:
+    get:
+      tags: [transfers]
+      operationId: listScheduledTransfers
+      summary: List scheduled transfers
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Schedules, next run first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledTransferPage'
+    post:
+      tags: [transfers]
+      operationId: createScheduledTransfer
+      summary: Schedule a transfer
+      description: One-off or recurring (daily, weekly, monthly). Signed, because it authorises future debits (TRF-9).
+      parameters:
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateScheduledTransferRequest'
+      responses:
+        '201':
+          description: The schedule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledTransfer'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/scheduled-transfers/{schedule_id}:
+    get:
+      tags: [transfers]
+      operationId: getScheduledTransfer
+      summary: Get a scheduled transfer
+      parameters:
+        - $ref: '#/components/parameters/ScheduleId'
+      responses:
+        '200':
+          description: The schedule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledTransfer'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [transfers]
+      operationId: updateScheduledTransfer
+      summary: Pause, resume or edit a schedule
+      parameters:
+        - $ref: '#/components/parameters/ScheduleId'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateScheduledTransferRequest'
+      responses:
+        '200':
+          description: The updated schedule.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ScheduledTransfer'
+        '409':
+          $ref: '#/components/responses/Conflict'
+    delete:
+      tags: [transfers]
+      operationId: cancelScheduledTransfer
+      summary: Cancel a schedule
+      parameters:
+        - $ref: '#/components/parameters/ScheduleId'
+      responses:
+        '204':
+          description: No future runs will happen.
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- beneficiaries
+  /v1/beneficiaries:
+    get:
+      tags: [beneficiaries]
+      operationId: listBeneficiaries
+      summary: List beneficiaries
+      parameters:
+        - name: favourite
+          in: query
+          schema:
+            type: boolean
+        - name: q
+          in: query
+          schema:
+            type: string
+            maxLength: 100
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Favourites first, then most recently paid.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/BeneficiaryPage'
+    post:
+      tags: [beneficiaries]
+      operationId: createBeneficiary
+      summary: Save a beneficiary
+      description: New beneficiaries start a cooling-off window (TRF-8).
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateBeneficiaryRequest'
+      responses:
+        '201':
+          description: The beneficiary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiary'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/beneficiaries/{beneficiary_id}:
+    patch:
+      tags: [beneficiaries]
+      operationId: updateBeneficiary
+      summary: Rename or favourite a beneficiary
+      parameters:
+        - $ref: '#/components/parameters/BeneficiaryId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateBeneficiaryRequest'
+      responses:
+        '200':
+          description: The updated beneficiary.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Beneficiary'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    delete:
+      tags: [beneficiaries]
+      operationId: deleteBeneficiary
+      summary: Delete a beneficiary
+      parameters:
+        - $ref: '#/components/parameters/BeneficiaryId'
+      responses:
+        '204':
+          description: Deleted.
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  # ---------------------------------------------------------------- money requests
+  /v1/money-requests:
+    get:
+      tags: [money-requests]
+      operationId: listMoneyRequests
+      summary: List money requests
+      parameters:
+        - name: direction
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/MoneyRequestDirection'
+        - name: status
+          in: query
+          schema:
+            $ref: '#/components/schemas/MoneyRequestStatus'
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Requests, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyRequestPage'
+    post:
+      tags: [money-requests]
+      operationId: createMoneyRequest
+      summary: Request money from a Nem user
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateMoneyRequestRequest'
+      responses:
+        '201':
+          description: The request was sent.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/money-requests/{request_id}:
+    get:
+      tags: [money-requests]
+      operationId: getMoneyRequest
+      summary: Get a money request
+      parameters:
+        - $ref: '#/components/parameters/MoneyRequestId'
+      responses:
+        '200':
+          description: The request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyRequest'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/money-requests/{request_id}/pay:
+    post:
+      tags: [money-requests]
+      operationId: payMoneyRequest
+      summary: Pay an incoming request
+      description: Creates a normal transfer, so limits, fees and risk checks all apply.
+      parameters:
+        - $ref: '#/components/parameters/MoneyRequestId'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayFromAccountRequest'
+      responses:
+        '201':
+          description: The transfer that pays the request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/money-requests/{request_id}/decline:
+    post:
+      tags: [money-requests]
+      operationId: declineMoneyRequest
+      summary: Decline an incoming request
+      parameters:
+        - $ref: '#/components/parameters/MoneyRequestId'
+      responses:
+        '200':
+          description: The declined request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/money-requests/{request_id}/cancel:
+    post:
+      tags: [money-requests]
+      operationId: cancelMoneyRequest
+      summary: Cancel a request I sent
+      parameters:
+        - $ref: '#/components/parameters/MoneyRequestId'
+      responses:
+        '200':
+          description: The cancelled request.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MoneyRequest'
+        '409':
+          $ref: '#/components/responses/Conflict'
+  /v1/split-bills:
+    get:
+      tags: [money-requests]
+      operationId: listSplitBills
+      summary: List split bills
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Split bills I created, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitBillPage'
+    post:
+      tags: [money-requests]
+      operationId: createSplitBill
+      summary: Split a bill
+      description: Equal or custom shares; one money request goes to each participant (TRF-11). Custom shares must add up to the total.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateSplitBillRequest'
+      responses:
+        '201':
+          description: The split bill and its requests.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitBill'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+  /v1/split-bills/{split_bill_id}:
+    get:
+      tags: [money-requests]
+      operationId: getSplitBill
+      summary: Get a split bill
+      parameters:
+        - $ref: '#/components/parameters/SplitBillId'
+      responses:
+        '200':
+          description: Who has paid and who hasn't.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SplitBill'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/split-bills/{split_bill_id}/remind:
+    post:
+      tags: [money-requests]
+      operationId: remindSplitBill
+      summary: Remind unpaid participants
+      description: At most one reminder per participant per 24 hours.
+      parameters:
+        - $ref: '#/components/parameters/SplitBillId'
+      responses:
+        '202':
+          description: Reminders were queued.
+        '429':
+          $ref: '#/components/responses/TooManyRequests'
+
+  # ---------------------------------------------------------------- payment links
+  /v1/payment-links:
+    get:
+      tags: [payment-links]
+      operationId: listPaymentLinks
+      summary: List my payment links
+      parameters:
+        - $ref: '#/components/parameters/Cursor'
+        - $ref: '#/components/parameters/Limit'
+      responses:
+        '200':
+          description: Links, newest first.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLinkPage'
+    post:
+      tags: [payment-links]
+      operationId: createPaymentLink
+      summary: Create a payment link
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreatePaymentLinkRequest'
+      responses:
+        '201':
+          description: The link, ready to share.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLink'
+        '400':
+          $ref: '#/components/responses/BadRequest'
+  /v1/payment-links/{link_id}:
+    get:
+      tags: [payment-links]
+      operationId: getPaymentLink
+      summary: Get a payment link
+      parameters:
+        - $ref: '#/components/parameters/PaymentLinkId'
+      responses:
+        '200':
+          description: The link with its totals.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLink'
+        '404':
+          $ref: '#/components/responses/NotFound'
+    patch:
+      tags: [payment-links]
+      operationId: updatePaymentLink
+      summary: Edit or deactivate a payment link
+      parameters:
+        - $ref: '#/components/parameters/PaymentLinkId'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdatePaymentLinkRequest'
+      responses:
+        '200':
+          description: The updated link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PaymentLink'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/public/payment-links/{slug}:
+    get:
+      tags: [payment-links]
+      operationId: getPublicPaymentLink
+      summary: Open a pay page (public)
+      description: What the public web pay page shows. Only the payee's display name is exposed.
+      security: []
+      parameters:
+        - $ref: '#/components/parameters/PaymentLinkSlug'
+      responses:
+        '200':
+          description: The pay page details.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/PublicPaymentLink'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/public/payment-links/{slug}/pay:
+    post:
+      tags: [payment-links]
+      operationId: payPaymentLink
+      summary: Pay a payment link
+      description: The payer signs in to Nem on the pay page and pays from one of their accounts.
+      parameters:
+        - $ref: '#/components/parameters/PaymentLinkSlug'
+        - $ref: '#/components/parameters/IdempotencyKey'
+        - $ref: '#/components/parameters/DeviceId'
+        - $ref: '#/components/parameters/DeviceSignature'
+        - $ref: '#/components/parameters/SignatureTimestamp'
+        - $ref: '#/components/parameters/Nonce'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/PayPaymentLinkRequest'
+      responses:
+        '201':
+          description: The transfer that pays the link.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Transfer'
+        '409':
+          $ref: '#/components/responses/Conflict'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
+
+  # ---------------------------------------------------------------- qr
+  /v1/qr/me:
+    get:
+      tags: [qr]
+      operationId: getMyQr
+      summary: Get my receive QR
+      description: A server-signed payload, optionally with a fixed amount.
+      parameters:
+        - name: account_id
+          in: query
+          required: true
+          schema:
+            $ref: '#/components/schemas/Uuid'
+        - name: amount_minor
+          in: query
+          schema:
+            $ref: '#/components/schemas/MinorUnits'
+      responses:
+        '200':
+          description: The payload to render as a QR.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/QrCode'
+        '404':
+          $ref: '#/components/responses/NotFound'
+  /v1/qr/decode:
+    post:
+      tags: [qr]
+      operationId: decodeQr
+      summary: Decode a scanned QR
+      description: Checks the server signature and expiry, then resolves the payee. Pay with `POST /v1/transfers`.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/QrDecodeRequest'
+      responses:
+        '200':
+          description: The decoded QR. `valid` is false for tampered or expired codes.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/DecodedQr'
+        '400':
+          $ref: '#/components/responses/BadRequest'
 
 components:
   securitySchemes:
@@ -93,6 +1650,20 @@ components:
         type: string
         minLength: 16
         maxLength: 64
+    StepUpTokenHeader:
+      name: X-Step-Up-Token
+      in: header
+      required: true
+      description: Short-lived token from `POST /v1/auth/step-up/{step_up_id}/verify`, bound to one purpose.
+      schema:
+        type: string
+    OptionalStepUpTokenHeader:
+      name: X-Step-Up-Token
+      in: header
+      required: false
+      description: Send when the quote said step-up is needed, to skip the cooling-off delay.
+      schema:
+        type: string
     Cursor:
       name: cursor
       in: query
@@ -109,8 +1680,96 @@ components:
         minimum: 1
         maximum: 100
         default: 20
+    FromDate:
+      name: from
+      in: query
+      required: false
+      description: Inclusive start date.
+      schema:
+        $ref: '#/components/schemas/Date'
+    ToDate:
+      name: to
+      in: query
+      required: false
+      description: Inclusive end date.
+      schema:
+        $ref: '#/components/schemas/Date'
+    StepUpId:
+      name: step_up_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    DeviceIdPath:
+      name: device_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    AccountId:
+      name: account_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TransactionId:
+      name: transaction_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    StatementId:
+      name: statement_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    TransferId:
+      name: transfer_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    ScheduleId:
+      name: schedule_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    BeneficiaryId:
+      name: beneficiary_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    MoneyRequestId:
+      name: request_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    SplitBillId:
+      name: split_bill_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    PaymentLinkId:
+      name: link_id
+      in: path
+      required: true
+      schema:
+        $ref: '#/components/schemas/Uuid'
+    PaymentLinkSlug:
+      name: slug
+      in: path
+      required: true
+      schema:
+        type: string
+        pattern: '^[a-z0-9-]{4,40}$'
 
   schemas:
+    # ------------------------------------------------------------ primitives
     Uuid:
       type: string
       format: uuid
@@ -119,10 +1778,19 @@ components:
       type: string
       format: date-time
       description: RFC 3339, UTC.
+    Date:
+      type: string
+      format: date
+      description: Calendar date in Africa/Lagos.
     CurrencyCode:
       type: string
       description: ISO 4217 code of a supported currency.
       enum: [NGN, USD, GBP, EUR]
+    MinorUnits:
+      type: string
+      description: Non-negative integer amount in minor units, as a string.
+      pattern: '^(0|[1-9][0-9]*)$'
+      examples: ['500000']
     Money:
       type: object
       required: [amount_minor, currency]
@@ -134,6 +1802,42 @@ components:
           examples: ['150000']
         currency:
           $ref: '#/components/schemas/CurrencyCode'
+    PhoneNumber:
+      type: string
+      description: Nigerian mobile number in E.164.
+      pattern: '^\+234[789][01][0-9]{8}$'
+      examples: ['+2348031234567']
+    Email:
+      type: string
+      format: email
+      maxLength: 254
+    Nemtag:
+      type: string
+      description: Unique handle for receiving money, without the leading `@`.
+      pattern: '^[a-z][a-z0-9_]{2,19}$'
+      examples: ['tolu_a']
+    Nuban:
+      type: string
+      description: 10-digit NUBAN account number.
+      pattern: '^[0-9]{10}$'
+    BankCode:
+      type: string
+      description: CBN bank code.
+      pattern: '^[0-9]{3,6}$'
+    Pin:
+      type: string
+      description: 4-digit transaction PIN. Only sent over TLS; stored as an Argon2id hash.
+      pattern: '^[0-9]{4}$'
+      writeOnly: true
+    KycTier:
+      type: integer
+      enum: [1, 2, 3]
+    KycStatus:
+      type: string
+      enum: [not_started, pending_review, approved, rejected, resubmit]
+    Platform:
+      type: string
+      enum: [ios, android, web]
     PageInfo:
       type: object
       required: [next_cursor]
@@ -163,7 +1867,12 @@ components:
           format: uri-reference
         code:
           type: string
-          description: Stable machine-readable error code, e.g. `insufficient_funds`.
+          description: |
+            Stable machine-readable error code. Common codes: `validation_failed`,
+            `insufficient_funds`, `limit_exceeded`, `kyc_tier_required`, `weak_pin`,
+            `pin_locked`, `invalid_otp`, `otp_expired`, `idempotency_conflict`,
+            `invalid_signature`, `step_up_required`, `account_frozen`,
+            `outgoing_blocked`, `paid_feature_required`, `rate_limited`.
           pattern: '^[a-z][a-z0-9_]*$'
         request_id:
           type: string
@@ -172,6 +1881,11 @@ components:
           description: Field-level validation errors.
           items:
             $ref: '#/components/schemas/FieldError'
+        feature:
+          type: string
+          description: The gated feature, present when `code` is `paid_feature_required`.
+        retry_at:
+          $ref: '#/components/schemas/Timestamp'
     FieldError:
       type: object
       required: [field, code, message]
@@ -195,6 +1909,1978 @@ components:
         time:
           $ref: '#/components/schemas/Timestamp'
 
+    # ------------------------------------------------------------ auth
+    Consent:
+      type: object
+      required: [terms_version, privacy_version, accepted_at]
+      description: NDPA 2023 consent record.
+      properties:
+        terms_version:
+          type: string
+        privacy_version:
+          type: string
+        accepted_at:
+          $ref: '#/components/schemas/Timestamp'
+    SignupRequest:
+      type: object
+      required: [first_name, last_name, email, phone, date_of_birth, consent]
+      properties:
+        first_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        last_name:
+          type: string
+          minLength: 1
+          maxLength: 50
+        email:
+          $ref: '#/components/schemas/Email'
+        phone:
+          $ref: '#/components/schemas/PhoneNumber'
+        date_of_birth:
+          $ref: '#/components/schemas/Date'
+        consent:
+          $ref: '#/components/schemas/Consent'
+    OtpChallenge:
+      type: object
+      required:
+        [
+          challenge_id,
+          channel,
+          destination_masked,
+          expires_at,
+          resend_available_at,
+          attempts_remaining,
+        ]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        channel:
+          type: string
+          description: SMS needs a paid provider, so only email is live.
+          enum: [email]
+        destination_masked:
+          type: string
+          examples: ['t***@gmail.com']
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        resend_available_at:
+          $ref: '#/components/schemas/Timestamp'
+        attempts_remaining:
+          type: integer
+          minimum: 0
+          maximum: 5
+    SignupStarted:
+      type: object
+      required: [signup_id, otp]
+      properties:
+        signup_id:
+          $ref: '#/components/schemas/Uuid'
+        otp:
+          $ref: '#/components/schemas/OtpChallenge'
+    OtpVerifyRequest:
+      type: object
+      required: [challenge_id, code]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+    OtpVerified:
+      type: object
+      required: [verification_token, expires_at]
+      properties:
+        verification_token:
+          type: string
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    OtpResendRequest:
+      type: object
+      required: [challenge_id]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+    Password:
+      type: string
+      minLength: 10
+      maxLength: 128
+      writeOnly: true
+      description: Checked for strength and known-breached patterns (AUTH-3); stored as Argon2id.
+    DeviceRegistration:
+      type: object
+      required: [name, platform, public_key]
+      properties:
+        name:
+          type: string
+          maxLength: 60
+          examples: ["Tolu's iPhone"]
+        platform:
+          $ref: '#/components/schemas/Platform'
+        public_key:
+          type: string
+          description: Base64url raw 32-byte Ed25519 public key.
+          pattern: '^[A-Za-z0-9_-]{43}$'
+        app_version:
+          type: string
+        hardware_backed:
+          type: boolean
+          description: False on the web demo, where the key lives in memory.
+    SignupCompleteRequest:
+      type: object
+      required: [signup_id, verification_token, password, device]
+      properties:
+        signup_id:
+          $ref: '#/components/schemas/Uuid'
+        verification_token:
+          type: string
+        password:
+          $ref: '#/components/schemas/Password'
+        device:
+          $ref: '#/components/schemas/DeviceRegistration'
+    AuthSession:
+      type: object
+      required:
+        [
+          access_token,
+          access_token_expires_at,
+          refresh_token,
+          refresh_token_expires_at,
+          token_type,
+          user,
+          device,
+        ]
+      properties:
+        access_token:
+          type: string
+        access_token_expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        refresh_token:
+          type: string
+        refresh_token_expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        token_type:
+          type: string
+          enum: [Bearer]
+        user:
+          $ref: '#/components/schemas/User'
+        device:
+          $ref: '#/components/schemas/Device'
+    LoginRequest:
+      type: object
+      required: [identifier, password]
+      description: Send `device_id` from a trusted device, or `device` to bind a new one.
+      properties:
+        identifier:
+          type: string
+          description: Email or +234 phone number.
+          maxLength: 254
+        password:
+          $ref: '#/components/schemas/Password'
+        device_id:
+          $ref: '#/components/schemas/Uuid'
+        device:
+          $ref: '#/components/schemas/DeviceRegistration'
+    DeviceChallengeRequest:
+      type: object
+      required: [device_id]
+      properties:
+        device_id:
+          $ref: '#/components/schemas/Uuid'
+    DeviceChallenge:
+      type: object
+      required: [challenge_id, nonce, expires_at]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        nonce:
+          type: string
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    DeviceLoginRequest:
+      type: object
+      required: [device_id, challenge_id, signature]
+      properties:
+        device_id:
+          $ref: '#/components/schemas/Uuid'
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        signature:
+          type: string
+          description: Base64url Ed25519 signature over the nonce.
+          pattern: '^[A-Za-z0-9_-]+$'
+    DemoSessionRequest:
+      type: object
+      properties:
+        persona:
+          type: string
+          description: Which seeded persona to load.
+          enum: [tolu, mama_ngozi, emeka, bisi]
+          default: tolu
+    RefreshRequest:
+      type: object
+      required: [refresh_token]
+      properties:
+        refresh_token:
+          type: string
+    LogoutRequest:
+      type: object
+      properties:
+        all_devices:
+          type: boolean
+          default: false
+    ForgotPasswordRequest:
+      type: object
+      required: [email]
+      properties:
+        email:
+          $ref: '#/components/schemas/Email'
+    ResetPasswordRequest:
+      type: object
+      required: [challenge_id, code, new_password]
+      properties:
+        challenge_id:
+          $ref: '#/components/schemas/Uuid'
+        code:
+          type: string
+          pattern: '^[0-9]{6}$'
+        new_password:
+          $ref: '#/components/schemas/Password'
+    StepUpPurpose:
+      type: string
+      enum:
+        - transfer
+        - new_beneficiary
+        - device_bind
+        - pin_reset
+        - card_reveal
+        - unfreeze
+        - limit_increase
+        - account_deletion
+    StepUpMethod:
+      type: string
+      enum: [email_otp, security_question, pin, device_signature]
+    StepUpStartRequest:
+      type: object
+      required: [purpose]
+      properties:
+        purpose:
+          $ref: '#/components/schemas/StepUpPurpose'
+        resource_id:
+          $ref: '#/components/schemas/Uuid'
+    StepUpChallenge:
+      type: object
+      required: [step_up_id, purpose, methods, expires_at]
+      properties:
+        step_up_id:
+          $ref: '#/components/schemas/Uuid'
+        purpose:
+          $ref: '#/components/schemas/StepUpPurpose'
+        methods:
+          type: array
+          description: Every method listed must be passed.
+          items:
+            $ref: '#/components/schemas/StepUpMethod'
+        security_question:
+          type: [string, 'null']
+        otp:
+          oneOf:
+            - $ref: '#/components/schemas/OtpChallenge'
+            - type: 'null'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    StepUpVerifyRequest:
+      type: object
+      properties:
+        otp_code:
+          type: string
+          pattern: '^[0-9]{6}$'
+        security_answer:
+          type: string
+          writeOnly: true
+          maxLength: 100
+        pin:
+          $ref: '#/components/schemas/Pin'
+        signature:
+          type: string
+          description: Device signature over `step_up_id`.
+    StepUpToken:
+      type: object
+      required: [step_up_token, purpose, expires_at]
+      properties:
+        step_up_token:
+          type: string
+        purpose:
+          $ref: '#/components/schemas/StepUpPurpose'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+
+    # ------------------------------------------------------------ users
+    User:
+      type: object
+      required:
+        [
+          id,
+          first_name,
+          last_name,
+          email,
+          phone,
+          date_of_birth,
+          nemtag,
+          kyc_tier,
+          kyc_status,
+          has_pin,
+          is_demo,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        first_name:
+          type: string
+        last_name:
+          type: string
+        preferred_name:
+          type: [string, 'null']
+        email:
+          $ref: '#/components/schemas/Email'
+        phone:
+          $ref: '#/components/schemas/PhoneNumber'
+        date_of_birth:
+          $ref: '#/components/schemas/Date'
+        nemtag:
+          oneOf:
+            - $ref: '#/components/schemas/Nemtag'
+            - type: 'null'
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+        kyc_tier:
+          $ref: '#/components/schemas/KycTier'
+        kyc_status:
+          $ref: '#/components/schemas/KycStatus'
+        has_pin:
+          type: boolean
+        is_demo:
+          type: boolean
+          description: Demo personas show the "Demo money" badge (DEMO-2).
+        is_dependant:
+          type: boolean
+          description: True for family dependants, who get kid mode (FAM-1).
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    UpdateUserRequest:
+      type: object
+      minProperties: 1
+      properties:
+        preferred_name:
+          type: [string, 'null']
+          maxLength: 50
+    NemtagAvailability:
+      type: object
+      required: [nemtag, available, suggestions]
+      properties:
+        nemtag:
+          $ref: '#/components/schemas/Nemtag'
+        available:
+          type: boolean
+        suggestions:
+          type: array
+          maxItems: 5
+          items:
+            $ref: '#/components/schemas/Nemtag'
+    SetNemtagRequest:
+      type: object
+      required: [nemtag]
+      properties:
+        nemtag:
+          $ref: '#/components/schemas/Nemtag'
+    SetPinRequest:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          $ref: '#/components/schemas/Pin'
+    VerifyPinRequest:
+      type: object
+      required: [pin]
+      properties:
+        pin:
+          $ref: '#/components/schemas/Pin'
+    PinVerification:
+      type: object
+      required: [valid, attempts_remaining, locked_until]
+      properties:
+        valid:
+          type: boolean
+        attempts_remaining:
+          type: integer
+          minimum: 0
+          maximum: 5
+        locked_until:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+
+    # ------------------------------------------------------------ devices
+    Device:
+      type: object
+      required:
+        [
+          id,
+          name,
+          platform,
+          current,
+          trusted,
+          hardware_backed,
+          key_fingerprint,
+          bound_at,
+          last_seen_at,
+          cool_off_until,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+        platform:
+          $ref: '#/components/schemas/Platform'
+        current:
+          type: boolean
+          description: True for the device making this request.
+        trusted:
+          type: boolean
+          description: False while the new-device cool-off is running.
+        hardware_backed:
+          type: boolean
+        key_fingerprint:
+          type: string
+          description: First 16 hex characters of SHA-256 of the public key.
+          pattern: '^[0-9a-f]{16}$'
+        bound_at:
+          $ref: '#/components/schemas/Timestamp'
+        last_seen_at:
+          $ref: '#/components/schemas/Timestamp'
+        cool_off_until:
+          description: Reduced outgoing limits apply until this time (AUTH-8).
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        location_hint:
+          type: [string, 'null']
+          description: Coarse city from the IP, e.g. "Lagos, NG".
+    DeviceList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Device'
+
+    # ------------------------------------------------------------ accounts
+    AccountKind:
+      type: string
+      description: The NGN current account, or a foreign-currency wallet.
+      enum: [ngn_current, fx_wallet]
+    AccountStatus:
+      type: string
+      enum: [active, frozen, closed]
+    NubanDetails:
+      type: object
+      required: [scheme, bank_name, bank_code, account_number, account_name, demo]
+      properties:
+        scheme:
+          type: string
+          const: nuban
+        bank_name:
+          type: string
+        bank_code:
+          $ref: '#/components/schemas/BankCode'
+        account_number:
+          $ref: '#/components/schemas/Nuban'
+        account_name:
+          type: string
+        demo:
+          type: boolean
+    UsAchDetails:
+      type: object
+      required:
+        [scheme, bank_name, account_number, routing_number, account_type, account_name, demo]
+      properties:
+        scheme:
+          type: string
+          const: us_ach
+        bank_name:
+          type: string
+        account_number:
+          type: string
+          pattern: '^[0-9]{8,17}$'
+        routing_number:
+          type: string
+          pattern: '^[0-9]{9}$'
+        account_type:
+          type: string
+          enum: [checking]
+        account_name:
+          type: string
+        demo:
+          type: boolean
+    UkFpsDetails:
+      type: object
+      required: [scheme, bank_name, sort_code, account_number, account_name, demo]
+      properties:
+        scheme:
+          type: string
+          const: uk_fps
+        bank_name:
+          type: string
+        sort_code:
+          type: string
+          pattern: '^[0-9]{2}-[0-9]{2}-[0-9]{2}$'
+        account_number:
+          type: string
+          pattern: '^[0-9]{8}$'
+        account_name:
+          type: string
+        demo:
+          type: boolean
+    IbanDetails:
+      type: object
+      required: [scheme, bank_name, iban, bic, account_name, demo]
+      properties:
+        scheme:
+          type: string
+          const: iban
+        bank_name:
+          type: string
+        iban:
+          type: string
+          pattern: '^[A-Z]{2}[0-9]{2}[A-Z0-9]{11,30}$'
+        bic:
+          type: string
+          pattern: '^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$'
+        account_name:
+          type: string
+        demo:
+          type: boolean
+    ReceivingDetails:
+      description: How to pay into the account. Foreign details are simulated and labelled "Demo details" (ACC-2).
+      oneOf:
+        - $ref: '#/components/schemas/NubanDetails'
+        - $ref: '#/components/schemas/UsAchDetails'
+        - $ref: '#/components/schemas/UkFpsDetails'
+        - $ref: '#/components/schemas/IbanDetails'
+      discriminator:
+        propertyName: scheme
+        mapping:
+          nuban: '#/components/schemas/NubanDetails'
+          us_ach: '#/components/schemas/UsAchDetails'
+          uk_fps: '#/components/schemas/UkFpsDetails'
+          iban: '#/components/schemas/IbanDetails'
+    Account:
+      type: object
+      required:
+        [
+          id,
+          currency,
+          kind,
+          status,
+          ledger_balance,
+          available_balance,
+          receiving_details,
+          opened_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        kind:
+          $ref: '#/components/schemas/AccountKind'
+        status:
+          $ref: '#/components/schemas/AccountStatus'
+        nickname:
+          type: [string, 'null']
+        ledger_balance:
+          $ref: '#/components/schemas/Money'
+        available_balance:
+          description: Ledger balance minus active holds. Never negative.
+          $ref: '#/components/schemas/Money'
+        max_balance:
+          description: KYC tier balance cap, or null when unlimited.
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        receiving_details:
+          $ref: '#/components/schemas/ReceivingDetails'
+        opened_at:
+          $ref: '#/components/schemas/Timestamp'
+    AccountList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Account'
+    OpenAccountRequest:
+      type: object
+      required: [currency]
+      properties:
+        currency:
+          type: string
+          enum: [USD, GBP, EUR]
+    HoldReason:
+      type: string
+      enum:
+        [
+          card_authorization,
+          pending_transfer,
+          delayed_transfer,
+          fraud_review,
+          ajo_contribution,
+          dispute,
+        ]
+    Hold:
+      type: object
+      required: [id, account_id, amount, reason, reference, created_at, expires_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          $ref: '#/components/schemas/Money'
+        reason:
+          $ref: '#/components/schemas/HoldReason'
+        reference:
+          type: string
+        description:
+          type: string
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        expires_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    HoldList:
+      type: object
+      required: [data, total]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Hold'
+        total:
+          $ref: '#/components/schemas/Money'
+
+    # ------------------------------------------------------------ transactions
+    TransactionType:
+      type: string
+      enum:
+        - transfer_in
+        - transfer_out
+        - card_payment
+        - card_refund
+        - bill_payment
+        - fx_conversion
+        - savings
+        - ajo
+        - loan_disbursement
+        - loan_repayment
+        - interest
+        - fee
+        - levy
+        - reversal
+        - deposit
+        - dispute_refund
+    TransactionStatus:
+      type: string
+      enum: [pending, completed, failed, reversed]
+    Direction:
+      type: string
+      enum: [credit, debit]
+    Category:
+      type: string
+      enum:
+        - food
+        - groceries
+        - transport
+        - airtime_data
+        - bills_utilities
+        - shopping
+        - entertainment
+        - subscriptions
+        - health
+        - education
+        - rent_housing
+        - family
+        - transfers
+        - salary_income
+        - savings
+        - fees_charges
+        - cash
+        - other
+    CategorySource:
+      type: string
+      description: Who set the category. `model` carries an AI badge (AI-3).
+      enum: [rules, model, user]
+    Counterparty:
+      type: object
+      required: [name]
+      properties:
+        name:
+          type: string
+        nemtag:
+          type: [string, 'null']
+        bank_name:
+          type: [string, 'null']
+        account_number_masked:
+          type: [string, 'null']
+          examples: ['******4821']
+        merchant_id:
+          type: [string, 'null']
+    Transaction:
+      type: object
+      required:
+        [
+          id,
+          account_id,
+          type,
+          direction,
+          status,
+          amount,
+          narration,
+          reference,
+          category,
+          category_source,
+          counterparty,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        type:
+          $ref: '#/components/schemas/TransactionType'
+        direction:
+          $ref: '#/components/schemas/Direction'
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        amount:
+          description: Always positive; `direction` gives the sign.
+          $ref: '#/components/schemas/Money'
+        fee:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        balance_after:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        narration:
+          type: string
+        reference:
+          type: string
+          examples: ['NEM20261017A8F3K2']
+        category:
+          $ref: '#/components/schemas/Category'
+        category_source:
+          $ref: '#/components/schemas/CategorySource'
+        counterparty:
+          $ref: '#/components/schemas/Counterparty'
+        transfer_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        card_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    TimelineEvent:
+      type: object
+      required: [status, label, at]
+      properties:
+        status:
+          type: string
+        label:
+          type: string
+          examples: ['At recipient bank']
+        at:
+          $ref: '#/components/schemas/Timestamp'
+        detail:
+          type: [string, 'null']
+    FeeLine:
+      type: object
+      required: [code, label, amount]
+      properties:
+        code:
+          type: string
+          enum: [transfer_fee, emtl, fx_spread, fx_fee, card_fee, bill_fee, early_break_penalty]
+        label:
+          type: string
+          examples: ['Electronic Money Transfer Levy']
+        amount:
+          $ref: '#/components/schemas/Money'
+    TransactionDetail:
+      allOf:
+        - $ref: '#/components/schemas/Transaction'
+        - type: object
+          required: [timeline, fees, journal_entry_id, can_dispute, can_repeat]
+          properties:
+            timeline:
+              type: array
+              items:
+                $ref: '#/components/schemas/TimelineEvent'
+            fees:
+              type: array
+              items:
+                $ref: '#/components/schemas/FeeLine'
+            journal_entry_id:
+              $ref: '#/components/schemas/Uuid'
+            can_dispute:
+              type: boolean
+            can_repeat:
+              type: boolean
+            dispute_id:
+              oneOf:
+                - $ref: '#/components/schemas/Uuid'
+                - type: 'null'
+    TransactionPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transaction'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    UpdateTransactionRequest:
+      type: object
+      required: [category]
+      properties:
+        category:
+          $ref: '#/components/schemas/Category'
+        apply_to_similar:
+          type: boolean
+          default: false
+          description: Also recategorise past and future transactions with this counterparty.
+    ReceiptParty:
+      type: object
+      required: [name, account_number_masked, bank_name]
+      properties:
+        name:
+          type: string
+        account_number_masked:
+          type: string
+        bank_name:
+          type: string
+    Receipt:
+      type: object
+      required:
+        [
+          transaction_id,
+          reference,
+          status,
+          amount,
+          fee,
+          from,
+          to,
+          narration,
+          created_at,
+          verification_code,
+        ]
+      properties:
+        transaction_id:
+          $ref: '#/components/schemas/Uuid'
+        reference:
+          type: string
+        status:
+          $ref: '#/components/schemas/TransactionStatus'
+        amount:
+          $ref: '#/components/schemas/Money'
+        fee:
+          $ref: '#/components/schemas/Money'
+        from:
+          $ref: '#/components/schemas/ReceiptParty'
+        to:
+          $ref: '#/components/schemas/ReceiptParty'
+        narration:
+          type: string
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        completed_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        verification_code:
+          type: string
+
+    # ------------------------------------------------------------ statements
+    StatementRequest:
+      type: object
+      required: [account_id, from, to]
+      description: Periods up to 12 months.
+      properties:
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        from:
+          $ref: '#/components/schemas/Date'
+        to:
+          $ref: '#/components/schemas/Date'
+    Statement:
+      type: object
+      required: [id, account_id, currency, period_from, period_to, status, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        period_from:
+          $ref: '#/components/schemas/Date'
+        period_to:
+          $ref: '#/components/schemas/Date'
+        status:
+          type: string
+          enum: [generating, ready, failed]
+        opening_balance:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        closing_balance:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        sha256:
+          type: [string, 'null']
+          description: Hash of the PDF, printed on it and checked by the verification page.
+          pattern: '^[0-9a-f]{64}$'
+        verification_code:
+          type: [string, 'null']
+          pattern: '^[A-Z0-9]{12}$'
+        verification_url:
+          type: [string, 'null']
+          format: uri
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    StatementPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Statement'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    StatementVerification:
+      type: object
+      required:
+        [
+          valid,
+          account_name_masked,
+          account_number_masked,
+          currency,
+          period_from,
+          period_to,
+          sha256,
+          issued_at,
+          demo,
+        ]
+      properties:
+        valid:
+          type: boolean
+        account_name_masked:
+          type: string
+          examples: ['T*** A******']
+        account_number_masked:
+          type: string
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        period_from:
+          $ref: '#/components/schemas/Date'
+        period_to:
+          $ref: '#/components/schemas/Date'
+        sha256:
+          type: string
+          pattern: '^[0-9a-f]{64}$'
+        issued_at:
+          $ref: '#/components/schemas/Timestamp'
+        demo:
+          type: boolean
+          description: Always true in v1; the page carries the demo disclaimer.
+
+    # ------------------------------------------------------------ transfers
+    Bank:
+      type: object
+      required: [code, name]
+      properties:
+        code:
+          $ref: '#/components/schemas/BankCode'
+        name:
+          type: string
+        short_name:
+          type: [string, 'null']
+        logo_url:
+          type: [string, 'null']
+          format: uri
+    BankList:
+      type: object
+      required: [data]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Bank'
+    NemPayeeQuery:
+      type: object
+      required: [kind, query]
+      properties:
+        kind:
+          type: string
+          const: nem
+        query:
+          type: string
+          description: '@nemtag, +234 phone or Nem account number.'
+          maxLength: 30
+    BankPayeeQuery:
+      type: object
+      required: [kind, bank_code, account_number]
+      properties:
+        kind:
+          type: string
+          const: bank
+        bank_code:
+          $ref: '#/components/schemas/BankCode'
+        account_number:
+          $ref: '#/components/schemas/Nuban'
+        expected_name:
+          type: string
+          description: The name the customer typed, compared by Confirmation of Payee.
+          maxLength: 100
+    PayeeQuery:
+      oneOf:
+        - $ref: '#/components/schemas/NemPayeeQuery'
+        - $ref: '#/components/schemas/BankPayeeQuery'
+      discriminator:
+        propertyName: kind
+        mapping:
+          nem: '#/components/schemas/NemPayeeQuery'
+          bank: '#/components/schemas/BankPayeeQuery'
+    NameMatch:
+      type: object
+      required: [result, confidence]
+      description: Confirmation of Payee outcome.
+      properties:
+        result:
+          type: string
+          enum: [match, close_match, no_match]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        expected_name:
+          type: [string, 'null']
+    ResolvedPayee:
+      type: object
+      required: [kind, name, bank_code, bank_name, account_number, is_saved_beneficiary]
+      properties:
+        kind:
+          type: string
+          enum: [nem, bank]
+        name:
+          type: string
+        nemtag:
+          type: [string, 'null']
+        user_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+        bank_code:
+          $ref: '#/components/schemas/BankCode'
+        bank_name:
+          type: string
+        account_number:
+          $ref: '#/components/schemas/Nuban'
+        name_match:
+          oneOf:
+            - $ref: '#/components/schemas/NameMatch'
+            - type: 'null'
+        is_saved_beneficiary:
+          type: boolean
+        beneficiary_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+    NemDestination:
+      type: object
+      required: [kind, account_number]
+      properties:
+        kind:
+          type: string
+          const: nem
+        account_number:
+          $ref: '#/components/schemas/Nuban'
+    BankDestination:
+      type: object
+      required: [kind, bank_code, account_number, account_name]
+      properties:
+        kind:
+          type: string
+          const: bank
+        bank_code:
+          $ref: '#/components/schemas/BankCode'
+        account_number:
+          $ref: '#/components/schemas/Nuban'
+        account_name:
+          type: string
+          description: The name returned by Confirmation of Payee.
+    BeneficiaryDestination:
+      type: object
+      required: [kind, beneficiary_id]
+      properties:
+        kind:
+          type: string
+          const: beneficiary
+        beneficiary_id:
+          $ref: '#/components/schemas/Uuid'
+    TransferDestination:
+      oneOf:
+        - $ref: '#/components/schemas/NemDestination'
+        - $ref: '#/components/schemas/BankDestination'
+        - $ref: '#/components/schemas/BeneficiaryDestination'
+      discriminator:
+        propertyName: kind
+        mapping:
+          nem: '#/components/schemas/NemDestination'
+          bank: '#/components/schemas/BankDestination'
+          beneficiary: '#/components/schemas/BeneficiaryDestination'
+    TransferQuoteRequest:
+      type: object
+      required: [source_account_id, destination, amount]
+      properties:
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        destination:
+          $ref: '#/components/schemas/TransferDestination'
+        amount:
+          $ref: '#/components/schemas/Money'
+    LimitStatus:
+      type: object
+      required: [kyc_tier, daily_limit, used_today, remaining_today, self_set, cool_off_active]
+      properties:
+        kyc_tier:
+          $ref: '#/components/schemas/KycTier'
+        daily_limit:
+          description: The lower of the KYC cap, the self-set limit and any cool-off limit.
+          $ref: '#/components/schemas/Money'
+        used_today:
+          $ref: '#/components/schemas/Money'
+        remaining_today:
+          $ref: '#/components/schemas/Money'
+        self_set:
+          type: boolean
+          description: True when the customer's own limit (SEC-3) is the binding one.
+        cool_off_active:
+          type: boolean
+    CoolingOff:
+      type: object
+      required: [reason, delay_minutes, step_up_skips_delay]
+      description: New-beneficiary cooling-off (TRF-8).
+      properties:
+        reason:
+          type: string
+          enum: [new_beneficiary, new_device]
+        delay_minutes:
+          type: integer
+          minimum: 0
+        step_up_skips_delay:
+          type: boolean
+    TransferQuote:
+      type: object
+      required: [quote_id, amount, fee, fees, total_debit, limits, cooling_off, rail, expires_at]
+      properties:
+        quote_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          $ref: '#/components/schemas/Money'
+        fee:
+          description: Sum of `fees`.
+          $ref: '#/components/schemas/Money'
+        fees:
+          type: array
+          items:
+            $ref: '#/components/schemas/FeeLine'
+        total_debit:
+          $ref: '#/components/schemas/Money'
+        limits:
+          $ref: '#/components/schemas/LimitStatus'
+        cooling_off:
+          oneOf:
+            - $ref: '#/components/schemas/CoolingOff'
+            - type: 'null'
+        rail:
+          $ref: '#/components/schemas/TransferRail'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    TransferRail:
+      type: string
+      description: '`internal` posts in one ledger transaction; `interbank` runs the sandbox NIP saga.'
+      enum: [internal, interbank]
+    CreateTransferRequest:
+      type: object
+      required: [source_account_id, destination, amount]
+      properties:
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        destination:
+          $ref: '#/components/schemas/TransferDestination'
+        amount:
+          $ref: '#/components/schemas/Money'
+        narration:
+          type: string
+          maxLength: 100
+        quote_id:
+          description: The quote the customer saw; rejected with 409 `quote_expired` if stale.
+          $ref: '#/components/schemas/Uuid'
+        save_beneficiary:
+          type: boolean
+          default: false
+        category:
+          $ref: '#/components/schemas/Category'
+    TransferStatus:
+      type: string
+      description: |
+        `created → risk_checked → processing → completed | failed → reversed`, plus
+        `pending_step_up`, `delayed` (cooling-off), `held_for_review`, `rejected` and `cancelled`.
+      enum:
+        - created
+        - risk_checked
+        - pending_step_up
+        - delayed
+        - held_for_review
+        - processing
+        - completed
+        - failed
+        - reversed
+        - rejected
+        - cancelled
+    RiskDecision:
+      type: string
+      enum: [allow, step_up, hold]
+    RiskReason:
+      type: object
+      required: [code, severity, message]
+      properties:
+        code:
+          type: string
+          examples: ['new_device', 'amount_unusual', 'new_beneficiary', 'velocity']
+        severity:
+          type: string
+          enum: [low, medium, high]
+        message:
+          type: string
+          description: Plain-language reason shown to the customer.
+    RiskAssessment:
+      type: object
+      required: [decision, score, reasons, model_version]
+      description: Rules plus the fraud model (AI-1). Scores are 0 (safe) to 1 (risky).
+      properties:
+        decision:
+          $ref: '#/components/schemas/RiskDecision'
+        score:
+          type: number
+          minimum: 0
+          maximum: 1
+        reasons:
+          type: array
+          items:
+            $ref: '#/components/schemas/RiskReason'
+        model_version:
+          type: string
+    TransferParty:
+      type: object
+      required: [name, bank_code, bank_name, account_number_masked]
+      properties:
+        name:
+          type: string
+        nemtag:
+          type: [string, 'null']
+        bank_code:
+          $ref: '#/components/schemas/BankCode'
+        bank_name:
+          type: string
+        account_number_masked:
+          type: string
+    Reversal:
+      type: object
+      required: [reason, reversed_at, transaction_id]
+      properties:
+        reason:
+          type: string
+        reversed_at:
+          $ref: '#/components/schemas/Timestamp'
+        transaction_id:
+          $ref: '#/components/schemas/Uuid'
+    Transfer:
+      type: object
+      required:
+        [
+          id,
+          reference,
+          status,
+          rail,
+          source_account_id,
+          recipient,
+          amount,
+          fee,
+          total_debit,
+          narration,
+          risk,
+          timeline,
+          created_at,
+          updated_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        reference:
+          type: string
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        rail:
+          $ref: '#/components/schemas/TransferRail'
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        recipient:
+          $ref: '#/components/schemas/TransferParty'
+        amount:
+          $ref: '#/components/schemas/Money'
+        fee:
+          $ref: '#/components/schemas/Money'
+        total_debit:
+          $ref: '#/components/schemas/Money'
+        narration:
+          type: string
+        risk:
+          oneOf:
+            - $ref: '#/components/schemas/RiskAssessment'
+            - type: 'null'
+        step_up_id:
+          description: Present when `status` is `pending_step_up`.
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        release_at:
+          description: When a `delayed` transfer will go out.
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        timeline:
+          type: array
+          items:
+            $ref: '#/components/schemas/TimelineEvent'
+        reversal:
+          oneOf:
+            - $ref: '#/components/schemas/Reversal'
+            - type: 'null'
+        transaction_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        updated_at:
+          $ref: '#/components/schemas/Timestamp'
+    TransferPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Transfer'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    InternationalTransferRequest:
+      type: object
+      required:
+        [
+          source_account_id,
+          amount,
+          recipient_name,
+          recipient_country,
+          recipient_iban_or_account,
+          purpose,
+        ]
+      properties:
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          $ref: '#/components/schemas/Money'
+        recipient_name:
+          type: string
+        recipient_country:
+          type: string
+          pattern: '^[A-Z]{2}$'
+        recipient_iban_or_account:
+          type: string
+        recipient_bic:
+          type: string
+        purpose:
+          type: string
+          enum: [family_support, education, medical, business, other]
+    ScheduleFrequency:
+      type: string
+      enum: [once, daily, weekly, monthly]
+    ScheduledRun:
+      type: object
+      required: [at, status]
+      properties:
+        at:
+          $ref: '#/components/schemas/Timestamp'
+        status:
+          $ref: '#/components/schemas/TransferStatus'
+        transfer_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+    ScheduledTransfer:
+      type: object
+      required:
+        [
+          id,
+          source_account_id,
+          recipient,
+          amount,
+          narration,
+          frequency,
+          status,
+          next_run_at,
+          run_count,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        recipient:
+          $ref: '#/components/schemas/TransferParty'
+        amount:
+          $ref: '#/components/schemas/Money'
+        narration:
+          type: string
+        frequency:
+          $ref: '#/components/schemas/ScheduleFrequency'
+        status:
+          type: string
+          enum: [active, paused, cancelled, completed]
+        next_run_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        ends_on:
+          oneOf:
+            - $ref: '#/components/schemas/Date'
+            - type: 'null'
+        run_count:
+          type: integer
+          minimum: 0
+        last_run:
+          oneOf:
+            - $ref: '#/components/schemas/ScheduledRun'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    ScheduledTransferPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/ScheduledTransfer'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    CreateScheduledTransferRequest:
+      type: object
+      required: [source_account_id, destination, amount, frequency, start_at]
+      properties:
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        destination:
+          $ref: '#/components/schemas/TransferDestination'
+        amount:
+          $ref: '#/components/schemas/Money'
+        narration:
+          type: string
+          maxLength: 100
+        frequency:
+          $ref: '#/components/schemas/ScheduleFrequency'
+        start_at:
+          $ref: '#/components/schemas/Timestamp'
+        ends_on:
+          $ref: '#/components/schemas/Date'
+    UpdateScheduledTransferRequest:
+      type: object
+      minProperties: 1
+      properties:
+        status:
+          type: string
+          enum: [active, paused]
+        amount:
+          $ref: '#/components/schemas/Money'
+        next_run_at:
+          $ref: '#/components/schemas/Timestamp'
+
+    # ------------------------------------------------------------ beneficiaries
+    Beneficiary:
+      type: object
+      required:
+        [
+          id,
+          kind,
+          name,
+          bank_code,
+          bank_name,
+          account_number,
+          favourite,
+          cooling_off_until,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        kind:
+          type: string
+          enum: [nem, bank]
+        name:
+          type: string
+        nickname:
+          type: [string, 'null']
+        nemtag:
+          type: [string, 'null']
+        bank_code:
+          $ref: '#/components/schemas/BankCode'
+        bank_name:
+          type: string
+        account_number:
+          $ref: '#/components/schemas/Nuban'
+        favourite:
+          type: boolean
+        cooling_off_until:
+          description: Large first transfers need step-up or wait until this time.
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        last_paid_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    BeneficiaryPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/Beneficiary'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    CreateBeneficiaryRequest:
+      type: object
+      required: [destination]
+      properties:
+        destination:
+          oneOf:
+            - $ref: '#/components/schemas/NemDestination'
+            - $ref: '#/components/schemas/BankDestination'
+          discriminator:
+            propertyName: kind
+            mapping:
+              nem: '#/components/schemas/NemDestination'
+              bank: '#/components/schemas/BankDestination'
+        nickname:
+          type: string
+          maxLength: 40
+        favourite:
+          type: boolean
+          default: false
+    UpdateBeneficiaryRequest:
+      type: object
+      minProperties: 1
+      properties:
+        nickname:
+          type: [string, 'null']
+          maxLength: 40
+        favourite:
+          type: boolean
+
+    # ------------------------------------------------------------ money requests
+    PartySummary:
+      type: object
+      required: [user_id, name, nemtag]
+      properties:
+        user_id:
+          $ref: '#/components/schemas/Uuid'
+        name:
+          type: string
+        nemtag:
+          type: [string, 'null']
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+    MoneyRequestDirection:
+      type: string
+      enum: [incoming, outgoing]
+    MoneyRequestStatus:
+      type: string
+      enum: [pending, paid, declined, cancelled, expired]
+    MoneyRequest:
+      type: object
+      required: [id, direction, requester, payer, amount, note, status, created_at, expires_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        direction:
+          description: Relative to the signed-in customer.
+          $ref: '#/components/schemas/MoneyRequestDirection'
+        requester:
+          $ref: '#/components/schemas/PartySummary'
+        payer:
+          $ref: '#/components/schemas/PartySummary'
+        amount:
+          $ref: '#/components/schemas/Money'
+        note:
+          type: string
+        status:
+          $ref: '#/components/schemas/MoneyRequestStatus'
+        split_bill_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        transfer_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+        responded_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    MoneyRequestPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/MoneyRequest'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    CreateMoneyRequestRequest:
+      type: object
+      required: [payer_nemtag, amount]
+      properties:
+        payer_nemtag:
+          $ref: '#/components/schemas/Nemtag'
+        amount:
+          $ref: '#/components/schemas/Money'
+        note:
+          type: string
+          maxLength: 100
+        expires_in_days:
+          type: integer
+          minimum: 1
+          maximum: 30
+          default: 7
+    PayFromAccountRequest:
+      type: object
+      required: [source_account_id]
+      properties:
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+    SplitShare:
+      type: object
+      required: [participant, amount, status]
+      properties:
+        participant:
+          $ref: '#/components/schemas/PartySummary'
+        amount:
+          $ref: '#/components/schemas/Money'
+        status:
+          $ref: '#/components/schemas/MoneyRequestStatus'
+        money_request_id:
+          oneOf:
+            - $ref: '#/components/schemas/Uuid'
+            - type: 'null'
+        last_reminded_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+    SplitBill:
+      type: object
+      required: [id, title, total, split, shares, paid_total, created_at]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+        total:
+          $ref: '#/components/schemas/Money'
+        split:
+          type: string
+          enum: [equal, custom]
+        shares:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitShare'
+        paid_total:
+          $ref: '#/components/schemas/Money'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    SplitBillPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/SplitBill'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    SplitParticipant:
+      type: object
+      required: [nemtag]
+      properties:
+        nemtag:
+          $ref: '#/components/schemas/Nemtag'
+        amount:
+          description: Required when `split` is `custom`.
+          $ref: '#/components/schemas/Money'
+    CreateSplitBillRequest:
+      type: object
+      required: [title, total, split, participants]
+      properties:
+        title:
+          type: string
+          maxLength: 60
+        total:
+          $ref: '#/components/schemas/Money'
+        split:
+          type: string
+          enum: [equal, custom]
+        include_self:
+          type: boolean
+          default: true
+          description: |
+            Count the creator as a participant when splitting equally. Equal splits give any
+            remainder kobo to the creator, so the shares always add up to the total.
+        participants:
+          type: array
+          minItems: 1
+          maxItems: 20
+          items:
+            $ref: '#/components/schemas/SplitParticipant'
+
+    # ------------------------------------------------------------ payment links
+    PaymentLinkAmountMode:
+      type: string
+      enum: [fixed, open]
+    PaymentLink:
+      type: object
+      required:
+        [
+          id,
+          slug,
+          url,
+          account_id,
+          title,
+          amount_mode,
+          amount,
+          status,
+          payments_count,
+          total_received,
+          created_at,
+        ]
+      properties:
+        id:
+          $ref: '#/components/schemas/Uuid'
+        slug:
+          type: string
+        url:
+          type: string
+          format: uri
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+        note:
+          type: [string, 'null']
+        amount_mode:
+          $ref: '#/components/schemas/PaymentLinkAmountMode'
+        amount:
+          description: Set for `fixed` links.
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        status:
+          type: string
+          enum: [active, inactive, expired]
+        payments_count:
+          type: integer
+          minimum: 0
+        total_received:
+          $ref: '#/components/schemas/Money'
+        expires_at:
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        created_at:
+          $ref: '#/components/schemas/Timestamp'
+    PaymentLinkPage:
+      type: object
+      required: [data, page]
+      properties:
+        data:
+          type: array
+          items:
+            $ref: '#/components/schemas/PaymentLink'
+        page:
+          $ref: '#/components/schemas/PageInfo'
+    CreatePaymentLinkRequest:
+      type: object
+      required: [account_id, title, amount_mode]
+      properties:
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        title:
+          type: string
+          maxLength: 60
+        note:
+          type: string
+          maxLength: 200
+        amount_mode:
+          $ref: '#/components/schemas/PaymentLinkAmountMode'
+        amount:
+          description: Required for `fixed` links.
+          $ref: '#/components/schemas/Money'
+        expires_at:
+          $ref: '#/components/schemas/Timestamp'
+    UpdatePaymentLinkRequest:
+      type: object
+      minProperties: 1
+      properties:
+        title:
+          type: string
+          maxLength: 60
+        note:
+          type: [string, 'null']
+          maxLength: 200
+        status:
+          type: string
+          enum: [active, inactive]
+    PublicPaymentLink:
+      type: object
+      required: [slug, title, payee_name, amount_mode, amount, currency, status, demo]
+      properties:
+        slug:
+          type: string
+        title:
+          type: string
+        note:
+          type: [string, 'null']
+        payee_name:
+          type: string
+        amount_mode:
+          $ref: '#/components/schemas/PaymentLinkAmountMode'
+        amount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        status:
+          type: string
+          enum: [active, inactive, expired]
+        demo:
+          type: boolean
+    PayPaymentLinkRequest:
+      type: object
+      required: [source_account_id]
+      properties:
+        source_account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          description: Required for `open` links.
+          $ref: '#/components/schemas/Money'
+        note:
+          type: string
+          maxLength: 100
+
+    # ------------------------------------------------------------ qr
+    QrCode:
+      type: object
+      required: [payload, account_id, amount, expires_at, key_id]
+      properties:
+        payload:
+          type: string
+          description: '`nem1.<base64url claims>.<base64url server signature>`.'
+        account_id:
+          $ref: '#/components/schemas/Uuid'
+        amount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+        expires_at:
+          description: Fixed-amount codes expire after 15 minutes; open codes do not.
+          oneOf:
+            - $ref: '#/components/schemas/Timestamp'
+            - type: 'null'
+        key_id:
+          type: string
+          description: Which server signing key was used (keys rotate).
+    QrDecodeRequest:
+      type: object
+      required: [payload]
+      properties:
+        payload:
+          type: string
+          maxLength: 2048
+    DecodedQr:
+      type: object
+      required: [valid, payee, amount, invalid_reason]
+      properties:
+        valid:
+          type: boolean
+        invalid_reason:
+          type: [string, 'null']
+          enum: [expired, bad_signature, unknown_account, not_nem_qr, null]
+        payee:
+          oneOf:
+            - $ref: '#/components/schemas/ResolvedPayee'
+            - type: 'null'
+        amount:
+          oneOf:
+            - $ref: '#/components/schemas/Money'
+            - type: 'null'
+
   responses:
     BadRequest:
       description: The request is malformed or failed validation.
@@ -214,6 +3900,12 @@ components:
         application/problem+json:
           schema:
             $ref: '#/components/schemas/Problem'
+    PaidFeatureRequired:
+      description: The feature needs a paid partner and is switched off (PRD §11). `code` is `paid_feature_required`.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
     NotFound:
       description: The resource does not exist.
       content:
@@ -228,6 +3920,12 @@ components:
             $ref: '#/components/schemas/Problem'
     UnprocessableEntity:
       description: Semantically invalid, e.g. an idempotency key reused with a different body.
+      content:
+        application/problem+json:
+          schema:
+            $ref: '#/components/schemas/Problem'
+    Locked:
+      description: Locked after too many wrong attempts. `retry_at` says when to try again.
       content:
         application/problem+json:
           schema:
