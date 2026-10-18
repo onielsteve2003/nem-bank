@@ -4,3 +4,7 @@
 jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
 // @gorhom/bottom-sheet needs a native gesture root; its bundled mock renders sheet content inline.
 jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
+// AsyncStorage's bundled in-memory mock (TanStack Query cache persistence).
+jest.mock('@react-native-async-storage/async-storage', () =>
+  require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
+);

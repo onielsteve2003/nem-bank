@@ -9,6 +9,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ToastProvider } from '@/components';
 import { RepositoryProvider } from '@/data';
+import { QueryProvider } from '@/lib/query';
 import { FONTS, ThemeProvider, useTheme } from '@/theme';
 
 // Keep the splash up until the fonts are ready, so text never renders in the
@@ -31,13 +32,15 @@ export default function RootLayout() {
   return (
     <GestureHandlerRootView style={styles.root}>
       <RepositoryProvider>
-        <ThemeProvider>
-          <BottomSheetModalProvider>
-            <ToastProvider>
-              <ThemedStack />
-            </ToastProvider>
-          </BottomSheetModalProvider>
-        </ThemeProvider>
+        <QueryProvider>
+          <ThemeProvider>
+            <BottomSheetModalProvider>
+              <ToastProvider>
+                <ThemedStack />
+              </ToastProvider>
+            </BottomSheetModalProvider>
+          </ThemeProvider>
+        </QueryProvider>
       </RepositoryProvider>
     </GestureHandlerRootView>
   );
