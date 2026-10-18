@@ -8,3 +8,12 @@ jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+// SecureStore has no native module in Jest; an in-memory Keychain stands in.
+jest.mock('expo-secure-store', () => {
+  const items = new Map();
+  return {
+    getItemAsync: jest.fn(async (key) => items.get(key) ?? null),
+    setItemAsync: jest.fn(async (key, value) => void items.set(key, value)),
+    deleteItemAsync: jest.fn(async (key) => void items.delete(key)),
+  };
+});

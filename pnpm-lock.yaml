@@ -58,6 +58,9 @@ importers:
       expo-router:
         specifier: ~57.0.28
         version: 57.0.28(84afd449cf0c9e3251f098e981693a17)
+      expo-secure-store:
+        specifier: ~57.0.4
+        version: 57.0.4(expo@57.0.30)
       expo-sensors:
         specifier: ~57.0.3
         version: 57.0.3(expo@57.0.30)(react-native@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/jest-preset@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(react@19.2.3)(supports-color@10.2.2))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.3)(supports-color@10.2.2))
@@ -112,6 +115,9 @@ importers:
       zod:
         specifier: ^4.6.7
         version: 4.6.7
+      zustand:
+        specifier: ^5.0.15
+        version: 5.0.15(@types/react@19.2.18)(react@19.2.3)
     devDependencies:
       '@testing-library/react-native':
         specifier: ^14.1.0
@@ -3118,6 +3124,11 @@ packages:
       react-server-dom-webpack:
         optional: true
 
+  expo-secure-store@57.0.4:
+    resolution: {integrity: sha512-7zBA1RThURTXdP4w65kBzZNbcSsfArqVd+p+ETAnPRWXO8J296Qd0YaCVyRpJ0HSwlCnGdvOnqO+NgSreHsOhA==}
+    peerDependencies:
+      expo: '*'
+
   expo-sensors@57.0.3:
     resolution: {integrity: sha512-3MmJ37S/fbN+Ejk9gCeo5pa50hMkW3BYe7IPZX1tKi0Tw1Wvy/FY9FKnVQowOacrDqyWEpmLGgwi3HmDY7DCnw==}
     peerDependencies:
@@ -5608,6 +5619,24 @@ packages:
 
   zod@4.6.7:
     resolution: {integrity: sha512-g8W2D2kU6a8untc053fX1uVBKzM7yqAxW/3zwk83+6RyF2+SKOuV+c0wBDhUwzV1PaGapmZH+rmcUzPf+3CGwg==}
+
+  zustand@5.0.15:
+    resolution: {integrity: sha512-MpSEjRiBkA9crSYeOUH32rJC7SVqAbm0Fqcqge/bUi2PPoLcBWKOsG+C8mevmpr8TwXHBVkChbbJiyvkE+i/3A==}
+    engines: {node: '>=12.20.0'}
+    peerDependencies:
+      '@types/react': '>=18.0.0'
+      immer: '>=9.0.6'
+      react: '>=18.0.0'
+      use-sync-external-store: '>=1.2.0'
+    peerDependenciesMeta:
+      '@types/react':
+        optional: true
+      immer:
+        optional: true
+      react:
+        optional: true
+      use-sync-external-store:
+        optional: true
 
 snapshots:
 
@@ -9304,6 +9333,10 @@ snapshots:
       - react-native-worklets
       - supports-color
 
+  expo-secure-store@57.0.4(expo@57.0.30):
+    dependencies:
+      expo: 57.0.30(75fc47e7ba31841bc45d8594965dbc71)
+
   expo-sensors@57.0.3(expo@57.0.30)(react-native@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(@react-native/jest-preset@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(react@19.2.3)(supports-color@10.2.2))(@react-native/metro-config@0.86.3(@babel/core@7.29.7(supports-color@10.2.2))(supports-color@10.2.2))(@types/react@19.2.18)(react@19.2.3)(supports-color@10.2.2)):
     dependencies:
       expo: 57.0.30(75fc47e7ba31841bc45d8594965dbc71)
@@ -12408,3 +12441,8 @@ snapshots:
   zod@3.25.76: {}
 
   zod@4.6.7: {}
+
+  zustand@5.0.15(@types/react@19.2.18)(react@19.2.3):
+    optionalDependencies:
+      '@types/react': 19.2.18
+      react: 19.2.3

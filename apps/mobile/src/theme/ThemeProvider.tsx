@@ -41,8 +41,11 @@ export const ThemeContext = createContext<Theme | null>(null);
 
 export type Props = {
   children: ReactNode;
-  /** The persisted preference arrives from the preferences store (T3.10). */
+  /** Starting preference when the provider owns it (uncontrolled). */
   initialPreference?: ThemePreference;
+  /** Controlled mode: the root passes the preferences store's appearance (T3.10). */
+  preference?: ThemePreference;
+  onPreferenceChange?: (preference: ThemePreference) => void;
   /** Off for nested providers (e.g. a light panel in the gallery) so only the root sets the window colour. */
   syncSystemUI?: boolean;
 };
@@ -50,10 +53,14 @@ export type Props = {
 export function ThemeProvider({
   children,
   initialPreference = 'system',
+  preference: controlled,
+  onPreferenceChange,
   syncSystemUI = true,
 }: Props) {
   const system = useColorScheme();
-  const [preference, setPreference] = useState<ThemePreference>(initialPreference);
+  const [local, setLocal] = useState<ThemePreference>(initialPreference);
+  const preference = controlled ?? local;
+  const setPreference = onPreferenceChange ?? setLocal;
   const scheme = resolveScheme(preference, system);
 
   const theme = useMemo<Theme>(
@@ -68,7 +75,7 @@ export function ThemeProvider({
       preference,
       setPreference,
     }),
-    [scheme, preference],
+    [scheme, preference, setPreference],
   );
 
   // The root view shows behind screen transitions and the keyboard; match it to
