@@ -40,17 +40,25 @@ export interface Props {
   repositories?: Repositories;
   /** Injects a realtime source; silent when repositories are injected without one. */
   realtime?: RealtimeSource;
+  /** Injects the mock bank's network simulation alongside injected repositories. */
+  simulation?: Simulation | null;
   /** Overrides the app environment when `repositories` is not given. */
   env?: Env;
 }
 
-export function RepositoryProvider({ children, repositories, realtime, env = appEnv }: Props) {
+export function RepositoryProvider({
+  children,
+  repositories,
+  realtime,
+  simulation = null,
+  env = appEnv,
+}: Props) {
   const value = useMemo<DataLayer>(
     () =>
       repositories
-        ? { repositories, realtime: realtime ?? silentRealtime, simulation: null }
+        ? { repositories, realtime: realtime ?? silentRealtime, simulation }
         : createDataLayer(env),
-    [repositories, realtime, env],
+    [repositories, realtime, simulation, env],
   );
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

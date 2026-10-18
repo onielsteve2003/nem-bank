@@ -26,6 +26,7 @@ import LoginRoute from '../../../../app/(auth)/login';
 import SignUpRoute from '../../../../app/(auth)/sign-up';
 import WelcomeRoute from '../../../../app/(auth)/welcome';
 import Index from '../../../../app/index';
+import { ToastProvider } from '@/components';
 import { repositoriesFromDispatcher, RepositoryProvider, type Call } from '@/data';
 import { RootNavigator } from '@/features/shell/RootNavigator';
 import { haptic } from '@/lib/haptics';
@@ -69,7 +70,9 @@ function RootLayout() {
       <RepositoryProvider repositories={repositories}>
         <QueryProvider client={new QueryClient()}>
           <ThemeProvider>
-            <RootNavigator />
+            <ToastProvider>
+              <RootNavigator />
+            </ToastProvider>
           </ThemeProvider>
         </QueryProvider>
       </RepositoryProvider>
