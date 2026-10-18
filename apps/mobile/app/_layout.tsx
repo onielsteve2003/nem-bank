@@ -1,20 +1,20 @@
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useFonts } from 'expo-font';
-import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
-import { StatusBar } from 'expo-status-bar';
 import { useEffect, type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ToastProvider } from '@/components';
 import { RepositoryProvider, useSimulation } from '@/data';
+import { RootNavigator } from '@/features/shell/RootNavigator';
 import { QueryProvider } from '@/lib/query';
 import { bindSimulation, usePreferencesStore, useStoresHydrated } from '@/stores';
-import { FONTS, ThemeProvider, useTheme } from '@/theme';
+import { FONTS, ThemeProvider } from '@/theme';
 
 // Keep the splash up until the fonts are ready, so text never renders in the
-// system font and then jumps.
+// system font and then jumps, and until the stores (the session above all) are
+// read, so the auth gate never flashes the wrong side.
 void SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
@@ -39,7 +39,7 @@ export default function RootLayout() {
           <StoredThemeProvider>
             <BottomSheetModalProvider>
               <ToastProvider>
-                <ThemedStack />
+                <RootNavigator />
               </ToastProvider>
             </BottomSheetModalProvider>
           </StoredThemeProvider>
@@ -65,19 +65,6 @@ function DemoSimulationSync() {
   const simulation = useSimulation();
   useEffect(() => (simulation ? bindSimulation(simulation) : undefined), [simulation]);
   return null;
-}
-
-function ThemedStack() {
-  const { colors, scheme } = useTheme();
-
-  return (
-    <>
-      <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
-      />
-      <StatusBar style={scheme === 'dark' ? 'light' : 'dark'} />
-    </>
-  );
 }
 
 const styles = StyleSheet.create({ root: { flex: 1 } });

@@ -4,12 +4,14 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import { Button, Icon, Text } from '@/components';
+import { useDemoSignIn } from '@/features/auth/hooks/useSessionActions';
 import { devToolsEnabled, env } from '@/lib/env';
 import { useTheme } from '@/theme';
 
 export function HelloScreen() {
   const router = useRouter();
   const { colors, spacing } = useTheme();
+  const demo = useDemoSignIn();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -25,13 +27,23 @@ export function HelloScreen() {
           Banking that moves at your speed. Simulated money, real engineering.
         </Text>
         <View style={{ gap: spacing[3], marginTop: spacing[6] }}>
-          <Button label="Try the demo" onPress={() => router.replace('/home')} />
+          {/* The route gate opens Home once the session is stored. */}
+          <Button
+            label="Try the demo"
+            loading={demo.isPending}
+            onPress={() => demo.mutate({ body: { persona: 'tolu' } })}
+          />
           <Button
             label="Log in"
             variant="secondary"
             icon={LogIn}
             onPress={() => router.push('/login')}
           />
+          {demo.isError && (
+            <Text variant="caption" color="danger" accessibilityRole="alert">
+              {demo.error.message}. Try again.
+            </Text>
+          )}
         </View>
         {devToolsEnabled && (
           <Button

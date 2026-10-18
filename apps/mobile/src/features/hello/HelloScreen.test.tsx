@@ -1,6 +1,9 @@
+import { QueryClient } from '@tanstack/react-query';
 import { render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { repositoriesFromDispatcher, RepositoryProvider } from '@/data';
+import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
 import { HelloScreen } from './HelloScreen';
@@ -15,9 +18,13 @@ describe('HelloScreen', () => {
   it('shows the brand name and tagline', async () => {
     await render(
       <SafeAreaProvider initialMetrics={metrics}>
-        <ThemeProvider>
-          <HelloScreen />
-        </ThemeProvider>
+        <RepositoryProvider repositories={repositoriesFromDispatcher(async () => undefined)}>
+          <QueryProvider client={new QueryClient()}>
+            <ThemeProvider>
+              <HelloScreen />
+            </ThemeProvider>
+          </QueryProvider>
+        </RepositoryProvider>
       </SafeAreaProvider>,
     );
 

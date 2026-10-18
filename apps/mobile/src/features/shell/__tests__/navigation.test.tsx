@@ -1,5 +1,6 @@
-import { fireEvent, screen } from '@testing-library/react-native';
-import { Slot } from 'expo-router';
+import type { AuthSession } from '@nem/contracts';
+import { QueryClient } from '@tanstack/react-query';
+import { act, fireEvent, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import AppLayout from '../../../../app/(app)/_layout';
@@ -21,6 +22,10 @@ import LoginRoute from '../../../../app/(auth)/login';
 import SignUpRoute from '../../../../app/(auth)/sign-up';
 import WelcomeRoute from '../../../../app/(auth)/welcome';
 import Index from '../../../../app/index';
+import { repositoriesFromDispatcher, RepositoryProvider, type Call } from '@/data';
+import { RootNavigator } from '@/features/shell/RootNavigator';
+import { QueryProvider } from '@/lib/query';
+import { useSessionStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 // Loaded after the routes on purpose: importing it swaps in Reanimated's bundled
@@ -34,12 +39,33 @@ const metrics = {
   insets: { top: 47, left: 0, right: 0, bottom: 34 },
 };
 
+const DAY_MS = 24 * 3_600_000;
+const demoSession = (): AuthSession => ({
+  access_token: 'access-1',
+  access_token_expires_at: new Date(Date.now() + 600_000).toISOString(),
+  refresh_token: 'refresh-1',
+  refresh_token_expires_at: new Date(Date.now() + 30 * DAY_MS).toISOString(),
+  token_type: 'Bearer',
+  user: { id: 'user-1', is_demo: true } as AuthSession['user'],
+  device: { id: 'device-1' } as AuthSession['device'],
+});
+
+let calls: Call[] = [];
+const repositories = repositoriesFromDispatcher(async (call) => {
+  calls.push(call);
+  return call.operationId === 'startDemoSession' ? demoSession() : undefined;
+});
+
 function RootLayout() {
   return (
     <SafeAreaProvider initialMetrics={metrics}>
-      <ThemeProvider>
-        <Slot />
-      </ThemeProvider>
+      <RepositoryProvider repositories={repositories}>
+        <QueryProvider client={new QueryClient()}>
+          <ThemeProvider>
+            <RootNavigator />
+          </ThemeProvider>
+        </QueryProvider>
+      </RepositoryProvider>
     </SafeAreaProvider>
   );
 }
@@ -66,6 +92,7 @@ const ROUTES = {
   '(app)/kyc/_layout': KycLayout,
   '(app)/kyc/index': KycRoute,
   '(app)/demo-controls': DemoControlsRoute,
+  kit: () => null,
 };
 
 /**
@@ -78,7 +105,55 @@ async function open(initialUrl: string) {
   return { pathname: () => rendered.getPathname() };
 }
 
+const signIn = () => useSessionStore.getState().setSession(demoSession());
+
+beforeEach(() => {
+  calls = [];
+  useSessionStore.setState({ status: 'signedOut', session: null });
+});
+
+describe('auth gate', () => {
+  it('opens on welcome when nobody is signed in', async () => {
+    const router = await open('/');
+    expect(router.pathname()).toBe('/welcome');
+  });
+
+  it('restores a stored session straight to Home', async () => {
+    signIn();
+    const router = await open('/');
+    expect(router.pathname()).toBe('/home');
+  });
+
+  it('keeps signed-out users out of the app', async () => {
+    const router = await open('/cards');
+    expect(router.pathname()).toBe('/welcome');
+  });
+
+  it('keeps signed-in users out of the auth screens', async () => {
+    signIn();
+    const router = await open('/login');
+    expect(router.pathname()).toBe('/home');
+  });
+
+  it('signs in with the demo and out again from Me', async () => {
+    const router = await open('/welcome');
+    await fireEvent.press(screen.getByRole('button', { name: 'Try the demo' }));
+    expect(await screen.findByText('Home is on its way')).toBeOnTheScreen();
+    expect(router.pathname()).toBe('/home');
+    expect(calls.map((c) => c.operationId)).toEqual(['startDemoSession']);
+
+    await fireEvent.press(screen.getByRole('button', { name: /^Me, tab/ }));
+    await fireEvent.press(await screen.findByText('Sign out'));
+    await act(async () => undefined);
+    expect(router.pathname()).toBe('/welcome');
+    expect(useSessionStore.getState().session).toBeNull();
+    expect(calls.map((c) => c.operationId)).toEqual(['startDemoSession', 'logout']);
+  });
+});
+
 describe('navigation structure', () => {
+  beforeEach(signIn);
+
   it('opens on Home with the five tabs', async () => {
     const router = await open('/');
     expect(router.pathname()).toBe('/home');
@@ -102,7 +177,7 @@ describe('navigation structure', () => {
     expect(router.pathname()).toBe('/home');
   });
 
-  it('reaches KYC, Demo Controls and the welcome screens from Me', async () => {
+  it('reaches KYC and Demo Controls from Me', async () => {
     const router = await open('/me');
     await fireEvent.press(screen.getByText('Demo Controls'));
     expect(router.pathname()).toBe('/demo-controls');
@@ -113,6 +188,7 @@ describe('navigation structure', () => {
   });
 
   it('walks the signed-out stack: welcome, log in, back', async () => {
+    useSessionStore.setState({ status: 'signedOut', session: null });
     const router = await open('/welcome');
     await fireEvent.press(screen.getByRole('button', { name: 'Log in' }));
     expect(router.pathname()).toBe('/login');

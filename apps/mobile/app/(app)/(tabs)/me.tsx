@@ -1,12 +1,14 @@
 import { useRouter } from 'expo-router';
-import { BadgeCheck, CircleUser, LayoutGrid, LogIn, SlidersHorizontal } from 'lucide-react-native';
+import { BadgeCheck, CircleUser, LayoutGrid, LogOut, SlidersHorizontal } from 'lucide-react-native';
 
 import { Card, ListItem } from '@/components';
+import { useSignOut } from '@/features/auth/hooks/useSessionActions';
 import { PlaceholderScreen } from '@/features/shell/PlaceholderScreen';
 import { devToolsEnabled } from '@/lib/env';
 
 export default function MeRoute() {
   const router = useRouter();
+  const signOut = useSignOut();
   return (
     <PlaceholderScreen
       title="Me"
@@ -26,12 +28,6 @@ export default function MeRoute() {
           leading={SlidersHorizontal}
           onPress={() => router.push('/demo-controls')}
         />
-        <ListItem
-          title="Welcome screens"
-          subtitle="Preview the signed-out flow"
-          leading={LogIn}
-          onPress={() => router.push('/welcome')}
-        />
         {devToolsEnabled && (
           <ListItem
             title="Design system"
@@ -40,6 +36,12 @@ export default function MeRoute() {
             onPress={() => router.push('/kit')}
           />
         )}
+        <ListItem
+          title="Sign out"
+          subtitle="Back to the welcome screen"
+          leading={LogOut}
+          onPress={() => void signOut()}
+        />
       </Card>
     </PlaceholderScreen>
   );
