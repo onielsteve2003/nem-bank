@@ -2,7 +2,7 @@ import type { User } from '@nem/contracts';
 import { money, negate, type Money } from '@nem/shared';
 
 import { isApiError } from '../errors';
-import type { MockBankState, TransactionMeta } from './bank';
+import { SCHEMA_VERSION, type MockBankState, type TransactionMeta } from './bank';
 import { createIdFactory, seededRandom } from './ids';
 import {
   convertFx,
@@ -13,6 +13,7 @@ import {
   settleExternalTransfer,
   startExternalTransfer,
 } from './ledger';
+import { finishWorld, SEED_FRIENDS, startWorld, type SeedFriend } from './seedWorld';
 
 // Tolu, 26, a Lagos tech worker (PRD §4): NGN salary, USD freelance income, and
 // six months of everyday Nigerian spending. Same seed + same day = same history.
@@ -23,7 +24,7 @@ const DAY = 24 * HOUR;
 /** Lagos is UTC+1 all year. */
 const LAGOS_OFFSET = HOUR;
 
-type Spend = Omit<TransactionMeta, 'accountId' | 'direction'>;
+type Spend = Omit<TransactionMeta, 'id' | 'accountId' | 'direction'>;
 
 interface Merchant {
   name: string;
@@ -48,11 +49,7 @@ const GROCERIES: Merchant[] = [
   { name: 'Spar Ikeja City Mall', min: 15_000, max: 42_000 },
   { name: 'Market Square', min: 12_000, max: 35_000 },
 ];
-const FRIENDS = [
-  { name: 'Chidi Okonkwo', bank_name: 'Access Bank' },
-  { name: 'Funmi Ade', bank_name: 'Zenith Bank' },
-  { name: 'Ibrahim Musa', bank_name: 'First Bank' },
-];
+const FRIENDS = SEED_FRIENDS.filter((f) => !f.family);
 
 interface Monthly {
   day: number;
@@ -130,8 +127,9 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
     currency: 'USD',
   }).id;
 
+  const world = startWorld({ ledger, newId, random, userId, ngn, usd });
   const meta = (accountId: string, direction: TransactionMeta['direction'], spend: Spend) => ({
-    txns: [{ accountId, direction, ...spend }] satisfies TransactionMeta[],
+    txns: [{ id: newId(), accountId, direction, ...spend }] satisfies TransactionMeta[],
   });
 
   // Spending the persona cannot afford is skipped, as a real customer's would be.
@@ -159,11 +157,15 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
             amount,
           },
         ],
-        metadata: meta(ngn, 'debit', spend),
+        metadata: meta(
+          ngn,
+          'debit',
+          settlement === 'card' ? { ...spend, cardId: world.cards[0]!.id } : spend,
+        ),
       });
     });
 
-  const sendExternal = (amount: Money, to: { name: string; bank_name: string }, note: string) =>
+  const sendExternal = (amount: Money, to: SeedFriend, note: string) =>
     attempt(() => {
       const ref = reference();
       const hold = startExternalTransfer(ledger, {
@@ -173,17 +175,26 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
         idempotencyKey: newId(),
         limits: { tier: 3 },
       });
-      settleExternalTransfer(
-        ledger,
-        hold.id,
-        newId(),
-        meta(ngn, 'debit', {
-          type: 'transfer_out',
-          category: note === 'Upkeep' ? 'family' : 'transfers',
-          narration: note,
-          counterparty: { ...to, account_number_masked: `******${between(1000, 9999, 1)}` },
-        }),
-      );
+      const transferId = newId();
+      const txn = meta(ngn, 'debit', {
+        type: 'transfer_out',
+        category: to.family ? 'family' : 'transfers',
+        narration: note,
+        counterparty: {
+          name: to.name,
+          bank_name: to.bank_name,
+          account_number_masked: `******${to.account_number.slice(-4)}`,
+        },
+        transferId,
+      });
+      const entry = settleExternalTransfer(ledger, hold.id, newId(), txn);
+      world.recordSettledTransfer({
+        id: transferId,
+        entry,
+        to,
+        note,
+        transactionId: txn.txns[0]!.id,
+      });
     });
 
   // Opening balance on day one.
@@ -226,7 +237,11 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
     }
     if (dayOfMonth === 26)
       at(9, 12, () =>
-        sendExternal(naira(50_000), { name: 'Mama Adebayo', bank_name: 'First Bank' }, 'Upkeep'),
+        sendExternal(
+          naira(50_000),
+          SEED_FRIENDS.find((f) => f.family)!,
+          'Upkeep',
+        ),
       );
     for (const monthly of MONTHLY_BILLS) {
       if (dayOfMonth === monthly.day) {
@@ -311,6 +326,7 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
         });
         const sell = money(dollars.amount / 2n, 'USD');
         const fx = (direction: TransactionMeta['direction'], accountId: string) => ({
+          id: newId(),
           accountId,
           direction,
           type: 'fx_conversion' as const,
@@ -338,6 +354,9 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
     }
   }
 
+  cursor = new Date(todayStart);
+  const finished = finishWorld(world, { now: cursor, start: new Date(start), reference });
+
   const user: User = {
     id: userId,
     first_name: 'Tolulope',
@@ -357,11 +376,12 @@ export function seedDemoBank({ now, seed }: SeedOptions): MockBankState {
   };
 
   return {
-    schemaVersion: 1,
+    schemaVersion: SCHEMA_VERSION,
     seed,
     seededAt: new Date(todayStart).toISOString(),
     user,
     accounts: { ngn, usd },
     ledger: ledger.state,
+    world: finished,
   };
 }

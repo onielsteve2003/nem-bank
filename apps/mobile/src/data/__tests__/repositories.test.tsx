@@ -57,8 +57,13 @@ describe('repositoriesFromDispatcher', () => {
 });
 
 describe('createRepositories', () => {
-  it('uses the mock bank by default and reports unbuilt operations as problems', async () => {
+  it('uses the mock bank by default', () => {
     const repos = createRepositories({ apiMode: 'mock', apiUrl: undefined });
+    expect(typeof repos.accounts.list).toBe('function');
+  });
+
+  it('reports operations the http client cannot serve yet as problems', async () => {
+    const repos = createRepositories({ apiMode: 'http', apiUrl: 'http://localhost:8080' });
     const error = await repos.accounts.list().catch((e: unknown) => e);
     expect(isApiError(error, 'not_implemented')).toBe(true);
     expect((error as ApiError).status).toBe(501);

@@ -237,7 +237,13 @@ export function receiveExternal(
 /** Demo Controls "fund wallet": simulated money from the demo funding account. */
 export function demoFund(
   ledger: Ledger,
-  input: { toAccountId: string; amount: Money; tier: KycTier; idempotencyKey: string },
+  input: {
+    toAccountId: string;
+    amount: Money;
+    tier: KycTier;
+    idempotencyKey: string;
+    metadata?: Record<string, unknown>;
+  },
 ): JournalEntry {
   if (!ledger.state.idempotency[input.idempotencyKey]) {
     assertWithinMaxBalance(ledger, input.toAccountId, input.amount, input.tier);
@@ -253,6 +259,7 @@ export function demoFund(
       },
       { accountId: input.toAccountId, amount: input.amount },
     ],
+    metadata: input.metadata,
   });
 }
 

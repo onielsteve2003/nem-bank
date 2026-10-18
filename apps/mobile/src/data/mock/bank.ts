@@ -4,15 +4,20 @@ import type { LedgerState } from './ledger';
 import { deserialize, serialize } from './persistence/serialize';
 import type { SnapshotStore } from './persistence/types';
 import { seedDemoBank } from './seed';
+import type { World } from './world';
 
 /** What a transaction looks like from the customer's side, kept on its journal entry. */
 export interface TransactionMeta {
+  /** The customer-facing transaction ID (one entry can be two transactions, e.g. FX). */
+  id: string;
   accountId: string;
   type: Schema<'TransactionType'>;
   direction: Schema<'Direction'>;
   category: Schema<'Category'>;
   narration: string;
   counterparty: Schema<'Counterparty'>;
+  transferId?: string | null;
+  cardId?: string | null;
 }
 
 /** The whole mock bank, saved as one snapshot. */
@@ -24,9 +29,10 @@ export interface MockBankState {
   user: User;
   accounts: { ngn: string; usd: string };
   ledger: LedgerState;
+  world: World;
 }
 
-export const SCHEMA_VERSION = 1;
+export const SCHEMA_VERSION = 2;
 export const SNAPSHOT_KEY = 'bank';
 export const DEFAULT_SEED = 2026;
 

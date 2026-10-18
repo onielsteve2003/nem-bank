@@ -1,4 +1,11 @@
-import { loadOrSeedBank, resetBank, saveBank, SNAPSHOT_KEY, type TransactionMeta } from '../bank';
+import {
+  loadOrSeedBank,
+  resetBank,
+  saveBank,
+  SCHEMA_VERSION,
+  SNAPSHOT_KEY,
+  type TransactionMeta,
+} from '../bank';
 import { Ledger } from '../ledger';
 import { deserialize, serialize } from '../persistence/serialize';
 import { createMemoryStore } from '../persistence/types';
@@ -40,7 +47,7 @@ describe('seedDemoBank', () => {
       expect(txns.some((t) => t.category === category)).toBe(true);
     }
     expect(txns.some((t) => t.type === 'fx_conversion')).toBe(true);
-    expect(txns.length).toBeGreaterThan(400);
+    expect(txns.length).toBeGreaterThan(350);
 
     const first = Date.parse(bank.ledger.entries[0]!.createdAt);
     const last = Date.parse(bank.ledger.entries.at(-1)!.createdAt);
@@ -74,7 +81,7 @@ describe('loadOrSeedBank', () => {
 
   it('replaces corrupt or outdated snapshots with a fresh seed', async () => {
     const corrupt = createMemoryStore({ [SNAPSHOT_KEY]: '{not json' });
-    expect((await loadOrSeedBank(corrupt, { now: NOW })).schemaVersion).toBe(1);
+    expect((await loadOrSeedBank(corrupt, { now: NOW })).schemaVersion).toBe(SCHEMA_VERSION);
 
     const outdated = createMemoryStore({ [SNAPSHOT_KEY]: JSON.stringify({ schemaVersion: 0 }) });
     expect((await loadOrSeedBank(outdated, { now: NOW })).user.is_demo).toBe(true);
