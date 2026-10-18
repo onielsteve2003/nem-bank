@@ -2,6 +2,14 @@
 import type { components, operations, paths, webhooks } from './schema.gen';
 
 export type { components, operations, paths, webhooks };
+export {
+  OPERATIONS,
+  type HttpMethod,
+  type OperationAuth,
+  type OperationMeta,
+  type RouteOperationId,
+  type WebhookOperationId,
+} from './operations.gen';
 
 type Schemas = components['schemas'];
 

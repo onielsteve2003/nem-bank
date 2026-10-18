@@ -20,3 +20,19 @@ export function createHttpRepositories(config: HttpConfig): Repositories {
     );
   return repositoriesFromDispatcher(dispatch);
 }
+
+export {
+  buildPath,
+  buildQuery,
+  createHttpClient,
+  toApiError,
+  type DeviceSignature,
+  type DeviceSigner,
+  type HttpClient,
+  type HttpClientConfig,
+  type RequestInput,
+  type SigningRequest,
+  type TokenStore,
+  type Tokens,
+} from './client';
+export { sessionTokens } from './sessionTokens';

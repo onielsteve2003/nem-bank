@@ -6,8 +6,8 @@
   "main": "src/index.ts",
   "types": "src/index.ts",
   "scripts": {
-    "generate": "openapi-typescript openapi.yaml -o src/schema.gen.ts && prettier --write src/schema.gen.ts",
-    "check:generated": "pnpm generate && git diff --exit-code -- src/schema.gen.ts",
+    "generate": "openapi-typescript openapi.yaml -o src/schema.gen.ts && node scripts/generate-operations.mjs && prettier --write src/schema.gen.ts src/operations.gen.ts",
+    "check:generated": "pnpm generate && git diff --exit-code -- src/schema.gen.ts src/operations.gen.ts",
     "lint": "redocly lint openapi.yaml && eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
