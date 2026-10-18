@@ -7,6 +7,7 @@ import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
 import { ToastProvider } from '@/components';
 import { RepositoryProvider, useSimulation } from '@/data';
+import { AppLock } from '@/features/lock/AppLock';
 import { RootNavigator } from '@/features/shell/RootNavigator';
 import { QueryProvider } from '@/lib/query';
 import { bindSimulation, usePreferencesStore, useStoresHydrated } from '@/stores';
@@ -40,6 +41,7 @@ export default function RootLayout() {
             <BottomSheetModalProvider>
               <ToastProvider>
                 <RootNavigator />
+                <AppLock />
               </ToastProvider>
             </BottomSheetModalProvider>
           </StoredThemeProvider>

@@ -10,6 +10,8 @@ import type { OtpRecord } from '../world';
 /** The demo bank sends no email: every OTP is this code, and the UI says so. */
 export const DEMO_OTP = '123456';
 export const DEMO_PASSWORD = 'Demo1234!';
+/** Tolu's transaction PIN; the lock screen shows it in demo sessions. */
+export const DEMO_PIN = '2580';
 const OTP_TTL_MINUTES = 10;
 const OTP_RESEND_SECONDS = 60;
 const OTP_ATTEMPTS = 5;

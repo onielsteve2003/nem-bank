@@ -4,6 +4,7 @@ import { money, negate, type Money } from '@nem/shared';
 import type { TransactionMeta } from './bank';
 import { addDays, api, isoDate, naira } from './convert';
 import { NEM_BANK } from './directory';
+import { DEMO_PIN } from './domains/auth';
 import { demoFund, type JournalEntry, type Ledger } from './ledger';
 import type { CardRecord, Person, World } from './world';
 
@@ -172,7 +173,7 @@ export function startWorld({ ledger, newId, random, userId, ngn, usd }: StartInp
     people,
     auth: {
       password: 'Demo1234!',
-      pin: '2580',
+      pin: DEMO_PIN,
       pinFailures: 0,
       pinLockedUntil: null,
       duressPin: null,

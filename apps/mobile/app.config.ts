@@ -43,6 +43,11 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
         imageWidth: 76,
       },
     ],
+    // Expo Go ships its own copy; this is for standalone builds.
+    [
+      'expo-local-authentication',
+      { faceIDPermission: 'Nem Bank uses Face ID to unlock the app and approve payments.' },
+    ],
   ],
   // The SDK runtime policy is the one Expo Go can load EAS updates for.
   runtimeVersion: { policy: 'sdkVersion' },

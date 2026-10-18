@@ -23,7 +23,7 @@ import {
   type SimulationSettings,
 } from './simulation';
 
-export { DEMO_OTP, DEMO_PASSWORD } from './domains/auth';
+export { DEMO_OTP, DEMO_PASSWORD, DEMO_PIN } from './domains/auth';
 export {
   DEFAULT_SIMULATION,
   type LatencyProfile,
