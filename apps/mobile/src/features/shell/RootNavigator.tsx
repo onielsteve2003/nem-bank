@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { useParkWebEntryLink } from '@/features/shell/linking';
 import { useSessionStore } from '@/stores';
 import { useTheme } from '@/theme';
 
@@ -14,6 +15,7 @@ import { useTheme } from '@/theme';
 export function RootNavigator() {
   const { colors, scheme } = useTheme();
   const signedIn = useSessionStore((s) => s.status === 'signedIn');
+  useParkWebEntryLink(signedIn);
 
   return (
     <>

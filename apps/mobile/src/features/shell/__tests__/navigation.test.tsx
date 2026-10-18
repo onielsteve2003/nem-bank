@@ -3,7 +3,9 @@ import { QueryClient } from '@tanstack/react-query';
 import { act, fireEvent, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import AppLayout from '../../../../app/(app)/_layout';
+import { redirectSystemPath } from '../../../../app/+native-intent';
+import AppLayout, { unstable_settings as appSettings } from '../../../../app/(app)/_layout';
+import AjoInviteRoute from '../../../../app/(app)/ajo/[code]';
 import CardsRoute from '../../../../app/(app)/(tabs)/cards';
 import GrowRoute from '../../../../app/(app)/(tabs)/grow';
 import HomeRoute from '../../../../app/(app)/(tabs)/home';
@@ -13,6 +15,8 @@ import TabsLayout from '../../../../app/(app)/(tabs)/_layout';
 import ConvertRoute from '../../../../app/(app)/convert/index';
 import ConvertLayout from '../../../../app/(app)/convert/_layout';
 import DemoControlsRoute from '../../../../app/(app)/demo-controls';
+import PaymentLinkRoute from '../../../../app/(app)/pay/[slug]';
+import QrPayRoute from '../../../../app/(app)/qr';
 import KycRoute from '../../../../app/(app)/kyc/index';
 import KycLayout from '../../../../app/(app)/kyc/_layout';
 import SendRoute from '../../../../app/(app)/send/index';
@@ -26,7 +30,7 @@ import { repositoriesFromDispatcher, RepositoryProvider, type Call } from '@/dat
 import { RootNavigator } from '@/features/shell/RootNavigator';
 import { haptic } from '@/lib/haptics';
 import { QueryProvider } from '@/lib/query';
-import { useSessionStore } from '@/stores';
+import { useDeepLinkStore, useSessionStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 // Loaded after the routes on purpose: importing it swaps in Reanimated's bundled
@@ -81,7 +85,8 @@ const ROUTES = {
   '(auth)/welcome': WelcomeRoute,
   '(auth)/login': LoginRoute,
   '(auth)/sign-up': SignUpRoute,
-  '(app)/_layout': AppLayout,
+  // As a module, so the router sees its unstable_settings.
+  '(app)/_layout': { default: AppLayout, unstable_settings: appSettings },
   '(app)/(tabs)/_layout': TabsLayout,
   '(app)/(tabs)/home': HomeRoute,
   '(app)/(tabs)/pay': PayRoute,
@@ -95,6 +100,9 @@ const ROUTES = {
   '(app)/kyc/_layout': KycLayout,
   '(app)/kyc/index': KycRoute,
   '(app)/demo-controls': DemoControlsRoute,
+  '(app)/pay/[slug]': PaymentLinkRoute,
+  '(app)/ajo/[code]': AjoInviteRoute,
+  '(app)/qr': QrPayRoute,
   kit: () => null,
 };
 
@@ -113,6 +121,7 @@ const signIn = () => useSessionStore.getState().setSession(demoSession());
 beforeEach(() => {
   calls = [];
   useSessionStore.setState({ status: 'signedOut', session: null });
+  useDeepLinkStore.setState({ pending: null });
 });
 
 describe('auth gate', () => {
@@ -216,3 +225,39 @@ describe('navigation structure', () => {
     expect(router.pathname()).toBe('/welcome');
   });
 });
+
+describe('deep links', () => {
+  it('opens a pay link as a modal over the tabs, and closes to Home', async () => {
+    signIn();
+    const router = await open(await redirectPath('nembank://pay/k3x9q2ab'));
+    expect(router.pathname()).toBe('/pay/k3x9q2ab');
+    expect(screen.getByText(/Payment link k3x9q2ab/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
+    expect(router.pathname()).toBe('/home');
+  });
+
+  it('parks a link opened while signed out and opens it after sign-in', async () => {
+    const router = await open(await redirectPath('https://nem-bank-fodx.vercel.app/ajo/AB12CD'));
+    expect(router.pathname()).toBe('/welcome');
+    await fireEvent.press(screen.getByRole('button', { name: 'Try the demo' }));
+    expect(await screen.findByText(/Invite AB12CD/)).toBeOnTheScreen();
+    expect(router.pathname()).toBe('/ajo/AB12CD');
+    expect(useDeepLinkStore.getState().pending).toBeNull();
+  });
+
+  it('drops a parked link on sign-out', () => {
+    signIn();
+    useDeepLinkStore.getState().setPending('/cards');
+    useSessionStore.getState().signOut();
+    expect(useDeepLinkStore.getState().pending).toBeNull();
+  });
+
+  it('never throws on a malformed link', async () => {
+    signIn();
+    await expect(redirectPath('%%%')).resolves.toBe('/home');
+  });
+});
+
+async function redirectPath(path: string): Promise<string> {
+  return (await redirectSystemPath({ path, initial: true })) ?? '/';
+}

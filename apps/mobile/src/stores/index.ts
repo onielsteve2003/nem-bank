@@ -6,6 +6,7 @@ import { usePrivacyStore } from './privacy';
 import { useSessionStore } from './session';
 
 export { bindSimulation, useDemoStore, type DemoState } from './demo';
+export { useDeepLinkStore, type DeepLinkState } from './deepLink';
 export { useAppLocked, useLockStore, type LockState } from './lock';
 export {
   DEFAULT_PREFERENCES,

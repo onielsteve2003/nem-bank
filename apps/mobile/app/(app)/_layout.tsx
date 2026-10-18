@@ -2,6 +2,10 @@ import { Stack } from 'expo-router';
 
 import { useTheme } from '@/theme';
 
+// A deep link straight into a modal (a pay link, an invite) still gets the tabs
+// underneath it, so closing the modal lands on the app instead of nothing.
+export const unstable_settings = { initialRouteName: '(tabs)' };
+
 /**
  * Signed-in app: the five tabs, with flows (send, convert, KYC) and tools
  * presented as modals over them (architecture §3).
@@ -17,6 +21,9 @@ export default function AppLayout() {
       <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
       <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />
       <Stack.Screen name="demo-controls" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="pay/[slug]" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="ajo/[code]" options={{ presentation: 'modal' }} />
+      <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
     </Stack>
   );
 }
