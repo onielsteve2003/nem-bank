@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { LayoutGrid, Zap } from 'lucide-react-native';
+import { LayoutGrid, LogIn, Zap } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
@@ -24,10 +24,19 @@ export function HelloScreen() {
         <Text color="textMuted" style={styles.subtitle}>
           Banking that moves at your speed. Simulated money, real engineering.
         </Text>
+        <View style={{ gap: spacing[3], marginTop: spacing[6] }}>
+          <Button label="Try the demo" onPress={() => router.replace('/home')} />
+          <Button
+            label="Log in"
+            variant="secondary"
+            icon={LogIn}
+            onPress={() => router.push('/login')}
+          />
+        </View>
         {devToolsEnabled && (
           <Button
             label="Design system"
-            variant="secondary"
+            variant="ghost"
             size="sm"
             icon={LayoutGrid}
             onPress={() => router.push('/kit')}
