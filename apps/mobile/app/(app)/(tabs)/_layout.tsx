@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 
+import { TabBar } from '@/features/shell/TabBar';
 import { useTheme } from '@/theme';
 
 const TABS: readonly { name: string; title: string; icon: LucideIcon }[] = [
@@ -18,18 +19,13 @@ const TABS: readonly { name: string; title: string; icon: LucideIcon }[] = [
   { name: 'me', title: 'Me', icon: CircleUser },
 ];
 
-/** The five tabs (PRD §8). The custom Volt Noir tab bar replaces the default in T4.3. */
+/** The five tabs (PRD §8) on the custom Volt Noir tab bar. */
 export default function TabsLayout() {
   const { colors } = useTheme();
   return (
     <Tabs
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.primaryText,
-        tabBarInactiveTintColor: colors.textMuted,
-        tabBarStyle: { backgroundColor: colors.surface, borderTopColor: colors.border },
-        sceneStyle: { backgroundColor: colors.background },
-      }}
+      tabBar={(props) => <TabBar {...props} />}
+      screenOptions={{ headerShown: false, sceneStyle: { backgroundColor: colors.background } }}
     >
       {TABS.map(({ name, title, icon: Glyph }) => (
         <Tabs.Screen

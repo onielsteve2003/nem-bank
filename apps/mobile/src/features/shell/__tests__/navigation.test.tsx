@@ -24,6 +24,7 @@ import WelcomeRoute from '../../../../app/(auth)/welcome';
 import Index from '../../../../app/index';
 import { repositoriesFromDispatcher, RepositoryProvider, type Call } from '@/data';
 import { RootNavigator } from '@/features/shell/RootNavigator';
+import { haptic } from '@/lib/haptics';
 import { QueryProvider } from '@/lib/query';
 import { useSessionStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
@@ -33,6 +34,8 @@ import { ThemeProvider } from '@/theme';
 type RouterTesting = typeof import('expo-router/testing-library');
 // eslint-disable-next-line @typescript-eslint/no-require-imports -- see above
 const { renderRouter } = require('expo-router/testing-library') as RouterTesting;
+
+jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
 
 const metrics = {
   frame: { x: 0, y: 0, width: 390, height: 844 },
@@ -142,7 +145,7 @@ describe('auth gate', () => {
     expect(router.pathname()).toBe('/home');
     expect(calls.map((c) => c.operationId)).toEqual(['startDemoSession']);
 
-    await fireEvent.press(screen.getByRole('button', { name: /^Me, tab/ }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Me' }));
     await fireEvent.press(await screen.findByText('Sign out'));
     await act(async () => undefined);
     expect(router.pathname()).toBe('/welcome');
@@ -158,13 +161,30 @@ describe('navigation structure', () => {
     const router = await open('/');
     expect(router.pathname()).toBe('/home');
     for (const tab of ['Home', 'Pay', 'Cards', 'Grow', 'Me']) {
-      expect(screen.getAllByText(tab).length).toBeGreaterThan(0);
+      expect(screen.getByRole('tab', { name: tab })).toBeOnTheScreen();
     }
+  });
+
+  it('marks only the active tab as selected and says where each sits', async () => {
+    await open('/cards');
+    expect(screen.getByRole('tab', { name: 'Cards' })).toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Home' })).not.toBeSelected();
+    expect(screen.getByRole('tab', { name: 'Me' }).props.accessibilityHint).toBe('5 of 5');
+  });
+
+  it('taps a selection haptic only when the tab changes', async () => {
+    await open('/home');
+    jest.mocked(haptic).mockClear();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Home' }));
+    expect(haptic).not.toHaveBeenCalled();
+    await fireEvent.press(screen.getByRole('tab', { name: 'Pay' }));
+    expect(haptic).toHaveBeenCalledTimes(1);
+    expect(haptic).toHaveBeenCalledWith('selection');
   });
 
   it('switches tabs', async () => {
     const router = await open('/home');
-    await fireEvent.press(screen.getByRole('button', { name: /^Grow, tab/ }));
+    await fireEvent.press(screen.getByRole('tab', { name: 'Grow' }));
     expect(router.pathname()).toBe('/grow');
     expect(await screen.findByText('Grow is on its way')).toBeOnTheScreen();
   });
