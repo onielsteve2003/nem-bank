@@ -8,6 +8,7 @@ import { useSessionStore } from './session';
 export { bindSimulation, useDemoStore, type DemoState } from './demo';
 export { useDeepLinkStore, type DeepLinkState } from './deepLink';
 export { useAppLocked, useLockStore, type LockState } from './lock';
+export { isOnline, useIsOnline, useNetworkStore, type NetworkState } from './network';
 export {
   DEFAULT_PREFERENCES,
   fromApiPreferences,
@@ -29,6 +30,7 @@ export {
   isAccessTokenFresh,
   toStoredSession,
   useSessionStore,
+  type SessionEnd,
   type SessionState,
   type SessionStatus,
   type StoredSession,

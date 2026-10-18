@@ -1,6 +1,10 @@
 import { Stack } from 'expo-router';
 
+import { RouteErrorBoundary } from '@/features/shell/RouteErrorBoundary';
 import { useTheme } from '@/theme';
+
+// A crash in any signed-in screen shows the crash screen inside the app shell.
+export { RouteErrorBoundary as ErrorBoundary };
 
 // A deep link straight into a modal (a pay link, an invite) still gets the tabs
 // underneath it, so closing the modal lands on the app instead of nothing.

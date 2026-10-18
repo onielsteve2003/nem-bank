@@ -5,10 +5,13 @@ import { useEffect, type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 
-import { ToastProvider } from '@/components';
+import { ScreenBannerProvider, ToastProvider } from '@/components';
 import { RepositoryProvider, useSimulation } from '@/data';
 import { AppLock } from '@/features/lock/AppLock';
+import { AppErrorBoundary } from '@/features/shell/CrashScreen';
+import { OfflineBanner } from '@/features/shell/OfflineBanner';
 import { RootNavigator } from '@/features/shell/RootNavigator';
+import { useSessionWatcher } from '@/features/shell/useSessionWatcher';
 import { QueryProvider } from '@/lib/query';
 import { bindSimulation, usePreferencesStore, useStoresHydrated } from '@/stores';
 import { FONTS, ThemeProvider } from '@/theme';
@@ -40,8 +43,13 @@ export default function RootLayout() {
           <StoredThemeProvider>
             <BottomSheetModalProvider>
               <ToastProvider>
-                <RootNavigator />
-                <AppLock />
+                <SessionWatcher />
+                <ScreenBannerProvider value={offlineBanner}>
+                  <AppErrorBoundary>
+                    <RootNavigator />
+                  </AppErrorBoundary>
+                  <AppLock />
+                </ScreenBannerProvider>
               </ToastProvider>
             </BottomSheetModalProvider>
           </StoredThemeProvider>
@@ -49,6 +57,14 @@ export default function RootLayout() {
       </RepositoryProvider>
     </GestureHandlerRootView>
   );
+}
+
+const offlineBanner = <OfflineBanner />;
+
+/** Session expiry, and the cache wipe on sign-out (T4.6). */
+function SessionWatcher() {
+  useSessionWatcher();
+  return null;
 }
 
 /** The theme follows the persisted appearance setting (SET-1). */

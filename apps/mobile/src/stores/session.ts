@@ -23,12 +23,18 @@ export interface StoredSession {
 /** `restoring` until SecureStore has been read on launch. */
 export type SessionStatus = 'restoring' | 'signedOut' | 'signedIn';
 
+/** Why the last session ended: the user signed out, or the bank ended it. */
+export type SessionEnd = 'signedOut' | 'expired';
+
 export interface SessionState {
   status: SessionStatus;
   session: StoredSession | null;
   /** Sign-in and every token refresh (refresh tokens rotate on each use). */
   setSession: (auth: AuthSession) => void;
   signOut: () => void;
+  /** The refresh token ran out or was revoked: back to sign-in, saying why (T4.6). */
+  expire: () => void;
+  endedBy: SessionEnd | null;
 }
 
 export function toStoredSession(auth: AuthSession): StoredSession {
@@ -56,8 +62,14 @@ export const useSessionStore = create<SessionState>()(
     (set) => ({
       status: 'restoring',
       session: null,
-      setSession: (auth) => set({ status: 'signedIn', session: toStoredSession(auth) }),
-      signOut: () => set({ status: 'signedOut', session: null }),
+      endedBy: null,
+      setSession: (auth) =>
+        set({ status: 'signedIn', session: toStoredSession(auth), endedBy: null }),
+      signOut: () => set({ status: 'signedOut', session: null, endedBy: 'signedOut' }),
+      expire: () =>
+        set((s) =>
+          s.status === 'signedIn' ? { status: 'signedOut', session: null, endedBy: 'expired' } : s,
+        ),
     }),
     {
       name: 'nem.session',
@@ -70,7 +82,12 @@ export const useSessionStore = create<SessionState>()(
         if (session && canRefresh(session)) {
           useSessionStore.setState({ status: 'signedIn' });
         } else {
-          useSessionStore.setState({ status: 'signedOut', session: null });
+          // A stored session that lapsed while the app was closed has expired too.
+          useSessionStore.setState({
+            status: 'signedOut',
+            session: null,
+            endedBy: session ? 'expired' : null,
+          });
         }
       },
     },

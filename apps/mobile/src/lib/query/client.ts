@@ -1,6 +1,7 @@
-import { QueryClient, type Query } from '@tanstack/react-query';
+import { MutationCache, QueryCache, QueryClient, type Query } from '@tanstack/react-query';
 
 import { isApiError, type Domain } from '@/data';
+import { useSessionStore } from '@/stores/session';
 
 // Query rules (architecture §7): reads retry briefly on transient failures and
 // are served from the persisted cache offline; writes never retry on their own
@@ -47,8 +48,30 @@ export function shouldPersistQuery(query: Query): boolean {
   return !NOT_PERSISTED.has(domain) && !NOT_PERSISTED_METHODS.has(method);
 }
 
+/**
+ * Problem codes that mean the session itself is over, not that one call failed.
+ * A wrong password or a bad device signature is also a 401 but must not sign the
+ * user out, so this is a list of codes rather than "any 401".
+ */
+const SESSION_ENDED_CODES: ReadonlySet<string> = new Set([
+  'invalid_token',
+  'session_expired',
+  'session_revoked',
+]);
+
+export function isSessionEnded(error: unknown): boolean {
+  return isApiError(error) && error.status === 401 && SESSION_ENDED_CODES.has(error.code);
+}
+
+/** Any read or write that finds the session over sends the user back to sign in. */
+function endSessionOn(error: unknown) {
+  if (isSessionEnded(error)) useSessionStore.getState().expire();
+}
+
 export function createQueryClient(): QueryClient {
   return new QueryClient({
+    queryCache: new QueryCache({ onError: endSessionOn }),
+    mutationCache: new MutationCache({ onError: endSessionOn }),
     defaultOptions: {
       queries: {
         staleTime: 30_000,

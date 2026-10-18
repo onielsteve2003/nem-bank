@@ -1,19 +1,13 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
-import {
-  focusManager,
-  onlineManager,
-  QueryClientProvider,
-  type QueryClient,
-} from '@tanstack/react-query';
+import { focusManager, QueryClientProvider, type QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import Constants from 'expo-constants';
 import { useEffect, useState, type ReactNode } from 'react';
 import { AppState, Platform } from 'react-native';
 
-import { useSimulation } from '@/data';
-
 import { createQueryClient, PERSIST_MAX_AGE_MS, shouldPersistQuery } from './client';
+import { useNetworkSync } from './network';
 import { useRealtimeSync } from './realtime';
 
 /** Bump to drop every persisted cache after a breaking change to cached shapes. */
@@ -29,17 +23,6 @@ export interface Props {
 function RealtimeSync() {
   useRealtimeSync();
   return null;
-}
-
-/** "Online" follows the mock bank's offline switch, so queries pause and resume with it. */
-function useOnlineFromSimulation() {
-  const simulation = useSimulation();
-  useEffect(() => {
-    if (!simulation) return;
-    const sync = () => onlineManager.setOnline(!simulation.get().offline);
-    sync();
-    return simulation.subscribe(sync);
-  }, [simulation]);
 }
 
 /** On native, "focus" is the app coming to the foreground (the web uses the tab). */
@@ -62,7 +45,7 @@ export function QueryProvider({ children, client: injected }: Props) {
   const [persister] = useState(() =>
     createAsyncStoragePersister({ storage: AsyncStorage, key: CACHE_KEY, throttleTime: 1_000 }),
   );
-  useOnlineFromSimulation();
+  useNetworkSync();
   useAppFocus();
 
   if (injected) {

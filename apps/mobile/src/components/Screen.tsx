@@ -1,4 +1,4 @@
-import type { ReactNode } from 'react';
+import { createContext, useContext, type ReactNode } from 'react';
 import {
   KeyboardAvoidingView,
   Platform,
@@ -31,6 +31,13 @@ export type Props = {
   contentContainerStyle?: StyleProp<ViewStyle>;
 };
 
+/**
+ * App-wide content shown at the top of every screen, under the status bar: the
+ * shell puts the offline banner here, so components never read app state.
+ */
+const ScreenBannerContext = createContext<ReactNode>(null);
+export const ScreenBannerProvider = ScreenBannerContext.Provider;
+
 /** The shell every screen renders in: themed background, safe areas, keyboard avoiding, refresh. */
 export function Screen({
   children,
@@ -44,6 +51,7 @@ export function Screen({
   contentContainerStyle,
 }: Props) {
   const { colors, spacing } = useTheme();
+  const banner = useContext(ScreenBannerContext);
   const padding = padded ? { padding: spacing[4], gap: spacing[6] } : undefined;
 
   const body = scroll ? (
@@ -73,6 +81,7 @@ export function Screen({
 
   return (
     <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: colors.background }]}>
+      {banner}
       {header}
       <KeyboardAvoidingView
         style={styles.flex}

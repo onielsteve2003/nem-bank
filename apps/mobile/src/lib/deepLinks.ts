@@ -27,11 +27,11 @@ type Route = {
 const ROUTES: Route[] = [
   // Payment links and QR (TRF-12, TRF-13)
   { pattern: 'pay/requests/:id', to: () => '/pay' },
-  { pattern: 'pay/:slug', to: ({ slug }) => ({ pathname: '/pay/[slug]', params: { slug } }) },
+  { pattern: 'pay/:slug', to: ({ slug = '' }) => ({ pathname: '/pay/[slug]', params: { slug } }) },
   { pattern: 'pay', to: () => '/pay' },
   { pattern: 'qr', to: (_, q) => qrHref(q.get('payload') ?? q.get('p') ?? '') },
   // Ajo invites (AJO-2)
-  { pattern: 'ajo/:code', to: ({ code }) => ({ pathname: '/ajo/[code]', params: { code } }) },
+  { pattern: 'ajo/:code', to: ({ code = '' }) => ({ pathname: '/ajo/[code]', params: { code } }) },
   // Notification targets (NOT-1)
   { pattern: 'home', to: () => '/home' },
   { pattern: 'transactions/:id', to: () => '/home' },

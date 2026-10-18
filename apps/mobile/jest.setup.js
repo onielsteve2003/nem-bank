@@ -8,6 +8,10 @@ jest.mock('@gorhom/bottom-sheet', () => require('@gorhom/bottom-sheet/mock'));
 jest.mock('@react-native-async-storage/async-storage', () =>
   require('@react-native-async-storage/async-storage/jest/async-storage-mock'),
 );
+// NetInfo's bundled mock reports a connected device.
+jest.mock('@react-native-community/netinfo', () =>
+  require('@react-native-community/netinfo/jest/netinfo-mock'),
+);
 // SecureStore has no native module in Jest; an in-memory Keychain stands in.
 jest.mock('expo-secure-store', () => {
   const items = new Map();

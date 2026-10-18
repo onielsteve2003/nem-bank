@@ -6,5 +6,5 @@ import type { TokenStore } from './client';
 export const sessionTokens: TokenStore = {
   get: () => useSessionStore.getState().session,
   save: (session) => useSessionStore.getState().setSession(session),
-  expire: () => useSessionStore.getState().signOut(),
+  expire: () => useSessionStore.getState().expire(),
 };

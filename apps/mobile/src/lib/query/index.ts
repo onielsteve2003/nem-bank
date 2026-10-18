@@ -1,5 +1,6 @@
 export {
   createQueryClient,
+  isSessionEnded,
   isTransient,
   MAX_QUERY_RETRIES,
   retryDelay,
