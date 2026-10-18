@@ -1,9 +1,10 @@
 import type { Schema } from '@nem/contracts';
+import { formatMoney, money } from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { DemoRepo, PrivacyRepo, RealtimeRepo } from '../../repositories';
 import { addDays, addMinutes, positive } from '../convert';
-import { demoFund, receiveExternal } from '../ledger';
+import { demoFund, receiveExternal, transferInternal } from '../ledger';
 import type { MockBank } from '../runtime';
 import { customerTransactions } from '../views';
 
@@ -136,4 +137,45 @@ export function demoRepo(bank: MockBank): DemoRepo {
       await bank.reset();
     },
   };
+}
+
+/**
+ * Ambient activity (Demo Controls): a friend sends a small amount, so the home
+ * screen shows money arriving in realtime without anyone tapping anything.
+ */
+export function ambientIncoming(bank: MockBank, random: () => number): void {
+  const ngn = bank.accountIn('NGN');
+  const friend = bank.world.people[Math.floor(random() * bank.world.people.length)];
+  if (!ngn || !friend) return;
+  const amount = money(BigInt(Math.round(1 + random() * 9)) * 100_000n, 'NGN');
+  const notes = ['For the suya', 'Fuel money', 'Thanks for yesterday', 'Your share', 'Small chops'];
+  const note = notes[Math.floor(random() * notes.length)]!;
+  transferInternal(bank.ledger, {
+    fromAccountId: friend.accountId,
+    toAccountId: ngn.id,
+    recipientTier: bank.tier(),
+    amount,
+    reference: bank.reference(),
+    idempotencyKey: `ambient:${bank.id()}`,
+    limits: { tier: friend.tier },
+    metadata: {
+      txns: [
+        {
+          id: bank.id(),
+          accountId: ngn.id,
+          direction: 'credit',
+          type: 'transfer_in',
+          category: 'transfers',
+          narration: note,
+          counterparty: { name: `${friend.firstName} ${friend.lastName}`, nemtag: friend.nemtag },
+        },
+      ],
+    },
+  });
+  bank.notify({
+    category: 'transactions',
+    title: `${friend.firstName} sent you ${formatMoney(amount)}`,
+    body: note,
+    deep_link: 'nembank://home',
+  });
 }

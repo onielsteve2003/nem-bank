@@ -12,7 +12,7 @@ const naira = (major: number) => ({ amount_minor: String(major * 100), currency:
 
 function setup(store: SnapshotStore = createMemoryStore()) {
   let now = START;
-  const repos = createMockRepositories({ store, clock: () => now });
+  const repos = createMockRepositories({ store, clock: () => now, simulation: { latency: 'off' } });
   const advance = (ms: number) => {
     now = new Date(now.getTime() + ms);
   };
