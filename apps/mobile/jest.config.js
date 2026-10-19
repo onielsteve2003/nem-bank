@@ -1,3 +1,5 @@
+const preset = require('jest-expo/jest-preset');
+
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
@@ -8,11 +10,10 @@ module.exports = {
     // an .mjs build Jest can't load; Node's "require" condition gives its CJS build.
     '^lucide-react-native$': require.resolve('lucide-react-native'),
   },
-  // @noble/* ship ESM only, so Jest must transform them like the RN packages.
-  transformIgnorePatterns: [
-    '/node_modules/(?!(.pnpm|react-native|@react-native|@react-native-community|expo|@expo|@expo-google-fonts|react-navigation|@react-navigation|@noble))',
-    '/node_modules/react-native-reanimated/plugin/',
-    '/node_modules/@react-native/babel-preset/',
-  ],
+  // @noble/* ship ESM only, so Jest must transform them like the RN packages. Extends
+  // the preset's own list so packages it adds later are not dropped.
+  transformIgnorePatterns: preset.transformIgnorePatterns.map((pattern) =>
+    pattern.startsWith('/node_modules/(?!(') ? pattern.replace('(?!(', '(?!(@noble|') : pattern,
+  ),
   testPathIgnorePatterns: ['/node_modules/', '/.expo/'],
 };

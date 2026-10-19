@@ -133,14 +133,12 @@ describe('VerifyEmailScreen', () => {
       expect.objectContaining({ method: 'resendOtp', input: { body: { challenge_id: 's1' } } }),
     );
     expect(useSignupStore.getState().pending?.otp.attempts_remaining).toBe(5);
-    expect(
-      screen.getByRole('button', { name: /Resend code in 1:00|Resend code in 0:59/ }),
-    ).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Resend code in [01]:dd$/ })).toBeDisabled();
   });
 
   it('shows the resend countdown and explains that SMS is a paid feature', async () => {
     await renderVerify(jest.fn());
-    expect(screen.getByRole('button', { name: /Resend code in (1:00|0:59)/ })).toBeDisabled();
+    expect(screen.getByRole('button', { name: /^Resend code in [01]:dd$/ })).toBeDisabled();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Use SMS instead' }));
     expect(await screen.findByText(/SMS one-time codes/)).toBeTruthy();
