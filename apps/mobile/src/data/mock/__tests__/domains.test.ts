@@ -54,6 +54,37 @@ describe('mock repositories', () => {
     }
   });
 
+  it('checks sign-up details with the shared rules and refuses an email already in use', async () => {
+    const { repos } = setup();
+    const body = {
+      first_name: 'Ada',
+      last_name: 'Obi',
+      email: 'ada@example.com',
+      phone: '+2348031234567',
+      date_of_birth: '1994-03-05',
+      consent: {
+        terms_version: '2026-10',
+        privacy_version: '2026-10',
+        accepted_at: START.toISOString(),
+      },
+    };
+    const started = await repos.auth.startSignup({ body });
+    expect(started.otp.destination_masked).toBe('a*a@example.com');
+
+    const minor = await repos.auth
+      .startSignup({ body: { ...body, date_of_birth: '2015-01-01' } })
+      .catch((e: unknown) => e);
+    expect(isApiError(minor, 'validation_failed') && minor.problem.errors?.[0]?.field).toBe(
+      '/date_of_birth',
+    );
+
+    const me = await repos.users.getMe();
+    const taken = await repos.auth
+      .startSignup({ body: { ...body, email: me.email.toUpperCase() } })
+      .catch((e: unknown) => e);
+    expect(isApiError(taken, 'email_taken') && taken.status).toBe(409);
+  });
+
   it('serves the seeded persona with balances that match the ledger', async () => {
     const { repos } = setup();
     expect((await repos.users.getMe()).preferred_name).toBe('Tolu');

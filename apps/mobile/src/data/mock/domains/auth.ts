@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { isWeakPin } from '@nem/shared';
+import { isWeakPin, signupRequestSchema } from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { AuthRepo, DevicesRepo, UsersRepo } from '../../repositories';
@@ -162,7 +162,29 @@ export function assertStrongPin(pin: string) {
 export function authRepo(bank: MockBank): AuthRepo {
   return {
     async startSignup({ body }) {
-      const otp = createOtp(bank, 'signup', body.email, { signup: body });
+      const checked = signupRequestSchema.safeParse(body);
+      if (!checked.success) {
+        const errors = checked.error.issues.map((issue) => ({
+          field: `/${issue.path.join('/')}`,
+          code: 'invalid',
+          message: issue.message,
+        }));
+        throw problem(400, 'validation_failed', 'Check the highlighted details', { errors });
+      }
+      // The seeded customer already holds this email: the realistic "already registered" path.
+      if (checked.data.email === bank.user.email.toLowerCase()) {
+        throw problem(409, 'email_taken', 'An account already uses this email', {
+          errors: [
+            {
+              field: '/email',
+              code: 'taken',
+              message: 'An account already uses this email. Log in instead.',
+            },
+          ],
+        });
+      }
+      const signup = { ...body, ...checked.data };
+      const otp = createOtp(bank, 'signup', signup.email, { signup });
       return { signup_id: otp.challenge_id, otp };
     },
     async completeSignup({ body }) {
