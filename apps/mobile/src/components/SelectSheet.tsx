@@ -10,6 +10,7 @@ import { useTheme } from '@/theme';
 import { FormField } from './FormField';
 import { Icon } from './Icon';
 import { IconButton } from './IconButton';
+import { useModalFrameStyle } from './modalFrame';
 import { Text } from './Text';
 
 export type SelectOption<T extends string> = {
@@ -53,6 +54,7 @@ export function SelectSheet<T extends string>({
 }: Props<T>) {
   const { colors, radius, spacing, motion } = useTheme();
   const insets = useSafeAreaInsets();
+  const frameStyle = useModalFrameStyle();
   const [open, setOpen] = useState(false);
   const selected = options.find((o) => o.value === value);
 
@@ -97,7 +99,7 @@ export function SelectSheet<T extends string>({
       </Pressable>
 
       <Modal visible={open} transparent animationType="fade" onRequestClose={close}>
-        <View style={[styles.backdrop, { backgroundColor: colors.overlay }]}>
+        <View style={[styles.backdrop, { backgroundColor: colors.overlay }, frameStyle]}>
           <Pressable
             accessibilityRole="button"
             accessibilityLabel="Close"

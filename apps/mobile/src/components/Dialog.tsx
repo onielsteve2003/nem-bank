@@ -4,6 +4,7 @@ import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 import { useTheme } from '@/theme';
 
 import { Button } from './Button';
+import { useModalFrameStyle } from './modalFrame';
 import { Text } from './Text';
 
 export type Props = {
@@ -34,6 +35,7 @@ export function Dialog({
   loading = false,
 }: Props) {
   const { colors, radius, spacing, motion, elevation } = useTheme();
+  const frameStyle = useModalFrameStyle();
   const cancel = () => {
     if (!loading) onCancel();
   };
@@ -42,7 +44,11 @@ export function Dialog({
     <Modal visible={open} transparent animationType="none" onRequestClose={cancel}>
       <Animated.View
         entering={FadeIn.duration(motion.duration.fast)}
-        style={[styles.backdrop, { backgroundColor: colors.overlay, padding: spacing[6] }]}
+        style={[
+          styles.backdrop,
+          { backgroundColor: colors.overlay, padding: spacing[6] },
+          frameStyle,
+        ]}
       >
         {/* Tap-outside is a shortcut only: the Cancel button is the accessible way out,
             so screen-reader focus starts on the dialog title, not on the backdrop. */}

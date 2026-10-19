@@ -10,6 +10,7 @@ import { RepositoryProvider, useSimulation } from '@/data';
 import { AppLock } from '@/features/lock/AppLock';
 import { AppErrorBoundary } from '@/features/shell/CrashScreen';
 import { OfflineBanner } from '@/features/shell/OfflineBanner';
+import { PhoneFrame } from '@/features/shell/PhoneFrame';
 import { RootNavigator } from '@/features/shell/RootNavigator';
 import { useSessionWatcher } from '@/features/shell/useSessionWatcher';
 import { QueryProvider } from '@/lib/query';
@@ -34,24 +35,27 @@ export default function RootLayout() {
 
   if (!ready) return null;
 
-  // Sheets and toasts sit inside the theme so they render in the active scheme.
+  // Sheets and toasts sit inside the theme so they render in the active scheme, and
+  // inside the web demo's phone frame so they stay on the phone's screen.
   return (
     <GestureHandlerRootView style={styles.root}>
       <RepositoryProvider>
         <DemoSimulationSync />
         <QueryProvider>
           <StoredThemeProvider>
-            <BottomSheetModalProvider>
-              <ToastProvider>
-                <SessionWatcher />
-                <ScreenBannerProvider value={offlineBanner}>
-                  <AppErrorBoundary>
-                    <RootNavigator />
-                  </AppErrorBoundary>
-                  <AppLock />
-                </ScreenBannerProvider>
-              </ToastProvider>
-            </BottomSheetModalProvider>
+            <PhoneFrame>
+              <BottomSheetModalProvider>
+                <ToastProvider>
+                  <SessionWatcher />
+                  <ScreenBannerProvider value={offlineBanner}>
+                    <AppErrorBoundary>
+                      <RootNavigator />
+                    </AppErrorBoundary>
+                    <AppLock />
+                  </ScreenBannerProvider>
+                </ToastProvider>
+              </BottomSheetModalProvider>
+            </PhoneFrame>
           </StoredThemeProvider>
         </QueryProvider>
       </RepositoryProvider>
