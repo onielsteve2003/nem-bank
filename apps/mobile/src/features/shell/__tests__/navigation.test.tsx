@@ -25,6 +25,7 @@ import AuthLayout from '../../../../app/(auth)/_layout';
 import LoginRoute from '../../../../app/(auth)/login';
 import SignUpRoute from '../../../../app/(auth)/sign-up';
 import WelcomeRoute from '../../../../app/(auth)/welcome';
+import ChooseNemtagRoute from '../../../../app/choose-nemtag';
 import Index from '../../../../app/index';
 import { ToastProvider } from '@/components';
 import { repositoriesFromDispatcher, RepositoryProvider, type Call } from '@/data';
@@ -106,6 +107,7 @@ const ROUTES = {
   '(app)/pay/[slug]': PaymentLinkRoute,
   '(app)/ajo/[code]': AjoInviteRoute,
   '(app)/qr': QrPayRoute,
+  'choose-nemtag': ChooseNemtagRoute,
   kit: () => null,
 };
 

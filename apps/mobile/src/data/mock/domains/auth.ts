@@ -1,5 +1,12 @@
 import type { Schema } from '@nem/contracts';
-import { checkPassword, isWeakPin, signupRequestSchema } from '@nem/shared';
+import {
+  checkPassword,
+  isWeakPin,
+  nemtagProblem,
+  normalizeNemtag,
+  RESERVED_NEMTAGS,
+  signupRequestSchema,
+} from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { AuthRepo, DevicesRepo, UsersRepo } from '../../repositories';
@@ -230,6 +237,8 @@ export function authRepo(bank: MockBank): AuthRepo {
         phone,
         date_of_birth,
         preferred_name: null,
+        // Chosen next, on the @nemtag step (AUTH-10).
+        nemtag: null,
         has_pin: body.pin !== undefined,
       });
       bank.world.auth.password = body.password;
@@ -406,11 +415,11 @@ export function authRepo(bank: MockBank): AuthRepo {
   };
 }
 
-const NEMTAG = /^[a-z0-9_]{3,20}$/;
-
 export function usersRepo(bank: MockBank): UsersRepo {
   const taken = (tag: string) =>
-    bank.world.people.some((p) => p.nemtag === tag) || ['nem', 'admin', 'support'].includes(tag);
+    RESERVED_NEMTAGS.includes(tag) ||
+    bank.world.people.some((p) => p.nemtag === tag) ||
+    tag === bank.user.nemtag;
   return {
     async getMe() {
       return bank.user;
@@ -421,8 +430,8 @@ export function usersRepo(bank: MockBank): UsersRepo {
       return bank.user;
     },
     async checkNemtag({ path }) {
-      const tag = path.nemtag.toLowerCase();
-      const available = NEMTAG.test(tag) && !taken(tag) && tag !== bank.user.nemtag;
+      const tag = normalizeNemtag(path.nemtag);
+      const available = nemtagProblem(tag) === null && !taken(tag);
       const base = tag.replace(/[^a-z0-9_]/g, '').slice(0, 16) || 'nem';
       return {
         nemtag: tag,
@@ -430,14 +439,14 @@ export function usersRepo(bank: MockBank): UsersRepo {
         suggestions: available
           ? []
           : [`${base}_ng`, `${base}${bank.now().getUTCFullYear() % 100}`, `the_${base}`].filter(
-              (s) => !taken(s),
+              (s) => nemtagProblem(s) === null && !taken(s),
             ),
       };
     },
     async setNemtag({ body }) {
-      const tag = body.nemtag.toLowerCase();
-      if (!NEMTAG.test(tag))
-        throw problem(422, 'validation_failed', 'Use 3–20 letters, numbers or _');
+      const tag = normalizeNemtag(body.nemtag);
+      const shape = nemtagProblem(tag);
+      if (shape) throw problem(422, 'validation_failed', shape);
       if (taken(tag)) throw problem(409, 'nemtag_taken', `@${tag} is taken`);
       bank.user.nemtag = tag;
       return bank.user;

@@ -22,6 +22,8 @@ export interface StoredSession {
   coolOffUntil: string | null;
   /** Show the "new device signed in" notice once, after a login that bound this device. */
   newDeviceNotice: boolean;
+  /** No @nemtag yet: the app opens on the chooser until one is set (AUTH-10). */
+  needsNemtag: boolean;
 }
 
 /** `restoring` until SecureStore has been read on launch. */
@@ -39,6 +41,7 @@ export interface SessionState {
    */
   setSession: (auth: AuthSession, options?: { newDevice?: boolean }) => void;
   dismissNewDeviceNotice: () => void;
+  nemtagChosen: () => void;
   signOut: () => void;
   /** The refresh token ran out or was revoked: back to sign-in, saying why (T4.6). */
   expire: () => void;
@@ -56,6 +59,7 @@ export function toStoredSession(auth: AuthSession, newDeviceNotice = false): Sto
     isDemo: auth.user.is_demo,
     coolOffUntil: auth.device.cool_off_until ?? null,
     newDeviceNotice,
+    needsNemtag: auth.user.nemtag === null,
   };
 }
 
@@ -79,6 +83,8 @@ export const useSessionStore = create<SessionState>()(
           session: toStoredSession(auth, options?.newDevice ?? s.session?.newDeviceNotice === true),
           endedBy: null,
         })),
+      nemtagChosen: () =>
+        set((s) => (s.session ? { session: { ...s.session, needsNemtag: false } } : s)),
       dismissNewDeviceNotice: () =>
         set((s) => (s.session ? { session: { ...s.session, newDeviceNotice: false } } : s)),
       signOut: () => set({ status: 'signedOut', session: null, endedBy: 'signedOut' }),

@@ -15,6 +15,7 @@ import { useTheme } from '@/theme';
 export function RootNavigator() {
   const { colors, scheme } = useTheme();
   const signedIn = useSessionStore((s) => s.status === 'signedIn');
+  const needsNemtag = useSessionStore((s) => s.session?.needsNemtag === true);
   useParkWebEntryLink(signedIn);
 
   return (
@@ -23,8 +24,12 @@ export function RootNavigator() {
         screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
       >
         <Stack.Screen name="index" />
-        <Stack.Protected guard={signedIn}>
+        <Stack.Protected guard={signedIn && !needsNemtag}>
           <Stack.Screen name="(app)" />
+        </Stack.Protected>
+        {/* The last onboarding step (AUTH-10): signed in, but no @nemtag yet. */}
+        <Stack.Protected guard={signedIn && needsNemtag}>
+          <Stack.Screen name="choose-nemtag" />
         </Stack.Protected>
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />

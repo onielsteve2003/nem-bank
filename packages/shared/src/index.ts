@@ -3,6 +3,7 @@ export * from './currency';
 export * from './format';
 export * from './fx';
 export * from './money';
+export * from './nemtag';
 export * from './password';
 export * from './pin';
 export * from './signup';
