@@ -5,6 +5,7 @@ import * as LocalAuthentication from 'expo-local-authentication';
 import { AppState, type AppStateStatus } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ToastProvider } from '@/components';
 import { repositoriesFromDispatcher, RepositoryProvider, type Call } from '@/data';
 import { QueryProvider } from '@/lib/query';
 import { useLockStore, usePreferencesStore, useSessionStore } from '@/stores';
@@ -68,7 +69,9 @@ async function renderLock() {
       <RepositoryProvider repositories={repositories}>
         <QueryProvider client={new QueryClient()}>
           <ThemeProvider>
-            <AppLock />
+            <ToastProvider>
+              <AppLock />
+            </ToastProvider>
           </ThemeProvider>
         </QueryProvider>
       </RepositoryProvider>

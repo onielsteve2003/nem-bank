@@ -6,7 +6,8 @@ import { problem, repositoriesFromDispatcher, RepositoryProvider, type Dispatche
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
-import { formatCountdown, otpErrorMessage, VerifyEmailScreen } from '../screens/VerifyEmailScreen';
+import { formatCountdown, otpErrorMessage } from '../otp';
+import { VerifyEmailScreen } from '../screens/VerifyEmailScreen';
 import { useSignupStore } from '../signupStore';
 
 const mockPush = jest.fn();

@@ -120,6 +120,42 @@ describe('mock repositories', () => {
     expect(await repos.users.verifyPin({ body: { pin: '2580' } })).toMatchObject({ valid: true });
   });
 
+  it('resets the password only for the account email, with a strong password', async () => {
+    const { repos } = setup();
+    const reset = async (email: string, new_password: string) => {
+      const otp = await repos.auth.forgotPassword({ body: { email } });
+      return repos.auth.resetPassword({
+        body: { challenge_id: otp.challenge_id, code: DEMO_OTP, new_password },
+      });
+    };
+    // Unknown emails get the same answer, but their code never resets anyone's password.
+    await expect(reset('stranger@example.com', 'Kitchen-Mango-River-7')).rejects.toMatchObject({
+      problem: { code: 'invalid_otp' },
+    });
+    await expect(reset('tolu.demo@example.com', 'password123')).rejects.toMatchObject({
+      problem: { code: 'weak_password' },
+    });
+    await reset('Tolu.Demo@example.com', 'Kitchen-Mango-River-7');
+    await expect(
+      repos.auth.login({ body: { identifier: 'tolu.demo@example.com', password: 'Demo1234!' } }),
+    ).rejects.toMatchObject({ problem: { code: 'invalid_credentials' } });
+  });
+
+  it('resets the PIN only with a pin_reset step-up, and clears a lockout', async () => {
+    const { repos } = setup();
+    for (let i = 0; i < 5; i++) await repos.users.verifyPin({ body: { pin: '9999' } });
+    expect((await repos.users.verifyPin({ body: { pin: '2580' } })).valid).toBe(false);
+
+    const wrongPurpose = await stepUpToken(repos, 'card_reveal');
+    await expect(
+      repos.users.resetPin({ body: { pin: '4826' }, stepUpToken: wrongPurpose }),
+    ).rejects.toMatchObject({ problem: { status: 403 } });
+
+    const token = await stepUpToken(repos, 'pin_reset');
+    await repos.users.resetPin({ body: { pin: '4826' }, stepUpToken: token });
+    expect((await repos.users.verifyPin({ body: { pin: '4826' } })).valid).toBe(true);
+  });
+
   it('serves the seeded persona with balances that match the ledger', async () => {
     const { repos } = setup();
     expect((await repos.users.getMe()).preferred_name).toBe('Tolu');

@@ -3,9 +3,10 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, Icon, PinPad, Text } from '@/components';
+import { Button, Icon, PinPad, Text, useToast } from '@/components';
 import { isApiError } from '@/data';
 import { DEMO_PIN } from '@/data/mock';
+import { ResetPinFlow } from '@/features/auth/components/ResetPinFlow';
 import { useSignOut } from '@/features/auth/hooks/useSessionActions';
 import { authenticateWithBiometrics, getBiometrics, NO_BIOMETRICS } from '@/lib/biometrics';
 import { getDeviceKeyInfo } from '@/lib/deviceKey';
@@ -30,6 +31,8 @@ export function LockScreen() {
   const verify = useRepoMutation('users', 'verifyPin', { invalidates: [] });
   const [error, setError] = useState<string>();
   const [biometrics, setBiometrics] = useState(NO_BIOMETRICS);
+  const [resetting, setResetting] = useState(false);
+  const toast = useToast();
   const prompted = useRef(false);
   useSecureScreen();
 
@@ -79,6 +82,20 @@ export function LockScreen() {
     return false;
   };
 
+  if (resetting) {
+    return (
+      <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
+        <ResetPinFlow
+          onCancel={() => setResetting(false)}
+          onDone={() => {
+            unlock();
+            toast.show({ message: 'Your new PIN is set.', tone: 'success' });
+          }}
+        />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <View style={[styles.brand, { gap: spacing[1], paddingTop: spacing[6] }]}>
@@ -104,13 +121,18 @@ export function LockScreen() {
           }
         />
       </View>
-      <Button
-        label="Sign out"
-        variant="ghost"
-        size="sm"
-        onPress={() => void signOut()}
-        style={{ alignSelf: 'center', marginBottom: spacing[4] }}
-      />
+      <View style={[styles.links, { gap: spacing[4], marginBottom: spacing[4] }]}>
+        <Button
+          label="Forgot PIN?"
+          variant="ghost"
+          size="sm"
+          onPress={() => {
+            setError(undefined);
+            setResetting(true);
+          }}
+        />
+        <Button label="Sign out" variant="ghost" size="sm" onPress={() => void signOut()} />
+      </View>
     </SafeAreaView>
   );
 }
@@ -120,4 +142,5 @@ const styles = StyleSheet.create({
   brand: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center' },
   brandText: { letterSpacing: 2, textTransform: 'uppercase' },
   pad: { flex: 1, justifyContent: 'center' },
+  links: { flexDirection: 'row', justifyContent: 'center' },
 });

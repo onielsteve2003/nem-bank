@@ -322,15 +322,33 @@ export function authRepo(bank: MockBank): AuthRepo {
     },
     async forgotPassword({ body }) {
       // The same answer for unknown emails, so the form cannot be used to find accounts.
-      return createOtp(bank, 'password_reset', body.email);
+      return createOtp(bank, 'password_reset', body.email.trim().toLowerCase());
     },
     async resetPassword({ body }) {
       const record = checkOtp(bank, body.challenge_id, body.code);
-      if (record.purpose !== 'password_reset')
-        throw problem(422, 'invalid_otp', 'That code is not for this');
+      // An email with no account got a code nobody can read: it never matches.
+      if (
+        record.purpose !== 'password_reset' ||
+        record.destination !== bank.user.email.toLowerCase()
+      ) {
+        throw problem(422, 'invalid_otp', 'That code is not right');
+      }
+      const { first_name, last_name, email, date_of_birth } = bank.user;
+      const strength = checkPassword(body.new_password, {
+        firstName: first_name,
+        lastName: last_name,
+        email,
+        dateOfBirth: date_of_birth,
+      });
+      if (!strength.acceptable) {
+        throw problem(422, 'weak_password', 'Pick a stronger password', {
+          errors: [{ field: '/new_password', code: 'weak', message: strength.problems[0]! }],
+        });
+      }
       bank.world.auth.password = body.new_password;
       delete bank.world.otps[body.challenge_id];
-      bank.world.sessions = bank.world.sessions.filter((s) => s.current);
+      // A new password signs out every session, including any an attacker held.
+      bank.world.sessions = [];
     },
     async startStepUp({ body }) {
       const otp = createOtp(bank, 'step_up', bank.user.email);

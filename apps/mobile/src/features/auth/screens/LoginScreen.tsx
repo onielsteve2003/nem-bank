@@ -1,4 +1,5 @@
 import { zodResolver } from '@hookform/resolvers/zod';
+import { useRouter } from 'expo-router';
 import { Fingerprint, ScanFace } from 'lucide-react-native';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
@@ -27,6 +28,7 @@ const DEMO_EMAIL = 'tolu.demo@example.com';
  */
 export function LoginScreen() {
   const { spacing } = useTheme();
+  const router = useRouter();
   const passwordLogin = usePasswordLogin();
   const quickLogin = useQuickLogin();
   const offer = useQuickLoginOffer();
@@ -174,6 +176,13 @@ export function LoginScreen() {
               onSubmitEditing={() => void submit()}
             />
           )}
+        />
+        <Button
+          label="Forgot password?"
+          variant="ghost"
+          size="sm"
+          onPress={() => router.push('/forgot-password')}
+          style={{ alignSelf: 'flex-start' }}
         />
         {env.apiMode === 'mock' && (
           <Text variant="bodySmall" color="textMuted">

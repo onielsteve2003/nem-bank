@@ -1,51 +1,17 @@
 import { Redirect, useRouter } from 'expo-router';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { View } from 'react-native';
 
 import { Button, OtpInput, PaidFeatureNotice, Screen, Text } from '@/components';
-import { isApiError, type ApiError } from '@/data';
+import { isApiError } from '@/data';
 import { DEMO_OTP } from '@/data/mock';
 import { env } from '@/lib/env';
 import { useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { SignupStepHeader } from '../components/SignupStepHeader';
+import { formatCountdown, otpErrorMessage, useSecondsUntil } from '../otp';
 import { useSignupStore } from '../signupStore';
-
-/** Whole seconds until `iso`, ticking once a second; 0 once it has passed. */
-export function useSecondsUntil(iso: string): number {
-  const [now, setNow] = useState(Date.now);
-  useEffect(() => {
-    const timer = setInterval(() => setNow(Date.now()), 1000);
-    return () => clearInterval(timer);
-  }, []);
-  // Rounded, not ceiled: a fresh 60 s cooldown read a moment late still says 1:00.
-  return Math.max(0, Math.round((Date.parse(iso) - now) / 1000));
-}
-
-export function formatCountdown(seconds: number): string {
-  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
-}
-
-/** What the user is told for a failed check. Attempts come from the challenge (AUTH-2). */
-export function otpErrorMessage(error: ApiError | Error, attemptsLeft: number): string {
-  if (!isApiError(error)) return "We couldn't check the code. Try again.";
-  switch (error.problem.code) {
-    case 'invalid_otp':
-      return attemptsLeft > 0
-        ? `That code is not right. ${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} left.`
-        : 'That code is not right, and that was the last try. Ask for a new code.';
-    case 'otp_expired':
-    case 'not_found':
-      return 'This code has expired. Ask for a new one.';
-    case 'rate_limited':
-      return 'Too many wrong codes. Ask for a new one.';
-    case 'offline':
-      return "You're offline. Reconnect and try again.";
-    default:
-      return "We couldn't check the code. Try again.";
-  }
-}
 
 /** Step 2 of sign-up: the 6-digit email code (AUTH-2). SMS is a paid feature. */
 export function VerifyEmailScreen() {
