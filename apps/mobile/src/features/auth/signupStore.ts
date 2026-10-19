@@ -6,14 +6,26 @@ import { create } from 'zustand';
  * PIN). Held in memory only: personal details never touch disk before the
  * account exists, and an app restart starts sign-up again.
  */
+export interface PendingSignup extends Schema<'SignupStarted'> {
+  request: Schema<'SignupRequest'>;
+  /** Proof the email was verified, sent with the password to finish sign-up. */
+  verificationToken?: string;
+}
+
 interface SignupState {
-  pending: (Schema<'SignupStarted'> & { request: Schema<'SignupRequest'> }) | null;
+  pending: PendingSignup | null;
   start: (started: Schema<'SignupStarted'>, request: Schema<'SignupRequest'>) => void;
+  /** A resent code replaces the challenge (new expiry, cooldown and attempts). */
+  setOtp: (otp: Schema<'OtpChallenge'>) => void;
+  verified: (token: string) => void;
   clear: () => void;
 }
 
 export const useSignupStore = create<SignupState>()((set) => ({
   pending: null,
   start: (started, request) => set({ pending: { ...started, request } }),
+  setOtp: (otp) => set((s) => (s.pending ? { pending: { ...s.pending, otp } } : s)),
+  verified: (verificationToken) =>
+    set((s) => (s.pending ? { pending: { ...s.pending, verificationToken } } : s)),
   clear: () => set({ pending: null }),
 }));

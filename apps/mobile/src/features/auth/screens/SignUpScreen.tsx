@@ -1,14 +1,14 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
 import { Controller, useForm } from 'react-hook-form';
 import { StyleSheet, View } from 'react-native';
 
-import { Button, Checkbox, IconButton, Screen, Text, TextField } from '@/components';
+import { Button, Checkbox, Screen, Text, TextField } from '@/components';
 import { isApiError } from '@/data';
 import { useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
+import { SignupStepHeader } from '../components/SignupStepHeader';
 import {
   EMPTY_SIGNUP_FORM,
   fieldForPointer,
@@ -19,8 +19,6 @@ import {
   type SignupFormValues,
 } from '../signupForm';
 import { useSignupStore } from '../signupStore';
-
-const SIGNUP_STEPS = 4;
 
 /** Step 1 of sign-up: who you are (AUTH-1). The bank emails a code for step 2. */
 export function SignUpScreen() {
@@ -67,21 +65,7 @@ export function SignUpScreen() {
     );
   });
 
-  const header = (
-    <View style={[styles.header, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
-      {router.canGoBack() && (
-        <IconButton
-          icon={ArrowLeft}
-          accessibilityLabel="Back"
-          variant="ghost"
-          onPress={() => router.back()}
-        />
-      )}
-      <Text variant="label" color="textMuted" style={styles.flex}>
-        Step 1 of {SIGNUP_STEPS}
-      </Text>
-    </View>
-  );
+  const header = <SignupStepHeader step={1} />;
 
   const footer = (
     <View style={{ padding: spacing[4], gap: spacing[2] }}>
@@ -235,7 +219,5 @@ export function SignUpScreen() {
 }
 
 const styles = StyleSheet.create({
-  header: { flexDirection: 'row', alignItems: 'center', minHeight: 44 },
-  flex: { flex: 1 },
   start: { alignSelf: 'flex-start' },
 });
