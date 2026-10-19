@@ -12,6 +12,10 @@ jest.mock('@react-native-async-storage/async-storage', () =>
 jest.mock('@react-native-community/netinfo', () =>
   require('@react-native-community/netinfo/jest/netinfo-mock'),
 );
+// expo-crypto's native random source is missing in Jest; Node's CSPRNG stands in.
+jest.mock('expo-crypto', () => ({
+  getRandomBytes: (count) => Uint8Array.from(require('crypto').randomBytes(count)),
+}));
 // SecureStore has no native module in Jest; an in-memory Keychain stands in.
 jest.mock('expo-secure-store', () => {
   const items = new Map();

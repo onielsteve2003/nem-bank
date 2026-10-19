@@ -8,8 +8,8 @@ import { useTheme } from '@/theme';
 /** Details, email code, password, PIN. Biometrics is an optional extra at the end. */
 export const SIGNUP_STEPS = 4;
 
-/** Back button and "Step n of 4" above every sign-up screen. */
-export function SignupStepHeader({ step }: { step: number }) {
+/** Back button and "Step n of 4" above every sign-up screen; no step for the optional extras. */
+export function SignupStepHeader({ step }: { step?: number }) {
   const router = useRouter();
   const { spacing } = useTheme();
   return (
@@ -23,7 +23,7 @@ export function SignupStepHeader({ step }: { step: number }) {
         />
       )}
       <Text variant="label" color="textMuted" style={styles.flex}>
-        Step {step} of {SIGNUP_STEPS}
+        {step ? `Step ${step} of ${SIGNUP_STEPS}` : 'Almost done'}
       </Text>
     </View>
   );

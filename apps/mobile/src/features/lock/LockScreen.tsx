@@ -8,6 +8,7 @@ import { isApiError } from '@/data';
 import { DEMO_PIN } from '@/data/mock';
 import { useSignOut } from '@/features/auth/hooks/useSessionActions';
 import { authenticateWithBiometrics, getBiometrics, NO_BIOMETRICS } from '@/lib/biometrics';
+import { getDeviceKeyInfo } from '@/lib/deviceKey';
 import { useRepoMutation } from '@/lib/query';
 import { useSecureScreen } from '@/lib/screenCapture';
 import { useLockStore, useSessionStore } from '@/stores';
@@ -44,8 +45,10 @@ export function LockScreen() {
 
   useEffect(() => {
     let cancelled = false;
-    void getBiometrics().then((found) => {
+    void Promise.all([getBiometrics(), getDeviceKeyInfo()]).then(([available, key]) => {
       if (cancelled) return;
+      // Turned down at sign-up (AUTH-5): PIN only. No key yet (demo sign-in) keeps the offer.
+      const found = key?.biometric === false ? NO_BIOMETRICS : available;
       setBiometrics(found);
       if (found.available && !prompted.current) {
         prompted.current = true;
