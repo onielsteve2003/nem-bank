@@ -68,7 +68,6 @@ export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] })
           showsHorizontalScrollIndicator={false}
           onScroll={onScroll}
           scrollEventThrottle={32}
-          importantForAccessibility="no-hide-descendants"
         >
           {slides.map((slide) => (
             <View

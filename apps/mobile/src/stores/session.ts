@@ -76,19 +76,20 @@ export const useSessionStore = create<SessionState>()(
       version: 1,
       storage: createJSONStorage(() => secureStorage),
       partialize: (state) => ({ session: state.session }),
-      // A session whose refresh token has expired cannot be revived: start signed out.
-      onRehydrateStorage: () => (state) => {
-        const session = state?.session ?? null;
-        if (session && canRefresh(session)) {
-          useSessionStore.setState({ status: 'signedIn' });
-        } else {
-          // A stored session that lapsed while the app was closed has expired too.
-          useSessionStore.setState({
-            status: 'signedOut',
-            session: null,
-            endedBy: session ? 'expired' : null,
-          });
-        }
+      // Restore runs in `merge`, not onRehydrateStorage: web storage is synchronous, so
+      // hydration happens inside `create()` before `useSessionStore` exists, and a
+      // throwing callback leaves the store never hydrated (a blank app).
+      merge: (persisted, current) => {
+        const session = (persisted as Partial<SessionState> | undefined)?.session ?? null;
+        // A session whose refresh token has expired cannot be revived: start signed out.
+        if (session && canRefresh(session)) return { ...current, status: 'signedIn', session };
+        // A stored session that lapsed while the app was closed has expired too.
+        return {
+          ...current,
+          status: 'signedOut',
+          session: null,
+          endedBy: session ? 'expired' : null,
+        };
       },
     },
   ),
