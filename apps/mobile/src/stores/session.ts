@@ -18,6 +18,10 @@ export interface StoredSession {
   userId: string;
   deviceId: string;
   isDemo: boolean;
+  /** Lower outgoing limits until then: this device signed in for the first time (AUTH-8). */
+  coolOffUntil: string | null;
+  /** Show the "new device signed in" notice once, after a login that bound this device. */
+  newDeviceNotice: boolean;
 }
 
 /** `restoring` until SecureStore has been read on launch. */
@@ -29,15 +33,19 @@ export type SessionEnd = 'signedOut' | 'expired';
 export interface SessionState {
   status: SessionStatus;
   session: StoredSession | null;
-  /** Sign-in and every token refresh (refresh tokens rotate on each use). */
-  setSession: (auth: AuthSession) => void;
+  /**
+   * Sign-in and every token refresh (refresh tokens rotate on each use). `newDevice`
+   * marks a login that bound this device; a refresh keeps the notice as it was.
+   */
+  setSession: (auth: AuthSession, options?: { newDevice?: boolean }) => void;
+  dismissNewDeviceNotice: () => void;
   signOut: () => void;
   /** The refresh token ran out or was revoked: back to sign-in, saying why (T4.6). */
   expire: () => void;
   endedBy: SessionEnd | null;
 }
 
-export function toStoredSession(auth: AuthSession): StoredSession {
+export function toStoredSession(auth: AuthSession, newDeviceNotice = false): StoredSession {
   return {
     accessToken: auth.access_token,
     accessTokenExpiresAt: auth.access_token_expires_at,
@@ -46,6 +54,8 @@ export function toStoredSession(auth: AuthSession): StoredSession {
     userId: auth.user.id,
     deviceId: auth.device.id,
     isDemo: auth.user.is_demo,
+    coolOffUntil: auth.device.cool_off_until ?? null,
+    newDeviceNotice,
   };
 }
 
@@ -63,8 +73,14 @@ export const useSessionStore = create<SessionState>()(
       status: 'restoring',
       session: null,
       endedBy: null,
-      setSession: (auth) =>
-        set({ status: 'signedIn', session: toStoredSession(auth), endedBy: null }),
+      setSession: (auth, options) =>
+        set((s) => ({
+          status: 'signedIn',
+          session: toStoredSession(auth, options?.newDevice ?? s.session?.newDeviceNotice === true),
+          endedBy: null,
+        })),
+      dismissNewDeviceNotice: () =>
+        set((s) => (s.session ? { session: { ...s.session, newDeviceNotice: false } } : s)),
       signOut: () => set({ status: 'signedOut', session: null, endedBy: 'signedOut' }),
       expire: () =>
         set((s) =>

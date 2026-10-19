@@ -9,7 +9,8 @@ import { QueryProvider } from '@/lib/query';
 import { useSessionStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
-import { deviceName, EnableBiometricsScreen } from '../screens/EnableBiometricsScreen';
+import { deviceName } from '../device';
+import { EnableBiometricsScreen } from '../screens/EnableBiometricsScreen';
 import { useSignupStore } from '../signupStore';
 
 jest.mock('expo-router', () => ({

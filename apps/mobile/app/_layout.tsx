@@ -9,6 +9,7 @@ import { ScreenBannerProvider, ToastProvider } from '@/components';
 import { RepositoryProvider, useSimulation } from '@/data';
 import { AppLock } from '@/features/lock/AppLock';
 import { AppErrorBoundary } from '@/features/shell/CrashScreen';
+import { CoolOffBanner } from '@/features/auth/components/CoolOffBanner';
 import { OfflineBanner } from '@/features/shell/OfflineBanner';
 import { PhoneFrame } from '@/features/shell/PhoneFrame';
 import { RootNavigator } from '@/features/shell/RootNavigator';
@@ -63,7 +64,12 @@ export default function RootLayout() {
   );
 }
 
-const offlineBanner = <OfflineBanner />;
+const offlineBanner = (
+  <>
+    <OfflineBanner />
+    <CoolOffBanner />
+  </>
+);
 
 /** Session expiry, and the cache wipe on sign-out (T4.6). */
 function SessionWatcher() {

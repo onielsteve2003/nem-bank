@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 
+import { NewDeviceNotice } from '@/features/auth/components/NewDeviceNotice';
 import { RouteErrorBoundary } from '@/features/shell/RouteErrorBoundary';
 import { useTheme } from '@/theme';
 
@@ -17,17 +18,20 @@ export const unstable_settings = { initialRouteName: '(tabs)' };
 export default function AppLayout() {
   const { colors } = useTheme();
   return (
-    <Stack
-      screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
-    >
-      <Stack.Screen name="(tabs)" />
-      <Stack.Screen name="send" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="demo-controls" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="pay/[slug]" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="ajo/[code]" options={{ presentation: 'modal' }} />
-      <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
-    </Stack>
+    <>
+      <Stack
+        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
+      >
+        <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="send" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="demo-controls" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="pay/[slug]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="ajo/[code]" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
+      </Stack>
+      <NewDeviceNotice />
+    </>
   );
 }

@@ -1,5 +1,3 @@
-import type { Schema } from '@nem/contracts';
-import Constants from 'expo-constants';
 import { Redirect } from 'expo-router';
 import { Fingerprint, KeyRound, ScanFace, ShieldCheck, type LucideIcon } from 'lucide-react-native';
 import { useEffect, useState } from 'react';
@@ -19,17 +17,8 @@ import { useSessionStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { SignupStepHeader } from '../components/SignupStepHeader';
+import { deviceRegistration } from '../device';
 import { useSignupStore } from '../signupStore';
-
-/** What the bank shows in the devices list, e.g. "Ada's iPhone". */
-export function deviceName(firstName: string): string {
-  const kind = Platform.OS === 'ios' ? 'iPhone' : Platform.OS === 'android' ? 'phone' : 'browser';
-  return `${firstName}'s ${kind}`.slice(0, 60);
-}
-
-function platform(): Schema<'DeviceRegistration'>['platform'] {
-  return Platform.OS === 'ios' || Platform.OS === 'android' ? Platform.OS : 'web';
-}
 
 function finishErrorMessage(error: unknown): string {
   if (!isApiError(error)) return "We couldn't set up this device. Try again.";
@@ -91,13 +80,7 @@ export function EnableBiometricsScreen() {
           verification_token: signup.verificationToken!,
           password: signup.password!,
           pin: signup.pin,
-          device: {
-            name: deviceName(signup.request.first_name),
-            platform: platform(),
-            public_key: key.publicKey,
-            app_version: Constants.expoConfig?.version,
-            hardware_backed: key.hardwareBacked,
-          },
+          device: deviceRegistration(key, signup.request.first_name),
         },
       });
       await setDeviceId(session.device.id);

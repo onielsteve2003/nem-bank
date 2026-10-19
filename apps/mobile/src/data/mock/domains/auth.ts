@@ -78,22 +78,31 @@ function currentDevice(bank: MockBank) {
   return bank.world.devices.find((d) => d.id === bank.world.currentDeviceId)!;
 }
 
-function bindNewDevice(bank: MockBank, registration: Schema<'DeviceRegistration'>) {
+/**
+ * Binds a device's public key. A login on a new device starts the cool-off and
+ * alerts the others (AUTH-8); the first device, at sign-up, has nothing to alert.
+ */
+function bindNewDevice(
+  bank: MockBank,
+  registration: Schema<'DeviceRegistration'>,
+  { coolOff = true }: { coolOff?: boolean } = {},
+) {
   const now = bank.now();
   const device: Schema<'Device'> = {
     id: bank.id(),
     name: registration.name,
     platform: registration.platform,
     current: false,
-    trusted: false,
+    trusted: !coolOff,
     hardware_backed: registration.hardware_backed ?? false,
     key_fingerprint: `SHA256:${registration.public_key.slice(0, 12)}`,
     bound_at: now.toISOString(),
     last_seen_at: now.toISOString(),
-    cool_off_until: addMinutes(now, NEW_DEVICE_COOL_OFF_HOURS * 60).toISOString(),
+    cool_off_until: coolOff ? addMinutes(now, NEW_DEVICE_COOL_OFF_HOURS * 60).toISOString() : null,
     location_hint: 'Lagos, NG',
   };
   bank.world.devices.push(device);
+  if (!coolOff) return device;
   bank.notify({
     category: 'security',
     title: 'New device signed in',
@@ -228,7 +237,7 @@ export function authRepo(bank: MockBank): AuthRepo {
         Object.assign(bank.world.auth, { pin: body.pin, pinFailures: 0, pinLockedUntil: null });
       }
       delete bank.world.otps[body.signup_id];
-      return session(bank, bindNewDevice(bank, body.device).id);
+      return session(bank, bindNewDevice(bank, body.device, { coolOff: false }).id);
     },
     async verifyOtp({ body }) {
       const record = checkOtp(bank, body.challenge_id, body.code);
