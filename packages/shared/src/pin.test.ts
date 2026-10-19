@@ -1,4 +1,4 @@
-import { isWeakPin, pinSchema } from './pin';
+import { isDateOfBirthPin, isWeakPin, pinSchema } from './pin';
 
 describe('isWeakPin', () => {
   it.each(['1111', '000000', '1234', '4321', '123456', '987654'])('rejects %s', (pin) => {
@@ -7,6 +7,21 @@ describe('isWeakPin', () => {
 
   it.each(['2580', '1357', '9021', '481516'])('accepts %s', (pin) => {
     expect(isWeakPin(pin)).toBe(false);
+  });
+});
+
+describe('date-of-birth PINs', () => {
+  it.each(['1994', '0503', '0305', '0394', '050394', '030594', '940305'])(
+    'rejects %s for 1994-03-05',
+    (pin) => {
+      expect(isDateOfBirthPin(pin, '1994-03-05')).toBe(true);
+      expect(isWeakPin(pin, '1994-03-05')).toBe(true);
+    },
+  );
+
+  it('allows other PINs and ignores the date when it is unknown', () => {
+    expect(isWeakPin('2580', '1994-03-05')).toBe(false);
+    expect(isWeakPin('0503')).toBe(false);
   });
 });
 

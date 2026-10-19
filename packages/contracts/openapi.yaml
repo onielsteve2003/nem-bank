@@ -6287,6 +6287,11 @@ components:
           type: string
         password:
           $ref: '#/components/schemas/Password'
+        pin:
+          $ref: '#/components/schemas/Pin'
+          description: >-
+            The transaction PIN chosen during sign-up (AUTH-4), set in the same step so no
+            account exists without one. Weak and date-of-birth PINs are refused (422 weak_pin).
         device:
           $ref: '#/components/schemas/DeviceRegistration'
     AuthSession:

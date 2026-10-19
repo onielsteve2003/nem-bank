@@ -85,6 +85,41 @@ describe('mock repositories', () => {
     expect(isApiError(taken, 'email_taken') && taken.status).toBe(409);
   });
 
+  it('finishes sign-up with a strong password and PIN, refusing birthday PINs', async () => {
+    const { repos } = setup();
+    const started = await repos.auth.startSignup({
+      body: {
+        first_name: 'Ada',
+        last_name: 'Obi',
+        email: 'ada@example.com',
+        phone: '+2348031234567',
+        date_of_birth: '1994-03-05',
+        consent: {
+          terms_version: '2026-10',
+          privacy_version: '2026-10',
+          accepted_at: START.toISOString(),
+        },
+      },
+    });
+    const { verification_token } = await repos.auth.verifyOtp({
+      body: { challenge_id: started.otp.challenge_id, code: '123456' },
+    });
+    const device = { name: "Ada's iPhone", platform: 'ios' as const, public_key: 'A'.repeat(43) };
+    const finish = (password: string, pin: string) =>
+      repos.auth
+        .completeSignup({
+          body: { signup_id: started.signup_id, verification_token, password, pin, device },
+        })
+        .catch((e: unknown) => e);
+
+    expect(isApiError(await finish('Password2026!', '2580'), 'weak_password')).toBe(true);
+    expect(isApiError(await finish('Kitchen-Mango-River-7', '0503'), 'weak_pin')).toBe(true);
+
+    const session = await finish('Kitchen-Mango-River-7', '2580');
+    expect(session).toMatchObject({ user: { first_name: 'Ada', has_pin: true } });
+    expect(await repos.users.verifyPin({ body: { pin: '2580' } })).toMatchObject({ valid: true });
+  });
+
   it('serves the seeded persona with balances that match the ledger', async () => {
     const { repos } = setup();
     expect((await repos.users.getMe()).preferred_name).toBe('Tolu');

@@ -322,7 +322,7 @@ export function securityRepo(bank: MockBank): SecurityRepo {
     },
     async setDuressPin({ body, stepUpToken }) {
       bank.consumeStepUp(stepUpToken, 'pin_reset');
-      assertStrongPin(body.pin);
+      assertStrongPin(body.pin, bank.user.date_of_birth);
       if (body.pin === bank.world.auth.pin) {
         throw problem(422, 'validation_failed', 'Your duress PIN must be different from your PIN');
       }

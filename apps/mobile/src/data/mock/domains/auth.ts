@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { isWeakPin, signupRequestSchema } from '@nem/shared';
+import { checkPassword, isWeakPin, signupRequestSchema } from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { AuthRepo, DevicesRepo, UsersRepo } from '../../repositories';
@@ -154,9 +154,13 @@ export function checkPin(bank: MockBank, pin: string): Schema<'PinVerification'>
   return { valid: false, attempts_remaining: PIN_ATTEMPTS - auth.pinFailures, locked_until: null };
 }
 
-export function assertStrongPin(pin: string) {
+export function assertStrongPin(pin: string, dateOfBirth?: string) {
   if (!/^(\d{4}|\d{6})$/.test(pin)) throw problem(422, 'validation_failed', 'Use 4 or 6 digits');
-  if (isWeakPin(pin)) throw problem(422, 'weak_pin', 'Pick a PIN that is harder to guess');
+  if (isWeakPin(pin, dateOfBirth)) {
+    throw problem(422, 'weak_pin', 'Pick a PIN that is harder to guess', {
+      errors: [{ field: '/pin', code: 'weak', message: 'Pick a PIN that is harder to guess' }],
+    });
+  }
 }
 
 export function authRepo(bank: MockBank): AuthRepo {
@@ -196,8 +200,20 @@ export function authRepo(bank: MockBank): AuthRepo {
       ) {
         throw problem(403, 'invalid_otp', 'Verify your email first');
       }
-      // The offline demo has one seeded customer: a new signup takes over the persona.
       const { first_name, last_name, email, phone, date_of_birth } = record.signup;
+      const strength = checkPassword(body.password, {
+        firstName: first_name,
+        lastName: last_name,
+        email,
+        dateOfBirth: date_of_birth,
+      });
+      if (!strength.acceptable) {
+        throw problem(422, 'weak_password', 'Pick a stronger password', {
+          errors: [{ field: '/password', code: 'weak', message: strength.problems[0]! }],
+        });
+      }
+      if (body.pin !== undefined) assertStrongPin(body.pin, date_of_birth);
+      // The offline demo has one seeded customer: a new signup takes over the persona.
       Object.assign(bank.user, {
         first_name,
         last_name,
@@ -205,8 +221,12 @@ export function authRepo(bank: MockBank): AuthRepo {
         phone,
         date_of_birth,
         preferred_name: null,
+        has_pin: body.pin !== undefined,
       });
       bank.world.auth.password = body.password;
+      if (body.pin !== undefined) {
+        Object.assign(bank.world.auth, { pin: body.pin, pinFailures: 0, pinLockedUntil: null });
+      }
       delete bank.world.otps[body.signup_id];
       return session(bank, bindNewDevice(bank, body.device).id);
     },
@@ -398,7 +418,7 @@ export function usersRepo(bank: MockBank): UsersRepo {
     async setPin({ body }) {
       if (bank.user.has_pin)
         throw problem(409, 'pin_exists', 'Change your PIN from Security instead');
-      assertStrongPin(body.pin);
+      assertStrongPin(body.pin, bank.user.date_of_birth);
       bank.world.auth.pin = body.pin;
       bank.user.has_pin = true;
     },
@@ -407,7 +427,7 @@ export function usersRepo(bank: MockBank): UsersRepo {
     },
     async resetPin({ body, stepUpToken }) {
       bank.consumeStepUp(stepUpToken, 'pin_reset');
-      assertStrongPin(body.pin);
+      assertStrongPin(body.pin, bank.user.date_of_birth);
       if (body.pin === bank.world.auth.duressPin) {
         throw problem(422, 'validation_failed', 'Your PIN and duress PIN must be different');
       }

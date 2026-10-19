@@ -4467,6 +4467,8 @@ export interface components {
       signup_id: components['schemas']['Uuid'];
       verification_token: string;
       password: components['schemas']['Password'];
+      /** @description The transaction PIN chosen during sign-up (AUTH-4), set in the same step so no account exists without one. Weak and date-of-birth PINs are refused (422 weak_pin). */
+      pin?: components['schemas']['Pin'];
       device: components['schemas']['DeviceRegistration'];
     };
     AuthSession: {

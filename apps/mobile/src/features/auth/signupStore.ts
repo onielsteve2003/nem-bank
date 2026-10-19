@@ -10,6 +10,9 @@ export interface PendingSignup extends Schema<'SignupStarted'> {
   request: Schema<'SignupRequest'>;
   /** Proof the email was verified, sent with the password to finish sign-up. */
   verificationToken?: string;
+  /** Chosen in steps 3 and 4 and sent together, so no account exists without a PIN. */
+  password?: string;
+  pin?: string;
 }
 
 interface SignupState {
@@ -18,6 +21,8 @@ interface SignupState {
   /** A resent code replaces the challenge (new expiry, cooldown and attempts). */
   setOtp: (otp: Schema<'OtpChallenge'>) => void;
   verified: (token: string) => void;
+  setPassword: (password: string) => void;
+  setPin: (pin: string) => void;
   clear: () => void;
 }
 
@@ -27,5 +32,7 @@ export const useSignupStore = create<SignupState>()((set) => ({
   setOtp: (otp) => set((s) => (s.pending ? { pending: { ...s.pending, otp } } : s)),
   verified: (verificationToken) =>
     set((s) => (s.pending ? { pending: { ...s.pending, verificationToken } } : s)),
+  setPassword: (password) => set((s) => (s.pending ? { pending: { ...s.pending, password } } : s)),
+  setPin: (pin) => set((s) => (s.pending ? { pending: { ...s.pending, pin } } : s)),
   clear: () => set({ pending: null }),
 }));
