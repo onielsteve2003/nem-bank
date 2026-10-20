@@ -158,7 +158,11 @@ export function HomeScreen() {
           recent.data.data.length > 0 ? (
             <View style={{ paddingHorizontal: spacing[2] }}>
               {recent.data.data.slice(0, RECENT_COUNT).map((t) => (
-                <TransactionRow key={t.id} transaction={t} />
+                <TransactionRow
+                  key={t.id}
+                  transaction={t}
+                  onPress={() => router.push(`/transactions/${t.id}`)}
+                />
               ))}
             </View>
           ) : (

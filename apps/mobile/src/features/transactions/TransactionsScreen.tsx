@@ -151,7 +151,11 @@ export function TransactionsScreen() {
       </View>
     ) : (
       <View style={{ paddingHorizontal: spacing[2] }}>
-        <TransactionRow transaction={item.transaction} timeOnly />
+        <TransactionRow
+          transaction={item.transaction}
+          timeOnly
+          onPress={() => router.push(`/transactions/${item.transaction.id}`)}
+        />
       </View>
     );
 
