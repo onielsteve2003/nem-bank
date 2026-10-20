@@ -1,5 +1,12 @@
 import { useRouter } from 'expo-router';
-import { BadgeCheck, CircleUser, LayoutGrid, LogOut, SlidersHorizontal } from 'lucide-react-native';
+import {
+  BadgeCheck,
+  CircleUser,
+  FileText,
+  LayoutGrid,
+  LogOut,
+  SlidersHorizontal,
+} from 'lucide-react-native';
 
 import { Card, ListItem } from '@/components';
 import { useSignOut } from '@/features/auth/hooks/useSessionActions';
@@ -21,6 +28,12 @@ export default function MeRoute() {
           subtitle="Raise your limits"
           leading={BadgeCheck}
           onPress={() => router.push('/kyc')}
+        />
+        <ListItem
+          title="Statements"
+          subtitle="Official PDFs with a verification code"
+          leading={FileText}
+          onPress={() => router.push('/statements')}
         />
         <ListItem
           title="Demo Controls"

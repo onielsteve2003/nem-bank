@@ -7,4 +7,5 @@ export * from './nemtag';
 export * from './password';
 export * from './pin';
 export * from './signup';
+export * from './statement';
 export * from './tokens';

@@ -1,5 +1,13 @@
 import type { Schema } from '@nem/contracts';
-import { formatMoney, money, sum, toMajorString, zero } from '@nem/shared';
+import {
+  formatMoney,
+  lagosToday,
+  money,
+  statementRangeError,
+  sum,
+  toMajorString,
+  zero,
+} from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { AccountsRepo, StatementsRepo, TransactionsRepo } from '../../repositories';
@@ -233,11 +241,8 @@ export function statementsRepo(bank: MockBank): StatementsRepo {
     },
     async request({ body }) {
       const account = bank.ownAccount(body.account_id);
-      if (body.from > body.to)
-        throw problem(422, 'validation_failed', 'The start date is after the end date');
-      if (body.to > bank.nowIso().slice(0, 10)) {
-        throw problem(422, 'validation_failed', 'Statements cannot cover future dates');
-      }
+      const invalid = statementRangeError(body.from, body.to, lagosToday(bank.now()));
+      if (invalid) throw problem(422, 'validation_failed', invalid);
       const statement: Schema<'Statement'> = {
         id: bank.id(),
         account_id: account.id,

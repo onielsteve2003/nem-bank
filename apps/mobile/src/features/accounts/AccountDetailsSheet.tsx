@@ -1,7 +1,8 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
-import { Copy, Share2, TriangleAlert } from 'lucide-react-native';
+import { useRouter } from 'expo-router';
+import { Copy, FileText, Share2, TriangleAlert } from 'lucide-react-native';
 import { Share, StyleSheet, View } from 'react-native';
 
 import { Badge, BottomSheet, Button, Icon, IconButton, Text, useToast } from '@/components';
@@ -28,6 +29,7 @@ export function AccountDetailsSheet({
 }) {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const router = useRouter();
   const details = account?.receiving_details;
   const currency = account ? CURRENCIES[account.currency] : null;
 
@@ -120,6 +122,16 @@ export function AccountDetailsSheet({
 
           <View style={{ gap: spacing[2] }}>
             <Button label="Share details" icon={Share2} fullWidth onPress={() => void share()} />
+            <Button
+              label="Get a statement"
+              icon={FileText}
+              variant="ghost"
+              fullWidth
+              onPress={() => {
+                onClose();
+                router.push({ pathname: '/statements', params: { account: account!.id } });
+              }}
+            />
             {onAddDemoMoney && (
               <Button
                 label="Add demo money now"
