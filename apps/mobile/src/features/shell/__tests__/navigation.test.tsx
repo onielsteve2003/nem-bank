@@ -227,7 +227,10 @@ describe('navigation structure', () => {
     const router = await open('/home');
     await fireEvent.press(screen.getByRole('button', { name: 'Send' }));
     expect(router.pathname()).toBe('/send');
-    await fireEvent.press(await screen.findByRole('button', { name: 'Close' }));
+    // The bottom-sheet mock renders the closed "Send abroad" sheet inline, so the
+    // header's Close is the first of two.
+    const [close] = await screen.findAllByRole('button', { name: 'Close' });
+    await fireEvent.press(close!);
     expect(router.pathname()).toBe('/home');
   });
 
