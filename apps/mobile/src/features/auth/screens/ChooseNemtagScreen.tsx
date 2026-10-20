@@ -1,11 +1,12 @@
 import { NEMTAG_MAX_LENGTH, nemtagIdeas, nemtagProblem, normalizeNemtag } from '@nem/shared';
 import { AtSign, Check, X } from 'lucide-react-native';
-import { useEffect, useState } from 'react';
+import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { Button, Icon, Screen, Text, TextField } from '@/components';
 import { isApiError } from '@/data';
 import { queryKeys, useRepoMutation, useRepoQuery } from '@/lib/query';
+import { useDebounced } from '@/lib/useDebounced';
 import { useSessionStore } from '@/stores';
 import { useTheme } from '@/theme';
 
@@ -14,15 +15,6 @@ import { useSignOut } from '../hooks/useSessionActions';
 
 /** Waits for typing to pause, so the bank is asked once per pause, not per key. */
 export const NEMTAG_CHECK_DELAY_MS = 400;
-
-function useDebounced<T>(value: T, delay: number): T {
-  const [settled, setSettled] = useState(value);
-  useEffect(() => {
-    const timer = setTimeout(() => setSettled(value), delay);
-    return () => clearTimeout(timer);
-  }, [value, delay]);
-  return settled;
-}
 
 /**
  * The last onboarding step (AUTH-10): a unique @nemtag friends can pay instead
