@@ -9,6 +9,7 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
+import { AmountScreen } from '../screens/AmountScreen';
 import { RecipientScreen } from '../screens/RecipientScreen';
 import { SendHubScreen } from '../screens/SendHubScreen';
 import { destinationOf, useSendDraft } from '../sendDraft';
@@ -140,5 +141,52 @@ describe('recipient', () => {
 
     await fireEvent.press(screen.getByRole('checkbox', { name: /I have checked/ }));
     await waitFor(() => expect(continueButton()).toBeEnabled());
+  });
+});
+
+describe('amount', () => {
+  const chidi = {
+    kind: 'bank' as const,
+    name: 'Chidi Okonkwo',
+    nemtag: null,
+    bankCode: '058',
+    bankName: 'Guaranty Trust Bank',
+    accountNumber: '0123456789',
+    beneficiaryId: null,
+    nameMatch: null,
+  };
+  const type = async (digits: string) => {
+    for (const d of digits) await fireEvent.press(screen.getByRole('button', { name: d }));
+  };
+
+  it('prices the amount, then saves it with the note for review', async () => {
+    useSendDraft.getState().setRecipient(chidi);
+    await render(wrap(bank(), <AmountScreen />));
+    await screen.findByLabelText(/^Available/);
+    await type('6000');
+    expect(await screen.findByLabelText('Fee, ₦25.00')).toBeTruthy();
+    expect(screen.getByLabelText('Total, ₦6,025.00')).toBeTruthy();
+    expect(screen.getByText(/Left to send today \(Tier/)).toBeTruthy();
+
+    await fireEvent.changeText(screen.getByLabelText(/What's it for/), 'Rent ');
+    const review = screen.getByRole('button', { name: 'Review' });
+    await waitFor(() => expect(review).toBeEnabled());
+    await fireEvent.press(review);
+    expect(mockPush).toHaveBeenCalledWith('/send/review');
+    expect(useSendDraft.getState()).toMatchObject({ amount: '6000', narration: 'Rent' });
+  });
+
+  it('stops an amount above the balance', async () => {
+    useSendDraft.getState().setRecipient(chidi);
+    await render(wrap(bank(), <AmountScreen />));
+    await screen.findByLabelText(/^Available/);
+    await type('900000000');
+    expect(await screen.findByText(/More than your available/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Review' })).toBeDisabled();
+  });
+
+  it('sends the customer back to pick someone when there is no recipient', async () => {
+    await render(wrap(bank(), <AmountScreen />));
+    expect(screen.getByText('Choose who to pay first')).toBeTruthy();
   });
 });
