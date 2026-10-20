@@ -20,6 +20,7 @@ import {
   Skeleton,
   SkeletonGroup,
   StatusPill,
+  StatusTimeline,
   Text,
   useToast,
 } from '@/components';
@@ -63,13 +64,6 @@ export function totalFees(detail: Pick<Detail, 'fees' | 'amount'>): Money {
     zero(detail.amount.currency),
   );
 }
-
-const STEP_TONE = (status: string) =>
-  status === 'failed'
-    ? 'danger'
-    : status === 'completed' || status === 'settled'
-      ? 'success'
-      : 'primaryText';
 
 function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: () => void }) {
   const { spacing } = useTheme();
@@ -209,30 +203,8 @@ export function TransactionDetailScreen() {
         <Text variant="label" color="textMuted" accessibilityRole="header">
           Status
         </Text>
-        <View accessibilityRole="list" style={{ marginTop: spacing[3] }}>
-          {t.timeline.map((step, i) => {
-            const last = i === t.timeline.length - 1;
-            return (
-              <View
-                key={`${step.status}-${step.at}`}
-                style={[styles.row, styles.step]}
-                accessible
-                accessibilityLabel={`${step.label}, ${formatDateTime(step.at)}${step.detail ? `. ${step.detail}` : ''}`}
-              >
-                <View style={styles.rail}>
-                  <View style={[styles.dot, { backgroundColor: colors[STEP_TONE(step.status)] }]} />
-                  {!last && <View style={[styles.line, { backgroundColor: colors.border }]} />}
-                </View>
-                <View style={[styles.flex, { paddingBottom: last ? 0 : spacing[4] }]}>
-                  <Text variant="bodyStrong">{step.label}</Text>
-                  <Text variant="caption" color="textMuted">
-                    {formatDateTime(step.at)}
-                  </Text>
-                  {step.detail && <Text variant="caption">{step.detail}</Text>}
-                </View>
-              </View>
-            );
-          })}
+        <View style={{ marginTop: spacing[3] }}>
+          <StatusTimeline steps={t.timeline} formatAt={formatDateTime} />
         </View>
       </Card>
 
@@ -348,14 +320,10 @@ export function TransactionDetailScreen() {
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },
-  step: { alignItems: 'stretch' },
   label: { width: 112 },
   value: { flex: 1, textAlign: 'right' },
   flex: { flex: 1 },
   center: { alignItems: 'center' },
   centerText: { textAlign: 'center' },
   badge: { width: 56, height: 56, alignItems: 'center', justifyContent: 'center' },
-  rail: { width: 24, alignItems: 'center' },
-  dot: { width: 12, height: 12, borderRadius: 6, marginTop: 4 },
-  line: { width: 2, flex: 1, marginTop: 2 },
 });

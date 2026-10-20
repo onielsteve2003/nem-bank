@@ -298,6 +298,7 @@ describe('mock repositories', () => {
     const failed = await repos.transfers.get({ path: { transfer_id: failing.id } });
     expect(failed.status).toBe('failed');
     expect(failed.timeline.map((e) => e.status)).toContain('reversed');
+    expect(failed.reversal?.reason).toMatch(/did not respond/);
     expect(await available(repos)).toBe(before - 2_002_500n);
     const txn = (await repos.transactions.list({ query: { limit: 1 } })).data[0]!;
     expect(txn.status).toBe('failed');

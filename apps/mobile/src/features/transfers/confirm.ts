@@ -10,10 +10,18 @@ type Transfer = Schema<'Transfer'>;
  * it through, asks them to prove it is them, delays it (new beneficiary) or holds
  * it for a person to check.
  */
-export type Outcome = 'sent' | 'processing' | 'step_up' | 'delayed' | 'held' | 'stopped';
+export type Outcome =
+  'sent' | 'processing' | 'step_up' | 'delayed' | 'held' | 'reversed' | 'stopped';
 
-export function outcomeOf(status: Schema<'TransferStatus'>): Outcome {
-  switch (status) {
+/** A failed transfer whose money has come back (TRF-7), whichever way the bank says it. */
+export const wasReversed = (t: Pick<Transfer, 'status' | 'reversal' | 'timeline'>) =>
+  t.status === 'reversed' ||
+  t.reversal != null ||
+  (t.status === 'failed' && t.timeline.some((e) => e.status === 'reversed'));
+
+export function outcomeOf(transfer: Pick<Transfer, 'status' | 'reversal' | 'timeline'>): Outcome {
+  if (wasReversed(transfer)) return 'reversed';
+  switch (transfer.status) {
     case 'completed':
       return 'sent';
     case 'pending_step_up':
@@ -23,7 +31,6 @@ export function outcomeOf(status: Schema<'TransferStatus'>): Outcome {
     case 'held_for_review':
       return 'held';
     case 'failed':
-    case 'reversed':
     case 'rejected':
     case 'cancelled':
       return 'stopped';
@@ -33,6 +40,10 @@ export function outcomeOf(status: Schema<'TransferStatus'>): Outcome {
 }
 
 /** Only waiting transfers can be called back; the hold is released (contract). */
+/** Still moving: the screen keeps listening until one of the end states. */
+export const isSettling = (status: Schema<'TransferStatus'>) =>
+  status === 'created' || status === 'risk_checked' || status === 'processing';
+
 export const canCancel = (status: Schema<'TransferStatus'>) =>
   status === 'pending_step_up' || status === 'delayed' || status === 'held_for_review';
 

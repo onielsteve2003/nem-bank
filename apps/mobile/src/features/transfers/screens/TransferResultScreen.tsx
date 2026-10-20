@@ -7,13 +7,15 @@ import {
   Send,
   ShieldAlert,
   ShieldQuestion,
+  Undo2,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
   Button,
+  Card,
   ErrorState,
   Icon,
   MoneyText,
@@ -21,15 +23,25 @@ import {
   Screen,
   Skeleton,
   SkeletonGroup,
+  StatusTimeline,
   Text,
   type TextColor,
 } from '@/components';
+import { formatDateTime } from '@/features/transactions/format';
+import { haptic } from '@/lib/haptics';
 import { fromApiMoney } from '@/lib/money';
 import { useMoneyMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { StepUpSheet } from '../components/StepUpSheet';
-import { canCancel, outcomeOf, riskReasonsOf, sendErrorMessage, type Outcome } from '../confirm';
+import {
+  canCancel,
+  isSettling,
+  outcomeOf,
+  riskReasonsOf,
+  sendErrorMessage,
+  type Outcome,
+} from '../confirm';
 
 type Transfer = Schema<'Transfer'>;
 
@@ -74,6 +86,17 @@ const HEADLINE: Record<
     message: () =>
       'A person at Nem checks it first. The money is put aside, not sent, and we tell you as soon as it is decided.',
   },
+  reversed: {
+    icon: Undo2,
+    color: 'info',
+    title: 'Money returned',
+    message: (t) =>
+      `${t.recipient.bank_name} did not accept it, so we sent ${
+        t.recipient.name.split(' ')[0]
+      }'s payment back to your balance${
+        t.reversal ? ` at ${timeOf(t.reversal.reversed_at)}` : ''
+      }. You were not charged.`,
+  },
   stopped: {
     icon: CircleX,
     color: 'danger',
@@ -85,9 +108,23 @@ const HEADLINE: Record<
   },
 };
 
+/** Fallback for transports without realtime: poll fast while it moves, slowly while it waits. */
+const POLL_MOVING_MS = 2_000;
+const POLL_WAITING_MS = 15_000;
+
+/** The step the customer is waiting for, while the transfer is still moving. */
+function nextStep(t: Transfer): string | undefined {
+  if (!isSettling(t.status)) return undefined;
+  return t.rail === 'internal'
+    ? `Credited to ${t.recipient.name}`
+    : `Received by ${t.recipient.bank_name}`;
+}
+
 /**
- * What happened after confirming (TRF-6): sent, on its way, or waiting with the
- * bank's plain-language reasons and what the customer can do about it.
+ * What happened after confirming (TRF-6, TRF-7): sent, on its way, waiting with
+ * the bank's plain-language reasons, or returned. The status timeline updates
+ * live (`transfer.updated` events, polling as the fallback); a failed transfer
+ * to another bank is reversed automatically and shown as money returned.
  */
 export function TransferResultScreen() {
   const router = useRouter();
@@ -95,7 +132,29 @@ export function TransferResultScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [checking, setChecking] = useState(false);
   const [cancelError, setCancelError] = useState<string>();
-  const transfer = useRepoQuery('transfers', 'get', { path: { transfer_id: id } });
+  const transfer = useRepoQuery(
+    'transfers',
+    'get',
+    { path: { transfer_id: id } },
+    {
+      refetchInterval: (query) => {
+        const status = query.state.data?.status;
+        if (!status) return false;
+        if (isSettling(status)) return POLL_MOVING_MS;
+        return canCancel(status) ? POLL_WAITING_MS : false;
+      },
+    },
+  );
+  const status = transfer.data?.status;
+  const seen = useRef(status);
+  // Feel the moment it lands (or comes back), not just the first render.
+  useEffect(() => {
+    const before = seen.current;
+    seen.current = status;
+    if (!before || before === status || !status) return;
+    if (status === 'completed') haptic('success');
+    else if (status === 'failed' || status === 'reversed') haptic('warning');
+  }, [status]);
   const cancel = useMoneyMutation('transfers', 'cancel');
 
   const done = () => router.dismissTo('/');
@@ -117,7 +176,7 @@ export function TransferResultScreen() {
   }
 
   const t = transfer.data;
-  const outcome = outcomeOf(t.status);
+  const outcome = outcomeOf(t);
   const head = HEADLINE[outcome];
   const reasons = riskReasonsOf(t);
   const waiting = outcome === 'step_up' || outcome === 'delayed';
@@ -169,6 +228,15 @@ export function TransferResultScreen() {
         </Text>
         <Text style={styles.text}>{head.message(t)}</Text>
       </View>
+
+      <Card>
+        <Text variant="label" color="textMuted" accessibilityRole="header">
+          Status
+        </Text>
+        <View style={{ marginTop: spacing[3] }}>
+          <StatusTimeline steps={t.timeline} formatAt={formatDateTime} next={nextStep(t)} />
+        </View>
+      </Card>
 
       {reasons.length > 0 && outcome !== 'sent' && outcome !== 'processing' && (
         <RiskReasonList

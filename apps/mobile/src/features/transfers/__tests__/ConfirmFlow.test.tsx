@@ -38,8 +38,13 @@ jest.mock('expo-local-authentication', () => ({
 
 configure({ defaultIncludeHiddenElements: true });
 
+let now = new Date('2026-10-20T09:00:00Z');
 const bank = () =>
-  createMockRepositories({ store: createMemoryStore(), simulation: { latency: 'off' } });
+  createMockRepositories({
+    store: createMemoryStore(),
+    clock: () => now,
+    simulation: { latency: 'off' },
+  });
 
 const wrap = (repos: Repositories, ui: React.ReactElement) => (
   <SafeAreaProvider
@@ -91,7 +96,26 @@ async function confirmWithPin(pin = DEMO_PIN) {
 
 const resultId = () => mockReplace.mock.calls.at(-1)![0].params.id as string;
 
+/** Sends ₦20,000 to the seeded friend at another bank: it goes through the partner saga. */
+async function sendToOtherBank(repos: Repositories) {
+  const { data: accounts } = await repos.accounts.list();
+  const { data: beneficiaries } = await repos.beneficiaries.list();
+  return repos.transfers.create({
+    idempotencyKey: `ext-${Math.random()}`,
+    body: {
+      source_account_id: accounts.find((a) => a.currency === 'NGN')!.id,
+      destination: {
+        kind: 'beneficiary',
+        beneficiary_id: beneficiaries.find((b) => b.kind === 'bank')!.id,
+      },
+      amount: toApiMoney(parseMajor('20000', 'NGN')),
+      save_beneficiary: false,
+    },
+  });
+}
+
 beforeEach(() => {
+  now = new Date('2026-10-20T09:00:00Z');
   mockReplace.mockClear();
   mockParams = {};
   useSendDraft.getState().clear();
@@ -150,14 +174,40 @@ describe('result', () => {
 
     mockParams = { id: resultId() };
     await render(wrap(repos, <TransferResultScreen />));
-    expect(await screen.findByText('Held for a quick review')).toBeTruthy();
+    expect(await screen.findByRole('header', { name: 'Held for a quick review' })).toBeTruthy();
     expect(screen.getByText('Why we are checking')).toBeTruthy();
-    expect(screen.getByText(/far larger than anything you have sent/)).toBeTruthy();
+    expect(screen.getAllByText(/far larger than anything you have sent/).length).toBeGreaterThan(0);
 
     await fireEvent.press(screen.getByRole('button', { name: 'Cancel payment' }));
-    expect(await screen.findByText('Not sent')).toBeTruthy();
+    expect(await screen.findByRole('header', { name: 'Not sent' })).toBeTruthy();
     expect((await repos.transfers.get({ path: { transfer_id: mockParams.id! } })).status).toBe(
       'cancelled',
     );
+  });
+
+  it('follows a transfer to another bank live until it lands', async () => {
+    const repos = bank();
+    const sent = await sendToOtherBank(repos);
+    mockParams = { id: sent.id };
+    await render(wrap(repos, <TransferResultScreen />));
+    expect(await screen.findByRole('header', { name: 'On its way' })).toBeTruthy();
+    expect(screen.getByLabelText(/^Next: Received by/)).toBeTruthy();
+
+    now = new Date(now.getTime() + 5_000);
+    expect(await screen.findByRole('header', { name: 'Sent' }, { timeout: 5000 })).toBeTruthy();
+    expect(screen.getAllByText(/^Received by/).length).toBeGreaterThan(0);
+    expect(screen.queryByLabelText(/^Next:/)).toBeNull();
+  });
+
+  it('shows a failed transfer as money returned', async () => {
+    const repos = bank();
+    await repos.demo.failNextTransfer();
+    const sent = await sendToOtherBank(repos);
+    now = new Date(now.getTime() + 5_000);
+    mockParams = { id: sent.id };
+    await render(wrap(repos, <TransferResultScreen />));
+    expect(await screen.findByRole('header', { name: 'Money returned' })).toBeTruthy();
+    expect(screen.getByText(/You were not charged/)).toBeTruthy();
+    expect(screen.getByText('Money returned to your account')).toBeTruthy();
   });
 });

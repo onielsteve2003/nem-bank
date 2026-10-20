@@ -223,6 +223,12 @@ function fail(bank: MockBank, record: TransferRecord, detail: string) {
   setStatus(bank, record, 'failed');
   event(record, 'failed', 'Transfer failed', bank.nowIso(), detail);
   event(record, 'reversed', 'Money returned to your account', bank.nowIso());
+  // Nothing was debited yet (only held), so the reversal is the released hold.
+  record.reversal = {
+    reason: detail,
+    reversed_at: bank.nowIso(),
+    transaction_id: record.transaction_id!,
+  };
   bank.notify({
     category: 'transactions',
     title: 'Transfer failed, money returned',
