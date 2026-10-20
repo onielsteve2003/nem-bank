@@ -1,7 +1,10 @@
 import type { Schema } from '@nem/contracts';
 import {
   checkPassword,
+  formatLockoutWait,
   isWeakPin,
+  PIN_MAX_ATTEMPTS,
+  pinLockoutMinutes,
   nemtagProblem,
   normalizeNemtag,
   RESERVED_NEMTAGS,
@@ -22,8 +25,6 @@ export const DEMO_PIN = '2580';
 const OTP_TTL_MINUTES = 10;
 const OTP_RESEND_SECONDS = 60;
 const OTP_ATTEMPTS = 5;
-const PIN_ATTEMPTS = 5;
-const PIN_LOCK_MINUTES = 30;
 const STEP_UP_TTL_MINUTES = 5;
 /** AUTH-8: reduced limits and alerts for a day after a new device signs in. */
 const NEW_DEVICE_COOL_OFF_HOURS = 24;
@@ -150,24 +151,28 @@ function devicesView(bank: MockBank): Schema<'Device'>[] {
   return bank.world.devices.map((d) => ({ ...d, current: d.id === bank.world.currentDeviceId }));
 }
 
-/** PIN check with AUTH-4 lockout. The duress PIN also "works" (SEC-5), silently. */
+/** PIN check with AUTH-4's escalating lockout. The duress PIN also "works" (SEC-5), silently. */
 export function checkPin(bank: MockBank, pin: string): Schema<'PinVerification'> {
   const auth = bank.world.auth;
   if (auth.pinLockedUntil && auth.pinLockedUntil > bank.nowIso()) {
     return { valid: false, attempts_remaining: 0, locked_until: auth.pinLockedUntil };
   }
   if (pin === auth.pin || (auth.duressPin !== null && pin === auth.duressPin)) {
-    auth.pinFailures = 0;
-    auth.pinLockedUntil = null;
-    return { valid: true, attempts_remaining: PIN_ATTEMPTS, locked_until: null };
+    Object.assign(auth, { pinFailures: 0, pinLockedUntil: null, pinLockouts: 0 });
+    return { valid: true, attempts_remaining: PIN_MAX_ATTEMPTS, locked_until: null };
   }
   auth.pinFailures += 1;
-  if (auth.pinFailures >= PIN_ATTEMPTS) {
+  if (auth.pinFailures >= PIN_MAX_ATTEMPTS) {
     auth.pinFailures = 0;
-    auth.pinLockedUntil = addMinutes(bank.now(), PIN_LOCK_MINUTES).toISOString();
+    auth.pinLockouts = (auth.pinLockouts ?? 0) + 1;
+    auth.pinLockedUntil = addMinutes(bank.now(), pinLockoutMinutes(auth.pinLockouts)).toISOString();
     return { valid: false, attempts_remaining: 0, locked_until: auth.pinLockedUntil };
   }
-  return { valid: false, attempts_remaining: PIN_ATTEMPTS - auth.pinFailures, locked_until: null };
+  return {
+    valid: false,
+    attempts_remaining: PIN_MAX_ATTEMPTS - auth.pinFailures,
+    locked_until: null,
+  };
 }
 
 export function assertStrongPin(pin: string, dateOfBirth?: string) {
@@ -243,7 +248,12 @@ export function authRepo(bank: MockBank): AuthRepo {
       });
       bank.world.auth.password = body.password;
       if (body.pin !== undefined) {
-        Object.assign(bank.world.auth, { pin: body.pin, pinFailures: 0, pinLockedUntil: null });
+        Object.assign(bank.world.auth, {
+          pin: body.pin,
+          pinFailures: 0,
+          pinLockedUntil: null,
+          pinLockouts: 0,
+        });
       }
       delete bank.world.otps[body.signup_id];
       return session(bank, bindNewDevice(bank, body.device, { coolOff: false }).id);
@@ -391,7 +401,9 @@ export function authRepo(bank: MockBank): AuthRepo {
             'Wrong PIN',
             {
               detail: result.locked_until
-                ? 'Too many wrong PINs. Try again in 30 minutes.'
+                ? `Too many wrong PINs. Try again in ${formatLockoutWait(
+                    (Date.parse(result.locked_until) - bank.now().getTime()) / 60_000,
+                  )}.`
                 : `${result.attempts_remaining} attempts left.`,
             },
           );
@@ -468,8 +480,7 @@ export function usersRepo(bank: MockBank): UsersRepo {
         throw problem(422, 'validation_failed', 'Your PIN and duress PIN must be different');
       }
       bank.world.auth.pin = body.pin;
-      bank.world.auth.pinFailures = 0;
-      bank.world.auth.pinLockedUntil = null;
+      Object.assign(bank.world.auth, { pinFailures: 0, pinLockedUntil: null, pinLockouts: 0 });
     },
     async getPreferences() {
       return bank.world.preferences;

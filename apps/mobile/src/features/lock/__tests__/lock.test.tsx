@@ -118,7 +118,7 @@ describe('pinErrorMessage', () => {
         verification({ attempts_remaining: 0, locked_until: '2026-10-18T10:29:30Z' }),
         now,
       ),
-    ).toBe('Too many wrong tries. Try again in 30 minutes, or sign out.');
+    ).toBe('Too many wrong tries. Try again in 30 minutes, or tap Forgot PIN.');
   });
 });
 

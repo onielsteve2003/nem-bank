@@ -84,6 +84,8 @@ export interface World {
     pin: string;
     pinFailures: number;
     pinLockedUntil: string | null;
+    /** Lockouts in a row, for the escalating backoff; missing in older snapshots. */
+    pinLockouts?: number;
     duressPin: string | null;
     securityQuestion: { question: string; answer: string } | null;
     biometricsOn: boolean;

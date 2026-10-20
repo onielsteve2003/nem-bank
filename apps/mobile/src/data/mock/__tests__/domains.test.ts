@@ -120,6 +120,73 @@ describe('mock repositories', () => {
     expect(await repos.users.verifyPin({ body: { pin: '2580' } })).toMatchObject({ valid: true });
   });
 
+  it('applies the email code rules: attempts, expiry and the resend cooldown', async () => {
+    const { repos, advance } = setup();
+    const ask = () => repos.auth.forgotPassword({ body: { email: 'tolu.demo@example.com' } });
+    const check = (challenge_id: string, code: string) =>
+      repos.auth.verifyOtp({ body: { challenge_id, code } });
+
+    const otp = await ask();
+    expect(otp.attempts_remaining).toBe(5);
+    for (let left = 4; left >= 0; left--) {
+      await expect(check(otp.challenge_id, '000000')).rejects.toMatchObject({
+        problem: { code: 'invalid_otp', detail: `${left} attempt${left === 1 ? '' : 's'} left.` },
+      });
+    }
+    // Out of attempts: even the right code is refused until a new one is sent.
+    await expect(check(otp.challenge_id, DEMO_OTP)).rejects.toMatchObject({
+      problem: { code: 'rate_limited' },
+    });
+    await expect(
+      repos.auth.resendOtp({ body: { challenge_id: otp.challenge_id } }),
+    ).rejects.toMatchObject({
+      problem: { code: 'rate_limited' },
+    });
+    advance(60_000);
+    const fresh = await repos.auth.resendOtp({ body: { challenge_id: otp.challenge_id } });
+    expect(fresh.attempts_remaining).toBe(5);
+    await expect(check(otp.challenge_id, DEMO_OTP)).resolves.toHaveProperty('verification_token');
+
+    const late = await ask();
+    advance(10 * 60_000 + 1);
+    await expect(check(late.challenge_id, DEMO_OTP)).rejects.toMatchObject({
+      problem: { code: 'otp_expired' },
+    });
+  });
+
+  it('locks the PIN after 5 wrong tries, longer each time, until a right PIN', async () => {
+    const { repos, advance } = setup();
+    let elapsed = 0;
+    const wait = (minutes: number) => {
+      advance(minutes * 60_000);
+      elapsed += minutes;
+    };
+    const tryPin = (pin: string) => repos.users.verifyPin({ body: { pin } });
+    /** Five wrong PINs; returns how many minutes the lockout lasts. */
+    const lockOut = async () => {
+      let result = await tryPin('9999');
+      for (let i = 1; i < 5; i++) result = await tryPin('9999');
+      expect(result).toMatchObject({ valid: false, attempts_remaining: 0 });
+      return (Date.parse(result.locked_until!) - START.getTime()) / 60_000 - elapsed;
+    };
+
+    expect(await tryPin('9999')).toMatchObject({ valid: false, attempts_remaining: 4 });
+    expect((await tryPin('2580')).valid).toBe(true);
+    expect(await lockOut()).toBe(30);
+    // While locked, even the right PIN is refused.
+    expect((await tryPin('2580')).valid).toBe(false);
+
+    wait(30);
+    expect(await lockOut()).toBe(120);
+    wait(120);
+    expect(await lockOut()).toBe(480);
+
+    // A right PIN after the wait starts the count again.
+    wait(480);
+    expect((await tryPin('2580')).valid).toBe(true);
+    expect(await lockOut()).toBe(30);
+  });
+
   it('resets the password only for the account email, with a strong password', async () => {
     const { repos } = setup();
     const reset = async (email: string, new_password: string) => {

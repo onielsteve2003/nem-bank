@@ -75,6 +75,28 @@ describe('device key', () => {
     await expect(deviceSigner(REQUEST)).resolves.toMatchObject({ deviceId: 'd1' });
   });
 
+  it('signs nothing when the Face ID prompt is cancelled', async () => {
+    await createDeviceKey({ biometric: true });
+    const read = jest.mocked(SecureStore.getItemAsync);
+    const real = read.getMockImplementation()!;
+    read.mockImplementation(async (key, options) => {
+      if (key === 'nem.device.secret') throw new Error('User canceled the authentication');
+      return real(key, options);
+    });
+    try {
+      await expect(signWithDeviceKey('x', 'Log in to Nem Bank')).rejects.toThrow('canceled');
+    } finally {
+      read.mockImplementation(real);
+    }
+    expect(SecureStore.getItemAsync).toHaveBeenLastCalledWith(
+      'nem.device.secret',
+      expect.objectContaining({
+        requireAuthentication: true,
+        authenticationPrompt: 'Log in to Nem Bank',
+      }),
+    );
+  });
+
   it('cannot sign after the key is deleted', async () => {
     await createDeviceKey({ biometric: false });
     await deleteDeviceKey();

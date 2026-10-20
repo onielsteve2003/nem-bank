@@ -1,4 +1,10 @@
-import { isDateOfBirthPin, isWeakPin, pinSchema } from './pin';
+import {
+  formatLockoutWait,
+  isDateOfBirthPin,
+  isWeakPin,
+  pinLockoutMinutes,
+  pinSchema,
+} from './pin';
 
 describe('isWeakPin', () => {
   it.each(['1111', '000000', '1234', '4321', '123456', '987654'])('rejects %s', (pin) => {
@@ -30,5 +36,18 @@ describe('pinSchema', () => {
     expect(pinSchema.safeParse('2580').success).toBe(true);
     expect(pinSchema.safeParse('25801').success).toBe(false);
     expect(pinSchema.safeParse('1234').success).toBe(false);
+  });
+});
+
+describe('PIN lockout backoff', () => {
+  it('quadruples each lockout in a row, up to a day', () => {
+    expect([1, 2, 3, 4, 5].map(pinLockoutMinutes)).toEqual([30, 120, 480, 1440, 1440]);
+  });
+
+  it('says how long to wait in the largest whole unit, rounding up', () => {
+    expect(formatLockoutWait(0.2)).toBe('1 minute');
+    expect(formatLockoutWait(29.5)).toBe('30 minutes');
+    expect(formatLockoutWait(61)).toBe('2 hours');
+    expect(formatLockoutWait(1440)).toBe('1 day');
   });
 });
