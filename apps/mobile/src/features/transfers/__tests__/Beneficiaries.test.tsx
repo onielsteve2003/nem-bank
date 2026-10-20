@@ -98,6 +98,7 @@ it('marks someone just saved as still in the cooling-off', async () => {
         account_number: '0123456789',
         account_name: 'Chidi Okonkwo',
       },
+      favourite: false,
     },
   });
   await render(wrap(repos));
