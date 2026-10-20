@@ -12,6 +12,7 @@ import { DEFAULT_PREFERENCES, usePreferencesStore, usePrivacyStore } from '@/sto
 import { ThemeProvider } from '@/theme';
 
 import { formatWhen } from '../../transactions/TransactionRow';
+import { addableCurrencies } from '../../accounts/AddWalletSheet';
 import { greetingFor, HomeScreen } from '../HomeScreen';
 
 const mockPush = jest.fn();
@@ -151,4 +152,33 @@ it('a failed section offers a retry without blanking the rest', async () => {
   await renderHome(repos);
   expect(await screen.findByText("We couldn't load your activity")).toBeOnTheScreen();
   expect(screen.getByTestId('balance-NGN')).toBeOnTheScreen();
+});
+
+describe('add a currency wallet', () => {
+  it('lists only the wallets Tolu does not have', () => {
+    expect(addableCurrencies([{ currency: 'NGN' }, { currency: 'USD' }])).toEqual(['GBP', 'EUR']);
+    expect(
+      addableCurrencies([{ currency: 'USD' }, { currency: 'GBP' }, { currency: 'EUR' }]),
+    ).toEqual([]);
+  });
+
+  it('opens a pound wallet and shows its UK details', async () => {
+    await renderHome(tolu());
+    await fireEvent.press(await screen.findByRole('button', { name: 'Add a currency wallet' }));
+    await fireEvent.press(await screen.findByText('British Pound wallet'));
+    expect(await screen.findByText('Sort code')).toBeTruthy();
+    expect(await screen.findByTestId('balance-GBP')).toBeTruthy();
+  });
+
+  it('sends Tier 1 customers to verification instead', async () => {
+    const base = tolu();
+    const repos: Repositories = {
+      ...base,
+      users: { ...base.users, getMe: async () => ({ ...(await base.users.getMe()), kyc_tier: 1 }) },
+    };
+    await renderHome(repos);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Add a currency wallet' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Verify my identity' }));
+    expect(mockPush).toHaveBeenCalledWith('/kyc');
+  });
 });

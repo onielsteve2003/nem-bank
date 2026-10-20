@@ -10,7 +10,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
-import { ChevronRight } from 'lucide-react-native';
+import { ChevronRight, Plus } from 'lucide-react-native';
 
 import { Icon, MoneyText, Text } from '@/components';
 import { fromApiMoney } from '@/lib/money';
@@ -40,23 +40,26 @@ export function BalanceCarousel({
   accounts,
   hidden,
   onOpen,
+  onAdd,
 }: {
   accounts: readonly Account[];
   hidden: boolean;
   onOpen?: (account: Account) => void;
+  /** Shows a last "Add wallet" card (ACC-2) while there are currencies left to add. */
+  onAdd?: () => void;
 }) {
   const { colors, spacing, radius } = useTheme();
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
-  const cardWidth =
-    accounts.length > 1 ? Math.max(0, width - PEEK - spacing[4]) : width - spacing[4] * 2;
+  const cards = accounts.length + (onAdd ? 1 : 0);
+  const cardWidth = cards > 1 ? Math.max(0, width - PEEK - spacing[4]) : width - spacing[4] * 2;
   const step = cardWidth + spacing[3];
 
   // onScroll rather than onMomentumScrollEnd: browsers never send momentum events.
   const onScroll = (event: NativeSyntheticEvent<NativeScrollEvent>) => {
     if (step <= 0) return;
     const next = Math.round(event.nativeEvent.contentOffset.x / step);
-    if (next !== index && next >= 0 && next < accounts.length) setIndex(next);
+    if (next !== index && next >= 0 && next < cards) setIndex(next);
   };
 
   return (
@@ -155,17 +158,44 @@ export function BalanceCarousel({
               </Pressable>
             );
           })}
+        {width > 0 && onAdd && (
+          <Pressable
+            testID="balance-add"
+            accessibilityRole="button"
+            accessibilityLabel="Add a currency wallet"
+            accessibilityHint="Dollar, pound or euro"
+            onPress={onAdd}
+            style={({ pressed }) => [
+              styles.card,
+              styles.add,
+              {
+                width: cardWidth,
+                borderRadius: radius.xl,
+                padding: spacing[5],
+                gap: spacing[2],
+                borderColor: colors.border,
+                opacity: pressed ? 0.8 : 1,
+              },
+            ]}
+          >
+            <Icon icon={Plus} size="lg" color="primaryText" />
+            <Text variant="label">Add a currency wallet</Text>
+            <Text variant="caption" color="textMuted">
+              Dollar, pound or euro
+            </Text>
+          </Pressable>
+        )}
       </ScrollView>
 
-      {accounts.length > 1 && (
+      {cards > 1 && (
         <View
           style={[styles.dots, { gap: spacing[1] }]}
           accessible
-          accessibilityLabel={`Wallet ${index + 1} of ${accounts.length}`}
+          accessibilityLabel={`Card ${index + 1} of ${cards}`}
         >
-          {accounts.map((account, i) => (
+          {Array.from({ length: cards }, (_, i) => (
             <View
-              key={account.id}
+              key={i}
               style={{
                 width: i === index ? DOT_ACTIVE : DOT,
                 height: DOT,
@@ -182,6 +212,7 @@ export function BalanceCarousel({
 
 const styles = StyleSheet.create({
   card: { minHeight: 148, justifyContent: 'flex-end' },
+  add: { borderWidth: 1, borderStyle: 'dashed', alignItems: 'flex-start' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dots: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
 });

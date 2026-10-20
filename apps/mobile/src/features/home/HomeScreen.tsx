@@ -19,6 +19,7 @@ import {
 } from '@/components';
 import { isApiError } from '@/data';
 import { AccountDetailsSheet } from '@/features/accounts/AccountDetailsSheet';
+import { AddWalletSheet, addableCurrencies } from '@/features/accounts/AddWalletSheet';
 import { TransactionRow } from '@/features/transactions/TransactionRow';
 import { env } from '@/lib/env';
 import { useRepoQuery } from '@/lib/query';
@@ -76,6 +77,8 @@ export function HomeScreen() {
   };
 
   const [detailsFor, setDetailsFor] = useState<Account | null>(null);
+  const [adding, setAdding] = useState(false);
+  const canAdd = accounts.data ? addableCurrencies(accounts.data.data).length > 0 : false;
   const naira = accounts.data?.data.find((a) => a.currency === 'NGN') ?? null;
   const addMoney = () => setDetailsFor(naira);
   const onAction = (action: QuickAction) =>
@@ -121,7 +124,12 @@ export function HomeScreen() {
       contentContainerStyle={{ gap: spacing[6], paddingVertical: spacing[4] }}
     >
       {accounts.data ? (
-        <BalanceCarousel accounts={accounts.data.data} hidden={hidden} onOpen={setDetailsFor} />
+        <BalanceCarousel
+          accounts={accounts.data.data}
+          hidden={hidden}
+          onOpen={setDetailsFor}
+          onAdd={canAdd ? () => setAdding(true) : undefined}
+        />
       ) : accounts.isError ? (
         <ErrorState
           kind={offline(accounts.error) ? 'offline' : 'error'}
@@ -194,6 +202,23 @@ export function HomeScreen() {
                 }
               : undefined
           }
+        />
+      )}
+
+      {adding && accounts.data && (
+        <AddWalletSheet
+          open
+          accounts={accounts.data.data}
+          tier={user?.kyc_tier}
+          onClose={() => setAdding(false)}
+          onOpened={(account) => {
+            setAdding(false);
+            setDetailsFor(account);
+          }}
+          onUpgrade={() => {
+            setAdding(false);
+            router.push('/kyc');
+          }}
         />
       )}
 
