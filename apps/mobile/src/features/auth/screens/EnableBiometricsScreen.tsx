@@ -162,9 +162,11 @@ export function EnableBiometricsScreen() {
           <Text color="textMuted">
             {checking
               ? 'Checking this device…'
-              : Platform.OS === 'web'
-                ? 'Browsers cannot use Face ID or fingerprints, so you will use your PIN here. The phone app supports both.'
-                : 'No Face ID or fingerprint is set up on this device, so you will use your PIN. You can turn it on later in Security.'}
+              : found.blockedBy === 'expoGo'
+                ? 'Expo Go cannot use Face ID: Apple only lets an app use it when the app asks for it itself. You will use your PIN in this demo; the installed Nem Bank app supports Face ID.'
+                : Platform.OS === 'web'
+                  ? 'Browsers cannot use Face ID or fingerprints, so you will use your PIN here. The phone app supports both.'
+                  : 'No Face ID or fingerprint is set up on this device, so you will use your PIN. You can turn it on later in Security.'}
           </Text>
         </View>
       )}

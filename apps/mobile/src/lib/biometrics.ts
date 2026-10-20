@@ -1,3 +1,4 @@
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import * as LocalAuthentication from 'expo-local-authentication';
 import { Platform } from 'react-native';
 
@@ -7,6 +8,12 @@ export interface Biometrics {
   available: boolean;
   /** What the user calls it: "Face ID", "Touch ID", "fingerprint". */
   label: string;
+  /**
+   * Set when the hardware is there but this build cannot use it: iOS only lets an
+   * app use Face ID if the app itself declares why (NSFaceIDUsageDescription),
+   * and Expo Go does not, so Face ID iPhones get the PIN inside Expo Go.
+   */
+  blockedBy?: 'expoGo';
 }
 
 export const NO_BIOMETRICS: Biometrics = { available: false, label: '' };
@@ -25,6 +32,9 @@ export async function getBiometrics(): Promise<Biometrics> {
     const face = types.includes(AuthenticationType.FACIAL_RECOGNITION);
     const ios = Platform.OS === 'ios';
     const label = face ? (ios ? 'Face ID' : 'face unlock') : ios ? 'Touch ID' : 'fingerprint';
+    if (face && ios && Constants.executionEnvironment === ExecutionEnvironment.StoreClient) {
+      return { available: false, label, blockedBy: 'expoGo' };
+    }
     return { available: true, label };
   } catch {
     return NO_BIOMETRICS;
