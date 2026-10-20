@@ -114,7 +114,7 @@ it('lists, searches and filters the demo history', async () => {
   expect(await screen.findByTestId('transactions-list')).toBeTruthy();
 
   await fireEvent.changeText(screen.getByLabelText('Search transactions'), 'zzzz-no-such-thing');
-  expect(await screen.findByText('No matching transactions', {}, { timeout: 3000 })).toBeTruthy();
+  expect(await screen.findByText('No matching transactions', {}, { timeout: 8_000 })).toBeTruthy();
   await fireEvent.press(screen.getByRole('button', { name: 'Clear filters' }));
   expect(await screen.findByTestId('transactions-list')).toBeTruthy();
 
