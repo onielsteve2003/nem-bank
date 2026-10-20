@@ -1,8 +1,12 @@
 import type { Schema } from '@nem/contracts';
-import { Star } from 'lucide-react-native';
+import { Clock, Star } from 'lucide-react-native';
 import { memo } from 'react';
+import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Icon, ListItem } from '@/components';
+import { useTheme } from '@/theme';
+
+import { beneficiaryTitle, coolingOffUntil, formatUntil } from '../beneficiaries';
 
 type Beneficiary = Schema<'Beneficiary'>;
 
@@ -12,24 +16,50 @@ export function beneficiarySubtitle(b: Beneficiary): string {
   return `${b.bank_name} · ••${b.account_number.slice(-4)}`;
 }
 
+/**
+ * A saved person: favourite star, and a clock while the new-beneficiary
+ * cooling-off applies (TRF-8). `verb` says what a tap does ("Pay", "Manage").
+ */
 export const BeneficiaryRow = memo(function BeneficiaryRow({
   beneficiary: b,
   onPress,
+  verb = 'Pay',
 }: {
   beneficiary: Beneficiary;
   onPress: (b: Beneficiary) => void;
+  verb?: string;
 }) {
-  const title = b.nickname ? `${b.nickname} (${b.name})` : b.name;
-  const subtitle = beneficiarySubtitle(b);
+  const { spacing } = useTheme();
+  const title = beneficiaryTitle(b);
+  const until = coolingOffUntil(b);
+  const subtitle = until ? `New · ${beneficiarySubtitle(b)}` : beneficiarySubtitle(b);
+  const spoken = [
+    `${verb} ${title}, ${beneficiarySubtitle(b)}`,
+    b.favourite ? 'favourite' : null,
+    until ? `new, large payments need an extra check until ${formatUntil(until)}` : null,
+  ]
+    .filter(Boolean)
+    .join(', ');
   return (
     <ListItem
       leading={<Avatar name={b.name} size="md" ring={b.kind === 'nem'} />}
       title={title}
       subtitle={subtitle}
-      trailing={b.favourite ? <Icon icon={Star} size="sm" color="primaryText" /> : undefined}
+      trailing={
+        until || b.favourite ? (
+          <View style={[styles.row, { gap: spacing[2] }]}>
+            {until && <Icon icon={Clock} size="sm" color="warning" />}
+            {b.favourite && <Icon icon={Star} size="sm" color="primaryText" />}
+          </View>
+        ) : undefined
+      }
       showChevron
       onPress={() => onPress(b)}
-      accessibilityLabel={`Pay ${title}, ${subtitle}${b.favourite ? ', favourite' : ''}`}
+      accessibilityLabel={spoken}
     />
   );
+});
+
+const styles = StyleSheet.create({
+  row: { flexDirection: 'row', alignItems: 'center' },
 });

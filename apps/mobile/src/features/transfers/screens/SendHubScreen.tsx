@@ -89,7 +89,11 @@ export function SendHubScreen() {
         />
       </Card>
 
-      <SectionHeader title="Beneficiaries" />
+      <SectionHeader
+        title="Beneficiaries"
+        actionLabel="Manage"
+        onAction={() => router.push('/send/beneficiaries')}
+      />
       {(list?.length ?? 0) > 0 || searching ? (
         <TextField
           label="Search beneficiaries"
