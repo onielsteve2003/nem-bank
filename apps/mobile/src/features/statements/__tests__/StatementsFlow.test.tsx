@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, fireEvent, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import * as Print from 'expo-print';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
@@ -63,7 +63,10 @@ it('requests last month, then previews and shares the ready statement', async ()
   mockParams = {};
   await render(wrap(repos, <StatementsScreen />));
 
-  await fireEvent.press(await screen.findByRole('button', { name: 'Get statement' }));
+  // The button stays disabled until the wallets load, and the request is async.
+  await screen.findByText(/Naira/);
+  await fireEvent.press(screen.getByRole('button', { name: 'Get statement' }));
+  await waitFor(() => expect(mockPush).toHaveBeenCalled());
   const [call] = mockPush.mock.calls.at(-1)!;
   expect(call.pathname).toBe('/statements/[id]');
 
