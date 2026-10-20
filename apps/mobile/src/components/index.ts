@@ -34,6 +34,7 @@ export {
   type RiskReason,
   type RiskSeverity,
 } from './RiskReasonList';
+export { ModalSheetHost } from './ModalSheetHost';
 export { Screen, ScreenBannerProvider } from './Screen';
 export { SectionHeader } from './SectionHeader';
 export { SelectSheet, type SelectOption } from './SelectSheet';
