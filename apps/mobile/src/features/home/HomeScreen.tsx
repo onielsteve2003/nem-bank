@@ -148,7 +148,11 @@ export function HomeScreen() {
 
       <View style={{ gap: spacing[2] }}>
         <View style={{ paddingHorizontal: spacing[4] }}>
-          <SectionHeader title="Recent activity" />
+          <SectionHeader
+            title="Recent activity"
+            actionLabel="See all"
+            onAction={() => router.push('/transactions')}
+          />
         </View>
         {recent.data ? (
           recent.data.data.length > 0 ? (

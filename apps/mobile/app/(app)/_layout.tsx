@@ -23,6 +23,7 @@ export default function AppLayout() {
         screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
       >
         <Stack.Screen name="(tabs)" />
+        <Stack.Screen name="transactions/index" />
         <Stack.Screen name="send" options={{ presentation: 'modal' }} />
         <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
         <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />

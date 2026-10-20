@@ -37,16 +37,19 @@ export function transactionTitle(t: Schema<'Transaction'>): string {
 export function TransactionRow({
   transaction: t,
   onPress,
+  timeOnly = false,
 }: {
   transaction: Schema<'Transaction'>;
   onPress?: () => void;
+  /** Under a day header the date is already said, so only the time is shown. */
+  timeOnly?: boolean;
 }) {
   const { colors, radius } = useTheme();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const category = CATEGORIES[t.category] ?? CATEGORIES.other;
   const amount = fromApiMoney(t.amount);
   const signed = t.direction === 'debit' ? negate(amount) : amount;
-  const when = formatWhen(t.created_at);
+  const when = timeOnly ? timeFormat.format(new Date(t.created_at)) : formatWhen(t.created_at);
   const showStatus = t.status !== 'completed';
 
   return (
