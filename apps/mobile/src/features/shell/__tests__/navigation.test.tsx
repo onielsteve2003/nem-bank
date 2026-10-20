@@ -16,6 +16,7 @@ import ConvertRoute from '../../../../app/(app)/convert/index';
 import ConvertLayout from '../../../../app/(app)/convert/_layout';
 import DemoControlsRoute from '../../../../app/(app)/demo-controls';
 import PaymentLinkRoute from '../../../../app/(app)/pay/[slug]';
+import AssistantRoute from '../../../../app/(app)/assistant';
 import QrPayRoute from '../../../../app/(app)/qr';
 import KycRoute from '../../../../app/(app)/kyc/index';
 import KycLayout from '../../../../app/(app)/kyc/_layout';
@@ -107,6 +108,7 @@ const ROUTES = {
   '(app)/pay/[slug]': PaymentLinkRoute,
   '(app)/ajo/[code]': AjoInviteRoute,
   '(app)/qr': QrPayRoute,
+  '(app)/assistant': AssistantRoute,
   'choose-nemtag': ChooseNemtagRoute,
   kit: () => null,
 };
@@ -152,19 +154,37 @@ describe('auth gate', () => {
     expect(router.pathname()).toBe('/home');
   });
 
+  it('sends a new account without an @nemtag to the chooser, and nowhere else', async () => {
+    useSessionStore.getState().setSession({
+      ...demoSession(),
+      user: { id: 'user-1', is_demo: false, nemtag: null } as AuthSession['user'],
+    });
+    const router = await open('/cards');
+    expect(router.pathname()).toBe('/choose-nemtag');
+    await act(async () => useSessionStore.getState().nemtagChosen());
+    expect(await screen.findByText('Recent activity')).toBeOnTheScreen();
+    expect(router.pathname()).toBe('/home');
+  });
+
   it('signs in with the demo and out again from Me', async () => {
     const router = await open('/welcome');
     await fireEvent.press(screen.getByRole('button', { name: 'Try the demo' }));
-    expect(await screen.findByText('Home is on its way')).toBeOnTheScreen();
+    expect(await screen.findByText('Recent activity')).toBeOnTheScreen();
     expect(router.pathname()).toBe('/home');
-    expect(calls.map((c) => c.operationId)).toEqual(['startDemoSession']);
+    // Home then loads its own data; the sign-in itself is one call.
+    expect(calls.filter((c) => c.domain === 'auth').map((c) => c.operationId)).toEqual([
+      'startDemoSession',
+    ]);
 
     await fireEvent.press(screen.getByRole('tab', { name: 'Me' }));
     await fireEvent.press(await screen.findByText('Sign out'));
     await act(async () => undefined);
     expect(router.pathname()).toBe('/welcome');
     expect(useSessionStore.getState().session).toBeNull();
-    expect(calls.map((c) => c.operationId)).toEqual(['startDemoSession', 'logout']);
+    expect(calls.filter((c) => c.domain === 'auth').map((c) => c.operationId)).toEqual([
+      'startDemoSession',
+      'logout',
+    ]);
   });
 });
 
@@ -205,7 +225,7 @@ describe('navigation structure', () => {
 
   it('presents the send flow as a modal and closes it', async () => {
     const router = await open('/home');
-    await fireEvent.press(screen.getByRole('button', { name: 'Send money' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Send' }));
     expect(router.pathname()).toBe('/send');
     await fireEvent.press(await screen.findByRole('button', { name: 'Close' }));
     expect(router.pathname()).toBe('/home');

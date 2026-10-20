@@ -30,6 +30,7 @@ export default function AppLayout() {
         <Stack.Screen name="pay/[slug]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="ajo/[code]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
       </Stack>
       <NewDeviceNotice />
     </>
