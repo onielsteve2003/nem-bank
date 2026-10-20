@@ -1,5 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
 import { Eye, EyeOff, ReceiptText } from 'lucide-react-native';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -17,13 +18,15 @@ import {
   Text,
 } from '@/components';
 import { isApiError } from '@/data';
+import { AccountDetailsSheet } from '@/features/accounts/AccountDetailsSheet';
 import { TransactionRow } from '@/features/transactions/TransactionRow';
+import { env } from '@/lib/env';
 import { useRepoQuery } from '@/lib/query';
 import { usePreferencesStore, usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { AssistantEntry } from './components/AssistantEntry';
-import { BalanceCarousel } from './components/BalanceCarousel';
+import { BalanceCarousel, type Account } from './components/BalanceCarousel';
 import { InsightsTeaser } from './components/InsightsTeaser';
 import { QuickActions, type QuickAction } from './components/QuickActions';
 
@@ -37,10 +40,9 @@ export function greetingFor(now: Date = new Date()): string {
   return 'Good evening';
 }
 
-const QUICK_ROUTES: Record<QuickAction, Href> = {
+/** Add money opens the naira account details instead of a route. */
+const QUICK_ROUTES: Record<Exclude<QuickAction, 'addMoney'>, Href> = {
   send: '/send',
-  // Account details to pay in from another bank arrive with T6.2.
-  addMoney: '/demo-controls',
   convert: '/convert',
   bills: '/pay',
   scan: '/qr',
@@ -72,6 +74,12 @@ export function HomeScreen() {
     void recent.refetch();
     void spending.refetch();
   };
+
+  const [detailsFor, setDetailsFor] = useState<Account | null>(null);
+  const naira = accounts.data?.data.find((a) => a.currency === 'NGN') ?? null;
+  const addMoney = () => setDetailsFor(naira);
+  const onAction = (action: QuickAction) =>
+    action === 'addMoney' ? addMoney() : router.push(QUICK_ROUTES[action]);
 
   const user = me.data;
   const name = user ? (user.preferred_name ?? user.first_name) : '';
@@ -113,7 +121,7 @@ export function HomeScreen() {
       contentContainerStyle={{ gap: spacing[6], paddingVertical: spacing[4] }}
     >
       {accounts.data ? (
-        <BalanceCarousel accounts={accounts.data.data} hidden={hidden} />
+        <BalanceCarousel accounts={accounts.data.data} hidden={hidden} onOpen={setDetailsFor} />
       ) : accounts.isError ? (
         <ErrorState
           kind={offline(accounts.error) ? 'offline' : 'error'}
@@ -128,7 +136,7 @@ export function HomeScreen() {
         </View>
       )}
 
-      <QuickActions onAction={(action) => router.push(QUICK_ROUTES[action])} />
+      <QuickActions onAction={onAction} />
 
       <View style={{ gap: spacing[2] }}>
         <View style={{ paddingHorizontal: spacing[4] }}>
@@ -147,7 +155,7 @@ export function HomeScreen() {
               title="No transactions yet"
               message="Money you send, receive or spend shows up here."
               actionLabel="Add money"
-              onAction={() => router.push(QUICK_ROUTES.addMoney)}
+              onAction={addMoney}
             />
           )
         ) : recent.isError ? (
@@ -170,6 +178,22 @@ export function HomeScreen() {
           spending={spending.data}
           hidden={hidden}
           onOpen={() => router.push('/grow')}
+        />
+      )}
+
+      {/* Mounted only while a wallet is picked; swiping it away still animates out first. */}
+      {detailsFor && (
+        <AccountDetailsSheet
+          account={detailsFor}
+          onClose={() => setDetailsFor(null)}
+          onAddDemoMoney={
+            env.apiMode === 'mock'
+              ? () => {
+                  setDetailsFor(null);
+                  router.push('/demo-controls');
+                }
+              : undefined
+          }
         />
       )}
 

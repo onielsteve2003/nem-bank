@@ -1,7 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
-import { fireEvent, render, screen, within } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen, within } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ToastProvider } from '@/components';
 import { MASK } from '@/components/MoneyText';
 import { problem, repositoriesFromDispatcher, RepositoryProvider, type Repositories } from '@/data';
 import { createMockRepositories } from '@/data/mock';
@@ -18,6 +19,10 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, back: jest.fn(), canGoBack: () => false }),
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
+jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
+
+// The bottom-sheet mock renders an open sheet inline as a modal view.
+configure({ defaultIncludeHiddenElements: true });
 
 const NO_GC_TIMERS = {
   defaultOptions: {
@@ -36,7 +41,9 @@ async function renderHome(repos: Repositories) {
       <RepositoryProvider repositories={repos}>
         <QueryProvider client={new QueryClient(NO_GC_TIMERS)}>
           <ThemeProvider initialPreference="dark">
-            <HomeScreen />
+            <ToastProvider>
+              <HomeScreen />
+            </ToastProvider>
           </ThemeProvider>
         </QueryProvider>
       </RepositoryProvider>
@@ -115,6 +122,16 @@ it('opens each quick action', async () => {
     await fireEvent.press(screen.getByRole('button', { name }));
     expect(mockPush).toHaveBeenLastCalledWith(href);
   }
+});
+
+it('opens a wallet’s account details from its card, and naira details from Add money', async () => {
+  await renderHome(tolu());
+  await fireEvent.press(await screen.findByTestId('balance-USD'));
+  expect(await screen.findByText(/US Dollar account/)).toBeOnTheScreen();
+  expect(screen.getByText('Routing number (ACH)')).toBeOnTheScreen();
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Add money' }));
+  expect(await screen.findByText(/Nigerian Naira account/)).toBeOnTheScreen();
 });
 
 it('leaves the assistant out when it is turned off in AI settings', async () => {

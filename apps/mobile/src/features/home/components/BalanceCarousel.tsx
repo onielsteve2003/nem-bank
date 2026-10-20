@@ -10,7 +10,9 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
-import { MoneyText, Text } from '@/components';
+import { ChevronRight } from 'lucide-react-native';
+
+import { Icon, MoneyText, Text } from '@/components';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
@@ -138,6 +140,16 @@ export function BalanceCarousel({
                     <Text variant="caption" color={muted}>
                       on hold
                     </Text>
+                  </View>
+                )}
+                {onOpen && (
+                  <View
+                    style={[styles.row, { justifyContent: 'flex-start', marginTop: spacing[1] }]}
+                  >
+                    <Text variant="caption" color={muted}>
+                      Account details
+                    </Text>
+                    <Icon icon={ChevronRight} size="sm" color={muted} />
                   </View>
                 )}
               </Pressable>
