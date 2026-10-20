@@ -10,9 +10,10 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
-import { ChevronRight, Plus } from 'lucide-react-native';
+import { ChevronRight, Info, Plus } from 'lucide-react-native';
 
 import { Icon, MoneyText, Text } from '@/components';
+import { BalanceTick } from '@/features/accounts/BalanceTick';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
@@ -41,12 +42,15 @@ export function BalanceCarousel({
   hidden,
   onOpen,
   onAdd,
+  onExplain,
 }: {
   accounts: readonly Account[];
   hidden: boolean;
   onOpen?: (account: Account) => void;
   /** Shows a last "Add wallet" card (ACC-2) while there are currencies left to add. */
   onAdd?: () => void;
+  /** Opens the available vs ledger explainer (ACC-3) for the card in view. */
+  onExplain?: (account: Account) => void;
 }) {
   const { colors, spacing, radius } = useTheme();
   const [width, setWidth] = useState(0);
@@ -130,13 +134,17 @@ export function BalanceCarousel({
                 <Text variant="caption" color={muted}>
                   Available balance
                 </Text>
-                <MoneyText
-                  value={available}
-                  variant="amountLarge"
-                  color={fg}
-                  masked={hidden}
-                  animate
-                />
+                <View style={[styles.row, { justifyContent: 'flex-start', gap: spacing[2] }]}>
+                  <MoneyText
+                    value={available}
+                    variant="amountLarge"
+                    color={fg}
+                    masked={hidden}
+                    animate
+                    style={styles.shrink}
+                  />
+                  <BalanceTick value={available} hidden={hidden} color={fg} label={currency.name} />
+                </View>
                 {isPositive(onHold) && (
                   <View style={[styles.row, { justifyContent: 'flex-start', gap: spacing[1] }]}>
                     <MoneyText value={onHold} variant="caption" color={muted} masked={hidden} />
@@ -187,6 +195,24 @@ export function BalanceCarousel({
         )}
       </ScrollView>
 
+      {onExplain && accounts[index] && (
+        <Pressable
+          accessibilityRole="button"
+          accessibilityLabel={`Available and ledger balance, ${CURRENCIES[accounts[index].currency].name} wallet`}
+          onPress={() => onExplain(accounts[index]!)}
+          style={({ pressed }) => [
+            styles.row,
+            styles.explain,
+            { gap: spacing[1], paddingHorizontal: spacing[4], opacity: pressed ? 0.7 : 1 },
+          ]}
+        >
+          <Icon icon={Info} size="sm" color="textMuted" />
+          <Text variant="caption" color="textMuted">
+            Available vs ledger balance
+          </Text>
+        </Pressable>
+      )}
+
       {cards > 1 && (
         <View
           style={[styles.dots, { gap: spacing[1] }]}
@@ -215,4 +241,6 @@ const styles = StyleSheet.create({
   add: { borderWidth: 1, borderStyle: 'dashed', alignItems: 'flex-start' },
   row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
   dots: { flexDirection: 'row', justifyContent: 'center', alignItems: 'center' },
+  explain: { justifyContent: 'center', minHeight: 44 },
+  shrink: { flexShrink: 1 },
 });

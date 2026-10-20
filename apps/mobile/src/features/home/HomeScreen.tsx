@@ -1,5 +1,5 @@
 import { useRouter, type Href } from 'expo-router';
-import { Eye, EyeOff, ReceiptText } from 'lucide-react-native';
+import { Eye, EyeOff, ReceiptText, Wallet } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -20,6 +20,7 @@ import {
 import { isApiError } from '@/data';
 import { AccountDetailsSheet } from '@/features/accounts/AccountDetailsSheet';
 import { AddWalletSheet, addableCurrencies } from '@/features/accounts/AddWalletSheet';
+import { BalanceExplainerSheet } from '@/features/accounts/BalanceExplainerSheet';
 import { TransactionRow } from '@/features/transactions/TransactionRow';
 import { env } from '@/lib/env';
 import { useRepoQuery } from '@/lib/query';
@@ -78,6 +79,7 @@ export function HomeScreen() {
 
   const [detailsFor, setDetailsFor] = useState<Account | null>(null);
   const [adding, setAdding] = useState(false);
+  const [explainFor, setExplainFor] = useState<Account | null>(null);
   const canAdd = accounts.data ? addableCurrencies(accounts.data.data).length > 0 : false;
   const naira = accounts.data?.data.find((a) => a.currency === 'NGN') ?? null;
   const addMoney = () => setDetailsFor(naira);
@@ -123,12 +125,19 @@ export function HomeScreen() {
       refreshing={refreshing}
       contentContainerStyle={{ gap: spacing[6], paddingVertical: spacing[4] }}
     >
-      {accounts.data ? (
+      {accounts.data?.data.length === 0 ? (
+        <EmptyState
+          icon={Wallet}
+          title="No wallets yet"
+          message="Your naira account appears here once it is open."
+        />
+      ) : accounts.data ? (
         <BalanceCarousel
           accounts={accounts.data.data}
           hidden={hidden}
           onOpen={setDetailsFor}
           onAdd={canAdd ? () => setAdding(true) : undefined}
+          onExplain={setExplainFor}
         />
       ) : accounts.isError ? (
         <ErrorState
@@ -213,6 +222,14 @@ export function HomeScreen() {
         />
       )}
 
+      {explainFor && (
+        <BalanceExplainerSheet
+          // Live figures: the sheet follows realtime balance updates while open.
+          account={accounts.data?.data.find((a) => a.id === explainFor.id) ?? explainFor}
+          hidden={hidden}
+          onClose={() => setExplainFor(null)}
+        />
+      )}
       {adding && accounts.data && (
         <AddWalletSheet
           open
