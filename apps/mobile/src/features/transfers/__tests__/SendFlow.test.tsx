@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
-import { ToastProvider } from '@/components';
+import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
 import { createMockRepositories } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
@@ -41,7 +41,10 @@ const wrap = (repos: Repositories, ui: React.ReactElement) => (
         }
       >
         <ThemeProvider initialPreference="dark">
-          <ToastProvider>{ui}</ToastProvider>
+          <ToastProvider>
+            {/* The send layout's host: sheets draw on the core Modal, as on a phone. */}
+            <ModalSheetHost>{ui}</ModalSheetHost>
+          </ToastProvider>
         </ThemeProvider>
       </QueryProvider>
     </RepositoryProvider>

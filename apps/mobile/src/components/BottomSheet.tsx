@@ -11,7 +11,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme';
 
+import { CoreSheet } from './CoreSheet';
 import { IconButton } from './IconButton';
+import { useInModalFlow } from './ModalSheetHost';
 import { Text } from './Text';
 
 export type Props = {
@@ -32,7 +34,12 @@ export type Props = {
  * gesture always has a tap alternative (code-standards §7). It follows the
  * system reduce-motion setting by default.
  */
-export function BottomSheet({
+export function BottomSheet(props: Props) {
+  // Inside a native modal the root sheet host is hidden behind it (ModalSheetHost).
+  return useInModalFlow() ? <CoreSheet {...props} /> : <GorhomSheet {...props} />;
+}
+
+function GorhomSheet({
   open,
   onClose,
   title,

@@ -1,20 +1,17 @@
-import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
-import type { ReactNode } from 'react';
-import { StyleSheet } from 'react-native';
-import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { createContext, useContext, type ReactNode } from 'react';
+
+const InModalFlow = createContext(false);
+
+/** True inside a flow presented as a native modal (see ModalSheetHost). */
+export const useInModalFlow = () => useContext(InModalFlow);
 
 /**
  * Wrap the layout of any flow presented as a modal (send, convert, KYC…) in
- * this. On iOS a modal is a separate native window above the root, so sheets
- * hosted by the root provider would open behind it and gestures would not
- * reach them. This gives the modal its own gesture root and sheet host.
+ * this. On iOS such a flow is its own native window above the app root, and
+ * sheets hosted by @gorhom/bottom-sheet's root provider never show over it.
+ * Inside this host, BottomSheet draws with the core `Modal` instead, which iOS
+ * always presents on top.
  */
 export function ModalSheetHost({ children }: { children: ReactNode }) {
-  return (
-    <GestureHandlerRootView style={styles.fill}>
-      <BottomSheetModalProvider>{children}</BottomSheetModalProvider>
-    </GestureHandlerRootView>
-  );
+  return <InModalFlow.Provider value>{children}</InModalFlow.Provider>;
 }
-
-const styles = StyleSheet.create({ fill: { flex: 1 } });
