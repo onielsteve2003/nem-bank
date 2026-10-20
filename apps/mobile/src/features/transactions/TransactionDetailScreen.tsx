@@ -2,7 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { add, formatMoney, negate, zero, type Money } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Copy, Flag, Repeat, Tag } from 'lucide-react-native';
+import { ArrowLeft, Copy, Flag, ReceiptText, Repeat, Tag } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -31,6 +31,8 @@ import { usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { CATEGORIES, type Category } from './categories';
+import { formatDateTime } from './format';
+import { ReceiptSheet } from './ReceiptSheet';
 import { transactionTitle } from './TransactionRow';
 
 type Detail = Schema<'TransactionDetail'>;
@@ -53,16 +55,6 @@ const TYPE_LABELS: Record<Schema<'TransactionType'>, string> = {
   deposit: 'Deposit',
   dispute_refund: 'Dispute refund',
 };
-
-const dateTime = new Intl.DateTimeFormat('en-NG', {
-  day: 'numeric',
-  month: 'short',
-  year: 'numeric',
-  hour: 'numeric',
-  minute: '2-digit',
-  timeZone: 'Africa/Lagos',
-});
-export const formatDateTime = (iso: string) => dateTime.format(new Date(iso));
 
 /** Total of the fee lines, in the transaction's currency. */
 export function totalFees(detail: Pick<Detail, 'fees' | 'amount'>): Money {
@@ -105,7 +97,7 @@ function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: 
 /**
  * One transaction in full (ACC-6): amount and status, the status timeline,
  * fees, reference, an editable category, and the way into a dispute or a
- * repeat transfer when those make sense.
+ * repeat transfer when those make sense, plus the shareable receipt (ACC-7).
  */
 export function TransactionDetailScreen() {
   const router = useRouter();
@@ -116,6 +108,7 @@ export function TransactionDetailScreen() {
   const query = useRepoQuery('transactions', 'get', { path: { transaction_id: id } });
   const [picking, setPicking] = useState(false);
   const [similar, setSimilar] = useState(false);
+  const [receipt, setReceipt] = useState(false);
 
   const recategorise = useRepoMutation('transactions', 'update', {
     invalidates: [['transactions'], ['insights']],
@@ -283,6 +276,12 @@ export function TransactionDetailScreen() {
       />
 
       <View style={{ gap: spacing[3] }}>
+        <Button
+          label="Share receipt"
+          icon={ReceiptText}
+          variant="secondary"
+          onPress={() => setReceipt(true)}
+        />
         {t.can_repeat && (
           <Button
             label="Send again"
@@ -310,6 +309,8 @@ export function TransactionDetailScreen() {
           )
         )}
       </View>
+
+      {receipt && <ReceiptSheet transactionId={t.id} onClose={() => setReceipt(false)} />}
 
       {picking && (
         <BottomSheet open onClose={() => setPicking(false)} title="Choose a category">

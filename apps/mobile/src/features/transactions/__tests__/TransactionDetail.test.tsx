@@ -1,5 +1,8 @@
+import type { Schema } from '@nem/contracts';
 import { QueryClient } from '@tanstack/react-query';
 import { configure, fireEvent, render, screen } from '@testing-library/react-native';
+import * as Print from 'expo-print';
+import * as Sharing from 'expo-sharing';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components';
@@ -19,6 +22,13 @@ jest.mock('expo-router', () => ({
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
+jest.mock('react-native-view-shot', () => ({
+  captureRef: jest.fn(async () => 'file:///receipt.png'),
+}));
+jest.mock('expo-print', () => ({
+  printToFileAsync: jest.fn(async () => ({ uri: 'file:///r.pdf' })),
+}));
+jest.mock('expo-sharing', () => ({ shareAsync: jest.fn(async () => undefined) }));
 
 configure({ defaultIncludeHiddenElements: true });
 
@@ -101,4 +111,34 @@ it('shows a sent transfer in full, recategorises it and offers repeat and disput
     pathname: '/disputes/new',
     params: { transaction: t.id },
   });
+}, 20_000);
+
+it('shares the receipt as an image and as a PDF', async () => {
+  const repos = createMockRepositories({
+    store: createMemoryStore(),
+    simulation: { latency: 'off' },
+  });
+  const [first] = (await repos.transactions.list({ query: { limit: 1 } })).data;
+  const receipt = (await repos.transactions.getReceipt({
+    path: { transaction_id: first!.id },
+  })) as Schema<'Receipt'>;
+  mockId = first!.id;
+  await renderDetail(repos);
+
+  await fireEvent.press(await screen.findByRole('button', { name: 'Share receipt' }));
+  expect(await screen.findByText(receipt.verification_code)).toBeTruthy();
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Share as image' }));
+  expect(Sharing.shareAsync).toHaveBeenLastCalledWith(
+    'file:///receipt.png',
+    expect.objectContaining({ mimeType: 'image/png' }),
+  );
+
+  await fireEvent.press(screen.getByRole('button', { name: 'Share as PDF' }));
+  const html = (Print.printToFileAsync as jest.Mock).mock.calls[0][0].html as string;
+  expect(html).toContain(receipt.reference);
+  expect(Sharing.shareAsync).toHaveBeenLastCalledWith(
+    'file:///r.pdf',
+    expect.objectContaining({ mimeType: 'application/pdf' }),
+  );
 }, 20_000);
