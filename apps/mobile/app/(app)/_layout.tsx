@@ -31,6 +31,7 @@ export default function AppLayout() {
         <Stack.Screen name="send" options={{ presentation: 'modal' }} />
         <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
         <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="new-card" options={{ presentation: 'modal' }} />
         <Stack.Screen name="demo-controls" options={{ presentation: 'modal' }} />
         <Stack.Screen name="ajo/[code]" options={{ presentation: 'modal' }} />
         <Stack.Screen name="qr" options={{ presentation: 'modal' }} />

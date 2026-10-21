@@ -27,6 +27,15 @@ const FLIP_MS = DURATION.slow * 2;
 const PERSPECTIVE = 900;
 
 export type CardNetwork = 'verve' | 'visa' | 'mastercard';
+export type CardDesign = 'volt' | 'noir' | 'mint' | 'coral';
+
+/** Each design is the same dark card with a different glow; noir keeps it faint. */
+const GLOW: Record<CardDesign, { color: string; opacity: number }> = {
+  volt: { color: INK.primary, opacity: 0.35 },
+  noir: { color: INK.textMuted, opacity: 0.12 },
+  mint: { color: INK.success, opacity: 0.4 },
+  coral: { color: INK.danger, opacity: 0.4 },
+};
 
 const NETWORK_NAME: Record<CardNetwork, string> = {
   verve: 'Verve',
@@ -41,6 +50,7 @@ export type Props = {
   expiry: string;
   network: CardNetwork;
   kind?: 'virtual' | 'physical';
+  design?: CardDesign;
   frozen?: boolean;
   /** Full number and CVV for the back, only once the user has unlocked them; masked otherwise. */
   revealed?: { number: string; cvv: string };
@@ -61,6 +71,7 @@ export function BankCard({
   expiry,
   network,
   kind = 'virtual',
+  design = 'volt',
   frozen = false,
   revealed,
   tilt = true,
@@ -122,7 +133,7 @@ export function BankCard({
         pointerEvents={flipped ? 'none' : 'auto'}
         importantForAccessibility="no-hide-descendants"
       >
-        <CardArt />
+        <CardArt design={design} />
         <View style={styles.row}>
           <Text variant="h3" style={ink('text')}>
             nem
@@ -153,7 +164,7 @@ export function BankCard({
         pointerEvents={flipped ? 'auto' : 'none'}
         importantForAccessibility="no-hide-descendants"
       >
-        <CardArt />
+        <CardArt design={design} />
         <View style={[styles.strip, { backgroundColor: INK.background }]} />
         <View style={styles.backBody}>
           <Labelled
@@ -196,7 +207,11 @@ function Labelled({ label, value }: { label: string; value: ReactNode }) {
   );
 }
 
-function CardArt() {
+function CardArt({ design }: { design: CardDesign }) {
+  const glow = GLOW[design];
+  // Ids are per design: on web every card's SVG shares one document, and the first
+  // definition of a duplicate id would paint every card the same.
+  const glowId = `card-glow-${design}`;
   return (
     <Svg style={StyleSheet.absoluteFill} preserveAspectRatio="none" viewBox="0 0 100 63">
       <Defs>
@@ -204,13 +219,13 @@ function CardArt() {
           <Stop offset="0" stopColor={INK.raised} />
           <Stop offset="1" stopColor={INK.background} />
         </LinearGradient>
-        <LinearGradient id="card-glow" x1="1" y1="0" x2="0.3" y2="0.8">
-          <Stop offset="0" stopColor={INK.primary} stopOpacity={0.35} />
-          <Stop offset="1" stopColor={INK.primary} stopOpacity={0} />
+        <LinearGradient id={glowId} x1="1" y1="0" x2="0.3" y2="0.8">
+          <Stop offset="0" stopColor={glow.color} stopOpacity={glow.opacity} />
+          <Stop offset="1" stopColor={glow.color} stopOpacity={0} />
         </LinearGradient>
       </Defs>
       <Rect width="100" height="63" fill="url(#card-base)" />
-      <Rect width="100" height="63" fill="url(#card-glow)" />
+      <Rect width="100" height="63" fill={`url(#${glowId})`} />
     </Svg>
   );
 }
