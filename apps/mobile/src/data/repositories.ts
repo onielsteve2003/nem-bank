@@ -88,6 +88,8 @@ export const REPOSITORY_METHODS = {
     create: 'createPaymentLink',
     get: 'getPaymentLink',
     update: 'updatePaymentLink',
+    getPublic: 'getPublicPaymentLink',
+    pay: 'payPaymentLink',
     getMyQr: 'getMyQr',
     decodeQr: 'decodeQr',
   },

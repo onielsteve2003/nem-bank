@@ -7,6 +7,7 @@ import {
   Globe,
   HandCoins,
   Landmark,
+  Link2,
   Receipt,
   Search,
   Users,
@@ -127,6 +128,13 @@ export function SendHubScreen() {
           subtitle="Share a cost with Nem users and see who has paid."
           showChevron
           onPress={() => router.push('/send/splits')}
+        />
+        <ListItem
+          leading={Link2}
+          title="Payment links"
+          subtitle="A link or QR anyone can use to pay you."
+          showChevron
+          onPress={() => router.push('/send/links')}
         />
         <ListItem
           leading={CalendarClock}

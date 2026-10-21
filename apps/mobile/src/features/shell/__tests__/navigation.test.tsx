@@ -15,7 +15,7 @@ import TabsLayout from '../../../../app/(app)/(tabs)/_layout';
 import ConvertRoute from '../../../../app/(app)/convert/index';
 import ConvertLayout from '../../../../app/(app)/convert/_layout';
 import DemoControlsRoute from '../../../../app/(app)/demo-controls';
-import PaymentLinkRoute from '../../../../app/(app)/pay/[slug]';
+import PaymentLinkRoute from '../../../../app/pay/[slug]';
 import AssistantRoute from '../../../../app/(app)/assistant';
 import QrPayRoute from '../../../../app/(app)/qr';
 import KycRoute from '../../../../app/(app)/kyc/index';
@@ -60,9 +60,22 @@ const demoSession = (): AuthSession => ({
   device: { id: 'device-1' } as AuthSession['device'],
 });
 
+const publicLink = {
+  slug: 'k3x9q2ab',
+  title: 'Ankara fabric',
+  note: null,
+  payee_name: 'Amaka Obi',
+  amount_mode: 'open',
+  amount: null,
+  currency: 'NGN',
+  status: 'active',
+  demo: true,
+};
+
 let calls: Call[] = [];
 const repositories = repositoriesFromDispatcher(async (call) => {
   calls.push(call);
+  if (call.operationId === 'getPublicPaymentLink') return publicLink;
   return call.operationId === 'startDemoSession' ? demoSession() : undefined;
 });
 
@@ -105,7 +118,7 @@ const ROUTES = {
   '(app)/kyc/_layout': KycLayout,
   '(app)/kyc/index': KycRoute,
   '(app)/demo-controls': DemoControlsRoute,
-  '(app)/pay/[slug]': PaymentLinkRoute,
+  'pay/[slug]': PaymentLinkRoute,
   '(app)/ajo/[code]': AjoInviteRoute,
   '(app)/qr': QrPayRoute,
   '(app)/assistant': AssistantRoute,
@@ -255,13 +268,22 @@ describe('navigation structure', () => {
 });
 
 describe('deep links', () => {
-  it('opens a pay link as a modal over the tabs, and closes to Home', async () => {
+  it('opens a pay link as a modal, and closes to Home', async () => {
     signIn();
     const router = await open(await redirectPath('nembank://pay/k3x9q2ab'));
     expect(router.pathname()).toBe('/pay/k3x9q2ab');
-    expect(screen.getByText(/Payment link k3x9q2ab/)).toBeOnTheScreen();
+    expect(await screen.findByText('Ankara fabric')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Close' }));
     expect(router.pathname()).toBe('/home');
+  });
+
+  it('shows a pay link to someone signed out, who logs in to pay', async () => {
+    const router = await open(await redirectPath('https://nem-bank-fodx.vercel.app/pay/k3x9q2ab'));
+    expect(router.pathname()).toBe('/pay/k3x9q2ab');
+    expect(await screen.findByText('Ankara fabric')).toBeOnTheScreen();
+    expect(screen.getByText(/Amaka Obi is asking you/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Log in to pay' }));
+    expect(router.pathname()).toBe('/login');
   });
 
   it('parks a link opened while signed out and opens it after sign-in', async () => {

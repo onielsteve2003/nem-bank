@@ -27,7 +27,12 @@ type Route = {
 const ROUTES: Route[] = [
   // Payment links and QR (TRF-12, TRF-13)
   { pattern: 'pay/requests/:id', to: () => '/send/requests' },
-  { pattern: 'pay/:slug', to: ({ slug = '' }) => ({ pathname: '/pay/[slug]', params: { slug } }) },
+  {
+    pattern: 'pay/:slug',
+    to: ({ slug = '' }) => ({ pathname: '/pay/[slug]', params: { slug } }),
+    public: true,
+  },
+  { pattern: 'send/links', to: () => '/send/links' },
   { pattern: 'pay', to: () => '/pay' },
   { pattern: 'qr', to: (_, q) => qrHref(q.get('payload') ?? q.get('p') ?? '') },
   // Ajo invites (AJO-2)

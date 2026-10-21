@@ -1,9 +1,12 @@
 import type { Schema } from '@nem/contracts';
 import {
+  add,
   customSharesError,
   equalShares,
+  formatMoney,
   MAX_SPLIT_PARTICIPANTS,
   money,
+  type Money,
   SPLIT_REMIND_HOURS,
   sum,
 } from '@nem/shared';
@@ -43,19 +46,22 @@ function requestFinder(bank: MockBank) {
   };
 }
 
-/** A friend pays one of the customer's requests: their money moves Nem-to-Nem. */
-function payBack(bank: MockBank, request: Schema<'MoneyRequest'>, person: Person) {
+/** A friend sends the customer money Nem-to-Nem; null when there is no naira account. */
+function creditFromFriend(
+  bank: MockBank,
+  person: Person,
+  input: { amount: Money; narration: string; idempotencyKey: string },
+) {
   const ngn = bank.accountIn('NGN');
-  if (!ngn) return;
-  const amount = fromApi(request.amount);
+  if (!ngn) return null;
   const transferId = bank.id();
   const entry = transferInternal(bank.ledger, {
     fromAccountId: person.accountId,
     toAccountId: ngn.id,
     recipientTier: bank.tier(),
-    amount,
+    amount: input.amount,
     reference: bank.reference(),
-    idempotencyKey: `request:${request.id}`,
+    idempotencyKey: input.idempotencyKey,
     limits: { tier: person.tier },
     metadata: {
       txns: [
@@ -65,13 +71,25 @@ function payBack(bank: MockBank, request: Schema<'MoneyRequest'>, person: Person
           direction: 'credit',
           type: 'transfer_in',
           category: 'transfers',
-          narration: request.note || 'Money request',
+          narration: input.narration,
           counterparty: { name: `${person.firstName} ${person.lastName}`, nemtag: person.nemtag },
           transferId,
         },
       ],
     },
   });
+  return { transferId, entry };
+}
+
+/** A friend pays one of the customer's requests: their money moves Nem-to-Nem. */
+function payBack(bank: MockBank, request: Schema<'MoneyRequest'>, person: Person) {
+  const credited = creditFromFriend(bank, person, {
+    amount: fromApi(request.amount),
+    narration: request.note || 'Money request',
+    idempotencyKey: `request:${request.id}`,
+  });
+  if (!credited) return;
+  const { transferId, entry } = credited;
   request.status = 'paid';
   request.transfer_id = transferId;
   request.responded_at = entry.createdAt;
@@ -83,10 +101,58 @@ function payBack(bank: MockBank, request: Schema<'MoneyRequest'>, person: Person
   });
 }
 
+/** What a friend pays into an open-amount link in the demo. */
+const OPEN_LINK_DEMO_PAYMENT = money(500_000n, 'NGN');
+
+function recordLinkPayment(link: Schema<'PaymentLink'>, amount: Money) {
+  link.payments_count += 1;
+  link.total_received = api(add(fromApi(link.total_received), amount));
+}
+
+/**
+ * The first payment into a new link of the customer's arrives from a friend
+ * shortly after it is made, so the demo shows a link doing its job.
+ */
+function payLinkAsFriend(bank: MockBank, link: Schema<'PaymentLink'>): boolean {
+  const person = bank.world.people[2];
+  if (!person) return false;
+  const amount = link.amount ? fromApi(link.amount) : OPEN_LINK_DEMO_PAYMENT;
+  const credited = creditFromFriend(bank, person, {
+    amount,
+    narration: link.title,
+    idempotencyKey: `payment-link:${link.id}:1`,
+  });
+  if (!credited) return false;
+  recordLinkPayment(link, amount);
+  bank.notify({
+    category: 'transactions',
+    title: `${person.firstName} paid your link`,
+    body: `${person.firstName} paid ${formatMoney(amount)} through "${link.title}".`,
+    deep_link: 'nembank://send/links',
+  });
+  return true;
+}
+
 export function processRequests(bank: MockBank): boolean {
   const now = bank.nowIso();
   const cutoff = new Date(bank.now().getTime() - PAY_BACK_MS).toISOString();
   let changed = false;
+  const own = new Set(bank.customerAccounts().map((a) => a.id));
+  for (const link of bank.world.paymentLinks) {
+    if (
+      own.has(link.account_id) &&
+      link.status === 'active' &&
+      link.payments_count === 0 &&
+      link.created_at <= cutoff &&
+      (!link.expires_at || link.expires_at > now)
+    ) {
+      try {
+        changed = payLinkAsFriend(bank, link) || changed;
+      } catch {
+        // A friend who cannot pay leaves the link waiting, like a real one.
+      }
+    }
+  }
   for (const request of bank.world.moneyRequests) {
     if (request.status !== 'pending') continue;
     if (request.expires_at <= now) {
@@ -320,18 +386,83 @@ export function moneyRequestsRepo(bank: MockBank): MoneyRequestsRepo {
 const qrSignature = (body: string) => sha256Hex(`nem-mock-qr-key|${body}`).slice(0, 24);
 
 export function paymentLinksRepo(bank: MockBank): PaymentLinksRepo {
-  const find = (id: string) => {
-    const link = bank.world.paymentLinks.find((l) => l.id === id);
-    if (!link) throw notFound('Payment link');
+  const expire = (link: Schema<'PaymentLink'>) => {
     if (link.status === 'active' && link.expires_at && link.expires_at < bank.nowIso()) {
       link.status = 'expired';
     }
     return link;
   };
+  const isOwn = (link: Schema<'PaymentLink'>) =>
+    bank.customerAccounts().some((a) => a.id === link.account_id);
+  // Other people's links are only reachable through the public pay page.
+  const find = (id: string) => {
+    const link = bank.world.paymentLinks.find((l) => l.id === id && isOwn(l));
+    if (!link) throw notFound('Payment link');
+    return expire(link);
+  };
+  const bySlug = (slug: string) => {
+    const link = bank.world.paymentLinks.find((l) => l.slug === slug);
+    if (!link) throw notFound('Payment link');
+    return expire(link);
+  };
+  const payeeOf = (link: Schema<'PaymentLink'>) =>
+    bank.world.people.find((p) => p.accountId === link.account_id);
+
   return {
     async list({ query } = {}) {
-      const page = paginate(newestFirst(bank.world.paymentLinks), query);
-      return { data: page.data.map((l) => find(l.id)), page: page.page };
+      const page = paginate(newestFirst(bank.world.paymentLinks.filter(isOwn)), query);
+      return { data: page.data.map(expire), page: page.page };
+    },
+    async getPublic({ path }) {
+      const link = bySlug(path.slug);
+      const person = payeeOf(link);
+      return {
+        slug: link.slug,
+        title: link.title,
+        note: link.note ?? null,
+        payee_name: person ? `${person.firstName} ${person.lastName}` : accountName(bank),
+        amount_mode: link.amount_mode,
+        amount: link.amount,
+        currency: link.total_received.currency,
+        status: link.status,
+        demo: true,
+      };
+    },
+    async pay({ path, body, idempotencyKey }) {
+      const link = bySlug(path.slug);
+      const record = bank.idempotent(
+        idempotencyKey,
+        { path, body },
+        (id) => bank.world.transfers.find((t) => t.id === id),
+        () => {
+          if (link.status !== 'active') {
+            throw problem(409, 'invalid_state', 'This link is not taking payments');
+          }
+          const person = payeeOf(link);
+          if (!person) {
+            throw problem(409, 'own_link', 'This is your own link', {
+              detail: 'Share it with whoever is paying you.',
+            });
+          }
+          const amount =
+            link.amount_mode === 'fixed' && link.amount
+              ? fromApi(link.amount)
+              : body.amount
+                ? positive(body.amount, 'NGN')
+                : null;
+          if (!amount) throw problem(422, 'validation_failed', 'Enter how much to pay');
+          const transfer = sendMoney(bank, {
+            sourceAccountId: body.source_account_id,
+            destination: { kind: 'nem', account_number: person.accountNumber },
+            amount: api(amount),
+            narration: body.note?.trim() || link.title,
+            paysRequestId: link.id,
+          });
+          recordLinkPayment(link, amount);
+          return transfer;
+        },
+      );
+      return transferView(record);
     },
     async create({ body }) {
       const account = bank.ownAccount(body.account_id);

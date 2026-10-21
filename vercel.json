@@ -5,6 +5,7 @@
   "buildCommand": "pnpm build:web",
   "outputDirectory": "apps/mobile/dist",
   "cleanUrls": true,
+  "rewrites": [{ "source": "/pay/:slug", "destination": "/pay/[slug]" }],
   "headers": [
     {
       "source": "/_expo/static/(.*)",

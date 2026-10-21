@@ -477,6 +477,24 @@ export function finishWorld(draft: WorldDraft, { now, start, reference }: Finish
     responded_at: null,
   });
 
+  // A friend's open-amount pay link, so the pay page can be tried from the app (TRF-12).
+  const emeka = world.people[1]!;
+  world.paymentLinks.push({
+    id: newId(),
+    slug: 'emeka-birthday',
+    url: 'https://nem-bank-fodx.vercel.app/pay/emeka-birthday',
+    account_id: emeka.accountId,
+    title: "Emeka's birthday dinner",
+    note: 'Chip in for Saturday at Yellow Chilli',
+    amount_mode: 'open',
+    amount: null,
+    status: 'active',
+    payments_count: 3,
+    total_received: api(naira(45_000)),
+    expires_at: null,
+    created_at: at,
+  });
+
   const conversationId = newId();
   world.conversations.push({
     id: conversationId,

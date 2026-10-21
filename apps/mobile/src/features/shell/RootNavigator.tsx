@@ -34,6 +34,8 @@ export function RootNavigator() {
         <Stack.Protected guard={!signedIn}>
           <Stack.Screen name="(auth)" />
         </Stack.Protected>
+        {/* A pay link's page is public (TRF-12): anyone can see it, and paying asks for sign-in. */}
+        <Stack.Screen name="pay/[slug]" options={{ presentation: 'modal' }} />
         {/* The design system gallery is a dev tool, open on both sides of the gate. */}
         <Stack.Screen name="kit" />
       </Stack>

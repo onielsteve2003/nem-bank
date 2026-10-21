@@ -33,9 +33,10 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://fx')).toBe('/convert');
   });
 
-  it('marks signed-out screens as public and the rest as needing auth', () => {
+  it('marks signed-out screens and pay pages as public, the rest as needing auth', () => {
     expect(resolveDeepLink('nembank://login').requiresAuth).toBe(false);
-    expect(resolveDeepLink('nembank://pay/abc').requiresAuth).toBe(true);
+    expect(resolveDeepLink('nembank://pay/abc').requiresAuth).toBe(false);
+    expect(resolveDeepLink('nembank://send/links').requiresAuth).toBe(true);
   });
 
   it('falls back to Home for unknown paths, foreign hosts and junk', () => {
