@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, type CurrencyCode } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowDownLeft, ChartLine, Lock, Wallet } from 'lucide-react-native';
+import { ArrowDownLeft, ChartLine, History, Lock, Wallet } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -265,6 +265,12 @@ export function ConvertScreen() {
         }
       />
 
+      <Button
+        label="Conversion history"
+        icon={History}
+        variant="ghost"
+        onPress={() => router.push('/convert/history')}
+      />
       <Button
         label="Receive from abroad"
         icon={ArrowDownLeft}
