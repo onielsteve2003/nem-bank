@@ -3,7 +3,9 @@ import type { Schema, User } from '@nem/contracts';
 import type { LedgerState } from './ledger';
 import { deserialize, serialize } from './persistence/serialize';
 import type { SnapshotStore } from './persistence/types';
+import { createIdFactory } from './ids';
 import { seedDemoBank } from './seed';
+import { addFriendPayLink } from './seedWorld';
 import type { World } from './world';
 
 /** What a transaction looks like from the customer's side, kept on its journal entry. */
@@ -52,7 +54,11 @@ export async function loadOrSeedBank(
   if (text) {
     try {
       const saved = deserialize<MockBankState>(text);
-      if (saved.schemaVersion === SCHEMA_VERSION) return saved;
+      if (saved.schemaVersion === SCHEMA_VERSION) {
+        // Demo data added after a bank was saved is filled in, keeping the customer's history.
+        addFriendPayLink(saved.world, createIdFactory(() => new Date())(), saved.seededAt);
+        return saved;
+      }
     } catch {
       // A corrupt snapshot is replaced; demo data is disposable by design.
     }

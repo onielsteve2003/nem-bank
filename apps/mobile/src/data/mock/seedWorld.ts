@@ -477,23 +477,7 @@ export function finishWorld(draft: WorldDraft, { now, start, reference }: Finish
     responded_at: null,
   });
 
-  // A friend's open-amount pay link, so the pay page can be tried from the app (TRF-12).
-  const emeka = world.people[1]!;
-  world.paymentLinks.push({
-    id: newId(),
-    slug: 'emeka-birthday',
-    url: 'https://nem-bank-fodx.vercel.app/pay/emeka-birthday',
-    account_id: emeka.accountId,
-    title: "Emeka's birthday dinner",
-    note: 'Chip in for Saturday at Yellow Chilli',
-    amount_mode: 'open',
-    amount: null,
-    status: 'active',
-    payments_count: 3,
-    total_received: api(naira(45_000)),
-    expires_at: null,
-    created_at: at,
-  });
+  addFriendPayLink(world, newId(), at);
 
   const conversationId = newId();
   world.conversations.push({
@@ -591,6 +575,32 @@ export function finishWorld(draft: WorldDraft, { now, start, reference }: Finish
 }
 
 /** Ajo: five friends, ₦20,000 weekly. Cycle 1 paid Amaka; cycle 2 is collecting. */
+export const FRIEND_PAY_LINK_SLUG = 'emeka-birthday';
+
+/**
+ * A friend's open-amount pay link, so the pay page can be tried from the app
+ * (TRF-12). Also added to banks saved before it existed (see loadOrSeedBank).
+ */
+export function addFriendPayLink(world: World, id: string, at: string): void {
+  const emeka = world.people[1];
+  if (!emeka || world.paymentLinks.some((l) => l.slug === FRIEND_PAY_LINK_SLUG)) return;
+  world.paymentLinks.push({
+    id,
+    slug: FRIEND_PAY_LINK_SLUG,
+    url: `https://nem-bank-fodx.vercel.app/pay/${FRIEND_PAY_LINK_SLUG}`,
+    account_id: emeka.accountId,
+    title: "Emeka's birthday dinner",
+    note: 'Chip in for Saturday at Yellow Chilli',
+    amount_mode: 'open',
+    amount: null,
+    status: 'active',
+    payments_count: 3,
+    total_received: api(naira(45_000)),
+    expires_at: null,
+    created_at: at,
+  });
+}
+
 function seedAjo(
   { world, ledger, newId, userId, ngn }: WorldDraft,
   { now, reference, me }: { now: Date; reference: () => string; me: Schema<'PartySummary'> },

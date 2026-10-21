@@ -22,6 +22,7 @@ import {
   TextField,
 } from '@/components';
 import { isApiError } from '@/data';
+import { env } from '@/lib/env';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
 import { useMoneyMutation, useRepoQuery } from '@/lib/query';
 import { useSessionStore } from '@/stores';
@@ -202,7 +203,11 @@ export function PayLinkScreen() {
             <EmptyState
               icon={Link2}
               title="We can't find this link"
-              message="Check the link with the person who sent it. It may have been mistyped."
+              message={
+                env.apiMode === 'mock'
+                  ? 'In this demo every phone and browser runs its own pretend bank, so a link only opens on the device that made it. Shared links work everywhere once the real backend is live.'
+                  : 'Check the link with the person who sent it. It may have been mistyped.'
+              }
             />
           ) : (
             <ErrorState title="We couldn't open this link" onRetry={() => link.refetch()} />

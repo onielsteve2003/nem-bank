@@ -79,6 +79,20 @@ describe('loadOrSeedBank', () => {
     expect(second.ledger.entries).toHaveLength(first.ledger.entries.length);
   });
 
+  it("adds the friend's pay link to a bank saved before it existed, once", async () => {
+    const store = createMemoryStore();
+    const saved = await loadOrSeedBank(store, { now: NOW });
+    saved.world.paymentLinks = [];
+    saved.user.preferred_name = 'Kept';
+    await saveBank(store, saved);
+
+    const loaded = await loadOrSeedBank(store, { now: NOW });
+    expect(loaded.user.preferred_name).toBe('Kept');
+    expect(loaded.world.paymentLinks.map((l) => l.slug)).toEqual(['emeka-birthday']);
+    await saveBank(store, loaded);
+    expect((await loadOrSeedBank(store, { now: NOW })).world.paymentLinks).toHaveLength(1);
+  });
+
   it('replaces corrupt or outdated snapshots with a fresh seed', async () => {
     const corrupt = createMemoryStore({ [SNAPSHOT_KEY]: '{not json' });
     expect((await loadOrSeedBank(corrupt, { now: NOW })).schemaVersion).toBe(SCHEMA_VERSION);
