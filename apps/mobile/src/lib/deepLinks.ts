@@ -26,7 +26,7 @@ type Route = {
 // First match wins, so specific patterns come before their prefixes.
 const ROUTES: Route[] = [
   // Payment links and QR (TRF-12, TRF-13)
-  { pattern: 'pay/requests/:id', to: () => '/pay' },
+  { pattern: 'pay/requests/:id', to: () => '/send/requests' },
   { pattern: 'pay/:slug', to: ({ slug = '' }) => ({ pathname: '/pay/[slug]', params: { slug } }) },
   { pattern: 'pay', to: () => '/pay' },
   { pattern: 'qr', to: (_, q) => qrHref(q.get('payload') ?? q.get('p') ?? '') },
@@ -35,6 +35,7 @@ const ROUTES: Route[] = [
   // Notification targets (NOT-1)
   { pattern: 'home', to: () => '/home' },
   { pattern: 'transactions/:id', to: () => '/home' },
+  { pattern: 'transfers/scheduled/:id', to: () => '/send/scheduled' },
   { pattern: 'transfers/:id', to: () => '/home' },
   { pattern: 'send', to: () => '/send' },
   { pattern: 'fx', to: () => '/convert' },

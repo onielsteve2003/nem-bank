@@ -1,7 +1,15 @@
 import type { Schema } from '@nem/contracts';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { AtSign, CalendarClock, Globe, Landmark, Search, Users } from 'lucide-react-native';
+import {
+  AtSign,
+  CalendarClock,
+  Globe,
+  HandCoins,
+  Landmark,
+  Search,
+  Users,
+} from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
@@ -23,6 +31,7 @@ import { useDebounced } from '@/lib/useDebounced';
 import { useTheme } from '@/theme';
 
 import { BeneficiaryRow } from '../components/BeneficiaryRow';
+import { openCount } from '../requests';
 import { SendHeader } from '../components/SendHeader';
 import { recipientFromBeneficiary, useSendDraft, type SendMode } from '../sendDraft';
 
@@ -47,6 +56,11 @@ export function SendHubScreen() {
     // Keeps the last results on screen while a new search runs, so the list never blinks.
     { placeholderData: keepPreviousData },
   );
+
+  const incoming = useRepoQuery('moneyRequests', 'list', {
+    query: { direction: 'incoming', status: 'pending', limit: 50 },
+  });
+  const toPay = openCount(incoming.data?.data);
 
   const startNew = (mode: SendMode) =>
     router.push({ pathname: '/send/recipient', params: { mode } });
@@ -90,6 +104,22 @@ export function SendHubScreen() {
       </Card>
 
       <Card padded={false}>
+        <ListItem
+          leading={HandCoins}
+          title="Requests"
+          subtitle={
+            toPay > 0
+              ? `${toPay} waiting for you to pay`
+              : 'Ask a Nem user for money, or pay what you owe.'
+          }
+          trailing={
+            toPay > 0 ? (
+              <Badge count={toPay} tone="primary" accessibilityLabel={`${toPay} to pay`} />
+            ) : undefined
+          }
+          showChevron
+          onPress={() => router.push('/send/requests')}
+        />
         <ListItem
           leading={CalendarClock}
           title="Scheduled payments"

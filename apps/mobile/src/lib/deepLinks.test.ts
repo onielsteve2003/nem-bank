@@ -25,7 +25,8 @@ describe('resolveDeepLink', () => {
 
   it('maps notification deep links to the closest screen that exists', () => {
     expect(path('nembank://transfers/0192f1aa-7b3c-7000-8000-000000000001')).toBe('/home');
-    expect(path('nembank://pay/requests/abc')).toBe('/pay');
+    expect(path('nembank://pay/requests/abc')).toBe('/send/requests');
+    expect(path('nembank://transfers/scheduled/abc')).toBe('/send/scheduled');
     expect(path('nembank://grow/ajo/abc')).toBe('/grow');
     expect(path('nembank://me/verification')).toBe('/kyc');
     expect(path('nembank://security/devices')).toBe('/me');
