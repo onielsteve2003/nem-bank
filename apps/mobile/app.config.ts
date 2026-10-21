@@ -48,6 +48,14 @@ export default ({ config }: ConfigContext): ExpoConfig => ({
       'expo-local-authentication',
       { faceIDPermission: 'Nem Bank uses Face ID to unlock the app and approve payments.' },
     ],
+    [
+      'expo-camera',
+      {
+        cameraPermission: 'Nem Bank uses the camera to scan QR codes you pay.',
+        microphonePermission: false,
+        recordAudioAndroid: false,
+      },
+    ],
   ],
   // The SDK runtime policy is the one Expo Go can load EAS updates for.
   runtimeVersion: { policy: 'sdkVersion' },

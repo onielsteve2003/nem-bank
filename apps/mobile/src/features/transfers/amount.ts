@@ -14,6 +14,14 @@ export function typedNaira(typed: string): Money | null {
   return isPositive(amount) ? amount : null;
 }
 
+/** Kobo as AmountInput types it: 250050n → "2500.5", 500000n → "5000". */
+export function typedFromKobo(kobo: bigint): string {
+  const whole = kobo / 100n;
+  const rest = kobo % 100n;
+  if (rest === 0n) return whole.toString();
+  return `${whole}.${rest.toString().padStart(2, '0').replace(/0$/, '')}`;
+}
+
 export interface AmountChecks {
   amount: Money;
   /** What the source wallet can spend now. */
