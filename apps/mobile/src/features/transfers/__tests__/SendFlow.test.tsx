@@ -82,10 +82,10 @@ describe('send hub', () => {
     });
   });
 
-  it('explains that sending abroad needs a partner', async () => {
+  it('opens the send abroad screen, marked as needing a partner', async () => {
     await render(wrap(bank(), <SendHubScreen />));
     await fireEvent.press(screen.getByRole('button', { name: /Send abroad/ }));
-    expect(await screen.findByText(/licensed remittance partner/)).toBeTruthy();
+    expect(mockPush).toHaveBeenCalledWith('/send/abroad');
   });
 });
 

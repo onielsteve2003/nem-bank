@@ -21,7 +21,6 @@ import {
   EmptyState,
   ErrorState,
   ListItem,
-  PaidFeatureNotice,
   Screen,
   SectionHeader,
   SkeletonGroup,
@@ -47,7 +46,6 @@ export function SendHubScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
   const setRecipient = useSendDraft((s) => s.setRecipient);
-  const [abroadOpen, setAbroadOpen] = useState(false);
   const [search, setSearch] = useState('');
   const q = useDebounced(search.trim(), SEARCH_DELAY_MS);
 
@@ -100,8 +98,8 @@ export function SendHubScreen() {
           title="Send abroad"
           subtitle="International transfer"
           trailing={<Badge label="Partner needed" tone="warning" />}
-          onPress={() => setAbroadOpen(true)}
-          accessibilityHint="Explains what sending abroad needs"
+          showChevron
+          onPress={() => router.push('/send/abroad')}
         />
       </Card>
 
@@ -193,12 +191,6 @@ export function SendHubScreen() {
           </View>
         </SkeletonGroup>
       )}
-
-      <PaidFeatureNotice
-        open={abroadOpen}
-        onClose={() => setAbroadOpen(false)}
-        feature="internationalTransfer"
-      />
     </Screen>
   );
 }
