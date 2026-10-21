@@ -5,6 +5,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
+import { problem } from '@/data/errors';
 import { createMockRepositories, DEMO_OTP, DEMO_PIN } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { toApiMoney } from '@/lib/money';
@@ -145,6 +146,43 @@ describe('review and confirm', () => {
     expect(mockReplace).not.toHaveBeenCalled();
     const { data } = await repos.transfers.list();
     expect(data.some((t) => t.narration === 'Rent')).toBe(false);
+  });
+
+  it('sends once when the answer is lost and the customer tries again', async () => {
+    const base = bank();
+    const keys: string[] = [];
+    let lose = true;
+    // The bank makes the transfer, but the answer never reaches the phone.
+    const repos: Repositories = {
+      ...base,
+      transfers: {
+        ...base.transfers,
+        create: async (input) => {
+          keys.push(input.idempotencyKey);
+          const transfer = await base.transfers.create(input);
+          if (lose) {
+            lose = false;
+            throw problem(504, 'gateway_timeout', 'Timed out');
+          }
+          return transfer;
+        },
+      },
+    };
+    await draft(repos, '5000');
+    await render(wrap(repos, <ReviewScreen />));
+
+    await confirmWithPin();
+    expect(await screen.findByText(/We didn't hear back\. Try again/)).toBeTruthy();
+    expect(mockReplace).not.toHaveBeenCalled();
+    for (const digit of DEMO_PIN)
+      await fireEvent.press(screen.getByRole('button', { name: digit }));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).toBe(keys[0]);
+    const { data } = await repos.transfers.list();
+    expect(data.filter((t) => t.narration === 'Rent')).toHaveLength(1);
+    expect(resultId()).toBe(data.find((t) => t.narration === 'Rent')!.id);
   });
 
   it('finishes a risk step-up with the emailed code', async () => {
