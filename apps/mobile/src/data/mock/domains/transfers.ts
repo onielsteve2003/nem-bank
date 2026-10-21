@@ -697,6 +697,14 @@ export function transfersRepo(bank: MockBank): TransfersRepo {
       if (body.status) s.status = body.status;
       if (body.amount) s.amount = api(positive(body.amount, 'NGN'));
       if (body.next_run_at) s.next_run_at = body.next_run_at;
+      // Runs missed while paused are skipped, not sent in a burst on resume.
+      const now = bank.nowIso();
+      while (s.status === 'active' && s.next_run_at && s.next_run_at <= now) {
+        const next = advance(s.next_run_at, s.frequency);
+        const ended = !next || (s.ends_on && next.slice(0, 10) > s.ends_on);
+        s.next_run_at = ended ? null : next;
+        if (ended) s.status = 'completed';
+      }
       return scheduleView(s);
     },
     async cancelScheduled({ path }) {

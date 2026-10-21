@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { AtSign, Globe, Landmark, Search, Users } from 'lucide-react-native';
+import { AtSign, CalendarClock, Globe, Landmark, Search, Users } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 
@@ -86,6 +86,16 @@ export function SendHubScreen() {
           trailing={<Badge label="Partner needed" tone="warning" />}
           onPress={() => setAbroadOpen(true)}
           accessibilityHint="Explains what sending abroad needs"
+        />
+      </Card>
+
+      <Card padded={false}>
+        <ListItem
+          leading={CalendarClock}
+          title="Scheduled payments"
+          subtitle="Pay later, or every day, week or month."
+          showChevron
+          onPress={() => router.push('/send/scheduled')}
         />
       </Card>
 

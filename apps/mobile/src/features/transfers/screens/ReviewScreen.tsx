@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Lock, UserSearch } from 'lucide-react-native';
+import { CalendarClock, Lock, UserSearch } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -13,6 +13,7 @@ import {
   EmptyState,
   ErrorState,
   Icon,
+  ListItem,
   Screen,
   Skeleton,
   SkeletonGroup,
@@ -26,10 +27,12 @@ import { useTheme } from '@/theme';
 import { typedNaira } from '../amount';
 import { ConfirmSheet } from '../components/ConfirmSheet';
 import { QuoteSummary } from '../components/QuoteSummary';
+import { ScheduleSheet } from '../components/ScheduleSheet';
 import { SendHeader } from '../components/SendHeader';
 import { StepUpSheet } from '../components/StepUpSheet';
 import { riskReasonsOf, sendErrorMessage } from '../confirm';
 import { copVerdict } from '../recipient';
+import { describeSchedule, scheduleBody, type ScheduleChoice } from '../schedule';
 import { destinationOf, useSendDraft } from '../sendDraft';
 
 type Transfer = Schema<'Transfer'>;
@@ -63,6 +66,8 @@ export function ReviewScreen() {
   const [confirming, setConfirming] = useState(false);
   const [sendError, setSendError] = useState<string>();
   const [stepUp, setStepUp] = useState<Transfer | null>(null);
+  const [schedule, setSchedule] = useState<ScheduleChoice | null>(null);
+  const [choosingWhen, setChoosingWhen] = useState(false);
 
   const accounts = useRepoQuery('accounts', 'list');
   const source = accounts.data?.data.find((a) => a.currency === 'NGN');
@@ -83,6 +88,7 @@ export function ReviewScreen() {
     { enabled: Boolean(amount && source && recipient) },
   );
   const send = useMoneyMutation('transfers', 'create');
+  const createSchedule = useMoneyMutation('transfers', 'createScheduled');
 
   const finish = useCallback(
     (transfer: Transfer) => {
@@ -98,6 +104,22 @@ export function ReviewScreen() {
     if (!recipient || !amount || !source || !quote.data) return false;
     setSendError(undefined);
     try {
+      if (schedule) {
+        // Nothing moves today: each run is checked and priced when it goes.
+        const created = await createSchedule.mutateAsync({
+          body: {
+            source_account_id: source.id,
+            destination: destinationOf(recipient),
+            amount: toApiMoney(amount),
+            ...(narration ? { narration } : {}),
+            ...scheduleBody(schedule),
+          },
+        });
+        setConfirming(false);
+        clearDraft();
+        router.replace({ pathname: '/send/scheduled', params: { created: created.id } });
+        return true;
+      }
       const transfer = await send.mutateAsync({
         body: {
           source_account_id: source.id,
@@ -124,7 +146,20 @@ export function ReviewScreen() {
       }
       return false;
     }
-  }, [recipient, amount, source, quote, send, narration, save, finish]);
+  }, [
+    recipient,
+    amount,
+    source,
+    quote,
+    send,
+    createSchedule,
+    schedule,
+    clearDraft,
+    router,
+    narration,
+    save,
+    finish,
+  ]);
 
   if (!recipient || !amount) {
     return (
@@ -161,10 +196,10 @@ export function ReviewScreen() {
             </Text>
           )}
           <Button
-            label={`Send ${formatMoney(amount)}`}
+            label={`${schedule ? 'Schedule' : 'Send'} ${formatMoney(amount)}`}
             icon={Lock}
             disabled={!quote.data || !source}
-            loading={send.isPending}
+            loading={send.isPending || createSchedule.isPending}
             onPress={() => setConfirming(true)}
           />
         </View>
@@ -206,7 +241,18 @@ export function ReviewScreen() {
         </SkeletonGroup>
       )}
 
-      {!recipient.beneficiaryId && (
+      <Card padded={false}>
+        <ListItem
+          leading={CalendarClock}
+          title={schedule ? describeSchedule(schedule) : 'Send now'}
+          subtitle={schedule ? 'Tap to change or send now instead' : 'Or schedule it, or repeat it'}
+          onPress={() => setChoosingWhen(true)}
+          accessibilityLabel={`When: ${schedule ? describeSchedule(schedule) : 'now'}`}
+          accessibilityHint="Choose a later day or a repeat"
+        />
+      </Card>
+
+      {!recipient.beneficiaryId && !schedule && (
         <Switch
           label={`Save ${firstName} for next time`}
           description="Saved people are quicker to pay and easier to check."
@@ -225,7 +271,11 @@ export function ReviewScreen() {
       <ConfirmSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        subtitle={`Send ${total} to ${firstName}`}
+        subtitle={
+          schedule
+            ? `Schedule ${formatMoney(amount)} to ${firstName}`
+            : `Send ${total} to ${firstName}`
+        }
         onApproved={onApproved}
         error={sendError}
       />
@@ -239,6 +289,16 @@ export function ReviewScreen() {
         }}
         onReleased={finish}
       />
+      {choosingWhen && (
+        <ScheduleSheet
+          value={schedule}
+          onClose={() => setChoosingWhen(false)}
+          onApply={(next) => {
+            setSchedule(next);
+            setChoosingWhen(false);
+          }}
+        />
+      )}
     </Screen>
   );
 }
