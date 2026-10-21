@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, type CurrencyCode } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Lock, Wallet } from 'lucide-react-native';
+import { ChartLine, Lock, Wallet } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -252,6 +252,18 @@ export function ConvertScreen() {
           Rates are indicative and held for 60 seconds once quoted.
         </Text>
       )}
+
+      <Button
+        label="Rate charts and alerts"
+        icon={ChartLine}
+        variant="ghost"
+        onPress={() =>
+          router.push({
+            pathname: '/convert/rates',
+            params: { pair: `${(from.currency === 'NGN' ? to : from).currency}-NGN` },
+          })
+        }
+      />
 
       <ConfirmSheet
         open={confirming}
