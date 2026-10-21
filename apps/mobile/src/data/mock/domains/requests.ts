@@ -1,5 +1,12 @@
 import type { Schema } from '@nem/contracts';
-import { money, sum } from '@nem/shared';
+import {
+  customSharesError,
+  equalShares,
+  MAX_SPLIT_PARTICIPANTS,
+  money,
+  SPLIT_REMIND_HOURS,
+  sum,
+} from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { MoneyRequestsRepo, PaymentLinksRepo } from '../../repositories';
@@ -23,7 +30,7 @@ import { sendMoney } from './transfers';
 
 /** Friends pay outgoing requests back after this long, so the demo shows money arriving. */
 const PAY_BACK_MS = 15_000;
-const REMIND_EVERY_MS = 60 * 60_000;
+const REMIND_EVERY_MS = SPLIT_REMIND_HOURS * 60 * 60_000;
 const QR_KEY_ID = 'mock-qr-1';
 const QR_TTL_MINUTES = 15;
 
@@ -225,22 +232,27 @@ export function moneyRequestsRepo(bank: MockBank): MoneyRequestsRepo {
       const total = positive(body.total, 'NGN');
       const people = body.participants.map((p) => participant(p.nemtag));
       if (people.length === 0) throw problem(422, 'validation_failed', 'Add at least one person');
-      const heads = BigInt(people.length + (body.include_self ? 1 : 0));
+      if (people.length > MAX_SPLIT_PARTICIPANTS) {
+        throw problem(
+          422,
+          'validation_failed',
+          `Split with up to ${MAX_SPLIT_PARTICIPANTS} people`,
+        );
+      }
+      if (new Set(people.map((p) => p.userId)).size !== people.length) {
+        throw problem(422, 'validation_failed', 'Add each person once');
+      }
       let amounts: bigint[];
       if (body.split === 'equal') {
-        // Kobo that do not divide evenly go to the first friend, never lost.
-        const share = total.amount / heads;
-        const remainder = total.amount - share * heads;
-        amounts = people.map((_, i) => share + (i === 0 ? remainder : 0n));
+        // Kobo that do not divide evenly go to the creator, never lost (shared rule).
+        amounts = equalShares(total.amount, people.length, body.include_self).friends;
       } else {
         amounts = body.participants.map((p) => {
           if (!p.amount) throw problem(422, 'validation_failed', 'Give every person an amount');
           return positive(p.amount, 'NGN').amount;
         });
-        const requested = amounts.reduce((a, b) => a + b, 0n);
-        if (requested > total.amount || (!body.include_self && requested !== total.amount)) {
-          throw problem(422, 'validation_failed', 'The shares must add up to the total');
-        }
+        const error = customSharesError(total.amount, amounts, body.include_self);
+        if (error) throw problem(422, 'validation_failed', error);
       }
       const id = bank.id();
       const shares: Schema<'SplitShare'>[] = people.map((person, i) => {
@@ -281,14 +293,26 @@ export function moneyRequestsRepo(bank: MockBank): MoneyRequestsRepo {
     async remindSplitBill({ path }) {
       const split = splitView(bank, findSplit(path.split_bill_id));
       const now = bank.now();
-      const recent = split.shares.some(
+      // At most one reminder per person per day; anyone not due yet is skipped.
+      const due = split.shares.filter(
         (s) =>
-          s.last_reminded_at && now.getTime() - Date.parse(s.last_reminded_at) < REMIND_EVERY_MS,
+          s.status === 'pending' &&
+          s.money_request_id &&
+          (!s.last_reminded_at ||
+            now.getTime() - Date.parse(s.last_reminded_at) >= REMIND_EVERY_MS),
       );
-      if (recent) throw problem(429, 'rate_limited', 'You reminded everyone recently');
-      for (const share of split.shares) {
-        if (share.status === 'pending') share.last_reminded_at = now.toISOString();
+      if (due.length === 0) {
+        throw problem(429, 'rate_limited', 'Everyone still to pay was reminded in the last day', {
+          retry_at: new Date(
+            Math.min(
+              ...split.shares
+                .filter((s) => s.status === 'pending' && s.last_reminded_at)
+                .map((s) => Date.parse(s.last_reminded_at!) + REMIND_EVERY_MS),
+            ),
+          ).toISOString(),
+        });
       }
+      for (const share of due) share.last_reminded_at = now.toISOString();
     },
   };
 }

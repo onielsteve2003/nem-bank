@@ -7,6 +7,7 @@ import {
   Globe,
   HandCoins,
   Landmark,
+  Receipt,
   Search,
   Users,
 } from 'lucide-react-native';
@@ -119,6 +120,13 @@ export function SendHubScreen() {
           }
           showChevron
           onPress={() => router.push('/send/requests')}
+        />
+        <ListItem
+          leading={Receipt}
+          title="Split a bill"
+          subtitle="Share a cost with Nem users and see who has paid."
+          showChevron
+          onPress={() => router.push('/send/splits')}
         />
         <ListItem
           leading={CalendarClock}

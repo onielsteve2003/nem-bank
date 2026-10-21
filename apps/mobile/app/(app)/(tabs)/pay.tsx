@@ -16,6 +16,11 @@ export default function PayRoute() {
       <Button label="Send money" onPress={() => router.push('/send')} />
       <Button label="Requests" variant="secondary" onPress={() => router.push('/send/requests')} />
       <Button
+        label="Split a bill"
+        variant="secondary"
+        onPress={() => router.push('/send/splits')}
+      />
+      <Button
         label="Scheduled payments"
         variant="secondary"
         onPress={() => router.push('/send/scheduled')}
