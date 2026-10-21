@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, type CurrencyCode } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ChartLine, Lock, Wallet } from 'lucide-react-native';
+import { ArrowDownLeft, ChartLine, Lock, Wallet } from 'lucide-react-native';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -261,6 +261,18 @@ export function ConvertScreen() {
           router.push({
             pathname: '/convert/rates',
             params: { pair: `${(from.currency === 'NGN' ? to : from).currency}-NGN` },
+          })
+        }
+      />
+
+      <Button
+        label="Receive from abroad"
+        icon={ArrowDownLeft}
+        variant="ghost"
+        onPress={() =>
+          router.push({
+            pathname: '/convert/receive',
+            params: { currency: (from.currency === 'NGN' ? to : from).currency },
           })
         }
       />

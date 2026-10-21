@@ -1,15 +1,14 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES } from '@nem/shared';
-import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { Copy, FileText, Share2, TriangleAlert } from 'lucide-react-native';
+import { CircleHelp, FileText, Share2, TriangleAlert } from 'lucide-react-native';
 import { Share, StyleSheet, View } from 'react-native';
 
-import { Badge, BottomSheet, Button, Icon, IconButton, Text, useToast } from '@/components';
-import { haptic } from '@/lib/haptics';
+import { Badge, BottomSheet, Button, Icon, Text, useToast } from '@/components';
 import { useTheme } from '@/theme';
 
-import { detailRows, shareMessage } from './receivingDetails';
+import { ReceivingDetailsCard } from './ReceivingDetailsCard';
+import { shareMessage } from './receivingDetails';
 
 /**
  * How to pay into a wallet from another bank (ACC-1, ACC-2): each detail with
@@ -27,17 +26,11 @@ export function AccountDetailsSheet({
   /** Mock bank only: Demo Controls can put money in straight away. */
   onAddDemoMoney?: () => void;
 }) {
-  const { colors, spacing, radius } = useTheme();
+  const { spacing } = useTheme();
   const toast = useToast();
   const router = useRouter();
   const details = account?.receiving_details;
   const currency = account ? CURRENCIES[account.currency] : null;
-
-  const copy = async (label: string, value: string) => {
-    await Clipboard.setStringAsync(value);
-    haptic('success');
-    toast.show({ message: `${label} copied`, tone: 'success' });
-  };
 
   const share = async () => {
     if (!details || !currency) return;
@@ -68,47 +61,7 @@ export function AccountDetailsSheet({
             {details.demo && <Badge label="Demo details" tone="warning" />}
           </View>
 
-          <View
-            style={{
-              borderRadius: radius.lg,
-              backgroundColor: colors.raised,
-              paddingHorizontal: spacing[4],
-            }}
-          >
-            {detailRows(details).map((row, i) => (
-              <View
-                key={row.label}
-                style={[
-                  styles.row,
-                  {
-                    paddingVertical: spacing[3],
-                    gap: spacing[2],
-                    borderTopWidth: i === 0 ? 0 : StyleSheet.hairlineWidth,
-                    borderColor: colors.border,
-                  },
-                ]}
-              >
-                <View
-                  style={styles.flex}
-                  accessible
-                  accessibilityLabel={`${row.label}: ${row.value}`}
-                >
-                  <Text variant="caption" color="textMuted">
-                    {row.label}
-                  </Text>
-                  <Text variant="bodyStrong" selectable>
-                    {row.value}
-                  </Text>
-                </View>
-                <IconButton
-                  icon={Copy}
-                  accessibilityLabel={`Copy ${row.label.toLowerCase()}`}
-                  variant="ghost"
-                  onPress={() => void copy(row.label, row.copy)}
-                />
-              </View>
-            ))}
-          </View>
+          <ReceivingDetailsCard details={details} />
 
           {details.demo && (
             <View style={[styles.row, { gap: spacing[2] }]}>
@@ -122,6 +75,21 @@ export function AccountDetailsSheet({
 
           <View style={{ gap: spacing[2] }}>
             <Button label="Share details" icon={Share2} fullWidth onPress={() => void share()} />
+            {account?.currency !== 'NGN' && (
+              <Button
+                label="How receiving works"
+                icon={CircleHelp}
+                variant="ghost"
+                fullWidth
+                onPress={() => {
+                  onClose();
+                  router.push({
+                    pathname: '/convert/receive',
+                    params: { currency: account!.currency, entry: 'wallet' },
+                  });
+                }}
+              />
+            )}
             <Button
               label="Get a statement"
               icon={FileText}
