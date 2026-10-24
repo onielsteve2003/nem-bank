@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 
 import type { CardDesign, CardNetwork } from '@/components';
+import { parseNairaText } from '@/features/transfers/splits';
 import { fromApiMoney } from '@/lib/money';
 
 // Virtual cards (CARD-1): how each card is named, described and drawn.
@@ -73,13 +74,7 @@ export function cardFacts(card: Card): string[] {
   const facts = [`${CARD_TYPES[card.type].label} · ${card.currency} · ends ${card.last4}`];
   const lock = card.controls.merchant_lock;
   if (lock) facts.push(`Only works at ${lock.merchant_name}`);
-  const limit = card.controls.spend_limit;
-  if (limit) {
-    const per = { per_transaction: 'per payment', daily: 'a day', monthly: 'a month' }[
-      limit.period
-    ];
-    facts.push(`Limit ${formatMoney(fromApiMoney(limit.amount), { trimZeroMinor: true })} ${per}`);
-  }
+  if (card.controls.spend_limit) facts.push(`Limit ${limitSummary(card)}`);
   return facts;
 }
 
@@ -88,3 +83,23 @@ export const closedReason = (card: Card) => (card.status === 'used' ? 'Used once
 
 /** "5060 9912 3456 7890": the PAN in groups of four, as printed on cards. */
 export const groupPan = (pan: string) => pan.replace(/(\d{4})(?=\d)/g, '$1 ');
+
+export type LimitPeriod = Schema<'SpendLimit'>['period'];
+
+export const LIMIT_PERIODS: { value: LimitPeriod; label: string }[] = [
+  { value: 'per_transaction', label: 'Per payment' },
+  { value: 'daily', label: 'A day' },
+  { value: 'monthly', label: 'A month' },
+];
+
+/** A typed limit ("50,000", "$25.50") in the card's minor units, or null if not a positive amount. */
+export const parseLimit = (text: string) => parseNairaText(text.replace(/\$/g, ''));
+
+/** "₦200,000 a day", or "No limit". */
+export function limitSummary(card: Card): string {
+  const limit = card.controls.spend_limit;
+  if (!limit) return 'No limit';
+  const period = LIMIT_PERIODS.find((p) => p.value === limit.period)!.label.toLowerCase();
+  const amount = formatMoney(fromApiMoney(limit.amount), { trimZeroMinor: true });
+  return `${amount} ${period}`;
+}

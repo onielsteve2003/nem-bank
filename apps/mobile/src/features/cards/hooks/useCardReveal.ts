@@ -3,8 +3,9 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { isApiError } from '@/data';
-import { getDeviceKeyInfo, signWithDeviceKey } from '@/lib/deviceKey';
 import { useRepoMutation } from '@/lib/query';
+
+import { StepUpCancelled, StepUpNeedsPin, useStepUp, type StepUpProof } from './useStepUp';
 
 /** How long card details stay on screen once unlocked (CARD-3). */
 export const REVEAL_SECONDS = 30;
@@ -18,7 +19,7 @@ export type CardReveal = {
   /** Why the last attempt failed, for the PIN sheet. */
   error: string | undefined;
   /** Proves it is the customer with the bank, then fetches the details. */
-  unlock: (cardId: string, proof: { pin: string } | { biometric: string }) => Promise<boolean>;
+  unlock: (cardId: string, proof: StepUpProof) => Promise<boolean>;
   hide: () => void;
 };
 
@@ -37,8 +38,7 @@ const failure = (e: unknown) => {
  * only in memory and go after 30 s, or as soon as the app leaves the screen.
  */
 export function useCardReveal(): CardReveal {
-  const start = useRepoMutation('auth', 'startStepUp', { invalidates: [] });
-  const verify = useRepoMutation('auth', 'verifyStepUp', { invalidates: [] });
+  const stepUp = useStepUp();
   const reveal = useRepoMutation('cards', 'reveal', { invalidates: [] });
   const [details, setDetails] = useState<Revealed | null>(null);
   const [secondsLeft, setSecondsLeft] = useState(0);
@@ -73,38 +73,20 @@ export function useCardReveal(): CardReveal {
   const unlock: CardReveal['unlock'] = async (cardId, proof) => {
     setError(undefined);
     try {
-      const challenge = await start.mutateAsync({
-        body: { purpose: 'card_reveal', resource_id: cardId },
-      });
-      let body: Schema<'StepUpVerifyRequest'>;
-      if ('pin' in proof) {
-        body = { pin: proof.pin };
-      } else {
-        if (!(await getDeviceKeyInfo())) {
-          setError(`${proof.biometric} isn't set up for card details here. Enter your PIN.`);
-          return false;
-        }
-        try {
-          body = {
-            signature: await signWithDeviceKey(challenge.step_up_id, 'Show card details'),
-          };
-        } catch {
-          // Cancelled the system prompt: stay on the pad.
-          return false;
-        }
-      }
-      const { step_up_token } = await verify.mutateAsync({
-        path: { step_up_id: challenge.step_up_id },
-        body,
-      });
+      const token = await stepUp('card_reveal', cardId, proof);
       const secrets = await reveal.mutateAsync({
         path: { card_id: cardId },
-        stepUpToken: step_up_token,
+        stepUpToken: token,
       });
       setSecondsLeft(REVEAL_SECONDS);
       setDetails(secrets);
       return true;
     } catch (e) {
+      if (e instanceof StepUpCancelled) return false;
+      if (e instanceof StepUpNeedsPin) {
+        setError('Face ID isn’t set up for this here. Enter your PIN.');
+        return false;
+      }
       setError(failure(e));
       return false;
     }

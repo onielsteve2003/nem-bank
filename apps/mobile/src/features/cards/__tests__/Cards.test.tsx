@@ -190,6 +190,65 @@ describe('cards home', () => {
   });
 });
 
+describe('card controls', () => {
+  it('freezes and unfreezes the card', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('switch', { name: 'Freeze card' }));
+    expect(await screen.findByText('Card frozen')).toBeTruthy();
+    expect((await repos.cards.list()).data[0]!.status).toBe('frozen');
+    await waitFor(() => expect(screen.getByRole('switch', { name: 'Freeze card' })).toBeChecked());
+    await fireEvent.press(screen.getByRole('switch', { name: 'Freeze card' }));
+    expect(await screen.findByText('Card unfrozen')).toBeTruthy();
+    expect((await repos.cards.list()).data[0]!.status).toBe('active');
+  });
+
+  it('turns international payments on', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    const before = (await repos.cards.list()).data[0]!.controls.international_enabled;
+    await fireEvent.press(await screen.findByRole('switch', { name: 'International payments' }));
+    await waitFor(async () =>
+      expect((await repos.cards.list()).data[0]!.controls.international_enabled).toBe(!before),
+    );
+  });
+
+  it('sets a monthly spend limit', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Spend limit/ }));
+    await fireEvent.press(screen.getByRole('togglebutton', { name: 'A month' }));
+    await fireEvent.changeText(screen.getByLabelText('Limit in NGN'), '0');
+    expect(screen.getByRole('button', { name: 'Save limit' })).toBeDisabled();
+    await fireEvent.changeText(screen.getByLabelText('Limit in NGN'), '75,000');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save limit' }));
+    expect(await screen.findByText('Spend limit saved')).toBeTruthy();
+    expect((await repos.cards.list()).data[0]!.controls.spend_limit).toEqual({
+      period: 'monthly',
+      amount: { amount_minor: '7500000', currency: 'NGN' },
+    });
+  });
+
+  it('locks a standard card to one merchant', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Merchant lock/ }));
+    await fireEvent.press(screen.getByRole('togglebutton', { name: 'Jumia' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByText('Locked to Jumia')).toBeTruthy();
+    expect((await repos.cards.list()).data[0]!.controls.merchant_lock?.merchant_name).toBe('Jumia');
+  });
+
+  it('keeps a panic-frozen card frozen and says why', async () => {
+    const repos = bank();
+    await repos.security.activatePanic();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('switch', { name: 'Freeze card' }));
+    expect(await screen.findByText(/Releasing it unfreezes every card/)).toBeTruthy();
+    expect((await repos.cards.list()).data[0]!.status).toBe('frozen');
+  });
+});
+
 describe('new card', () => {
   it('creates a merchant-locked card once a merchant is picked, after the PIN', async () => {
     const repos = bank();

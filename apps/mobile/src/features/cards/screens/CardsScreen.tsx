@@ -24,6 +24,7 @@ import { useTheme } from '@/theme';
 
 import { cardFacts, cardName, closedReason, isOpen } from '../cards';
 import { CardCarousel } from '../components/CardCarousel';
+import { CardControls } from '../components/CardControls';
 import { CardDetailsPanel } from '../components/CardDetailsPanel';
 import { useCardReveal } from '../hooks/useCardReveal';
 
@@ -148,6 +149,11 @@ export function CardsScreen() {
                   onPress={() => setUnlocking(true)}
                 />
               )}
+            </View>
+          )}
+          {current && (
+            <View style={{ paddingHorizontal: spacing[2] }}>
+              <CardControls key={current.id} card={current} />
             </View>
           )}
           <View style={{ paddingHorizontal: spacing[4] }}>
