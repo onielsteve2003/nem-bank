@@ -410,6 +410,10 @@ export function authRepo(bank: MockBank): AuthRepo {
         }
       } else if (body.otp_code !== undefined) {
         checkOtp(bank, stepUp.otpId, body.otp_code);
+      } else if (body.signature !== undefined) {
+        // The server checks it against the bound device key (Phase 2); the mock
+        // only needs one, like loginWithDevice.
+        if (!body.signature) throw problem(401, 'invalid_signature', 'Use your PIN instead');
       } else if (body.security_answer !== undefined) {
         const q = bank.world.auth.securityQuestion;
         if (!q || q.answer !== body.security_answer.trim().toLowerCase()) {

@@ -85,3 +85,6 @@ export function cardFacts(card: Card): string[] {
 
 /** Why a closed card is closed, in a word. */
 export const closedReason = (card: Card) => (card.status === 'used' ? 'Used once' : 'Terminated');
+
+/** "5060 9912 3456 7890": the PAN in groups of four, as printed on cards. */
+export const groupPan = (pan: string) => pan.replace(/(\d{4})(?=\d)/g, '$1 ');

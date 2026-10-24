@@ -10,7 +10,9 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
-import { bankCardProps, cardFacts, cardName } from '../cards';
+import * as Clipboard from 'expo-clipboard';
+
+import { bankCardProps, cardFacts, cardName, groupPan } from '../cards';
 import { CardsScreen } from '../screens/CardsScreen';
 import { NewCardScreen } from '../screens/NewCardScreen';
 
@@ -18,6 +20,12 @@ const mockPush = jest.fn();
 const mockBack = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn() }),
+  useFocusEffect: jest.fn(),
+}));
+jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
+jest.mock('expo-screen-capture', () => ({
+  preventScreenCaptureAsync: jest.fn(async () => undefined),
+  allowScreenCaptureAsync: jest.fn(async () => undefined),
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
 jest.mock('expo-local-authentication', () => ({
@@ -93,6 +101,10 @@ beforeEach(() => {
 });
 
 describe('card copy', () => {
+  it('groups a card number in fours', () => {
+    expect(groupPan('5060991234567890')).toBe('5060 9912 3456 7890');
+  });
+
   it('draws the simulated network as its brand with a two-digit expiry', () => {
     expect(bankCardProps(CARD)).toMatchObject({
       network: 'visa',
@@ -137,6 +149,37 @@ describe('cards home', () => {
     expect(await screen.findByText('Trial')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Show card 2 of 2' }));
     expect(await screen.findByText('Everyday')).toBeTruthy();
+  });
+
+  it('shows the details after the PIN, copies them, and hides them after 30 s', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Show card details' }));
+    await enterPin();
+
+    const number = await screen.findByLabelText(/^Card number: \d{4} \d{4} \d{4} \d{4}$/);
+    expect(screen.getByLabelText(/^CVV: \d{3}$/)).toBeTruthy();
+    expect(screen.getByText(/^Hiding in \d+ s/)).toBeTruthy();
+    const pan = number.props.accessibilityLabel.replace('Card number: ', '').replaceAll(' ', '');
+    await fireEvent.press(screen.getByRole('button', { name: 'Copy card number' }));
+    expect(Clipboard.setStringAsync).toHaveBeenCalledWith(pan);
+
+    const now = Date.now();
+    const clock = jest.spyOn(Date, 'now').mockReturnValue(now + 31_000);
+    await waitFor(() => expect(screen.queryByLabelText(/^Card number:/)).toBeNull());
+    expect(screen.getByRole('button', { name: 'Show card details' })).toBeTruthy();
+    clock.mockRestore();
+  });
+
+  it('keeps the details hidden after a wrong PIN', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Show card details' }));
+    const wrong = '1111'; // not the demo PIN
+    for (const k of wrong)
+      await fireEvent.press(screen.getAllByRole('button', { name: k }).at(-1)!);
+    expect(await screen.findByText(/attempts? left|Wrong PIN|isn't right/i)).toBeTruthy();
+    expect(screen.queryByLabelText(/^Card number:/)).toBeNull();
   });
 
   it('says so when there are no cards', async () => {

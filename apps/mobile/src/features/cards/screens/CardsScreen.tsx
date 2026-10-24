@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
-import { useRouter } from 'expo-router';
-import { CreditCard, Plus } from 'lucide-react-native';
-import { useState } from 'react';
+import { useFocusEffect, useRouter } from 'expo-router';
+import { CreditCard, Eye, Plus } from 'lucide-react-native';
+import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -18,11 +18,14 @@ import {
   Text,
 } from '@/components';
 import { isApiError } from '@/data';
+import { ConfirmSheet } from '@/features/transfers/components/ConfirmSheet';
 import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { cardFacts, cardName, closedReason, isOpen } from '../cards';
 import { CardCarousel } from '../components/CardCarousel';
+import { CardDetailsPanel } from '../components/CardDetailsPanel';
+import { useCardReveal } from '../hooks/useCardReveal';
 
 /** The most cards one person can hold open at once (the bank enforces it too). */
 export const MAX_OPEN_CARDS = 5;
@@ -36,6 +39,11 @@ export function CardsScreen() {
   const { spacing } = useTheme();
   const cards = useRepoQuery('cards', 'list');
   const [index, setIndex] = useState(0);
+  const reveal = useCardReveal();
+  const [unlocking, setUnlocking] = useState(false);
+  const { hide } = reveal;
+  // Leaving the tab takes the details with it.
+  useFocusEffect(useCallback(() => hide, [hide]));
 
   const all = cards.data?.data ?? [];
   const open = all.filter(isOpen);
@@ -43,6 +51,17 @@ export function CardsScreen() {
   const atMax = open.length >= MAX_OPEN_CARDS;
   const current: Schema<'Card'> | undefined = open[Math.min(index, open.length - 1)];
   const create = () => router.push('/new-card');
+  const shown = current && reveal.details?.card_id === current.id ? reveal.details : null;
+  const choose = (i: number) => {
+    reveal.hide();
+    setIndex(i);
+  };
+  const unlock = async (proof: { pin: string } | { biometric: string }) => {
+    if (!current) return false;
+    const ok = await reveal.unlock(current.id, proof);
+    if (ok) setUnlocking(false);
+    return ok;
+  };
 
   const header = (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
@@ -89,7 +108,14 @@ export function CardsScreen() {
         />
       ) : (
         <>
-          <CardCarousel cards={open} index={Math.min(index, open.length - 1)} onIndex={setIndex} />
+          <CardCarousel
+            cards={open}
+            index={Math.min(index, open.length - 1)}
+            onIndex={choose}
+            revealed={
+              shown ? { cardId: shown.card_id, number: shown.pan, cvv: shown.cvv } : undefined
+            }
+          />
           {current && (
             <View style={{ paddingHorizontal: spacing[4], gap: spacing[1] }}>
               <View style={[styles.row, { gap: spacing[2] }]}>
@@ -103,9 +129,25 @@ export function CardsScreen() {
                   {fact}
                 </Text>
               ))}
-              <Text variant="caption" color="textMuted">
-                Tap the card to see its back.
-              </Text>
+            </View>
+          )}
+          {current && (
+            <View style={{ paddingHorizontal: spacing[4] }}>
+              {shown ? (
+                <CardDetailsPanel
+                  details={shown}
+                  secondsLeft={reveal.secondsLeft}
+                  onHide={reveal.hide}
+                />
+              ) : (
+                <Button
+                  label="Show card details"
+                  icon={Eye}
+                  variant="secondary"
+                  fullWidth
+                  onPress={() => setUnlocking(true)}
+                />
+              )}
             </View>
           )}
           <View style={{ paddingHorizontal: spacing[4] }}>
@@ -118,7 +160,7 @@ export function CardsScreen() {
               <Button
                 label="Create a virtual card"
                 icon={Plus}
-                variant="secondary"
+                variant="ghost"
                 fullWidth
                 onPress={create}
               />
@@ -142,6 +184,14 @@ export function CardsScreen() {
           ))}
         </View>
       )}
+      <ConfirmSheet
+        open={unlocking}
+        onClose={() => setUnlocking(false)}
+        subtitle={current ? `Show details for the card ending ${current.last4}` : ''}
+        error={reveal.error}
+        onApproved={(pin) => (pin ? unlock({ pin }) : Promise.resolve(false))}
+        approveWithBiometrics={(label) => unlock({ biometric: label })}
+      />
     </Screen>
   );
 }

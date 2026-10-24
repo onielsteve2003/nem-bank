@@ -17,12 +17,19 @@ interface Props {
   /** e.g. "Send ₦25,000.00 to Chidi". */
   subtitle: string;
   /**
-   * Runs once the customer has proved it is them. Resolve `false` (and set `error`)
-   * to keep the sheet open on the pad.
+   * Runs once the customer has proved it is them, with the PIN when that was the
+   * proof (for a bank step-up). Resolve `false` (and set `error`) to keep the
+   * sheet open on the pad.
    */
-  onApproved: () => Promise<boolean>;
+  onApproved: (pin?: string) => Promise<boolean>;
   /** Why the last attempt to send failed, shown under the pad. */
   error?: string;
+  /**
+   * Replaces the plain system prompt, for callers whose proof is itself
+   * biometric-gated (signing a bank challenge with the device key prompts on
+   * its own, so prompting first would ask twice).
+   */
+  approveWithBiometrics?: (label: string) => Promise<boolean>;
 }
 
 /**
@@ -30,7 +37,14 @@ interface Props {
  * Face ID / fingerprint when this phone's key was set up with it. The transfer
  * itself is then signed with the device key by the transport.
  */
-export function ConfirmSheet({ open, onClose, subtitle, onApproved, error }: Props) {
+export function ConfirmSheet({
+  open,
+  onClose,
+  subtitle,
+  onApproved,
+  error,
+  approveWithBiometrics,
+}: Props) {
   const isDemo = useSessionStore((s) => s.session?.isDemo ?? false);
   const verify = useRepoMutation('users', 'verifyPin', { invalidates: [] });
   const [biometrics, setBiometrics] = useState(NO_BIOMETRICS);
@@ -39,9 +53,10 @@ export function ConfirmSheet({ open, onClose, subtitle, onApproved, error }: Pro
 
   const tryBiometrics = useCallback(
     async (label: string) => {
-      if (await authenticateWithBiometrics(`Approve with ${label}`)) await onApproved();
+      if (approveWithBiometrics) await approveWithBiometrics(label);
+      else if (await authenticateWithBiometrics(`Approve with ${label}`)) await onApproved();
     },
-    [onApproved],
+    [onApproved, approveWithBiometrics],
   );
 
   useEffect(() => {
@@ -83,7 +98,7 @@ export function ConfirmSheet({ open, onClose, subtitle, onApproved, error }: Pro
       return false;
     }
     setPinError(undefined);
-    return onApproved();
+    return onApproved(pin);
   };
 
   return (

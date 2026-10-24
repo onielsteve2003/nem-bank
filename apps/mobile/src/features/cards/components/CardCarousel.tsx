@@ -21,13 +21,15 @@ export type Props = {
   cards: Card[];
   index: number;
   onIndex: (index: number) => void;
+  /** Unlocked details: that card turns to its back and shows them. */
+  revealed?: { cardId: string; number: string; cvv: string };
 };
 
 /**
  * The cards one page at a time (CARD-2): swipe between them, or tap a dot. Only
  * the card in view tilts with the phone, so one motion sensor runs at a time.
  */
-export function CardCarousel({ cards, index, onIndex }: Props) {
+export function CardCarousel({ cards, index, onIndex, revealed }: Props) {
   const { colors, spacing, radius } = useTheme();
   const list = useRef<FlatList<Card>>(null);
   const window = useWindowDimensions();
@@ -60,7 +62,12 @@ export function CardCarousel({ cards, index, onIndex }: Props) {
         onMomentumScrollEnd={onSettle}
         renderItem={({ item, index: i }) => (
           <View style={{ width, paddingHorizontal: spacing[4] }}>
-            <BankCard {...bankCardProps(item)} tilt={i === index} />
+            <BankCard
+              {...bankCardProps(item)}
+              tilt={i === index}
+              revealed={revealed?.cardId === item.id ? revealed : undefined}
+              flipped={revealed?.cardId === item.id ? true : undefined}
+            />
           </View>
         )}
       />
