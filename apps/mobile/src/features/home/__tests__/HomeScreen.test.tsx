@@ -104,7 +104,8 @@ it('hides every amount with one tap, and brings them back', async () => {
 
   expect(usePrivacyStore.getState().balancesHidden).toBe(true);
   expect(ngn.props.accessibilityLabel).toMatch(/Available balance hidden/);
-  expect(within(ngn).getByText(`₦${MASK}`)).toBeOnTheScreen();
+  // The balance, and the on-hold amount when the demo card has pending payments.
+  expect(within(ngn).getAllByText(`₦${MASK}`).length).toBeGreaterThan(0);
   // No digits of any amount are left on screen.
   expect(screen.queryAllByText(/[₦$£€][\d,]+\.\d{2}/)).toHaveLength(0);
 
