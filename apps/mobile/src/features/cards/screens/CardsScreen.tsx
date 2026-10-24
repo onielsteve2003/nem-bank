@@ -25,6 +25,7 @@ import { useTheme } from '@/theme';
 import { cardFacts, cardName, closedReason, isOpen } from '../cards';
 import { CardCarousel } from '../components/CardCarousel';
 import { CardControls } from '../components/CardControls';
+import { CardPayments } from '../components/CardPayments';
 import { CardDetailsPanel } from '../components/CardDetailsPanel';
 import { useCardReveal } from '../hooks/useCardReveal';
 
@@ -152,8 +153,9 @@ export function CardsScreen() {
             </View>
           )}
           {current && (
-            <View style={{ paddingHorizontal: spacing[2] }}>
+            <View style={{ paddingHorizontal: spacing[2], gap: spacing[4] }}>
               <CardControls key={current.id} card={current} />
+              <CardPayments key={`payments-${current.id}`} card={current} />
             </View>
           )}
           <View style={{ paddingHorizontal: spacing[4] }}>

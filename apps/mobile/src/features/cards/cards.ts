@@ -103,3 +103,11 @@ export function limitSummary(card: Card): string {
   const amount = formatMoney(fromApiMoney(limit.amount), { trimZeroMinor: true });
   return `${amount} ${period}`;
 }
+
+/** Pending authorisations first, then everything that has settled or dropped off. */
+export function splitCardPayments(payments: Schema<'CardTransaction'>[]) {
+  return {
+    pending: payments.filter((p) => p.status === 'authorized'),
+    done: payments.filter((p) => p.status !== 'authorized'),
+  };
+}

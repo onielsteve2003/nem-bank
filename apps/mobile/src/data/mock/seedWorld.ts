@@ -260,6 +260,7 @@ export function startWorld({ ledger, newId, random, userId, ngn, usd }: StartInp
     fxConversions: [],
     fxAlerts: [],
     cards: [card],
+    cardAuthorizations: [],
     billPayments: [],
     savedBillers: [],
     billSchedules: [],

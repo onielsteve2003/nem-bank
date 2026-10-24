@@ -249,6 +249,41 @@ describe('card controls', () => {
   });
 });
 
+describe('card payments', () => {
+  it('holds a pending payment, then settles it into a transaction when due', async () => {
+    let now = Date.now();
+    const repos = createMockRepositories({
+      store: createMemoryStore(),
+      clock: () => new Date(now),
+      simulation: { latency: 'off' },
+    });
+    const card = (await repos.cards.list()).data[0]!;
+    const payments = async () =>
+      (await repos.cards.listTransactions({ path: { card_id: card.id } })).data;
+    const bolt = (await payments()).find((p) => p.merchant.name === 'Bolt')!;
+    expect(bolt).toMatchObject({ status: 'authorized', settled_at: null, transaction_id: null });
+
+    now += 4 * 60_000;
+    const after = await payments();
+    const settled = after.find((p) => p.merchant.name === 'Bolt')!;
+    expect(settled).toMatchObject({ status: 'settled', authorized_at: bolt.authorized_at });
+    expect(after.find((p) => p.merchant.name === 'Chicken Republic')!.status).toBe('authorized');
+    const txn = await repos.transactions.get({
+      path: { transaction_id: settled.transaction_id! },
+    });
+    expect(txn).toMatchObject({ card_id: card.id, amount: bolt.amount, type: 'card_payment' });
+  });
+
+  it('lists pending payments apart from settled ones', async () => {
+    await render(wrap(bank(), <CardsScreen />));
+    expect(
+      await screen.findByText(/^Held from your balance until the merchant settles/),
+    ).toBeTruthy();
+    expect(screen.getByText('Settled')).toBeTruthy();
+    expect(screen.getAllByText(/^Authorised /).length).toBe(2);
+  });
+});
+
 describe('new card', () => {
   it('creates a merchant-locked card once a merchant is picked, after the PIN', async () => {
     const repos = bank();

@@ -1,6 +1,7 @@
 import type { Schema, User } from '@nem/contracts';
 
-import type { LedgerState } from './ledger';
+import { addDemoAuthorizations } from './cardAuthorizations';
+import { Ledger, type LedgerState } from './ledger';
 import { deserialize, serialize } from './persistence/serialize';
 import type { SnapshotStore } from './persistence/types';
 import { createIdFactory } from './ids';
@@ -57,15 +58,31 @@ export async function loadOrSeedBank(
       if (saved.schemaVersion === SCHEMA_VERSION) {
         // Demo data added after a bank was saved is filled in, keeping the customer's history.
         addFriendPayLink(saved.world, createIdFactory(() => new Date())(), saved.seededAt);
+        if (!('cardAuthorizations' in saved.world)) {
+          (saved.world as World).cardAuthorizations = [];
+          placeDemoAuthorizations(saved, options.now ?? new Date());
+        }
         return saved;
       }
     } catch {
       // A corrupt snapshot is replaced; demo data is disposable by design.
     }
   }
-  const bank = seedDemoBank({ now: options.now ?? new Date(), seed: options.seed ?? DEFAULT_SEED });
+  const now = options.now ?? new Date();
+  const bank = seedDemoBank({ now, seed: options.seed ?? DEFAULT_SEED });
+  placeDemoAuthorizations(bank, now);
   await saveBank(store, bank);
   return bank;
+}
+
+/**
+ * Card payments still waiting to settle, timed from the device clock rather than
+ * the seed, which must stay the same all day for a given seed.
+ */
+function placeDemoAuthorizations(bank: MockBankState, deviceNow: Date): void {
+  const newId = createIdFactory(() => new Date());
+  const now = () => new Date(deviceNow.getTime() + bank.world.clockOffsetDays * 86_400_000);
+  addDemoAuthorizations(new Ledger(bank.ledger, { now, newId }), bank.world, newId, now());
 }
 
 /** Demo Controls "reset": throw the snapshot away and seed again. */

@@ -182,7 +182,11 @@ export function cardsRepo(bank: MockBank): CardsRepo {
     },
     async listTransactions({ path, query }) {
       const card = find(path.card_id);
-      const items: Schema<'CardTransaction'>[] = customerTransactions(bank)
+      const auths = bank.world.cardAuthorizations.filter((a) => a.cardId === card.id);
+      const authorizedAt = new Map(
+        auths.flatMap((a) => (a.transactionId ? [[a.transactionId, a.authorizedAt]] : [])),
+      );
+      const settled: Schema<'CardTransaction'>[] = customerTransactions(bank)
         .filter((t) => t.card_id === card.id)
         .map((t) => ({
           id: t.id,
@@ -197,9 +201,27 @@ export function cardsRepo(bank: MockBank): CardsRepo {
           status: t.status === 'reversed' ? 'reversed' : 'settled',
           decline_reason: null,
           transaction_id: t.id,
-          authorized_at: t.created_at,
+          authorized_at: authorizedAt.get(t.id) ?? t.created_at,
           settled_at: t.created_at,
         }));
+      // Still waiting, or dropped without settling: these have no ledger entry yet.
+      const unsettled: Schema<'CardTransaction'>[] = auths
+        .filter((a) => a.status !== 'settled')
+        .map((a) => ({
+          id: a.id,
+          card_id: card.id,
+          merchant: a.merchant,
+          amount: a.amount,
+          billing_amount: a.amount,
+          status: a.status === 'authorized' ? 'authorized' : 'reversed',
+          decline_reason: null,
+          transaction_id: null,
+          authorized_at: a.authorizedAt,
+          settled_at: null,
+        }));
+      const items = [...unsettled, ...settled].sort((x, y) =>
+        y.authorized_at.localeCompare(x.authorized_at),
+      );
       return paginate(items, query);
     },
   };

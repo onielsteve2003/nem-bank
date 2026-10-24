@@ -1,4 +1,5 @@
 import type { Repositories } from '../../repositories';
+import { processCardSettlements } from '../cardAuthorizations';
 import type { MockBank } from '../runtime';
 import { accountsRepo, processStatements, statementsRepo, transactionsRepo } from './accounts';
 import { ajoRepo, processAjo } from './ajo';
@@ -33,6 +34,7 @@ import {
 /** Work that comes due with time, in the order a real bank's jobs would run it. */
 const TASKS = [
   processDueTransfers,
+  processCardSettlements,
   processSchedules,
   processBillSchedules,
   processRequests,

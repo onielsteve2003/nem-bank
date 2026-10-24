@@ -1,6 +1,8 @@
 import type { Schema } from '@nem/contracts';
 import type { KycTier } from '@nem/shared';
 
+import type { CardAuthorizationRecord } from './cardAuthorizations';
+
 // Everything the mock bank knows besides the ledger. Records are stored in their
 // contract shape where that is possible, so reads are a lookup, not a mapping;
 // balances are never stored here, they are always read from the ledger.
@@ -125,6 +127,8 @@ export interface World {
   fxConversions: Schema<'FxConversion'>[];
   fxAlerts: Schema<'FxAlert'>[];
   cards: CardRecord[];
+  /** Card payments authorised but not yet settled, and what became of them. */
+  cardAuthorizations: CardAuthorizationRecord[];
   billPayments: Schema<'BillPayment'>[];
   savedBillers: Schema<'SavedBiller'>[];
   billSchedules: (Schema<'BillSchedule'> & { payment: Schema<'PayBillRequest'> })[];
