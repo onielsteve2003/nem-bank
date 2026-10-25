@@ -14,7 +14,9 @@ module.exports = {
   // @noble/* and @shopify/flash-list ship ESM only, so Jest must transform them like the RN packages. Extends
   // the preset's own list so packages it adds later are not dropped.
   transformIgnorePatterns: preset.transformIgnorePatterns.map((pattern) =>
-    pattern.startsWith('/node_modules/(?!(') ? pattern.replace('(?!(', '(?!(@noble|@shopify/flash-list|') : pattern,
+    pattern.startsWith('/node_modules/(?!(')
+      ? pattern.replace('(?!(', '(?!(@noble|@shopify/flash-list|')
+      : pattern,
   ),
   testPathIgnorePatterns: ['/node_modules/', '/.expo/'],
 };
