@@ -11,10 +11,10 @@ module.exports = {
     // an .mjs build Jest can't load; Node's "require" condition gives its CJS build.
     '^lucide-react-native$': require.resolve('lucide-react-native'),
   },
-  // @noble/* ship ESM only, so Jest must transform them like the RN packages. Extends
+  // @noble/* and @shopify/flash-list ship ESM only, so Jest must transform them like the RN packages. Extends
   // the preset's own list so packages it adds later are not dropped.
   transformIgnorePatterns: preset.transformIgnorePatterns.map((pattern) =>
-    pattern.startsWith('/node_modules/(?!(') ? pattern.replace('(?!(', '(?!(@noble|') : pattern,
+    pattern.startsWith('/node_modules/(?!(') ? pattern.replace('(?!(', '(?!(@noble|@shopify/flash-list|') : pattern,
   ),
   testPathIgnorePatterns: ['/node_modules/', '/.expo/'],
 };
