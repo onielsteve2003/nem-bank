@@ -107,7 +107,9 @@ describe('AccountDetailsSheet', () => {
   });
 
   it('shares all the details in one message', async () => {
-    const share = jest.spyOn(Share, 'share').mockResolvedValue({ action: 'sharedAction' });
+    const share = jest
+      .spyOn(Share, 'share')
+      .mockResolvedValue({ action: 'sharedAction', activityType: undefined });
     await renderSheet();
     await fireEvent.press(screen.getByRole('button', { name: 'Share details' }));
     expect(share).toHaveBeenCalledWith({ message: shareMessage(NUBAN, 'Nigerian Naira') });

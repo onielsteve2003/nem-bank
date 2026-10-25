@@ -1,5 +1,5 @@
 import { FileText, Image as ImageIcon } from 'lucide-react-native';
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -32,7 +32,7 @@ export type Props = { transactionId: string; onClose: () => void };
 export function ReceiptSheet({ transactionId, onClose }: Props) {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
-  const card = useRef<View>(null);
+  const card = useRef<ComponentRef<typeof View>>(null);
   const [busy, setBusy] = useState<'image' | 'pdf' | null>(null);
   const query = useRepoQuery('transactions', 'getReceipt', {
     path: { transaction_id: transactionId },

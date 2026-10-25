@@ -7,7 +7,7 @@ import {
   Vibrate,
   type LucideIcon,
 } from 'lucide-react-native';
-import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useRef, useState, type ReactNode, type ComponentRef } from 'react';
 import { Linking, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Button, Icon, Text } from '@/components';
@@ -39,7 +39,7 @@ export function PhoneFrameLayout({
 }) {
   const { colors, spacing } = useTheme();
   const framed = layout.mode === 'frame';
-  const screenRef = useRef<View>(null);
+  const screenRef = useRef<ComponentRef<typeof View>>(null);
   const [rect, setRect] = useState<FrameRect | null>(null);
 
   // Modals render outside the frame on web, so they need its place on the page.

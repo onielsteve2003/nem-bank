@@ -4,6 +4,7 @@ const preset = require('jest-expo/jest-preset');
 module.exports = {
   preset: 'jest-expo',
   setupFiles: ['<rootDir>/jest.setup.js'],
+  resolver: '<rootDir>/jest.resolver.js',
   moduleNameMapper: {
     '^@/(.*)$': '<rootDir>/src/$1',
     // jest-expo resolves the "react-native" export condition, which points lucide at

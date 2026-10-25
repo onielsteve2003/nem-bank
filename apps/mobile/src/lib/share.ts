@@ -1,6 +1,6 @@
 import * as Print from 'expo-print';
 import * as Sharing from 'expo-sharing';
-import type { RefObject } from 'react';
+import type { RefObject, ComponentRef } from 'react';
 import type { View } from 'react-native';
 import { captureRef } from 'react-native-view-shot';
 
@@ -10,7 +10,10 @@ export { escapeHtml } from './shareHtml';
 export const canShareImage = true;
 
 /** Captures a mounted view as a PNG and opens the share sheet with it. */
-export async function shareViewAsImage(ref: RefObject<View | null>, title: string) {
+export async function shareViewAsImage(
+  ref: RefObject<ComponentRef<typeof View> | null>,
+  title: string,
+) {
   if (!ref.current) throw new Error('Nothing to capture');
   // Captured at the screen's pixel density; a temp file avoids a huge base64 string.
   const uri = await captureRef(ref, { format: 'png', quality: 1, result: 'tmpfile' });

@@ -1,4 +1,4 @@
-import type { RefObject } from 'react';
+import type { RefObject, ComponentRef } from 'react';
 import type { View } from 'react-native';
 
 export { escapeHtml } from './shareHtml';
@@ -7,7 +7,10 @@ export { escapeHtml } from './shareHtml';
 // web demo offers the PDF only: the browser's print dialog has "Save as PDF".
 export const canShareImage = false;
 
-export async function shareViewAsImage(_ref: RefObject<View | null>, _title: string) {
+export async function shareViewAsImage(
+  _ref: RefObject<ComponentRef<typeof View> | null>,
+  _title: string,
+) {
   throw new Error('Image sharing is only in the app');
 }
 

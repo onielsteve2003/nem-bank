@@ -131,8 +131,7 @@ const ROUTES = {
  * on the returned promise, so keep a handle before awaiting it.
  */
 async function open(initialUrl: string) {
-  const rendered = renderRouter(ROUTES, { initialUrl });
-  await rendered;
+  const rendered = await renderRouter(ROUTES, { initialUrl });
   return { pathname: () => rendered.getPathname() };
 }
 

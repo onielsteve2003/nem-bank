@@ -1,6 +1,6 @@
 import { MIN_TOUCH_TARGET } from '@nem/shared';
 import { Eye, EyeOff, type LucideIcon } from 'lucide-react-native';
-import { useState, type ReactNode, type Ref } from 'react';
+import { useState, type ReactNode, type Ref, type ComponentRef } from 'react';
 import {
   StyleSheet,
   TextInput,
@@ -26,7 +26,7 @@ export type Props = Omit<TextInputProps, 'style'> & {
   leadingIcon?: LucideIcon;
   /** Anything to the right of the text, such as a unit or a clear button. */
   trailing?: ReactNode;
-  ref?: Ref<TextInput>;
+  ref?: Ref<ComponentRef<typeof TextInput>>;
   style?: StyleProp<ViewStyle>;
 };
 

@@ -1,6 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { Share2, X } from 'lucide-react-native';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -29,7 +29,7 @@ import { countdown } from '../qr';
 export function MyQr() {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
-  const card = useRef<View>(null);
+  const card = useRef<ComponentRef<typeof View>>(null);
   const [typed, setTyped] = useState('');
   const [asked, setAsked] = useState<bigint | null>(null);
   const [editing, setEditing] = useState(false);

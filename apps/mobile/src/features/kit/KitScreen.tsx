@@ -75,7 +75,7 @@ export function KitScreen() {
               icon={ArrowLeft}
               accessibilityLabel="Back"
               variant="ghost"
-              onPress={router.back}
+              onPress={() => router.back()}
             />
             <Text variant="title" style={styles.flex}>
               Design system

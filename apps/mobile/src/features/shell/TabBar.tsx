@@ -26,7 +26,7 @@ const ICON_REST_SCALE = 0.86;
  * selection taps a light haptic, and each tab is a real `tab` for screen readers.
  * With reduce motion on, the pill jumps and the icon does not grow.
  */
-export function TabBar({ state, descriptors, navigation }: Props) {
+export function TabBar({ state, descriptors, emitter, navigateToTab }: Props) {
   const { colors, spacing, motion } = useTheme();
   const insets = useSafeAreaInsets();
   const reduceMotion = useReducedMotion();
@@ -72,14 +72,14 @@ export function TabBar({ state, descriptors, navigation }: Props) {
           const title = typeof options.title === 'string' ? options.title : route.name;
 
           const onPress = () => {
-            const event = navigation.emit({
+            const event = emitter.emit({
               type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
             if (!focused && !event.defaultPrevented) {
               haptic('selection');
-              navigation.navigate(route.name, route.params);
+              navigateToTab(route.key);
             }
           };
 
@@ -96,7 +96,7 @@ export function TabBar({ state, descriptors, navigation }: Props) {
                 size: ICON_SIZE,
               })}
               onPress={onPress}
-              onLongPress={() => navigation.emit({ type: 'tabLongPress', target: route.key })}
+              onLongPress={() => emitter.emit({ type: 'tabLongPress', target: route.key })}
             />
           );
         })}

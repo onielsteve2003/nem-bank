@@ -1,4 +1,4 @@
-import { useState, type Ref } from 'react';
+import { useState, type Ref, type ComponentRef } from 'react';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useTheme } from '@/theme';
@@ -22,7 +22,7 @@ export type Props = {
   error?: string;
   help?: string;
   autoFocus?: boolean;
-  ref?: Ref<TextInput>;
+  ref?: Ref<ComponentRef<typeof TextInput>>;
 };
 
 /**

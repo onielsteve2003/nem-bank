@@ -14,7 +14,10 @@ export function shouldLock(leftAt: number | null, now: number, autoLockSeconds: 
  * privacy cover can hide balances from the app-switcher snapshot.
  */
 export function useAutoLock(now: () => number = Date.now): { obscured: boolean } {
-  const [appState, setAppState] = useState<AppStateStatus>(AppState.currentState);
+  const [appState, setAppState] = useState<AppStateStatus>(
+    // Unknown before the first change on some platforms: the app is in front then.
+    (AppState.currentState as AppStateStatus | null | undefined) ?? 'active',
+  );
   const leftAt = useRef<number | null>(null);
 
   useEffect(() => {

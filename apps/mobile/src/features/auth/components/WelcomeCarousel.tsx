@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react';
+import { useRef, useState, type ComponentRef } from 'react';
 import {
   Pressable,
   ScrollView,
@@ -25,7 +25,7 @@ const DOT_ACTIVE = 24;
  */
 export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] }) {
   const { colors, spacing, radius } = useTheme();
-  const scroller = useRef<ScrollView>(null);
+  const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
 
