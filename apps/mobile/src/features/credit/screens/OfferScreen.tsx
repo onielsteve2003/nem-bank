@@ -21,6 +21,7 @@ import { useRepoQuery } from '@/lib/query';
 import { useDebounced } from '@/lib/useDebounced';
 import { useTheme } from '@/theme';
 
+import { AcceptOffer } from '../components/AcceptOffer';
 import { InstallmentList } from '../components/InstallmentList';
 import { amountAt, amountSteps, aprLabel, TENORS, tenorLabel } from '../credit';
 
@@ -153,7 +154,15 @@ export function OfferScreen() {
   }
 
   return (
-    <Screen header={<SendHeader title="Your offer" />} edges={['top', 'bottom']}>
+    <Screen
+      header={<SendHeader title="Your offer" />}
+      edges={['top', 'bottom']}
+      footer={
+        o && !pending && steps > 0 ? (
+          <AcceptOffer offer={o} onExpired={() => void offer.refetch()} />
+        ) : undefined
+      }
+    >
       <View style={styles.start}>
         <DemoMoneyBadge />
       </View>

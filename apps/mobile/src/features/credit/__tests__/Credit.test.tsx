@@ -1,10 +1,10 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, fireEvent, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
-import { createMockRepositories } from '@/data/mock';
+import { createMockRepositories, DEMO_PIN } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { usePreferencesStore } from '@/stores';
@@ -12,14 +12,23 @@ import { ThemeProvider } from '@/theme';
 
 import { amountAt, amountSteps, nextStep, sortReasons, tenorLabel } from '../credit';
 import { CreditScreen } from '../screens/CreditScreen';
+import { LoanScreen } from '../screens/LoanScreen';
 import { OfferScreen } from '../screens/OfferScreen';
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
   useLocalSearchParams: () => ({}),
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
+jest.mock('expo-local-authentication', () => ({
+  AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2 },
+  hasHardwareAsync: jest.fn(async () => false),
+  isEnrolledAsync: jest.fn(async () => false),
+  supportedAuthenticationTypesAsync: jest.fn(async () => []),
+  authenticateAsync: jest.fn(async () => ({ success: false })),
+}));
 
 configure({ defaultIncludeHiddenElements: true });
 
@@ -113,5 +122,57 @@ describe('loan offer', () => {
     expect(amountAt(9)).toBe(5_000_000n);
     expect(tenorLabel(30)).toBe('1 month');
     expect(tenorLabel(180)).toBe('6 months');
+  });
+});
+
+describe('accepting a loan', () => {
+  const pin = async () => {
+    for (const digit of DEMO_PIN) {
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+  };
+
+  it('pays the money in with the PIN, once, and opens the loan with its schedule', async () => {
+    const repos = bank();
+    const naira = async () =>
+      (await repos.accounts.list()).data.find((a) => a.currency === 'NGN')!.available_balance;
+    const before = BigInt((await naira()).amount_minor);
+    await render(wrap(repos, <OfferScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Borrow ₦/ }));
+    await pin();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+
+    const { data } = await repos.credit.listLoans();
+    expect(data).toHaveLength(1);
+    const loan = data[0]!;
+    expect(loan.auto_repay).toBe(true);
+    expect(BigInt((await naira()).amount_minor) - before).toBe(BigInt(loan.principal.amount_minor));
+    expect(mockReplace).toHaveBeenCalledWith({
+      pathname: '/credit/[id]',
+      params: { id: loan.id, new: '1' },
+    });
+
+    await screen.unmount();
+    await render(wrap(repos, <LoanScreen id={loan.id} justBorrowed />));
+    expect(await screen.findByText(/is in your naira account$/)).toBeTruthy();
+    expect(screen.getAllByLabelText(/^Payment \d, .*, Upcoming$/)).toHaveLength(3);
+    expect(screen.getByLabelText(/^0% of ₦[\d,.]+ repaid$/)).toBeTruthy();
+  });
+
+  it('shows the current loan on the hub', async () => {
+    const repos = bank();
+    const check = await repos.credit.getEligibility();
+    const offer = await repos.credit.createOffer({
+      body: { amount: check.max_amount, tenor_days: 30 },
+    });
+    const naira = (await repos.accounts.list()).data.find((a) => a.currency === 'NGN')!;
+    await repos.credit.acceptOffer({
+      body: { offer_id: offer.offer_id, disbursement_account_id: naira.id, auto_repay: false },
+      idempotencyKey: 'test-accept',
+    });
+    await render(wrap(repos));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Your loan, On track' }));
+    expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/credit/[id]' }));
+    expect(screen.getByText('Repay your current loan first.')).toBeTruthy();
   });
 });

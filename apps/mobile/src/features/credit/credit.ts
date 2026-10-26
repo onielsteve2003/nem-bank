@@ -60,3 +60,27 @@ export const tenorLabel = (days: number) => {
 
 /** 2400 → "24%", 2650 → "26.5%". */
 export const aprLabel = (bps: number) => `${bps / 100}%`;
+
+type Loan = Schema<'Loan'>;
+
+export const LOAN_STATUS: Record<Loan['status'], { label: string; tone: Tone }> = {
+  active: { label: 'On track', tone: 'success' },
+  overdue: { label: 'Overdue', tone: 'danger' },
+  repaid: { label: 'Repaid', tone: 'neutral' },
+  defaulted: { label: 'In default', tone: 'danger' },
+};
+
+/** Everything the customer repays: the sum of the schedule. */
+export const loanTotalKobo = (loan: Loan) =>
+  loan.schedule.reduce((sum, i) => sum + BigInt(i.amount.amount_minor), 0n);
+
+/** Whole percent of the total already repaid, rounded down so it never shows 100% early. */
+export function repaidPct(loan: Loan): number {
+  const total = loanTotalKobo(loan);
+  if (total === 0n) return 100;
+  const paid = total - BigInt(loan.outstanding.amount_minor);
+  return Number((paid * 100n) / total);
+}
+
+/** The loan still being repaid, if there is one. */
+export const currentLoan = (loans: readonly Loan[]) => loans.find((l) => l.status !== 'repaid');

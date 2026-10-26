@@ -23,7 +23,8 @@ import { useRepoQuery } from '@/lib/query';
 import { usePreferencesStore } from '@/stores';
 import { useTheme } from '@/theme';
 
-import { bandIndex, IMPACT, nextStep, SCORE_BANDS, sortReasons } from '../credit';
+import { LoanSummary } from '../components/LoanSummary';
+import { bandIndex, currentLoan, IMPACT, nextStep, SCORE_BANDS, sortReasons } from '../credit';
 
 const checkedFormat = new Intl.DateTimeFormat('en-NG', {
   day: 'numeric',
@@ -45,7 +46,13 @@ export function CreditScreen() {
   const { colors, radius, spacing } = useTheme();
   const aiOn = usePreferencesStore((s) => s.ai.creditScoring);
   const check = useRepoQuery('credit', 'getEligibility');
+  const loans = useRepoQuery('credit', 'listLoans');
+  const loan = currentLoan(loans.data?.data ?? []);
   const e = check.data;
+  const refresh = () => {
+    void check.refetch();
+    void loans.refetch();
+  };
 
   let body;
   if (check.isError) {
@@ -64,6 +71,12 @@ export function CreditScreen() {
     const step = e.eligible ? null : nextStep(e.reasons);
     body = (
       <>
+        {loan && (
+          <LoanSummary
+            loan={loan}
+            onPress={() => router.push({ pathname: '/credit/[id]', params: { id: loan.id } })}
+          />
+        )}
         <Card>
           <View style={{ gap: spacing[4] }}>
             <View style={[styles.row, { gap: spacing[2] }]}>
@@ -196,8 +209,8 @@ export function CreditScreen() {
     <Screen
       header={<SendHeader title="Credit" first />}
       edges={['top', 'bottom']}
-      onRefresh={() => void check.refetch()}
-      refreshing={check.isRefetching}
+      onRefresh={refresh}
+      refreshing={check.isRefetching || loans.isRefetching}
     >
       <View style={styles.start}>
         <DemoMoneyBadge />
