@@ -26,6 +26,7 @@ import { usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { AutoSaveFields, type AutoSaveChoice } from '../components/AutoSaveFields';
+import { DetailRow } from '../components/DetailRow';
 import { GoalProgress } from '../components/GoalProgress';
 import { MoveMoneySheet } from '../components/MoveMoneySheet';
 import { describeAutoSave, formatGoalDate, goalSubtitle } from '../goals';
@@ -83,15 +84,6 @@ function AutoSaveSheet({
         <Button label="Save" loading={update.isPending} onPress={save} />
       </View>
     </BottomSheet>
-  );
-}
-
-function Row({ label, value }: { label: string; value: string }) {
-  return (
-    <View style={styles.between}>
-      <Text color="textMuted">{label}</Text>
-      <Text variant="bodyStrong">{value}</Text>
-    </View>
   );
 }
 
@@ -194,16 +186,16 @@ export function GoalScreen({ id }: { id: string }) {
 
           <Card>
             <View style={{ gap: spacing[3] }}>
-              <Row
+              <DetailRow
                 label="Target"
                 value={hidden ? '••••' : formatMoney(fromApiMoney(goal.target))}
               />
-              <Row
+              <DetailRow
                 label="Reach it by"
                 value={goal.target_date ? formatGoalDate(goal.target_date) : 'No date'}
               />
-              <Row label="Interest" value={`${goal.interest_rate_bps / 100}% a year`} />
-              <Row
+              <DetailRow label="Interest" value={`${goal.interest_rate_bps / 100}% a year`} />
+              <DetailRow
                 label="Interest earned"
                 value={hidden ? '••••' : formatMoney(fromApiMoney(goal.interest_earned))}
               />

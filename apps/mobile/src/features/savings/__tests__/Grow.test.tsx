@@ -14,6 +14,8 @@ import { goalSubtitle, sortGoals } from '../goals';
 import { GoalScreen } from '../screens/GoalScreen';
 import { GrowScreen } from '../screens/GrowScreen';
 import { NewGoalScreen, targetDateError } from '../screens/NewGoalScreen';
+import { keptOnBreak } from '../locks';
+import { LockScreen } from '../screens/LockScreen';
 import { roundUpExample, RoundUpsScreen } from '../screens/RoundUpsScreen';
 
 const mockPush = jest.fn();
@@ -204,5 +206,25 @@ describe('savings goals', () => {
     await fireEvent.press(screen.getByText('Round up my spending'));
     await waitFor(async () => expect((await repos.savings.getRoundUps()).enabled).toBe(false));
     expect(screen.getByText(/No round-ups yet/)).toBeTruthy();
+  });
+
+  it('keeps half the interest, rounded up, when a lock breaks early', () => {
+    const lock = { early_break_penalty_bps: 5_000 } as Parameters<typeof keptOnBreak>[0];
+    expect(keptOnBreak(lock, { amount: 1_001n, currency: 'NGN' }).amount).toBe(501n);
+  });
+
+  it('spells out what breaking a lock early costs before the PIN', async () => {
+    const repos = bank();
+    const lock = (await repos.savings.listLocks()).data[0]!;
+    await render(wrap(repos, <LockScreen id={lock.id} />));
+    expect(await screen.findByText('14% a year, fixed')).toBeTruthy();
+    await fireEvent.press(screen.getByText('Break lock early'));
+    expect(await screen.findByText('Break this lock early?')).toBeTruthy();
+    expect(screen.getByText(/You lose .* of interest earned so far/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Break lock' }));
+    await pin();
+    await waitFor(async () =>
+      expect((await repos.savings.getLock({ path: { lock_id: lock.id } })).status).toBe('broken'),
+    );
   });
 });

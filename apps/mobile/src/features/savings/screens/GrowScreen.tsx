@@ -93,6 +93,7 @@ export function GrowScreen() {
           : 'Up to 18% a year for 30 to 365 days'
         : 'Up to 18% a year',
       icon: Lock,
+      onPress: () => router.push('/locks'),
     },
     {
       key: 'ajo',

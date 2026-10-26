@@ -33,6 +33,7 @@ export default function AppLayout() {
         <Stack.Screen name="bills" options={{ presentation: 'modal' }} />
         <Stack.Screen name="goals" options={{ presentation: 'modal' }} />
         <Stack.Screen name="round-ups" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="locks" options={{ presentation: 'modal' }} />
         <Stack.Screen name="kyc" options={{ presentation: 'modal' }} />
         <Stack.Screen name="new-card" options={{ presentation: 'modal' }} />
         <Stack.Screen name="physical-card" options={{ presentation: 'modal' }} />

@@ -54,6 +54,10 @@ const ROUTES: Route[] = [
     to: ({ id = '' }) => ({ pathname: '/goals/[id]', params: { id } }),
   },
   { pattern: 'grow/round-ups', to: () => '/round-ups' },
+  {
+    pattern: 'grow/locks/:id',
+    to: ({ id = '' }) => ({ pathname: '/locks/[id]', params: { id } }),
+  },
   { pattern: 'grow/*', to: () => '/grow' },
   { pattern: 'me', to: () => '/me' },
   { pattern: 'me/verification', to: () => '/kyc' },
