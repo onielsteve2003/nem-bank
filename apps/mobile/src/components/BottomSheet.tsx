@@ -48,12 +48,20 @@ function GorhomSheet({
   hideCloseButton = false,
 }: Props) {
   const ref = useRef<BottomSheetModal>(null);
+  const presented = useRef(false);
   const { colors, radius, spacing } = useTheme();
   const insets = useSafeAreaInsets();
 
+  // Only dismiss a sheet that was presented: dismissing one that never opened
+  // (a sheet kept mounted with open={false}) leaves later present() calls dead.
   useEffect(() => {
-    if (open) ref.current?.present();
-    else ref.current?.dismiss();
+    if (open) {
+      presented.current = true;
+      ref.current?.present();
+    } else if (presented.current) {
+      presented.current = false;
+      ref.current?.dismiss();
+    }
   }, [open]);
 
   const renderBackdrop = useCallback(
@@ -74,7 +82,10 @@ function GorhomSheet({
   return (
     <BottomSheetModal
       ref={ref}
-      onDismiss={onClose}
+      onDismiss={() => {
+        presented.current = false;
+        onClose();
+      }}
       snapPoints={snapPoints}
       enableDynamicSizing={!snapPoints}
       backdropComponent={renderBackdrop}
