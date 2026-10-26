@@ -17,7 +17,7 @@ import {
 import { creditRepo, processLoans } from './credit';
 import { familyRepo, processFamily } from './family';
 import { fxRepo, processFxAlerts } from './fx';
-import { insightsRepo } from './insights';
+import { insightsRepo, processBudgetAlerts } from './insights';
 import { kycRepo, processKyc } from './kyc';
 import { demoRepo, privacyRepo, realtimeRepo } from './misc';
 import { moneyRequestsRepo, paymentLinksRepo, processRequests } from './requests';
@@ -47,6 +47,7 @@ const TASKS = [
   processStatements,
   processFxAlerts,
   processRoundUps,
+  processBudgetAlerts,
   processAutoSaves,
   processGoalInterest,
   processLocks,

@@ -516,6 +516,56 @@ describe('mock repositories', () => {
     expect(payment.token).toMatch(/^\d{4}(-\d{4}){4}$/);
   });
 
+  it('alerts once at 80% and once at 100% of a budget', async () => {
+    const { repos } = setup();
+    const ngn = await ngnAccount(repos);
+    const budgetAlerts = async () =>
+      (await repos.notifications.list()).data.filter((n) =>
+        n.title.includes('bills & utilities budget'),
+      );
+    const spending = await repos.insights.getSpending();
+    const spent =
+      BigInt(
+        spending.categories.find((c) => c.category === 'bills_utilities')?.amount.amount_minor ??
+          '0',
+      ) / 100n;
+    // A limit five times this month's bills, so the budget starts well under 80%.
+    const limit = Number(spent) * 5 + 10_000;
+    const budget = await repos.insights.createBudget({
+      body: { category: 'bills_utilities', limit: naira(limit) },
+    });
+    expect(budget.status).toBe('ok');
+    const pay = (major: number, key: string) =>
+      repos.bills.pay({
+        body: {
+          biller_id: 'ikeja-electric-prepaid',
+          customer_id: '45031234567',
+          amount: naira(major),
+          source_account_id: ngn.id,
+        },
+        idempotencyKey: key,
+      });
+
+    await pay(Math.ceil(limit * 0.85) - Number(spent), 'budget-80');
+    expect(await budgetAlerts()).toHaveLength(1);
+    expect((await budgetAlerts())[0]!.title).toMatch(
+      /^You’ve used 8\d% of your bills & utilities budget$/,
+    );
+    expect((await budgetAlerts())[0]!.deep_link).toBe('nembank://grow/insights/budgets');
+
+    await pay(Math.ceil(limit * 0.2), 'budget-100');
+    const alerts = await budgetAlerts();
+    expect(alerts).toHaveLength(2);
+    expect(alerts.map((n) => n.title)).toContain('You’ve reached your bills & utilities budget');
+    expect((await repos.insights.listBudgets()).data.find((b) => b.id === budget.id)!.status).toBe(
+      'exceeded',
+    );
+
+    // Already told: more spending this month sends nothing new.
+    await pay(1_000, 'budget-more');
+    expect(await budgetAlerts()).toHaveLength(2);
+  });
+
   it('lends against salary and takes repayments', async () => {
     const { repos } = setup();
     const ngn = await ngnAccount(repos);

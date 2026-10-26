@@ -1,7 +1,8 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, fireEvent, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
+import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
 import { createMockRepositories } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
@@ -10,6 +11,7 @@ import { usePrivacyStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 import { changeOf, donutSlices, monthYearLabel, shiftMonth } from '../insights';
+import { BudgetsScreen } from '../screens/BudgetsScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
 
 jest.mock('expo-router', () => ({
@@ -26,7 +28,7 @@ const bank = () =>
     simulation: { latency: 'off' },
   });
 
-const wrap = (repos: Repositories) => (
+const wrap = (repos: Repositories, ui: React.ReactElement = <InsightsScreen />) => (
   <SafeAreaProvider
     initialMetrics={{
       frame: { x: 0, y: 0, width: 390, height: 844 },
@@ -40,7 +42,9 @@ const wrap = (repos: Repositories) => (
         }
       >
         <ThemeProvider initialPreference="dark">
-          <InsightsScreen />
+          <ToastProvider>
+            <ModalSheetHost>{ui}</ModalSheetHost>
+          </ToastProvider>
         </ThemeProvider>
       </QueryProvider>
     </RepositoryProvider>
@@ -111,4 +115,43 @@ describe('insights screen', () => {
     await render(wrap(bank()));
     expect(await screen.findAllByLabelText(/: hidden, \d+% of spending/)).not.toHaveLength(0);
   });
+});
+
+describe('budgets', () => {
+  beforeEach(() => usePrivacyStore.setState({ balancesHidden: false }));
+
+  const typeAmount = async (keys: string) => {
+    for (const key of keys) {
+      await fireEvent.press(screen.getAllByRole('button', { name: key })[0]!);
+    }
+  };
+
+  it('shows this month’s budgets on Insights', async () => {
+    await render(wrap(bank()));
+    expect(await screen.findByLabelText(/^Food & drink budget, /)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Manage, Budgets' })).toBeTruthy();
+  });
+
+  it('adds a budget, changes it and removes it', async () => {
+    const repos = bank();
+    await render(wrap(repos, <BudgetsScreen />));
+    expect(await screen.findByLabelText(/^Transport budget, /)).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Add a budget' }));
+    await fireEvent.press(await screen.findByText('Groceries'));
+    await typeAmount('500');
+    expect(await screen.findByText('Set at least ₦1,000')).toBeTruthy();
+    await typeAmount('00');
+    await fireEvent.press(screen.getByRole('button', { name: 'Add groceries budget' }));
+    const groceries = await screen.findByLabelText(/^Groceries budget, .* of ₦50,000\.00 spent/);
+
+    await fireEvent.press(groceries);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remove budget' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remove' }));
+    await waitFor(async () =>
+      expect((await repos.insights.listBudgets()).data.map((b) => b.category)).not.toContain(
+        'groceries',
+      ),
+    );
+  }, 20_000);
 });

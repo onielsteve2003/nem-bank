@@ -1,5 +1,6 @@
 import { formatMoney, isZero, money } from '@nem/shared';
 import { keepPreviousData } from '@tanstack/react-query';
+import { useRouter } from 'expo-router';
 import { ChartPie } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
@@ -23,16 +24,18 @@ import { useRepoQuery } from '@/lib/query';
 import { useBalancesHidden } from '@/stores';
 import { useTheme } from '@/theme';
 
+import { BudgetsSummary } from '../components/BudgetsSummary';
 import { CategoryCompare } from '../components/CategoryCompare';
 import { MonthStepper } from '../components/MonthStepper';
 import { changeOf, donutSlices, monthLabel, MONTHS_BACK, shiftMonth } from '../insights';
 
 /**
- * Insights (INS-1): where the money went in a month, by category, set against
- * the month before. Spending excludes money moved between the customer's own
+ * Insights (INS-1, INS-2): where the money went in a month, by category, set
+ * against the month before, and this month's budgets. Spending excludes money moved between the customer's own
  * pots (savings, ajo, conversions, loan repayments).
  */
 export function InsightsScreen() {
+  const router = useRouter();
   const { spacing } = useTheme();
   const hidden = useBalancesHidden();
   // null = the current month, whatever the bank's clock says it is.
@@ -45,6 +48,7 @@ export function InsightsScreen() {
     { query: { currency: 'NGN', month: picked ?? undefined } },
     { enabled: picked !== null, placeholderData: keepPreviousData },
   );
+  const budgets = useRepoQuery('insights', 'listBudgets');
   const q = picked === null ? current : other;
   const s = q.data;
 
@@ -133,6 +137,13 @@ export function InsightsScreen() {
             </View>
           </>
         )}
+        {inProgress && budgets.data && (
+          <BudgetsSummary
+            budgets={budgets.data.data}
+            hidden={hidden}
+            onManage={() => router.push('/insights/budgets')}
+          />
+        )}
       </>
     );
   }
@@ -141,7 +152,7 @@ export function InsightsScreen() {
     <Screen
       header={<SendHeader title="Insights" first />}
       edges={['top', 'bottom']}
-      onRefresh={() => void q.refetch()}
+      onRefresh={() => void Promise.all([q.refetch(), budgets.refetch()])}
       refreshing={q.isRefetching}
     >
       {body}

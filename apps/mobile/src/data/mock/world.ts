@@ -147,7 +147,10 @@ export interface World {
   ajo: AjoRecord[];
   loanOffers: Record<string, Schema<'LoanOffer'>>;
   loans: LoanRecord[];
-  budgets: Omit<Schema<'Budget'>, 'spent' | 'status'>[];
+  budgets: (Omit<Schema<'Budget'>, 'spent' | 'status'> & {
+    /** The last alert sent (INS-2), so each level fires once a month. */
+    alerted?: { month: string; level: 80 | 100 };
+  })[];
   kyc: {
     status: Schema<'KycStatus'>;
     documents: Schema<'KycDocument'>[];

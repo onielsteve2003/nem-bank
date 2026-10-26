@@ -135,25 +135,72 @@ function nextPayday(from: Date): string {
   return isoDate(d);
 }
 
+type BudgetRecord = MockBank['world']['budgets'][number];
+
+/** This month's spend on a budget's category, and the whole percent of the limit it is. */
+function budgetUse(bank: MockBank, b: BudgetRecord) {
+  const month = monthOf(bank.nowIso());
+  const spent = total(
+    spending(bank, month, 'NGN').filter((t) => t.category === b.category),
+    'NGN',
+  );
+  const limit = fromApi(b.limit);
+  const pct = limit.amount > 0n ? Number((spent.amount * 100n) / limit.amount) : 0;
+  const level: 0 | 80 | 100 = pct >= 100 ? 100 : pct >= 80 ? 80 : 0;
+  return { month, spent, limit, pct, level };
+}
+
+/** "rent_housing" → "rent & housing": two-word categories are all "x & y". */
+const categoryName = (c: Schema<'Category'>) => c.replaceAll('_', ' & ');
+
+/**
+ * Budget alerts (INS-2): one notification when this month's spending on a
+ * category reaches 80% of its budget and one when it reaches 100%. A month
+ * that jumps straight past 100% gets only the 100% alert.
+ */
+export function processBudgetAlerts(bank: MockBank): boolean {
+  let changed = false;
+  for (const b of bank.world.budgets) {
+    const { month, spent, limit, pct, level } = budgetUse(bank, b);
+    const sent = b.alerted?.month === month ? b.alerted.level : 0;
+    if (level === 0 || level <= sent) continue;
+    const name = categoryName(b.category);
+    bank.notify({
+      category: 'transactions',
+      title:
+        level === 100
+          ? `You’ve reached your ${name} budget`
+          : `You’ve used ${pct}% of your ${name} budget`,
+      body:
+        level === 100
+          ? `${formatMoney(spent)} spent this month against ${formatMoney(limit)}.`
+          : `${formatMoney(spent)} of ${formatMoney(limit)} spent this month.`,
+      deep_link: 'nembank://grow/insights/budgets',
+    });
+    b.alerted = { month, level };
+    changed = true;
+  }
+  return changed;
+}
+
 export function insightsRepo(bank: MockBank): InsightsRepo {
   const budget = (id: string) => {
     const b = bank.world.budgets.find((x) => x.id === id);
     if (!b) throw notFound('Budget');
     return b;
   };
-  const budgetView = (b: (typeof bank.world.budgets)[number]): Schema<'Budget'> => {
-    const month = monthOf(bank.nowIso());
-    const spent = total(
-      spending(bank, month, 'NGN').filter((t) => t.category === b.category),
-      'NGN',
-    );
-    const limit = fromApi(b.limit);
-    const pct = limit.amount > 0n ? Number((spent.amount * 100n) / limit.amount) : 0;
+  const budgetView = ({ alerted: _, ...b }: BudgetRecord): Schema<'Budget'> => {
+    const { spent, level } = budgetUse(bank, b);
     return {
       ...b,
       spent: api(spent),
-      status: pct >= 100 ? 'exceeded' : pct >= 80 ? 'warning' : 'ok',
+      status: level === 100 ? 'exceeded' : level === 80 ? 'warning' : 'ok',
     };
+  };
+  /** A new or changed limit starts from where spending is now: no alert for what is already known. */
+  const settle = (b: BudgetRecord) => {
+    const { month, level } = budgetUse(bank, b);
+    b.alerted = level ? { month, level } : undefined;
   };
 
   return {
@@ -173,12 +220,14 @@ export function insightsRepo(bank: MockBank): InsightsRepo {
         limit: api(positive(body.limit, 'NGN')),
         alert_at_pct: [80, 100] as (80 | 100)[],
       };
+      settle(b);
       bank.world.budgets.push(b);
       return budgetView(b);
     },
     async updateBudget({ path, body }) {
       const b = budget(path.budget_id);
       b.limit = api(positive(body.limit, 'NGN'));
+      settle(b);
       return budgetView(b);
     },
     async deleteBudget({ path }) {

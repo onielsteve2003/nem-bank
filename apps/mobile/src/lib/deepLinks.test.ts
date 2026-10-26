@@ -29,6 +29,7 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://transfers/scheduled/abc')).toBe('/send/scheduled');
     expect(path('nembank://grow/ajo/abc')).toBe('/ajo/group/abc');
     expect(path('nembank://grow/insights')).toBe('/insights');
+    expect(path('nembank://grow/insights/budgets')).toBe('/insights/budgets');
     expect(path('nembank://me/verification')).toBe('/kyc');
     expect(path('nembank://security/devices')).toBe('/me');
     expect(path('nembank://fx')).toBe('/convert');

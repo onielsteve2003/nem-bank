@@ -65,6 +65,7 @@ const ROUTES: Route[] = [
   },
   { pattern: 'grow/credit', to: () => '/credit' },
   { pattern: 'grow/insights', to: () => '/insights' },
+  { pattern: 'grow/insights/budgets', to: () => '/insights/budgets' },
   { pattern: 'grow/*', to: () => '/grow' },
   { pattern: 'me', to: () => '/me' },
   { pattern: 'me/verification', to: () => '/kyc' },
