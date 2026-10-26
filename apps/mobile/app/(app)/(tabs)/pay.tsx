@@ -14,6 +14,7 @@ export default function PayRoute() {
       variant="tab"
     >
       <Button label="Send money" onPress={() => router.push('/send')} />
+      <Button label="Pay bills" variant="secondary" onPress={() => router.push('/bills')} />
       <Button label="Scan or show QR" variant="secondary" onPress={() => router.push('/qr')} />
       <Button label="Requests" variant="secondary" onPress={() => router.push('/send/requests')} />
       <Button

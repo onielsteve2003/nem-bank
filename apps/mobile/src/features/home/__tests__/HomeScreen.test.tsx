@@ -118,7 +118,7 @@ it('opens each quick action', async () => {
   for (const [name, href] of [
     ['Send', '/send'],
     ['Convert', '/convert'],
-    ['Bills', '/pay'],
+    ['Bills', '/bills'],
     ['Scan', '/qr'],
   ] as const) {
     await fireEvent.press(screen.getByRole('button', { name }));

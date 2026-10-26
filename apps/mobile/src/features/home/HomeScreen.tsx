@@ -46,7 +46,7 @@ export function greetingFor(now: Date = new Date()): string {
 const QUICK_ROUTES: Record<Exclude<QuickAction, 'addMoney'>, Href> = {
   send: '/send',
   convert: '/convert',
-  bills: '/pay',
+  bills: '/bills',
   scan: '/qr',
 };
 
