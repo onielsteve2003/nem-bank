@@ -44,6 +44,8 @@ export interface GoalRecord extends Omit<Schema<'SavingsGoal'>, 'balance' | 'pro
   accountId: string;
   /** When the auto-save rule next moves money; set one period after the rule is made. */
   autoSaveNextAt?: string | null;
+  /** Interest is paid up to the start of this day (SAV-5); set on the first tick. */
+  interestPaidTo?: string;
 }
 
 export interface LockRecord extends Omit<Schema<'LockedSaving'>, 'accrued_interest'> {

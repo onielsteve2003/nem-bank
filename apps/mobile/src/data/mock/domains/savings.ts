@@ -171,6 +171,34 @@ export function processAutoSaves(bank: MockBank): boolean {
   return moved;
 }
 
+/**
+ * Daily interest on goals (SAV-5): each whole day since interest was last paid
+ * earns simple interest on today's balance, posted through the ledger from the
+ * bank's interest expense. Time travel catches up all the days in one entry.
+ */
+export function processGoalInterest(bank: MockBank): boolean {
+  const today = isoDate(bank.now());
+  let paid = false;
+  for (const g of bank.world.goals) {
+    if (g.status === 'closed') continue;
+    // Banks saved before interest ran start earning from today.
+    if (!g.interestPaidTo) {
+      g.interestPaidTo = today;
+      continue;
+    }
+    const days = Math.round((Date.parse(today) - Date.parse(g.interestPaidTo)) / DAY);
+    if (days < 1) continue;
+    const from = g.interestPaidTo;
+    g.interestPaidTo = today;
+    const interest = simpleInterest(bank.ledger.account(g.accountId).balance, g.interest_rate_bps, days);
+    if (interest.amount <= 0n) continue;
+    payInterest(bank, g.accountId, interest, `Interest on ${g.name}`, `goal-interest:${g.id}:${from}`);
+    g.interest_earned = api(add(fromApi(g.interest_earned), interest));
+    paid = true;
+  }
+  return paid;
+}
+
 const ROUND_UP_TYPES = { card: 'card_payment', transfer: 'transfer_out' } as const;
 
 /** What a spend rounds up by: the gap to the next multiple of `step` (none if already round). */

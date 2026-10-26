@@ -97,8 +97,13 @@ it('arms a failed bank transfer and travels forward in time', async () => {
   expect(await screen.findByText(/next bank transfer will fail/)).toBeOnTheScreen();
 
   await fireEvent.press(screen.getByRole('togglebutton', { name: '30 days' }));
+  expect(await screen.findByText(/goals would earn about ₦[\d,.]+ in interest/)).toBeOnTheScreen();
   await fireEvent.press(screen.getByRole('button', { name: 'Jump 30 days ahead' }));
   expect(await screen.findByText(/^Demo date .*, 30 days ahead$/)).toBeOnTheScreen();
+  // Goal interest is paid daily and the seeded ajo pays out its next four turns.
+  expect(
+    await screen.findByText(/^₦[\d,.]+ interest earned · 4 ajo payouts made$/),
+  ).toBeOnTheScreen();
 });
 
 it('switches the mock bank offline and back to defaults', async () => {
