@@ -13,7 +13,11 @@ export default function CreditFlowLayout() {
     <ModalSheetHost>
       <Stack
         screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
-      />
+      >
+        {/* iOS swipes back from anywhere on the screen, which would steal the
+            sliders' horizontal drag. The header's Back button still works. */}
+        <Stack.Screen name="offer" options={{ gestureEnabled: false }} />
+      </Stack>
     </ModalSheetHost>
   );
 }

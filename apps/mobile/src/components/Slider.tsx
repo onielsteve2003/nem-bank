@@ -25,6 +25,8 @@ const TRACK = 6;
 /**
  * A stepped slider: drag or tap anywhere on the track. VoiceOver reads it as
  * adjustable and swipes up or down one step, so it never needs the gesture.
+ * On iOS the screen's swipe-back takes horizontal drags first: a screen with a
+ * slider turns it off (`gestureEnabled: false`) and relies on its Back button.
  */
 export function Slider({
   label,
