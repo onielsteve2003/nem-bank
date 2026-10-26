@@ -12,9 +12,17 @@ import { ThemeProvider } from '@/theme';
 
 import * as Clipboard from 'expo-clipboard';
 
-import { bankCardProps, cardFacts, cardName, groupPan } from '../cards';
+import {
+  addressComplete,
+  addressProblems,
+  bankCardProps,
+  cardFacts,
+  cardName,
+  groupPan,
+} from '../cards';
 import { CardsScreen } from '../screens/CardsScreen';
 import { NewCardScreen } from '../screens/NewCardScreen';
+import { PhysicalCardScreen } from '../screens/PhysicalCardScreen';
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
@@ -341,5 +349,38 @@ describe('replace and terminate', () => {
     expect(await screen.findByText(/^Card ending \d{4} terminated$/)).toBeTruthy();
     expect((await repos.cards.list()).data[0]!.status).toBe('terminated');
     expect(await screen.findByText('Closed cards')).toBeTruthy();
+  });
+});
+
+describe('physical card', () => {
+  const blank = { line1: '', line2: '', city: '', state: '', postalCode: '' };
+
+  it('checks the delivery address', () => {
+    expect(addressComplete(blank)).toBe(false);
+    expect(addressProblems({ ...blank, postalCode: '1234' }).postalCode).toMatch(/6 digits/);
+    expect(addressProblems({ ...blank, city: 'Lekki 1' }).city).toBeTruthy();
+    expect(
+      addressComplete({ ...blank, line1: '12 Admiralty Way', city: 'Lekki', state: 'Lagos' }),
+    ).toBe(true);
+  });
+
+  it('opens from Cards home', async () => {
+    await render(wrap(bank(), <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Order a physical card/ }));
+    expect(mockPush).toHaveBeenCalledWith('/physical-card');
+  });
+
+  it('designs the order in full, then shows the Paid Feature Notice', async () => {
+    await render(wrap(bank(), <PhysicalCardScreen />));
+    const order = await screen.findByRole('button', { name: 'Order card · ₦1,000' });
+    expect(order).toBeDisabled();
+    await fireEvent.changeText(screen.getByLabelText('Address'), '12 Admiralty Way');
+    await fireEvent.changeText(screen.getByLabelText('City or town'), 'Lekki');
+    await fireEvent.press(screen.getByRole('button', { name: /^State/ }));
+    await fireEvent.press(screen.getAllByText('Lagos').at(-1)!);
+    await waitFor(() => expect(order).toBeEnabled());
+    await fireEvent.press(order);
+    expect(await screen.findByText('This feature needs a paid partner service')).toBeTruthy();
+    expect(screen.getByText(/Physical cards requires a card issuer/)).toBeTruthy();
   });
 });

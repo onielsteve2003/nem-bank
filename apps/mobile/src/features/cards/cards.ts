@@ -111,3 +111,71 @@ export function splitCardPayments(payments: Schema<'CardTransaction'>[]) {
     done: payments.filter((p) => p.status !== 'authorized'),
   };
 }
+
+/** The 36 states and the FCT, where a physical card could be posted (CARD-8). */
+export const NIGERIAN_STATES = [
+  'Abia',
+  'Adamawa',
+  'Akwa Ibom',
+  'Anambra',
+  'Bauchi',
+  'Bayelsa',
+  'Benue',
+  'Borno',
+  'Cross River',
+  'Delta',
+  'Ebonyi',
+  'Edo',
+  'Ekiti',
+  'Enugu',
+  'FCT',
+  'Gombe',
+  'Imo',
+  'Jigawa',
+  'Kaduna',
+  'Kano',
+  'Katsina',
+  'Kebbi',
+  'Kogi',
+  'Kwara',
+  'Lagos',
+  'Nasarawa',
+  'Niger',
+  'Ogun',
+  'Ondo',
+  'Osun',
+  'Oyo',
+  'Plateau',
+  'Rivers',
+  'Sokoto',
+  'Taraba',
+  'Yobe',
+  'Zamfara',
+] as const;
+
+export type DeliveryAddress = {
+  line1: string;
+  line2: string;
+  city: string;
+  state: string;
+  postalCode: string;
+};
+
+/** What's wrong with a typed delivery address, field by field; empty fields are just incomplete. */
+export function addressProblems(
+  a: DeliveryAddress,
+): Partial<Record<keyof DeliveryAddress, string>> {
+  const problems: Partial<Record<keyof DeliveryAddress, string>> = {};
+  if (a.line1.trim() && a.line1.trim().length < 5)
+    problems.line1 = 'Add the house number and street';
+  if (a.city.trim() && !/^[A-Za-z][A-Za-z .'-]+$/.test(a.city.trim()))
+    problems.city = 'Use letters only';
+  if (a.postalCode.trim() && !/^\d{6}$/.test(a.postalCode.trim()))
+    problems.postalCode = 'Nigerian postal codes have 6 digits';
+  return problems;
+}
+
+/** Ready to send: the required fields are filled and nothing is wrong. */
+export const addressComplete = (a: DeliveryAddress) =>
+  Boolean(a.line1.trim() && a.city.trim() && a.state) &&
+  Object.keys(addressProblems(a)).length === 0;

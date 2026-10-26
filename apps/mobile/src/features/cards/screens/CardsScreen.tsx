@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { CreditCard, Eye, Plus } from 'lucide-react-native';
+import { CreditCard, Eye, Plus, Truck } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -182,6 +182,17 @@ export function CardsScreen() {
             )}
           </View>
         </>
+      )}
+
+      {cards.data && (
+        <View style={{ paddingHorizontal: spacing[2] }}>
+          <ListItem
+            leading={Truck}
+            title="Order a physical card"
+            subtitle="A Verve card posted to you, for shops and ATMs"
+            onPress={() => router.push('/physical-card')}
+          />
+        </View>
       )}
 
       {closed.length > 0 && (
