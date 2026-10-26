@@ -232,7 +232,7 @@ describe('navigation structure', () => {
     const router = await open('/home');
     await fireEvent.press(screen.getByRole('tab', { name: 'Grow' }));
     expect(router.pathname()).toBe('/grow');
-    expect(await screen.findByText('Grow is on its way')).toBeOnTheScreen();
+    expect(await screen.findByText('Ways to save')).toBeOnTheScreen();
   });
 
   it('presents the send flow as a modal and closes it', async () => {
