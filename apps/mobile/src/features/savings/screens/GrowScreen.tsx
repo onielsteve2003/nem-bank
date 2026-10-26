@@ -82,6 +82,7 @@ export function GrowScreen() {
           : 'Off · save the change from every spend'
         : 'Save the change from every spend',
       icon: Coins,
+      onPress: () => router.push('/round-ups'),
     },
     {
       key: 'locks',

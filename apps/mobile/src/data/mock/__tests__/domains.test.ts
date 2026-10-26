@@ -464,6 +464,34 @@ describe('mock repositories', () => {
     expect((await repos.savings.getGoal({ path: { goal_id: goal.id } })).auto_save).toBeNull();
   });
 
+  it('rounds transfers up into the chosen goal and never twice', async () => {
+    const { repos, advance } = setup();
+    const ngn = await ngnAccount(repos);
+    const goal = (await repos.savings.listGoals()).data[0]!;
+    await repos.savings.setRoundUps({
+      body: { enabled: true, round_to: '50000', goal_id: goal.id, sources: ['transfer'] },
+    });
+    await repos.transfers.create({
+      body: {
+        source_account_id: ngn.id,
+        destination: { kind: 'nem', account_number: '0420270000' },
+        amount: naira(1_230),
+        save_beneficiary: false,
+      },
+      idempotencyKey: 'ru-1',
+    });
+    advance(1_000);
+    await repos.savings.listGoals();
+    advance(1_000);
+    await repos.savings.listGoals();
+    // ₦1,230 rounds up to ₦1,500: ₦270 saved, once.
+    const after = await repos.savings.getGoal({ path: { goal_id: goal.id } });
+    expect(BigInt(after.balance.amount_minor) - BigInt(goal.balance.amount_minor)).toBe(27_000n);
+    const history = await repos.transactions.list({ query: { q: 'round-up', type: ['savings'] } });
+    expect(history.data).toHaveLength(1);
+    expect(history.data[0]!.amount).toEqual(naira(270));
+  });
+
   it('pays an electricity bill and returns a token', async () => {
     const { repos } = setup();
     const ngn = await ngnAccount(repos);

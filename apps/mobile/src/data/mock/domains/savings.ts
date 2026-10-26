@@ -171,6 +171,51 @@ export function processAutoSaves(bank: MockBank): boolean {
   return moved;
 }
 
+const ROUND_UP_TYPES = { card: 'card_payment', transfer: 'transfer_out' } as const;
+
+/** What a spend rounds up by: the gap to the next multiple of `step` (none if already round). */
+export function roundUpOf(spend: Money, step: bigint): Money {
+  const rest = spend.amount % step;
+  return money(rest === 0n ? 0n : step - rest, spend.currency);
+}
+
+/** Round-ups (SAV-3): each naira card or transfer spend since the last run tops up the chosen goal. */
+export function processRoundUps(bank: MockBank): boolean {
+  const now = bank.nowIso();
+  const since = bank.world.roundUpsSince;
+  // The cursor moves even while round-ups are off, so turning them on never backdates.
+  bank.world.roundUpsSince = now;
+  const settings = bank.world.roundUps;
+  const g = bank.world.goals.find((x) => x.id === settings.goal_id);
+  if (!since || !settings.enabled || !g || g.status !== 'active') return false;
+  const types: string[] = settings.sources.map((s) => ROUND_UP_TYPES[s]);
+  const step = BigInt(settings.round_to);
+  let moved = false;
+  for (const t of customerTransactions(bank)) {
+    // A spend in the same instant as the last run is checked again; the key stops a second round-up.
+    if (t.created_at < since || t.created_at > now) continue;
+    if (bank.ledger.state.idempotency[`roundup:${t.id}`]) continue;
+    if (t.direction !== 'debit' || t.amount.currency !== 'NGN' || !types.includes(t.type)) continue;
+    if (t.status === 'failed' || t.status === 'reversed') continue;
+    const extra = roundUpOf(fromApi(t.amount), step);
+    if (extra.amount === 0n) continue;
+    try {
+      move(bank, {
+        from: t.account_id,
+        to: g.accountId,
+        amount: extra,
+        narration: `Round-up: ${t.counterparty.name || t.narration}`,
+        key: `roundup:${t.id}`,
+        direction: 'debit',
+      });
+      moved = true;
+    } catch {
+      // Not enough left in the account: skip this one quietly, like a real round-up.
+    }
+  }
+  return moved;
+}
+
 export function processLocks(bank: MockBank): boolean {
   const today = isoDate(bank.now());
   const due = bank.world.locks.filter((l) => l.status === 'active' && l.maturity_date <= today);

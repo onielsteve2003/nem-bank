@@ -136,6 +136,8 @@ export interface World {
   billSchedules: (Schema<'BillSchedule'> & { payment: Schema<'PayBillRequest'> })[];
   goals: GoalRecord[];
   roundUps: Schema<'RoundUpSettings'>;
+  /** Spends after this time still to be rounded up; set when round-ups start. */
+  roundUpsSince?: string;
   locks: LockRecord[];
   ajo: AjoRecord[];
   loanOffers: Record<string, Schema<'LoanOffer'>>;

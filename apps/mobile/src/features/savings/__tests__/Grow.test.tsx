@@ -14,6 +14,7 @@ import { goalSubtitle, sortGoals } from '../goals';
 import { GoalScreen } from '../screens/GoalScreen';
 import { GrowScreen } from '../screens/GrowScreen';
 import { NewGoalScreen, targetDateError } from '../screens/NewGoalScreen';
+import { roundUpExample, RoundUpsScreen } from '../screens/RoundUpsScreen';
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
@@ -187,5 +188,21 @@ describe('savings goals', () => {
         (await repos.savings.getGoal({ path: { goal_id: goal.id } })).balance.amount_minor,
       ).toBe(String(BigInt(goal.balance.amount_minor) + 50_000n)),
     );
+  });
+
+  it('changes round-ups and saves each change straight away', async () => {
+    const repos = bank();
+    expect(roundUpExample('50000')).toBe('A ₦1,230.00 spend saves ₦270.00');
+    await render(wrap(repos, <RoundUpsScreen />));
+    expect(await screen.findByText('Round up my spending')).toBeTruthy();
+    await fireEvent.press(screen.getByText('₦1,000'));
+    await waitFor(async () => expect((await repos.savings.getRoundUps()).round_to).toBe('100000'));
+    await fireEvent.press(screen.getByText('Transfers'));
+    await waitFor(async () =>
+      expect((await repos.savings.getRoundUps()).sources).toEqual(['card', 'transfer']),
+    );
+    await fireEvent.press(screen.getByText('Round up my spending'));
+    await waitFor(async () => expect((await repos.savings.getRoundUps()).enabled).toBe(false));
+    expect(screen.getByText(/No round-ups yet/)).toBeTruthy();
   });
 });
