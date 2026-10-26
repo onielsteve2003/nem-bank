@@ -9547,6 +9547,13 @@ components:
           oneOf:
             - $ref: '#/components/schemas/Installment'
             - type: 'null'
+        payoff_amount:
+          description: >-
+            What clears the loan if paid today: the outstanding amount less the
+            interest for the days not yet used (CRD-4). Repaying exactly this
+            amount closes the loan. Absent once the loan is repaid.
+          allOf:
+            - $ref: '#/components/schemas/Money'
     LoanList:
       type: object
       required: [data]

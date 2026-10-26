@@ -59,7 +59,10 @@ export interface AjoRecord extends Omit<Schema<'AjoGroup'>, 'pot_balance'> {
   cycles: Schema<'AjoCycle'>[];
 }
 
-export interface LoanRecord extends Omit<Schema<'Loan'>, 'outstanding' | 'next_due'> {
+export interface LoanRecord extends Omit<
+  Schema<'Loan'>,
+  'outstanding' | 'next_due' | 'payoff_amount'
+> {
   loanAccountId: string;
   repaymentAccountId: string;
 }

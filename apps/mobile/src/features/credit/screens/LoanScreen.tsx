@@ -20,6 +20,7 @@ import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { InstallmentList } from '../components/InstallmentList';
+import { LoanActions } from '../components/LoanActions';
 import { LoanSummary } from '../components/LoanSummary';
 import { aprLabel, tenorLabel } from '../credit';
 
@@ -37,8 +38,9 @@ type Props = {
 };
 
 /**
- * One loan (CRD-3): what is left, the next payment, the terms and the full
- * repayment schedule with each instalment's state.
+ * One loan (CRD-3, CRD-4): what is left, the next payment, anything overdue,
+ * repaying early or paying off, auto-repay, the terms and the full repayment
+ * schedule with each instalment's state.
  */
 export function LoanScreen({ id, justBorrowed = false }: Props) {
   const { spacing } = useTheme();
@@ -75,13 +77,13 @@ export function LoanScreen({ id, justBorrowed = false }: Props) {
           </Card>
         )}
         <LoanSummary loan={loan} />
+        {loan.status !== 'repaid' && <LoanActions loan={loan} />}
         <Card>
           <View style={{ gap: spacing[3] }}>
             <DetailRow label="Borrowed" value={principal} />
             <DetailRow label="APR" value={`${aprLabel(loan.apr_bps)} a year`} />
             <DetailRow label="Term" value={tenorLabel(loan.tenor_days)} />
             <DetailRow label="Paid out on" value={paidOut.format(new Date(loan.disbursed_at))} />
-            <DetailRow label="Auto-repay" value={loan.auto_repay ? 'On' : 'Off'} />
           </View>
         </Card>
         <View style={{ gap: spacing[2] }}>

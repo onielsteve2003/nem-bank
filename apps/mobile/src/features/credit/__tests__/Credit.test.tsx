@@ -138,7 +138,9 @@ describe('accepting a loan', () => {
       (await repos.accounts.list()).data.find((a) => a.currency === 'NGN')!.available_balance;
     const before = BigInt((await naira()).amount_minor);
     await render(wrap(repos, <OfferScreen />));
-    await fireEvent.press(await screen.findByRole('button', { name: /^Borrow ₦/ }));
+    const borrow = await screen.findByRole('button', { name: /^Borrow ₦/ });
+    await waitFor(() => expect(borrow).toBeEnabled());
+    await fireEvent.press(borrow);
     await pin();
     await waitFor(() => expect(mockReplace).toHaveBeenCalled());
 
@@ -174,5 +176,103 @@ describe('accepting a loan', () => {
     await fireEvent.press(await screen.findByRole('button', { name: 'Your loan, On track' }));
     expect(mockPush).toHaveBeenCalledWith(expect.objectContaining({ pathname: '/credit/[id]' }));
     expect(screen.getByText('Repay your current loan first.')).toBeTruthy();
+  });
+});
+
+describe('repaying a loan', () => {
+  const pin = async () => {
+    for (const digit of DEMO_PIN) {
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+  };
+
+  /** A bank whose clock can be moved forward, with one accepted 3-month loan. */
+  const withLoan = async (autoRepay: boolean) => {
+    let now = Date.now();
+    const repos = createMockRepositories({
+      store: createMemoryStore(),
+      clock: () => new Date(now),
+      simulation: { latency: 'off' },
+    });
+    const check = await repos.credit.getEligibility();
+    const offer = await repos.credit.createOffer({
+      body: { amount: check.max_amount, tenor_days: 90 },
+    });
+    const naira = (await repos.accounts.list()).data.find((a) => a.currency === 'NGN')!;
+    const loan = await repos.credit.acceptOffer({
+      body: { offer_id: offer.offer_id, disbursement_account_id: naira.id, auto_repay: autoRepay },
+      idempotencyKey: 'accept',
+    });
+    return {
+      repos,
+      loan,
+      naira,
+      advanceDays: (days: number) => {
+        now += days * 86_400_000;
+      },
+    };
+  };
+
+  it('gives back unused interest when paid off early, and a replay changes nothing', async () => {
+    const { repos, loan, naira, advanceDays } = await withLoan(true);
+    advanceDays(30);
+    const before = await repos.credit.getLoan({ path: { loan_id: loan.id } });
+    const owed = BigInt(before.outstanding.amount_minor);
+    const payoff = BigInt(before.payoff_amount!.amount_minor);
+    expect(payoff).toBeLessThan(owed);
+
+    const body = { amount: before.payoff_amount!, account_id: naira.id };
+    const paid = await repos.credit.repay({
+      path: { loan_id: loan.id },
+      body,
+      idempotencyKey: 'off',
+    });
+    expect(paid.status).toBe('repaid');
+    expect(paid.outstanding.amount_minor).toBe('0');
+    expect(paid.payoff_amount).toBeUndefined();
+
+    const balance = async () =>
+      (await repos.accounts.list()).data.find((a) => a.id === naira.id)!.available_balance;
+    const after = (await balance()).amount_minor;
+    const replay = await repos.credit.repay({
+      path: { loan_id: loan.id },
+      body,
+      idempotencyKey: 'off',
+    });
+    expect(replay.status).toBe('repaid');
+    expect((await balance()).amount_minor).toBe(after);
+  });
+
+  it('shows an overdue payment and clears it with Pay now', async () => {
+    const { repos, loan, advanceDays } = await withLoan(false);
+    advanceDays(32);
+    await render(wrap(repos, <LoanScreen id={loan.id} />));
+    expect(await screen.findByLabelText(/^₦[\d,.]+ is overdue$/)).toBeTruthy();
+    expect(screen.getAllByText('Overdue').length).toBeGreaterThan(0);
+    await fireEvent.press(screen.getByRole('button', { name: /^Pay ₦[\d,.]+ now$/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Repay ₦/ }));
+    await pin();
+    await waitFor(async () =>
+      expect((await repos.credit.getLoan({ path: { loan_id: loan.id } })).status).toBe('active'),
+    );
+  });
+
+  it('pays off from the sheet and turns auto-repay off', async () => {
+    const { repos, loan } = await withLoan(true);
+    await render(wrap(repos, <LoanScreen id={loan.id} />));
+    await fireEvent.press(
+      await screen.findByRole('switch', { name: 'Repay automatically', checked: true }),
+    );
+    await waitFor(async () =>
+      expect((await repos.credit.getLoan({ path: { loan_id: loan.id } })).auto_repay).toBe(false),
+    );
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Repay early or pay off' }));
+    await fireEvent.press(await screen.findByText(/^Pay off ₦/));
+    await fireEvent.press(screen.getByRole('button', { name: 'Pay off the loan' }));
+    await pin();
+    await waitFor(async () =>
+      expect((await repos.credit.getLoan({ path: { loan_id: loan.id } })).status).toBe('repaid'),
+    );
   });
 });

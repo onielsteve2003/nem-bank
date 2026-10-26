@@ -38,6 +38,20 @@ function outstanding(bank: MockBank, loan: LoanRecord): Money {
   return money(balance.amount < 0n ? -balance.amount : 0n, 'NGN');
 }
 
+const DAY_MS = 86_400_000;
+
+/**
+ * Paying off early (CRD-4): the interest for the days not yet used is given
+ * back, rounded up in the customer's favour and never more than is owed.
+ */
+function payoffRebate(bank: MockBank, loan: LoanRecord, owed: Money): Money {
+  const interest = simpleInterest(fromApi(loan.principal), loan.apr_bps, loan.tenor_days);
+  const used = Math.floor((bank.now().getTime() - Date.parse(loan.disbursed_at)) / DAY_MS);
+  const left = BigInt(Math.max(0, loan.tenor_days - used));
+  const rebate = divideRounded(interest.amount * left, BigInt(loan.tenor_days), 'ceil');
+  return money(rebate < owed.amount ? rebate : owed.amount, 'NGN');
+}
+
 function schedule(total: Money, tenorDays: number, start: Date): Schema<'Installment'>[] {
   const count = Math.max(1, Math.round(tenorDays / 30));
   const each = total.amount / BigInt(count);
@@ -83,18 +97,40 @@ function loanView(bank: MockBank, loan: LoanRecord): Schema<'Loan'> {
     outstanding: api(owed),
     schedule: installments,
     next_due: installments.find((i) => i.status !== 'paid') ?? null,
+    ...(owed.amount > 0n && {
+      payoff_amount: api(money(owed.amount - payoffRebate(bank, loan, owed).amount, 'NGN')),
+    }),
   };
 }
 
-function repay(bank: MockBank, loan: LoanRecord, from: string, amount: Money, key: string) {
+/**
+ * One repayment posting. With a `rebate` (paying off early) the loan account is
+ * cleared by the payment plus the unused interest, which comes back out of
+ * interest income, so the posting still balances.
+ */
+function repay(
+  bank: MockBank,
+  loan: LoanRecord,
+  from: string,
+  amount: Money,
+  key: string,
+  rebate: Money = zero('NGN'),
+) {
+  const postings = [
+    { accountId: from, amount: negate(amount) },
+    { accountId: loan.loanAccountId, amount: money(amount.amount + rebate.amount, 'NGN') },
+  ];
+  if (rebate.amount > 0n) {
+    postings.push({
+      accountId: bank.ledger.systemAccount('interest_income', 'NGN').id,
+      amount: negate(rebate),
+    });
+  }
   bank.ledger.post({
     kind: 'loan_repayment',
     reference: bank.reference('LON'),
     idempotencyKey: key,
-    postings: [
-      { accountId: from, amount: negate(amount) },
-      { accountId: loan.loanAccountId, amount },
-    ],
+    postings,
     metadata: {
       txns: [
         {
@@ -304,14 +340,21 @@ export function creditRepo(bank: MockBank): CreditRepo {
       return loanView(bank, loan);
     },
     async repay({ path, body, idempotencyKey }) {
-      const loan = find(path.loan_id);
-      const from = bank.ownAccount(body.account_id);
-      const amount = positive(body.amount, 'NGN');
-      const owed = outstanding(bank, loan);
-      if (owed.amount === 0n) throw problem(409, 'invalid_state', 'This loan is fully repaid');
-      if (amount.amount > owed.amount)
-        throw problem(422, 'validation_failed', 'That is more than you owe');
-      repay(bank, loan, from.id, amount, idempotencyKey);
+      // A replay (lost response) returns the loan, even once it is fully repaid.
+      const loan = bank.idempotent(idempotencyKey, { path, body }, find, () => {
+        const record = find(path.loan_id);
+        const from = bank.ownAccount(body.account_id);
+        const amount = positive(body.amount, 'NGN');
+        const owed = outstanding(bank, record);
+        if (owed.amount === 0n) throw problem(409, 'invalid_state', 'This loan is fully repaid');
+        if (amount.amount > owed.amount)
+          throw problem(422, 'validation_failed', 'That is more than you owe');
+        // Exactly the payoff amount settles the loan with the unused interest given back.
+        const rebate = payoffRebate(bank, record, owed);
+        const settles = rebate.amount > 0n && amount.amount === owed.amount - rebate.amount;
+        repay(bank, record, from.id, amount, idempotencyKey, settles ? rebate : zero('NGN'));
+        return record;
+      });
       return loanView(bank, loan);
     },
   };

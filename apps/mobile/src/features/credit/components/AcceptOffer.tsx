@@ -16,6 +16,8 @@ import { tenorLabel } from '../credit';
 
 type Props = {
   offer: Schema<'LoanOffer'>;
+  /** A slider moved and the new offer is not in yet: wait before borrowing. */
+  pricing?: boolean;
   /** The offer ran out before it was accepted: price it again. */
   onExpired: () => void;
 };
@@ -25,7 +27,7 @@ type Props = {
  * Face ID, and the principal is paid into the naira account in one
  * idempotent call. Then the loan opens with its schedule.
  */
-export function AcceptOffer({ offer, onExpired }: Props) {
+export function AcceptOffer({ offer, pricing = false, onExpired }: Props) {
   const router = useRouter();
   const { spacing } = useTheme();
   const [autoRepay, setAutoRepay] = useState(true);
@@ -77,7 +79,7 @@ export function AcceptOffer({ offer, onExpired }: Props) {
       )}
       <Button
         label={`Borrow ${principal}`}
-        disabled={!naira}
+        disabled={!naira || pricing}
         onPress={() => {
           accept.resetIntent();
           setConfirming(true);

@@ -1,4 +1,5 @@
 import { formatMoney, money } from '@nem/shared';
+import { keepPreviousData } from '@tanstack/react-query';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -45,6 +46,8 @@ export function OfferScreen() {
   const tenor = TENORS[tenorIndex]!;
   const settledIndex = useDebounced(index, 300);
   const settledTenor = useDebounced(tenor, 300);
+  // Only price what the sliders settled on; the last offer stays (dimmed) meanwhile.
+  const pending = settledIndex !== index || settledTenor !== tenor;
   const offer = useRepoQuery(
     'credit',
     'createOffer',
@@ -54,10 +57,10 @@ export function OfferScreen() {
         tenor_days: settledTenor,
       },
     },
-    { enabled: steps > 0, staleTime: 5 * 60_000 },
+    { enabled: steps > 0 && !pending, staleTime: 5 * 60_000, placeholderData: keepPreviousData },
   );
   const o = offer.data;
-  const pending = settledIndex !== index || settledTenor !== tenor;
+  const pricing = pending || offer.isPlaceholderData;
 
   let body;
   if (check.isError) {
@@ -126,7 +129,7 @@ export function OfferScreen() {
             <Skeleton height={220} />
           </SkeletonGroup>
         ) : (
-          <View style={{ gap: spacing[4], opacity: pending ? 0.5 : 1 }}>
+          <View style={{ gap: spacing[4], opacity: pricing ? 0.5 : 1 }}>
             <Card>
               <View style={{ gap: spacing[3] }}>
                 <DetailRow label="APR" value={`${aprLabel(o.apr_bps)} a year`} />
@@ -158,8 +161,8 @@ export function OfferScreen() {
       header={<SendHeader title="Your offer" />}
       edges={['top', 'bottom']}
       footer={
-        o && !pending && steps > 0 ? (
-          <AcceptOffer offer={o} onExpired={() => void offer.refetch()} />
+        o && steps > 0 ? (
+          <AcceptOffer offer={o} pricing={pricing} onExpired={() => void offer.refetch()} />
         ) : undefined
       }
     >

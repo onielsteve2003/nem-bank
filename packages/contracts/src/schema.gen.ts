@@ -5973,6 +5973,8 @@ export interface components {
       schedule: components['schemas']['Installment'][];
       disbursed_at: components['schemas']['Timestamp'];
       next_due: components['schemas']['Installment'] | null;
+      /** @description What clears the loan if paid today: the outstanding amount less the interest for the days not yet used (CRD-4). Repaying exactly this amount closes the loan. Absent once the loan is repaid. */
+      payoff_amount?: components['schemas']['Money'];
     };
     LoanList: {
       data: components['schemas']['Loan'][];

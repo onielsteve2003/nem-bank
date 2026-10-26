@@ -84,3 +84,15 @@ export function repaidPct(loan: Loan): number {
 
 /** The loan still being repaid, if there is one. */
 export const currentLoan = (loans: readonly Loan[]) => loans.find((l) => l.status !== 'repaid');
+
+const leftOn = (i: Schema<'Installment'>) =>
+  BigInt(i.amount.amount_minor) - BigInt(i.paid.amount_minor);
+
+/** What is owed right now: every instalment that is due today or overdue. */
+export const dueNowKobo = (loan: Loan) =>
+  loan.schedule
+    .filter((i) => i.status === 'due' || i.status === 'overdue')
+    .reduce((sum, i) => sum + leftOn(i), 0n);
+
+/** What is left on the next unpaid instalment (0 when the loan is repaid). */
+export const nextLeftKobo = (loan: Loan) => (loan.next_due ? leftOn(loan.next_due) : 0n);
