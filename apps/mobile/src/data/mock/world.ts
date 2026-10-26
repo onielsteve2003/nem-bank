@@ -42,6 +42,8 @@ export interface CardRecord extends Schema<'Card'> {
 
 export interface GoalRecord extends Omit<Schema<'SavingsGoal'>, 'balance' | 'progress_pct'> {
   accountId: string;
+  /** When the auto-save rule next moves money; set one period after the rule is made. */
+  autoSaveNextAt?: string | null;
 }
 
 export interface LockRecord extends Omit<Schema<'LockedSaving'>, 'accrued_interest'> {

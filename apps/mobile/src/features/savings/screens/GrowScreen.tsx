@@ -1,3 +1,4 @@
+import { useRouter } from 'expo-router';
 import {
   ChartPie,
   Coins,
@@ -50,6 +51,7 @@ interface Entry {
  * savings, ajo, credit and insights.
  */
 export function GrowScreen() {
+  const router = useRouter();
   const { colors, radius, spacing } = useTheme();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const toggleBalances = usePrivacyStore((s) => s.toggleBalances);
@@ -69,6 +71,7 @@ export function GrowScreen() {
       title: 'Savings goals',
       subtitle: s ? `${s.goals_count} open · 10% a year` : 'Save towards something',
       icon: Target,
+      onPress: () => router.push('/goals'),
     },
     {
       key: 'roundups',
@@ -212,7 +215,12 @@ export function GrowScreen() {
       )}
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Your goals" />
+        <SectionHeader
+          title="Your goals"
+          actionLabel={goals.data && goals.data.data.length > 0 ? 'See all' : undefined}
+          onAction={() => router.push('/goals')}
+          actionAccessibilityLabel="See all goals"
+        />
         {goals.isError ? (
           <ErrorState title="We couldn't load your goals" onRetry={() => goals.refetch()} />
         ) : !goals.data ? (
@@ -225,9 +233,20 @@ export function GrowScreen() {
             icon={Target}
             title="No goals yet"
             message="Name what you're saving for, set a target and watch it grow."
+            actionLabel="Start a goal"
+            onAction={() => router.push('/goals/new')}
           />
         ) : (
-          open.slice(0, PREVIEW).map((g) => <GoalRow key={g.id} goal={g} hidden={hidden} />)
+          open
+            .slice(0, PREVIEW)
+            .map((g) => (
+              <GoalRow
+                key={g.id}
+                goal={g}
+                hidden={hidden}
+                onPress={() => router.push({ pathname: '/goals/[id]', params: { id: g.id } })}
+              />
+            ))
         )}
       </View>
 

@@ -436,6 +436,34 @@ describe('mock repositories', () => {
     expect(broken).toMatchObject({ status: 'broken', paid_out: naira(374_000) });
   });
 
+  it('runs a goal auto-save each period until the target is met', async () => {
+    const { repos, advance } = setup();
+    const ngn = await ngnAccount(repos);
+    const goal = await repos.savings.createGoal({
+      body: {
+        name: 'Laptop',
+        emoji: '💼',
+        target: naira(25_000),
+        auto_save: { amount: naira(10_000), frequency: 'weekly', source_account_id: ngn.id },
+      },
+      idempotencyKey: 'goal-1',
+    });
+    expect(goal.balance).toEqual(naira(0));
+    advance(7 * 86_400_000 + 1);
+    await repos.savings.listGoals();
+    expect((await repos.savings.getGoal({ path: { goal_id: goal.id } })).balance).toEqual(
+      naira(10_000),
+    );
+    // Five more weeks: two more saves reach ₦30,000, then it stops at the target.
+    advance(5 * 7 * 86_400_000);
+    await repos.savings.listGoals();
+    const done = await repos.savings.getGoal({ path: { goal_id: goal.id } });
+    expect(done).toMatchObject({ balance: naira(30_000), status: 'completed' });
+
+    await repos.savings.updateGoal({ path: { goal_id: goal.id }, body: { auto_save: null } });
+    expect((await repos.savings.getGoal({ path: { goal_id: goal.id } })).auto_save).toBeNull();
+  });
+
   it('pays an electricity bill and returns a token', async () => {
     const { repos } = setup();
     const ngn = await ngnAccount(repos);

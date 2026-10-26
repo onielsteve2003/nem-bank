@@ -94,7 +94,7 @@ function payInterest(bank: MockBank, to: string, amount: Money, narration: strin
 }
 
 function goalView(bank: MockBank, goal: GoalRecord): Schema<'SavingsGoal'> {
-  const { accountId, ...rest } = goal;
+  const { accountId, autoSaveNextAt: _next, ...rest } = goal;
   const balance = bank.ledger.account(accountId).balance;
   const target = fromApi(goal.target);
   const pct = target.amount > 0n ? Number((balance.amount * 100n) / target.amount) : 0;
@@ -120,6 +120,55 @@ function lockView(bank: MockBank, lock: LockRecord): Schema<'LockedSaving'> {
       ? simpleInterest(fromApi(lock.principal), lock.rate_bps, elapsedDays(bank, lock))
       : zero('NGN');
   return { ...rest, accrued_interest: api(accrued) };
+}
+
+/** One auto-save period after `from`. */
+function nextAutoSave(from: Date, frequency: Schema<'AutoSaveRule'>['frequency']): string {
+  const next = new Date(from);
+  if (frequency === 'monthly') next.setUTCMonth(next.getUTCMonth() + 1);
+  else next.setUTCDate(next.getUTCDate() + (frequency === 'weekly' ? 7 : 1));
+  return next.toISOString();
+}
+
+/** Auto-save (SAV-2): moves the rule's amount into each goal when due, until the target is met. */
+export function processAutoSaves(bank: MockBank): boolean {
+  const now = bank.now();
+  let moved = false;
+  for (const g of bank.world.goals) {
+    if (g.status !== 'active' || !g.auto_save) continue;
+    // Banks saved before auto-save ran start counting from now.
+    if (!g.autoSaveNextAt) {
+      g.autoSaveNextAt = nextAutoSave(now, g.auto_save.frequency);
+      continue;
+    }
+    const rule = g.auto_save;
+    // Time travel can skip many periods; catch up a bounded number of them.
+    for (let i = 0; i < 400 && g.autoSaveNextAt <= now.toISOString(); i++) {
+      const at = g.autoSaveNextAt;
+      g.autoSaveNextAt = nextAutoSave(new Date(at), rule.frequency);
+      const balance = bank.ledger.account(g.accountId).balance;
+      if (balance.amount >= fromApi(g.target).amount) break;
+      try {
+        move(bank, {
+          from: rule.source_account_id,
+          to: g.accountId,
+          amount: fromApi(rule.amount),
+          narration: `Auto-save to ${g.name}`,
+          key: `autosave:${g.id}:${at}`,
+          direction: 'debit',
+        });
+        moved = true;
+      } catch {
+        bank.notify({
+          category: 'savings',
+          title: `Auto-save to ${g.name} skipped`,
+          body: 'There was not enough in your naira account. We will try again next time.',
+          deep_link: `nembank://grow/goals/${g.id}`,
+        });
+      }
+    }
+  }
+  return moved;
 }
 
 export function processLocks(bank: MockBank): boolean {
@@ -245,6 +294,9 @@ export function savingsRepo(bank: MockBank): SavingsRepo {
             target: api(target),
             target_date: body.target_date ?? null,
             auto_save: body.auto_save ?? null,
+            autoSaveNextAt: body.auto_save
+              ? nextAutoSave(bank.now(), body.auto_save.frequency)
+              : null,
             interest_rate_bps: 1_000,
             interest_earned: api(zero('NGN')),
             status: 'active',
@@ -265,7 +317,16 @@ export function savingsRepo(bank: MockBank): SavingsRepo {
       if (body.emoji !== undefined) g.emoji = body.emoji;
       if (body.target !== undefined) g.target = api(positive(body.target, 'NGN'));
       if (body.target_date !== undefined) g.target_date = body.target_date;
-      if (body.auto_save !== undefined) g.auto_save = body.auto_save;
+      if (body.auto_save !== undefined) {
+        if (body.auto_save) {
+          bank.ownAccount(body.auto_save.source_account_id);
+          positive(body.auto_save.amount, 'NGN');
+        }
+        g.auto_save = body.auto_save;
+        g.autoSaveNextAt = body.auto_save
+          ? nextAutoSave(bank.now(), body.auto_save.frequency)
+          : null;
+      }
       return goalView(bank, g);
     },
     async closeGoal({ path, idempotencyKey }) {

@@ -21,7 +21,7 @@ import { insightsRepo } from './insights';
 import { kycRepo, processKyc } from './kyc';
 import { demoRepo, privacyRepo, realtimeRepo } from './misc';
 import { moneyRequestsRepo, paymentLinksRepo, processRequests } from './requests';
-import { processLocks, savingsRepo } from './savings';
+import { processAutoSaves, processLocks, savingsRepo } from './savings';
 import { processLimitIncreases, securityRepo } from './security';
 import {
   beneficiariesRepo,
@@ -40,6 +40,7 @@ const TASKS = [
   processRequests,
   processStatements,
   processFxAlerts,
+  processAutoSaves,
   processLocks,
   processAjo,
   processLoans,

@@ -1,24 +1,34 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, fireEvent, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
-import { createMockRepositories } from '@/data/mock';
+import { createMockRepositories, DEMO_PIN } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { usePrivacyStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 import { goalSubtitle, sortGoals } from '../goals';
+import { GoalScreen } from '../screens/GoalScreen';
 import { GrowScreen } from '../screens/GrowScreen';
+import { NewGoalScreen, targetDateError } from '../screens/NewGoalScreen';
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
   useLocalSearchParams: () => ({}),
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
+jest.mock('expo-local-authentication', () => ({
+  AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2 },
+  hasHardwareAsync: jest.fn(async () => false),
+  isEnrolledAsync: jest.fn(async () => false),
+  supportedAuthenticationTypesAsync: jest.fn(async () => []),
+  authenticateAsync: jest.fn(async () => ({ success: false })),
+}));
 
 configure({ defaultIncludeHiddenElements: true });
 
@@ -101,5 +111,81 @@ describe('Grow tab', () => {
       { ...base, id: 'b', progress_pct: 70 },
     ]);
     expect(sorted.map((g) => g.id)).toEqual(['b', 'a', 'closed']);
+  });
+});
+
+describe('savings goals', () => {
+  beforeEach(() => {
+    usePrivacyStore.setState({ balancesHidden: false });
+    mockPush.mockClear();
+    mockReplace.mockClear();
+  });
+
+  const pin = async () => {
+    for (const digit of DEMO_PIN) {
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+  };
+  const typeAmount = async (keys: string) => {
+    for (const key of keys) {
+      await fireEvent.press(screen.getAllByRole('button', { name: key })[0]!);
+    }
+  };
+
+  it('creates a goal with an emoji, target, date and auto-save', async () => {
+    const repos = bank();
+    await render(wrap(repos, <NewGoalScreen />));
+    await fireEvent.changeText(screen.getByLabelText('What are you saving for?'), 'New laptop');
+    await fireEvent.press(screen.getByRole('radio', { name: '🎓' }));
+    await typeAmount('500000');
+    await fireEvent.changeText(screen.getByLabelText('Reach it by (optional)'), '31/12/2030');
+    await fireEvent.press(screen.getByRole('switch', { name: /Auto-save/ }));
+    await fireEvent.press(screen.getByRole('togglebutton', { name: '₦10,000' }));
+    await fireEvent.press(screen.getByRole('togglebutton', { name: 'Every month' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Create goal' })).not.toBeDisabled(),
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Create goal' }));
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+
+    const created = (await repos.savings.listGoals()).data.find((g) => g.name === 'New laptop');
+    expect(created).toMatchObject({
+      emoji: '🎓',
+      target: { amount_minor: '50000000', currency: 'NGN' },
+      target_date: '2030-12-31',
+      auto_save: { amount: { amount_minor: '1000000', currency: 'NGN' }, frequency: 'monthly' },
+    });
+  });
+
+  it('refuses a target date in the past', () => {
+    expect(targetDateError('01/01/2020', '2026-10-26')).toBe('Pick a day after today');
+    expect(targetDateError('31/02/2027', '2026-10-26')).toBe('Use a real date in DD/MM/YYYY');
+    expect(targetDateError('01/01/2027', '2026-10-26')).toBeNull();
+  });
+
+  it('adds money, then withdraws with the PIN', async () => {
+    const repos = bank();
+    const goal = (await repos.savings.listGoals()).data.find((g) => g.name === 'Rent 2027')!;
+    await render(wrap(repos, <GoalScreen id={goal.id} />));
+    expect(await screen.findByText('Rent 2027', { exact: false })).toBeTruthy();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Add money' }));
+    await typeAmount('1000');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Add ₦1,000' }));
+    await waitFor(async () =>
+      expect(
+        (await repos.savings.getGoal({ path: { goal_id: goal.id } })).balance.amount_minor,
+      ).toBe(String(BigInt(goal.balance.amount_minor) + 100_000n)),
+    );
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Withdraw' }));
+    await typeAmount('500');
+    await fireEvent.press(await screen.findByRole('button', { name: 'Withdraw ₦500' }));
+    await pin();
+    await waitFor(async () =>
+      expect(
+        (await repos.savings.getGoal({ path: { goal_id: goal.id } })).balance.amount_minor,
+      ).toBe(String(BigInt(goal.balance.amount_minor) + 50_000n)),
+    );
   });
 });

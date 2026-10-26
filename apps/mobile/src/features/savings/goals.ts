@@ -25,3 +25,23 @@ export function sortGoals(goals: Goal[]): Goal[] {
   const rank = (g: Goal) => (g.status === 'closed' ? 1 : 0);
   return [...goals].sort((a, b) => rank(a) - rank(b) || b.progress_pct - a.progress_pct);
 }
+
+export const GOAL_EMOJIS = ['🎯', '🏠', '🚗', '✈️', '🎓', '💍', '🎉', '📱', '👶', '🏥', '💼', '🎁'];
+
+export type AutoSaveFrequency = Schema<'AutoSaveRule'>['frequency'];
+
+export const AUTO_SAVE_FREQUENCIES: Record<AutoSaveFrequency, string> = {
+  daily: 'Every day',
+  weekly: 'Every week',
+  monthly: 'Every month',
+};
+
+/** Quick auto-save amounts, in naira. */
+export const AUTO_SAVE_PRESETS = [1_000, 5_000, 10_000, 20_000, 50_000] as const;
+
+/** "₦20,000 every week", the rule in words. */
+export const describeAutoSave = (amountText: string, frequency: AutoSaveFrequency) =>
+  `${amountText} ${AUTO_SAVE_FREQUENCIES[frequency].toLowerCase()}`;
+
+/** Goal names: 1 to 40 characters once trimmed. */
+export const MAX_GOAL_NAME = 40;
