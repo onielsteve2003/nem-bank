@@ -58,3 +58,35 @@ export const AJO_STATUS: Record<Group['status'], { label: string; tone: Tone }> 
 /** The text sent with an invite link. */
 export const inviteMessage = (g: Group, url: string) =>
   `Join my ajo "${g.name}" on Nem: ${contributionLabel(fromApiMoney(g.contribution), g.frequency)}, ${g.member_count} people, everyone takes the pot once. ${url}`;
+
+type Cycle = Schema<'AjoCycle'>;
+type Member = Group['members'][number];
+
+export const PAYOUT_STATUS: Record<Cycle['payout_status'], { label: string; tone: Tone }> = {
+  upcoming: { label: 'Upcoming', tone: 'neutral' },
+  collecting: { label: 'Collecting', tone: 'primary' },
+  paid: { label: 'Paid out', tone: 'success' },
+  short_paid: { label: 'Paid short', tone: 'warning' },
+};
+
+export const CONTRIBUTION_STATUS: Record<
+  Schema<'AjoContribution'>['status'],
+  { label: string; tone: Tone }
+> = {
+  pending: { label: 'Not yet', tone: 'neutral' },
+  paid: { label: 'Paid', tone: 'success' },
+  late: { label: 'Late', tone: 'warning' },
+  defaulted: { label: 'Defaulted', tone: 'danger' },
+};
+
+export const paidCount = (c: Cycle) => c.contributions.filter((x) => x.status === 'paid').length;
+
+/**
+ * The default flag every member sees (AJO-5). A defaulter who has already had
+ * their payout owes the ajo, which is the case that matters most.
+ */
+export function defaultFlag(m: Member): { label: string; tone: Tone } | null {
+  if (m.status !== 'defaulted' && m.missed_contributions === 0) return null;
+  if (m.has_received_payout) return { label: 'Owes the ajo', tone: 'danger' };
+  return { label: `Missed ${Math.max(m.missed_contributions, 1)}`, tone: 'warning' };
+}

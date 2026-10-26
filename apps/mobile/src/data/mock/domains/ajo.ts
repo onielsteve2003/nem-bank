@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { money, negate } from '@nem/shared';
+import { formatMoney, money, negate } from '@nem/shared';
 
 import { isApiError, problem } from '../../errors';
 import type { AjoRepo } from '../../repositories';
@@ -25,9 +25,13 @@ export function ajoView(bank: MockBank, group: AjoRecord): Schema<'AjoGroup'> {
   return { ...rest, pot_balance: api(bank.ledger.account(escrowAccountId).balance) };
 }
 
-/** Collects every unpaid contribution for a cycle; a member who cannot pay is marked late. */
-function collect(bank: MockBank, group: AjoRecord, cycle: Schema<'AjoCycle'>) {
+/**
+ * Collects every unpaid contribution for a cycle; a member who cannot pay is
+ * marked late (and told once). Returns how much reached the escrow.
+ */
+function collect(bank: MockBank, group: AjoRecord, cycle: Schema<'AjoCycle'>): bigint {
   const amount = fromApi(group.contribution);
+  let collected = 0n;
   for (const c of cycle.contributions) {
     if (c.status === 'paid') continue;
     const from = memberAccount(bank, group, c.member.user_id);
@@ -61,12 +65,14 @@ function collect(bank: MockBank, group: AjoRecord, cycle: Schema<'AjoCycle'>) {
       });
       c.status = 'paid';
       c.paid_at = bank.nowIso();
+      collected += amount.amount;
       const member = group.members.find((m) => m.member.user_id === c.member.user_id);
       if (member) member.contributions_paid += 1;
     } catch (error) {
       if (!isApiError(error)) throw error;
+      const firstMiss = c.status === 'pending';
       c.status = 'late';
-      if (c.member.user_id === bank.user.id) {
+      if (firstMiss && c.member.user_id === bank.user.id) {
         bank.notify({
           category: 'ajo',
           title: `${group.name}: contribution missed`,
@@ -76,6 +82,7 @@ function collect(bank: MockBank, group: AjoRecord, cycle: Schema<'AjoCycle'>) {
       }
     }
   }
+  return collected;
 }
 
 function payout(bank: MockBank, group: AjoRecord, cycle: Schema<'AjoCycle'>) {
@@ -120,6 +127,56 @@ function payout(bank: MockBank, group: AjoRecord, cycle: Schema<'AjoCycle'>) {
   });
 }
 
+/**
+ * AJO-5: a late contribution is retried once more when the grace period ends.
+ * Money that arrives goes straight on to that cycle's payee; anyone still
+ * unpaid is flagged as a defaulter for every member to see.
+ */
+function settleLate(bank: MockBank, group: AjoRecord, now: string): boolean {
+  let changed = false;
+  for (const cycle of group.cycles) {
+    if (cycle.number >= group.current_cycle) continue;
+    if (!cycle.contributions.some((c) => c.status === 'late')) continue;
+    const graceEnds = new Date(
+      new Date(cycle.due_at).getTime() + group.grace_period_hours * 3_600_000,
+    ).toISOString();
+    if (graceEnds > now) continue;
+    const late = collect(bank, group, cycle);
+    const to = memberAccount(bank, group, cycle.payout_to.user_id);
+    if (late > 0n && to) {
+      const amount = money(late, 'NGN');
+      bank.ledger.post({
+        kind: 'ajo_payout',
+        reference: bank.reference('AJO'),
+        idempotencyKey: `ajo-late:${group.id}:${cycle.number}:${bank.id()}`,
+        postings: [
+          { accountId: group.escrowAccountId, amount: negate(amount) },
+          { accountId: to, amount },
+        ],
+      });
+    }
+    for (const c of cycle.contributions) {
+      if (c.status !== 'late') continue;
+      c.status = 'defaulted';
+      const m = group.members.find((x) => x.member.user_id === c.member.user_id);
+      if (!m) continue;
+      m.missed_contributions += 1;
+      m.status = 'defaulted';
+      if (m.member.user_id === bank.user.id) {
+        bank.notify({
+          category: 'ajo',
+          title: `${group.name}: you are marked as a defaulter`,
+          body: `Your ${formatMoney(fromApi(group.contribution), { trimZeroMinor: true })} for turn ${cycle.number} was not paid within ${group.grace_period_hours} hours. Everyone in the ajo can see the flag.`,
+          deep_link: `nembank://grow/ajo/${group.id}`,
+        });
+      }
+    }
+    if (cycle.contributions.every((c) => c.status === 'paid')) cycle.payout_status = 'paid';
+    changed = true;
+  }
+  return changed;
+}
+
 function refreshNext(group: AjoRecord) {
   const next = group.cycles.find((c) => c.number === group.current_cycle);
   group.next_payout = next
@@ -132,18 +189,12 @@ export function processAjo(bank: MockBank): boolean {
   const now = bank.nowIso();
   let changed = false;
   for (const group of bank.world.ajo) {
+    if (group.status === 'completed') changed = settleLate(bank, group, now) || changed;
     if (group.status !== 'active') continue;
     let cycle = group.cycles.find((c) => c.number === group.current_cycle);
     while (cycle && cycle.due_at <= now) {
       collect(bank, group, cycle);
       payout(bank, group, cycle);
-      for (const c of cycle.contributions) {
-        if (c.status === 'late') {
-          c.status = 'defaulted';
-          const m = group.members.find((x) => x.member.user_id === c.member.user_id);
-          if (m) m.missed_contributions += 1;
-        }
-      }
       group.current_cycle += 1;
       changed = true;
       cycle = group.cycles.find((c) => c.number === group.current_cycle);
@@ -154,6 +205,7 @@ export function processAjo(bank: MockBank): boolean {
       cycle.payout_status = 'collecting';
       collect(bank, group, cycle);
     }
+    changed = settleLate(bank, group, now) || changed;
     refreshNext(group);
   }
   return changed;
@@ -176,6 +228,20 @@ export function ajoRepo(bank: MockBank): AjoRepo {
   const isMine = (g: AjoRecord) => g.created_by.user_id === bank.user.id;
   const isMember = (g: AjoRecord) =>
     g.members.some((m) => m.member.user_id === bank.user.id && m.status !== 'left');
+  // AJO-5: a defaulter who has already taken a payout is barred from new ajo.
+  const assertNoDebt = () => {
+    const owed = bank.world.ajo.find((g) =>
+      g.members.some(
+        (m) =>
+          m.member.user_id === bank.user.id && m.status === 'defaulted' && m.has_received_payout,
+      ),
+    );
+    if (owed) {
+      throw problem(409, 'ajo_debt', `Pay what you owe ${owed.name} first`, {
+        detail: 'You had your payout but missed a contribution after it.',
+      });
+    }
+  };
 
   return {
     async listGroups() {
@@ -189,6 +255,7 @@ export function ajoRepo(bank: MockBank): AjoRepo {
         body,
         (id) => bank.world.ajo.find((g) => g.id === id),
         () => {
+          assertNoDebt();
           const contribution = positive(body.contribution, 'NGN');
           const source = bank.ownAccount(body.source_account_id);
           if (body.member_count < 2 || body.member_count > 12) {
@@ -283,6 +350,7 @@ export function ajoRepo(bank: MockBank): AjoRepo {
         body,
         (id) => bank.world.ajo.find((x) => x.id === id),
         () => {
+          assertNoDebt();
           const source = bank.ownAccount(body.source_account_id);
           if (source.currency !== 'NGN')
             throw problem(422, 'validation_failed', 'Ajo is paid from your naira account');

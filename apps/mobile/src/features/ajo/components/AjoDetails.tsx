@@ -8,7 +8,7 @@ import { formatGoalDate } from '@/features/savings/goals';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
-import { contributionLabel, durationLabel, joinedCount, potOf } from '../ajo';
+import { contributionLabel, defaultFlag, durationLabel, joinedCount, potOf } from '../ajo';
 
 type Group = Schema<'AjoGroup'>;
 
@@ -61,6 +61,7 @@ export function AjoDetails({ group: g, meId }: { group: Group; meId?: string }) 
           {members.map((m) => {
             const isMe = m.member.user_id === meId;
             const turn = m.position ? `Turn ${m.position}` : 'Turn drawn at start';
+            const flag = defaultFlag(m);
             return (
               <ListItem
                 key={m.member.user_id}
@@ -68,7 +69,9 @@ export function AjoDetails({ group: g, meId }: { group: Group; meId?: string }) 
                 title={isMe ? `${m.member.name} (you)` : m.member.name}
                 subtitle={m.member.nemtag ? `@${m.member.nemtag} · ${turn}` : turn}
                 trailing={
-                  m.has_received_payout ? (
+                  flag ? (
+                    <Badge label={flag.label} tone={flag.tone} />
+                  ) : m.has_received_payout ? (
                     <Badge label="Paid out" tone="success" />
                   ) : m.member.user_id === g.created_by.user_id ? (
                     <Badge label="Organiser" tone="neutral" />

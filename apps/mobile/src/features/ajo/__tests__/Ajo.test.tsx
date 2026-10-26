@@ -10,6 +10,8 @@ import { QueryProvider } from '@/lib/query';
 import { FRIEND_AJO_CODE } from '@/data/mock/seedWorld';
 import { ThemeProvider } from '@/theme';
 
+import { defaultFlag } from '../ajo';
+import { AjoGroupScreen } from '../screens/AjoGroupScreen';
 import { AjoInviteScreen } from '../screens/AjoInviteScreen';
 import { inviteCodeOf } from '../screens/AjoListScreen';
 
@@ -93,5 +95,62 @@ describe('ajo invites', () => {
         idempotencyKey: 'again',
       }),
     ).rejects.toMatchObject({ problem: { code: 'already_member' } });
+  });
+});
+
+describe('ajo dashboard', () => {
+  it("shows the pot, this turn's payments and the schedule", async () => {
+    const repos = bank();
+    const lekki = (await repos.ajo.listGroups()).data.find((g) => g.status === 'active')!;
+    await render(wrap(repos, <AjoGroupScreen id={lekki.id} />));
+    expect(await screen.findByText('Turn 2 · 3 of 5 paid')).toBeTruthy();
+    expect(screen.getByText(/Your ₦100,000 payout is due/)).toBeTruthy();
+    expect(screen.getByText('Schedule and history')).toBeTruthy();
+    expect(screen.getAllByText('Paid out').length).toBeGreaterThan(0);
+    expect(screen.getByText('24 hours')).toBeTruthy();
+  });
+
+  it('flags a paid-out member who then defaults and bars them from new ajo', async () => {
+    const repos = bank();
+    const lekki = (await repos.ajo.listGroups()).data.find((g) => g.status === 'active')!;
+    // Turn 2 (the customer's) pays out and turn 3 collects.
+    await repos.demo.timeTravel({ body: { days: 4 } });
+    const ngn = (await repos.accounts.list()).data.find((a) => a.currency === 'NGN')!;
+    const goal = await repos.savings.createGoal({
+      body: { name: 'Stash', emoji: '💰', target: { amount_minor: '9999999900', currency: 'NGN' } },
+      idempotencyKey: 'stash',
+    });
+    await repos.savings.deposit({
+      path: { goal_id: goal.id },
+      body: { account_id: ngn.id, amount: ngn.available_balance },
+      idempotencyKey: 'drain',
+    });
+    // Turn 4 collects, falls due, then its grace period ends with nothing paid.
+    await repos.demo.timeTravel({ body: { days: 16 } });
+
+    const g = await repos.ajo.getGroup({ path: { group_id: lekki.id } });
+    const meId = (await repos.users.getMe()).id;
+    const mine = g.members.find((m) => m.member.user_id === meId)!;
+    expect(mine).toMatchObject({ status: 'defaulted', has_received_payout: true });
+    expect(defaultFlag(mine)).toEqual({ label: 'Owes the ajo', tone: 'danger' });
+    const turn4 = (await repos.ajo.listCycles({ path: { group_id: lekki.id } })).data[3]!;
+    expect(turn4.contributions.find((c) => c.member.user_id === mine.member.user_id)).toMatchObject(
+      { status: 'defaulted' },
+    );
+    await expect(
+      repos.ajo.createGroup({
+        body: {
+          name: 'Again',
+          contribution: { amount_minor: '100000', currency: 'NGN' },
+          frequency: 'weekly',
+          member_count: 2,
+          rotation: 'fixed',
+          start_date: '2099-01-01',
+          grace_period_hours: 24,
+          source_account_id: ngn.id,
+        },
+        idempotencyKey: 'again',
+      }),
+    ).rejects.toMatchObject({ problem: { code: 'ajo_debt' } });
   });
 });

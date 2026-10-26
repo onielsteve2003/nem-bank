@@ -26,12 +26,14 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { AJO_STATUS, groupSubtitle, inviteMessage, joinedCount } from '../ajo';
+import { AjoDashboard } from '../components/AjoDashboard';
 import { AjoDetails } from '../components/AjoDetails';
 
 /**
- * One ajo group (AJO-1, AJO-2). While it is forming: invite by link or
- * @nemtag, see who has joined, and (for the organiser) start it once everyone
- * is in, or cancel it. Members who are not the organiser can leave.
+ * One ajo group (AJO-1..5). While it is forming: invite by link or @nemtag,
+ * see who has joined, and (for the organiser) start it once everyone is in, or
+ * cancel it. Members who are not the organiser can leave. Once it runs, the
+ * dashboard shows the pot, this turn's payments, the schedule and defaults.
  */
 export function AjoGroupScreen({ id }: { id: string }) {
   const router = useRouter();
@@ -179,6 +181,10 @@ export function AjoGroupScreen({ id }: { id: string }) {
             </Text>
           )}
         </View>
+      )}
+
+      {(g.status === 'active' || g.status === 'completed') && (
+        <AjoDashboard group={g} meId={me.data?.id} />
       )}
 
       <AjoDetails group={g} meId={me.data?.id} />
