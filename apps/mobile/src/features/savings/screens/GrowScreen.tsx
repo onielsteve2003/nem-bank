@@ -119,6 +119,7 @@ export function GrowScreen() {
       title: 'Insights and budgets',
       subtitle: 'Where your money goes each month',
       icon: ChartPie,
+      onPress: () => router.push('/insights'),
     },
   ];
 

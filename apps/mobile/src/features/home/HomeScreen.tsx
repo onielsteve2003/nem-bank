@@ -202,7 +202,7 @@ export function HomeScreen() {
         <InsightsTeaser
           spending={spending.data}
           hidden={hidden}
-          onOpen={() => router.push('/grow')}
+          onOpen={() => router.push('/insights')}
         />
       )}
 

@@ -4,20 +4,14 @@ import { ChartPie, ChevronRight } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Icon, MoneyText, Text } from '@/components';
+import { monthLabel } from '@/features/insights/insights';
 import { CATEGORIES } from '@/features/transactions/categories';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
-const monthName = new Intl.DateTimeFormat('en-NG', { month: 'long', timeZone: 'UTC' });
-
-/** "2026-10" → "October". */
-export function monthLabel(month: string): string {
-  return monthName.format(new Date(`${month}-01T00:00:00Z`));
-}
-
 /**
  * This month's spending so far and where most of it went. The full breakdown
- * lives in Insights (Grow); this is the doorway. Last month is shown as a
+ * lives in Insights; this is the doorway. Last month is shown as a
  * reference, not as "x% less": a month in progress against a whole month
  * would always look like saving.
  */
