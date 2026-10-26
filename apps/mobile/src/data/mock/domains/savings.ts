@@ -190,9 +190,19 @@ export function processGoalInterest(bank: MockBank): boolean {
     if (days < 1) continue;
     const from = g.interestPaidTo;
     g.interestPaidTo = today;
-    const interest = simpleInterest(bank.ledger.account(g.accountId).balance, g.interest_rate_bps, days);
+    const interest = simpleInterest(
+      bank.ledger.account(g.accountId).balance,
+      g.interest_rate_bps,
+      days,
+    );
     if (interest.amount <= 0n) continue;
-    payInterest(bank, g.accountId, interest, `Interest on ${g.name}`, `goal-interest:${g.id}:${from}`);
+    payInterest(
+      bank,
+      g.accountId,
+      interest,
+      `Interest on ${g.name}`,
+      `goal-interest:${g.id}:${from}`,
+    );
     g.interest_earned = api(add(fromApi(g.interest_earned), interest));
     paid = true;
   }

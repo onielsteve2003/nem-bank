@@ -204,11 +204,19 @@ export function GoalScreen({ id }: { id: string }) {
                 <>
                   <DetailRow
                     label="Projected in 30 days"
-                    value={hidden ? '••••' : `+${formatMoney(projectInterest(fromApiMoney(goal.balance), goal.interest_rate_bps, 30))}`}
+                    value={
+                      hidden
+                        ? '••••'
+                        : `+${formatMoney(projectInterest(fromApiMoney(goal.balance), goal.interest_rate_bps, 30))}`
+                    }
                   />
                   <DetailRow
                     label="Projected in a year"
-                    value={hidden ? '••••' : `+${formatMoney(projectInterest(fromApiMoney(goal.balance), goal.interest_rate_bps, 365))}`}
+                    value={
+                      hidden
+                        ? '••••'
+                        : `+${formatMoney(projectInterest(fromApiMoney(goal.balance), goal.interest_rate_bps, 365))}`
+                    }
                   />
                   <Text variant="caption" color="textMuted">
                     At today&apos;s balance. Interest is added daily and paid into this goal.

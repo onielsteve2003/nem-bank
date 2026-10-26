@@ -286,7 +286,7 @@ describe('deep links', () => {
     const router = await open(await redirectPath('https://nem-bank-fodx.vercel.app/ajo/AB12CD'));
     expect(router.pathname()).toBe('/welcome');
     await fireEvent.press(screen.getByRole('button', { name: 'Try the demo' }));
-    expect(await screen.findByText(/Invite AB12CD/)).toBeOnTheScreen();
+    expect(await screen.findByText('Ajo invite')).toBeOnTheScreen();
     expect(router.pathname()).toBe('/ajo/AB12CD');
     expect(useDeepLinkStore.getState().pending).toBeNull();
   });

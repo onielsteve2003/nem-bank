@@ -458,7 +458,11 @@ describe('mock repositories', () => {
     advance(5 * 7 * 86_400_000);
     await repos.savings.listGoals();
     const done = await repos.savings.getGoal({ path: { goal_id: goal.id } });
-    expect(done).toMatchObject({ balance: naira(30_000), status: 'completed' });
+    expect(done.status).toBe('completed');
+    // ₦30,000 saved plus the daily interest the goal has earned on it (SAV-5).
+    const interest = BigInt(done.balance.amount_minor) - 3_000_000n;
+    expect(interest).toBeGreaterThan(0n);
+    expect(interest).toBeLessThan(100_000n);
 
     await repos.savings.updateGoal({ path: { goal_id: goal.id }, body: { auto_save: null } });
     expect((await repos.savings.getGoal({ path: { goal_id: goal.id } })).auto_save).toBeNull();
