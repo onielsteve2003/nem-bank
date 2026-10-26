@@ -1,8 +1,9 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
+import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { CircleCheck, CircleX, Clock } from 'lucide-react-native';
-import { StyleSheet, View } from 'react-native';
+import { CircleCheck, CircleX, Clock, Copy, Share2 } from 'lucide-react-native';
+import { Share, StyleSheet, View } from 'react-native';
 
 import {
   Button,
@@ -14,6 +15,7 @@ import {
   Skeleton,
   SkeletonGroup,
   Text,
+  useToast,
 } from '@/components';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { fromApiMoney } from '@/lib/money';
@@ -31,10 +33,17 @@ const HEADLINE: Record<Status, string> = {
   reversed: 'Payment reversed',
 };
 
+/** The text shared with whoever will load the meter. */
+export const tokenMessage = (p: Schema<'BillPayment'>) =>
+  `${p.biller_name} token for meter ${p.customer_id}: ${p.token}` +
+  (p.units ? ` (${p.units})` : '') +
+  `. Ref ${p.reference}`;
+
 /** What a bill payment bought, for whom, and how it went (BILL-1, BILL-2). */
 export function BillReceiptScreen({ id }: { id: string }) {
   const router = useRouter();
-  const { spacing } = useTheme();
+  const { colors, radius, spacing } = useTheme();
+  const toast = useToast();
   const payment = useRepoQuery('bills', 'getPayment', { path: { payment_id: id } });
   const p = payment.data;
 
@@ -70,6 +79,52 @@ export function BillReceiptScreen({ id }: { id: string }) {
             <Text variant="h2">{HEADLINE[p.status]}</Text>
             <Text variant="display">{formatMoney(fromApiMoney(p.amount))}</Text>
           </View>
+          {p.token && (
+            <View
+              style={[
+                styles.token,
+                {
+                  backgroundColor: colors.surface,
+                  borderRadius: radius.lg,
+                  padding: spacing[4],
+                  gap: spacing[3],
+                },
+              ]}
+            >
+              <Text variant="caption" color="textMuted">
+                Your token{p.units ? ` · ${p.units}` : ''}
+              </Text>
+              <Text
+                variant="h2"
+                selectable
+                accessibilityLabel={`Token ${p.token.split('-').join(' ')}`}
+              >
+                {p.token}
+              </Text>
+              <View style={[styles.row, { gap: spacing[2] }]}>
+                <Button
+                  label="Copy"
+                  variant="secondary"
+                  size="sm"
+                  icon={Copy}
+                  onPress={async () => {
+                    await Clipboard.setStringAsync(p.token!.replaceAll('-', ''));
+                    toast.show({ message: 'Token copied', tone: 'success' });
+                  }}
+                />
+                <Button
+                  label="Share"
+                  variant="secondary"
+                  size="sm"
+                  icon={Share2}
+                  onPress={() => void Share.share({ message: tokenMessage(p) })}
+                />
+              </View>
+              <Text variant="caption" color="textMuted">
+                Type the 20 digits into the meter keypad to load the units.
+              </Text>
+            </View>
+          )}
           <Card padded={false}>
             <ListItem
               leading={categoryMeta(p.category).icon}
@@ -88,4 +143,6 @@ export function BillReceiptScreen({ id }: { id: string }) {
 
 const styles = StyleSheet.create({
   hero: { alignItems: 'center', paddingVertical: 16 },
+  token: { alignItems: 'center' },
+  row: { flexDirection: 'row' },
 });

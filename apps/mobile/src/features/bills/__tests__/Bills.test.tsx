@@ -9,9 +9,10 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
-import { BillersScreen } from '../screens/BillersScreen';
+import { BillReceiptScreen, tokenMessage } from '../screens/BillReceiptScreen';
 import { BillsHubScreen } from '../screens/BillsHubScreen';
 import { TopUpScreen } from '../screens/TopUpScreen';
+import { UtilityScreen } from '../screens/UtilityScreen';
 
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
@@ -19,6 +20,7 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
 }));
 
+jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
 jest.mock('expo-local-authentication', () => ({
   AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2 },
@@ -97,12 +99,6 @@ describe('bills hub', () => {
     await render(wrap(bank(), <BillsHubScreen />));
     expect(await screen.findByText('No bills yet')).toBeTruthy();
   });
-
-  it('lists the providers for a kind of bill', async () => {
-    await render(wrap(bank(), <BillersScreen category="electricity" />));
-    expect(await screen.findByText('Ikeja Electric (prepaid)')).toBeTruthy();
-    expect(screen.getAllByText('From ₦1,000')).toHaveLength(3);
-  });
 });
 
 describe('airtime and data', () => {
@@ -137,5 +133,51 @@ describe('airtime and data', () => {
     await waitFor(() => expect(mockReplace).toHaveBeenCalled());
     const [paid] = (await repos.bills.listPayments()).data;
     expect(paid).toMatchObject({ biller_id: 'mtn-airtime', customer_id: '08031234567' });
+  });
+});
+
+describe('electricity and cable TV', () => {
+  const pin = async () => {
+    for (const digit of DEMO_PIN) {
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+  };
+
+  it('checks the meter, buys units and shows a shareable token', async () => {
+    const repos = bank();
+    await render(wrap(repos, <UtilityScreen category="electricity" />));
+    await fireEvent.press(
+      await screen.findByRole('togglebutton', { name: 'Ikeja Electric (prepaid)' }),
+    );
+    await fireEvent.changeText(screen.getByLabelText('Meter number'), '45031234567');
+    expect(await screen.findByText('12 Admiralty Way, Lekki Phase 1')).toBeTruthy();
+    for (const key of ['5', '0', '0', '0']) {
+      await fireEvent.press(screen.getAllByRole('button', { name: key })[0]!);
+    }
+    await fireEvent.press(await screen.findByRole('button', { name: /^Pay ₦5,000/ }));
+    await pin();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+
+    const [paid] = (await repos.bills.listPayments()).data;
+    expect(paid!.token).toMatch(/^\d{4}(-\d{4}){4}$/);
+    await render(wrap(repos, <BillReceiptScreen id={paid!.id} />));
+    expect(await screen.findByText(paid!.token!)).toBeTruthy();
+    expect(screen.getByText(/22.2 kWh/)).toBeTruthy();
+    expect(tokenMessage(paid!)).toContain('meter 45031234567');
+  });
+
+  it('says when the smartcard is not found', async () => {
+    await render(wrap(bank(), <UtilityScreen category="cable_tv" />));
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: 'DStv' }));
+    await fireEvent.changeText(screen.getByLabelText('Smartcard number'), '1234560000');
+    expect(await screen.findByText("We couldn't find that smartcard with DStv")).toBeTruthy();
+  });
+
+  it('lists plans for a valid smartcard and marks the current one', async () => {
+    await render(wrap(bank(), <UtilityScreen category="cable_tv" />));
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: 'GOtv' }));
+    await fireEvent.changeText(screen.getByLabelText('Smartcard number'), '1234567890');
+    expect(await screen.findByText('Current plan: GOtv Max')).toBeTruthy();
+    expect(screen.getByText('Current plan · Renew')).toBeTruthy();
   });
 });
