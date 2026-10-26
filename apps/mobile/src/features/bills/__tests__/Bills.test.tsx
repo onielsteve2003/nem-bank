@@ -1,20 +1,31 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, fireEvent, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
-import { createMockRepositories } from '@/data/mock';
+import { createMockRepositories, DEMO_PIN } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
 import { BillersScreen } from '../screens/BillersScreen';
 import { BillsHubScreen } from '../screens/BillsHubScreen';
+import { TopUpScreen } from '../screens/TopUpScreen';
 
 const mockPush = jest.fn();
+const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
+}));
+
+jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
+jest.mock('expo-local-authentication', () => ({
+  AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2 },
+  hasHardwareAsync: jest.fn(async () => false),
+  isEnrolledAsync: jest.fn(async () => false),
+  supportedAuthenticationTypesAsync: jest.fn(async () => []),
+  authenticateAsync: jest.fn(async () => ({ success: false })),
 }));
 
 configure({ defaultIncludeHiddenElements: true });
@@ -91,5 +102,40 @@ describe('bills hub', () => {
     await render(wrap(bank(), <BillersScreen category="electricity" />));
     expect(await screen.findByText('Ikeja Electric (prepaid)')).toBeTruthy();
     expect(screen.getAllByText('From ₦1,000')).toHaveLength(3);
+  });
+});
+
+describe('airtime and data', () => {
+  const typePhone = async (number: string) => {
+    const field = screen.getByLabelText('Phone number');
+    await fireEvent.changeText(field, '');
+    await fireEvent.changeText(field, number);
+  };
+
+  it('detects the network from the number and lists its bundles', async () => {
+    await render(wrap(bank(), <TopUpScreen category="data" />));
+    await typePhone('08021234567');
+    await waitFor(() =>
+      expect(screen.getByRole('togglebutton', { name: 'Airtel' })).toBeSelected(),
+    );
+    expect(await screen.findByText('10GB, 30 days')).toBeTruthy();
+  });
+
+  it('buys airtime with the PIN and opens the receipt', async () => {
+    const repos = bank();
+    await render(wrap(repos, <TopUpScreen category="airtime" />));
+    await typePhone('08031234567');
+    await fireEvent.press(screen.getByRole('togglebutton', { name: '₦500' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: /^Buy ₦500/ })).not.toBeDisabled(),
+    );
+    await fireEvent.press(screen.getByRole('button', { name: /^Buy ₦500/ }));
+    for (const digit of DEMO_PIN) {
+      // The amount keypad has digits too; the PIN pad is the sheet on top.
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+    const [paid] = (await repos.bills.listPayments()).data;
+    expect(paid).toMatchObject({ biller_id: 'mtn-airtime', customer_id: '08031234567' });
   });
 });

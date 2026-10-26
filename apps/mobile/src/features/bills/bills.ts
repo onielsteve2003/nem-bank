@@ -43,3 +43,31 @@ export const shortDate = (iso: string) =>
     month: 'short',
     timeZone: 'Africa/Lagos',
   });
+
+export type MobileNetwork = Schema<'MobileNetwork'>;
+
+export const NETWORKS: { value: MobileNetwork; label: string }[] = [
+  { value: 'mtn', label: 'MTN' },
+  { value: 'airtel', label: 'Airtel' },
+  { value: 'glo', label: 'Glo' },
+  { value: 'nine_mobile', label: '9mobile' },
+];
+
+/** "+2348031234567" or "0803 123 4567" → "08031234567". */
+export function localPhone(input: string): string {
+  const digits = input.replace(/\D/g, '');
+  return digits.startsWith('234') ? `0${digits.slice(3)}` : digits;
+}
+
+/** An 11-digit Nigerian mobile number, 070… to 091…. */
+export const isMobileNumber = (local: string) => /^0[789][01]\d{8}$/.test(local);
+
+/** "08031234567" → "+2348031234567". */
+export const toE164 = (local: string) => `+234${local.slice(1)}`;
+
+/** The biller for a network's airtime or data, e.g. "mtn-data". */
+export const topUpBillerId = (network: MobileNetwork, category: 'airtime' | 'data') =>
+  `${network}-${category}`;
+
+/** Quick airtime amounts, in naira. */
+export const AIRTIME_PRESETS = [100, 200, 500, 1_000, 2_000, 5_000] as const;
