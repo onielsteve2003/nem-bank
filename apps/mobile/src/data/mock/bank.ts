@@ -6,7 +6,7 @@ import { deserialize, serialize } from './persistence/serialize';
 import type { SnapshotStore } from './persistence/types';
 import { createIdFactory } from './ids';
 import { seedDemoBank } from './seed';
-import { addFriendPayLink } from './seedWorld';
+import { addFriendAjoInvite, addFriendPayLink } from './seedWorld';
 import type { World } from './world';
 
 /** What a transaction looks like from the customer's side, kept on its journal entry. */
@@ -58,6 +58,15 @@ export async function loadOrSeedBank(
       if (saved.schemaVersion === SCHEMA_VERSION) {
         // Demo data added after a bank was saved is filled in, keeping the customer's history.
         addFriendPayLink(saved.world, createIdFactory(() => new Date())(), saved.seededAt);
+        addFriendAjoInvite(
+          saved.world,
+          new Ledger(saved.ledger, {
+            now: () => new Date(),
+            newId: createIdFactory(() => new Date()),
+          }),
+          createIdFactory(() => new Date()),
+          saved.seededAt,
+        );
         if (!('cardAuthorizations' in saved.world)) {
           (saved.world as World).cardAuthorizations = [];
           placeDemoAuthorizations(saved, options.now ?? new Date());

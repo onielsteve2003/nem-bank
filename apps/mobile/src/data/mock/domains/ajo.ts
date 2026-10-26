@@ -174,10 +174,14 @@ export function ajoRepo(bank: MockBank): AjoRepo {
     return g;
   };
   const isMine = (g: AjoRecord) => g.created_by.user_id === bank.user.id;
+  const isMember = (g: AjoRecord) =>
+    g.members.some((m) => m.member.user_id === bank.user.id && m.status !== 'left');
 
   return {
     async listGroups() {
-      return { data: newestFirst(bank.world.ajo).map((g) => ajoView(bank, g)) };
+      // Only the customer's own groups: a friend's ajo shows up once they join it.
+      const mine = bank.world.ajo.filter((g) => isMine(g) || isMember(g));
+      return { data: newestFirst(mine).map((g) => ajoView(bank, g)) };
     },
     async createGroup({ body, idempotencyKey }) {
       const group = bank.idempotent(
@@ -272,13 +276,40 @@ export function ajoRepo(bank: MockBank): AjoRepo {
     async getInvite({ path }) {
       return ajoView(bank, byCode(path.invite_code));
     },
-    async acceptInvite({ path, body }) {
+    async acceptInvite({ path, body, idempotencyKey }) {
       const g = byCode(path.invite_code);
-      bank.ownAccount(body.source_account_id);
-      if (g.members.some((m) => m.member.user_id === bank.user.id && m.status === 'joined')) {
-        throw problem(409, 'already_member', 'You are already in this ajo');
-      }
-      throw problem(409, 'group_full', 'This ajo is full');
+      const joined = bank.idempotent(
+        idempotencyKey,
+        body,
+        (id) => bank.world.ajo.find((x) => x.id === id),
+        () => {
+          const source = bank.ownAccount(body.source_account_id);
+          if (source.currency !== 'NGN')
+            throw problem(422, 'validation_failed', 'Ajo is paid from your naira account');
+          if (isMember(g)) throw problem(409, 'already_member', 'You are already in this ajo');
+          if (g.status !== 'forming')
+            throw problem(409, 'invalid_state', 'This ajo has already started');
+          if (g.members.filter((m) => m.status === 'joined').length >= g.member_count)
+            throw problem(409, 'group_full', 'This ajo is full');
+          g.sourceAccountId = source.id;
+          g.members.push({
+            member: me(bank),
+            position: g.rotation === 'fixed' ? g.members.length + 1 : null,
+            status: 'joined',
+            has_received_payout: false,
+            contributions_paid: 0,
+            missed_contributions: 0,
+          });
+          bank.notify({
+            category: 'ajo',
+            title: `You joined ${g.name}`,
+            body: `${g.created_by.name} will start it once everyone is in.`,
+            deep_link: `nembank://grow/ajo/${g.id}`,
+          });
+          return g;
+        },
+      );
+      return ajoView(bank, joined);
     },
     async start({ path }) {
       const g = find(path.group_id);

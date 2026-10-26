@@ -424,6 +424,7 @@ export function finishWorld(draft: WorldDraft, { now, start, reference }: Finish
   });
 
   seedAjo(draft, { now, reference, me });
+  addFriendAjoInvite(world, ledger, newId, now.toISOString());
 
   world.budgets.push(
     { id: newId(), category: 'food', limit: api(naira(60_000)), alert_at_pct: [80, 100] },
@@ -599,6 +600,62 @@ export function addFriendPayLink(world: World, id: string, at: string): void {
     total_received: api(naira(45_000)),
     expires_at: null,
     created_at: at,
+  });
+}
+
+export const FRIEND_AJO_CODE = 'YABA04';
+
+/**
+ * Emeka's ajo, still forming with one place left, so an invite link can be
+ * opened and accepted (AJO-2). Also added to banks saved before it existed
+ * (see loadOrSeedBank).
+ */
+export function addFriendAjoInvite(
+  world: World,
+  ledger: Ledger,
+  newId: () => string,
+  at: string,
+): void {
+  const [emeka, bisi, kunle] = [world.people[1], world.people[2], world.people[4]];
+  if (!emeka || !bisi || !kunle || world.ajo.some((g) => g.inviteCode === FRIEND_AJO_CODE)) {
+    return;
+  }
+  const id = newId();
+  const members = [emeka, kunle, bisi].map((p, i) => ({
+    member: party(p),
+    position: i + 1,
+    status: 'joined' as const,
+    has_received_payout: false,
+    contributions_paid: 0,
+    missed_contributions: 0,
+  }));
+  world.ajo.push({
+    id,
+    escrowAccountId: ledger.openAccount({
+      ownerType: 'system',
+      ownerId: id,
+      kind: 'ajo_escrow',
+      currency: 'NGN',
+    }).id,
+    // Replaced by the customer's own account when they accept.
+    sourceAccountId: emeka.accountId,
+    inviteCode: FRIEND_AJO_CODE,
+    name: 'Yaba Tech Bros',
+    contribution: api(naira(10_000)),
+    frequency: 'monthly',
+    member_count: 4,
+    rotation: 'fixed',
+    status: 'forming',
+    members,
+    current_cycle: 0,
+    total_cycles: 4,
+    next_contribution_at: addDays(new Date(at), 5).toISOString(),
+    next_payout: null,
+    grace_period_hours: 24,
+    invite_url: `https://nem-bank-fodx.vercel.app/ajo/${FRIEND_AJO_CODE}`,
+    created_by: party(emeka),
+    created_at: at,
+    cycles: [],
   });
 }
 

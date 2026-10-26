@@ -103,6 +103,7 @@ export function GrowScreen() {
           ? `${ajoCount} ${ajoCount === 1 ? 'group' : 'groups'}`
           : 'Save in turns with people you trust',
       icon: Users,
+      onPress: () => router.push('/ajo'),
     },
   ];
   const more: Entry[] = [
