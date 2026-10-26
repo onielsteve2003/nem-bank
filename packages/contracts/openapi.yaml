@@ -10797,6 +10797,9 @@ components:
               type: boolean
             id_prefill:
               type: boolean
+            credit_scoring:
+              type: boolean
+              description: Absent on preferences saved before credit scoring; treated as on.
     PrivacyRequest:
       type: object
       required: [id, kind, status, requested_at, completes_by]

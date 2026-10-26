@@ -19,6 +19,8 @@ export interface AiFeatures {
   assistant: boolean;
   /** Reads ID photos with a vision model, so it stays off until the user opts in. */
   idPrefill: boolean;
+  /** Scores loan eligibility with the credit model; off uses the standard rules. */
+  creditScoring: boolean;
 }
 export type AiFeature = keyof AiFeatures;
 
@@ -41,6 +43,7 @@ export const DEFAULT_PREFERENCES: Preferences = {
     scamChecker: true,
     assistant: true,
     idPrefill: false,
+    creditScoring: true,
   },
 };
 
@@ -66,6 +69,7 @@ export function fromApiPreferences(api: ApiPreferences): Preferences {
       scamChecker: api.ai.scam_checker,
       assistant: api.ai.assistant,
       idPrefill: api.ai.id_prefill,
+      creditScoring: api.ai.credit_scoring ?? true,
     },
   };
 }
@@ -84,6 +88,7 @@ export function toApiPreferences(prefs: Preferences, hideBalances: boolean): Api
       scam_checker: prefs.ai.scamChecker,
       assistant: prefs.ai.assistant,
       id_prefill: prefs.ai.idPrefill,
+      credit_scoring: prefs.ai.creditScoring,
     },
   };
 }

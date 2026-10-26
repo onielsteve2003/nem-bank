@@ -6571,6 +6571,8 @@ export interface components {
         scam_checker: boolean;
         assistant: boolean;
         id_prefill: boolean;
+        /** @description Absent on preferences saved before credit scoring; treated as on. */
+        credit_scoring?: boolean;
       };
     };
     PrivacyRequest: {

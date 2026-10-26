@@ -107,7 +107,13 @@ export function GrowScreen() {
     },
   ];
   const more: Entry[] = [
-    { key: 'credit', title: 'Credit', subtitle: 'See what you could borrow', icon: HandCoins },
+    {
+      key: 'credit',
+      title: 'Credit',
+      subtitle: 'See what you could borrow',
+      icon: HandCoins,
+      onPress: () => router.push('/credit'),
+    },
     {
       key: 'insights',
       title: 'Insights and budgets',

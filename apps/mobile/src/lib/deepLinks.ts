@@ -63,6 +63,7 @@ const ROUTES: Route[] = [
     pattern: 'grow/ajo/:id',
     to: ({ id = '' }) => ({ pathname: '/ajo/group/[id]', params: { id } }),
   },
+  { pattern: 'grow/credit', to: () => '/credit' },
   { pattern: 'grow/*', to: () => '/grow' },
   { pattern: 'me', to: () => '/me' },
   { pattern: 'me/verification', to: () => '/kyc' },
