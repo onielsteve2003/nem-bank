@@ -40,6 +40,8 @@ const NOT_PERSISTED_METHODS = new Set([
   'decodeQr',
   'quote',
   'createQuote',
+  // Loan offers expire after minutes; a stale one could never be accepted.
+  'createOffer',
 ]);
 
 export function shouldPersistQuery(query: Query): boolean {

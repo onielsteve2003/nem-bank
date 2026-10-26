@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { RefreshCw, ShieldCheck } from 'lucide-react-native';
+import { HandCoins, RefreshCw, ShieldCheck } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -177,9 +177,16 @@ export function CreditScreen() {
           </Text>
         )}
         {e.eligible && (
-          <Text variant="bodySmall" color="textMuted">
-            Rates start at 24% a year. Nothing is borrowed until you accept an offer.
-          </Text>
+          <>
+            <Button
+              label="See your offer"
+              icon={HandCoins}
+              onPress={() => router.push('/credit/offer')}
+            />
+            <Text variant="bodySmall" color="textMuted">
+              Rates start at 24% a year. Nothing is borrowed until you accept an offer.
+            </Text>
+          </>
         )}
       </>
     );

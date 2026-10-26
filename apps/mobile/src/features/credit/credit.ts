@@ -39,3 +39,24 @@ export function nextStep(reasons: readonly Reason[]): 'kyc' | 'repay' | 'income'
   if (reasons.some((r) => r.code === 'no_salary')) return 'income';
   return null;
 }
+
+/** Loan amounts move in ₦5,000 steps, from ₦5,000 up to what the customer may borrow. */
+export const AMOUNT_STEP_KOBO = 500_000n;
+
+/** How many amount steps fit under `maxKobo` (0 when not even one does). */
+export const amountSteps = (maxKobo: bigint) => Number(maxKobo / AMOUNT_STEP_KOBO);
+
+/** Slider index → amount in kobo: index 0 is one step. */
+export const amountAt = (index: number) => BigInt(index + 1) * AMOUNT_STEP_KOBO;
+
+export const TENORS = [30, 60, 90, 180] as const;
+export type Tenor = (typeof TENORS)[number];
+
+/** 30 → "1 month", 180 → "6 months": every instalment is 30 days apart. */
+export const tenorLabel = (days: number) => {
+  const months = Math.round(days / 30);
+  return `${months} ${months === 1 ? 'month' : 'months'}`;
+};
+
+/** 2400 → "24%", 2650 → "26.5%". */
+export const aprLabel = (bps: number) => `${bps / 100}%`;

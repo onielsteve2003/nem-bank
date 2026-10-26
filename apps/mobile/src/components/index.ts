@@ -41,6 +41,7 @@ export { SelectSheet, type SelectOption } from './SelectSheet';
 export { Skeleton, SkeletonGroup, SkeletonListItem } from './Skeleton';
 export { STATUS_META, StatusPill, type TransactionStatus } from './StatusPill';
 export { StatusTimeline, stepTone, type TimelineStep } from './StatusTimeline';
+export { Slider } from './Slider';
 export { Switch } from './Switch';
 export { Text, type TextColor } from './Text';
 export { TextField } from './TextField';

@@ -1,5 +1,5 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, render, screen } from '@testing-library/react-native';
+import { configure, fireEvent, render, screen } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
@@ -10,8 +10,9 @@ import { QueryProvider } from '@/lib/query';
 import { usePreferencesStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
-import { nextStep, sortReasons } from '../credit';
+import { amountAt, amountSteps, nextStep, sortReasons, tenorLabel } from '../credit';
 import { CreditScreen } from '../screens/CreditScreen';
+import { OfferScreen } from '../screens/OfferScreen';
 
 const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
@@ -29,7 +30,7 @@ const bank = () =>
     simulation: { latency: 'off' },
   });
 
-const wrap = (repos: Repositories) => (
+const wrap = (repos: Repositories, ui: React.ReactElement = <CreditScreen />) => (
   <SafeAreaProvider
     initialMetrics={{
       frame: { x: 0, y: 0, width: 390, height: 844 },
@@ -44,9 +45,7 @@ const wrap = (repos: Repositories) => (
       >
         <ThemeProvider initialPreference="dark">
           <ToastProvider>
-            <ModalSheetHost>
-              <CreditScreen />
-            </ModalSheetHost>
+            <ModalSheetHost>{ui}</ModalSheetHost>
           </ToastProvider>
         </ThemeProvider>
       </QueryProvider>
@@ -83,5 +82,36 @@ describe('credit hub', () => {
     expect(nextStep(reasons)).toBe('kyc');
     expect(nextStep(reasons.slice(0, 2))).toBe('repay');
     expect(nextStep([])).toBeNull();
+  });
+});
+
+describe('loan offer', () => {
+  it('discloses APR, interest, fee, total and the schedule, and re-prices on change', async () => {
+    await render(wrap(bank(), <OfferScreen />));
+    const amount = await screen.findByRole('adjustable', { name: 'Amount to borrow' });
+    expect(await screen.findByText('APR')).toBeTruthy();
+    expect(screen.getByText('28% a year')).toBeTruthy();
+    expect(screen.getByText('Total to repay')).toBeTruthy();
+    expect(screen.getAllByLabelText(/^Payment \d,/)).toHaveLength(3);
+
+    const tenor = screen.getByRole('adjustable', { name: 'Repay over' });
+    await fireEvent(tenor, 'accessibilityAction', { nativeEvent: { actionName: 'increment' } });
+    expect(await screen.findByText('30% a year', {}, { timeout: 3000 })).toBeTruthy();
+    expect(screen.getAllByLabelText(/^Payment \d,/)).toHaveLength(6);
+    expect(amount.props.accessibilityValue.text).toMatch(/^₦[\d,]+$/);
+  });
+
+  it('opens from the hub when the customer can borrow', async () => {
+    await render(wrap(bank()));
+    await fireEvent.press(await screen.findByRole('button', { name: 'See your offer' }));
+    expect(mockPush).toHaveBeenCalledWith('/credit/offer');
+  });
+
+  it('steps amounts by ₦5,000 and labels tenors in months', () => {
+    expect(amountSteps(1_250_000n)).toBe(2);
+    expect(amountAt(0)).toBe(500_000n);
+    expect(amountAt(9)).toBe(5_000_000n);
+    expect(tenorLabel(30)).toBe('1 month');
+    expect(tenorLabel(180)).toBe('6 months');
   });
 });
