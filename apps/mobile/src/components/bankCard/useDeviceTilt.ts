@@ -47,13 +47,18 @@ export function useDeviceTilt(enabled: boolean): {
 
     void Accelerometer.isAvailableAsync().then((available) => {
       if (!available || cancelled) return;
-      Accelerometer.setUpdateInterval(UPDATE_MS);
-      subscription = Accelerometer.addListener((sample) => {
-        baseline = baseline ? followBaseline(baseline, sample) : sample;
-        const tilt = tiltFromGravity(sample, baseline);
-        rotateX.set(withSpring(tilt.rotateX, TILT_SPRING));
-        rotateY.set(withSpring(tilt.rotateY, TILT_SPRING));
-      });
+      // Some browsers report a sensor the web module can't subscribe to: stay flat.
+      try {
+        Accelerometer.setUpdateInterval(UPDATE_MS);
+        subscription = Accelerometer.addListener((sample) => {
+          baseline = baseline ? followBaseline(baseline, sample) : sample;
+          const tilt = tiltFromGravity(sample, baseline);
+          rotateX.set(withSpring(tilt.rotateX, TILT_SPRING));
+          rotateY.set(withSpring(tilt.rotateY, TILT_SPRING));
+        });
+      } catch {
+        subscription = undefined;
+      }
     });
 
     return () => {
