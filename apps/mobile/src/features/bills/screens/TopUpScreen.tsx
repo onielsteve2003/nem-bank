@@ -1,5 +1,4 @@
 import { formatMoney, parseMajor } from '@nem/shared';
-import { useRouter } from 'expo-router';
 import { Phone } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -19,38 +18,52 @@ import {
 } from '@/components';
 import { ConfirmSheet } from '@/features/transfers/components/ConfirmSheet';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
-import { sendErrorMessage } from '@/features/transfers/confirm';
+import type { ScheduleChoice } from '@/features/transfers/schedule';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
-import { useMoneyMutation, useRepoQuery } from '@/lib/query';
+import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import {
   AIRTIME_PRESETS,
   isMobileNumber,
   localPhone,
+  networkOfBiller,
   NETWORKS,
   toE164,
   topUpBillerId,
+  type BillPrefill,
   type MobileNetwork,
 } from '../bills';
+import { useBillCheckout } from '../checkout';
+import { BillOptions } from '../components/BillOptions';
 
 /**
  * Airtime and data (BILL-1): the network is read from the number's prefix and
  * can be changed for ported numbers; data shows that network's bundles.
  */
-export function TopUpScreen({ category }: { category: 'airtime' | 'data' }) {
-  const router = useRouter();
+export function TopUpScreen({
+  category,
+  prefill,
+}: {
+  category: 'airtime' | 'data';
+  prefill?: BillPrefill;
+}) {
   const { spacing } = useTheme();
   const me = useRepoQuery('users', 'getMe');
   const accounts = useRepoQuery('accounts', 'list');
   const source = accounts.data?.data.find((a) => a.currency === 'NGN');
 
-  const [typed, setTyped] = useState<string | null>(null);
-  const [picked, setPicked] = useState<MobileNetwork | null>(null);
+  const [typed, setTyped] = useState<string | null>(prefill?.customerId ?? null);
+  const [picked, setPicked] = useState<MobileNetwork | null>(
+    prefill?.billerId ? networkOfBiller(prefill.billerId) : null,
+  );
   const [amount, setAmount] = useState('');
   const [productId, setProductId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [payError, setPayError] = useState<string>();
+  const [schedule, setSchedule] = useState<ScheduleChoice | null>(null);
+  const [nickname, setNickname] = useState<string | null>(null);
+  const saved = useRepoQuery('bills', 'listSaved');
+  const checkout = useBillCheckout();
 
   // Starts on the customer's own number, the one most people top up.
   const own = me.data?.phone ? localPhone(me.data.phone) : '';
@@ -83,36 +96,38 @@ export function TopUpScreen({ category }: { category: 'airtime' | 'data' }) {
       ? parseMajor(amount, 'NGN')
       : undefined;
   const tooSmall = !isData && price !== undefined && price.amount < 5_000n;
-  const ready = complete && billerId !== null && price !== undefined && !tooSmall && source;
+  const savingName = schedule ? null : nickname?.trim();
+  const ready =
+    complete &&
+    billerId !== null &&
+    price !== undefined &&
+    !tooSmall &&
+    source &&
+    savingName !== '';
 
-  const pay = useMoneyMutation('bills', 'pay', {
-    invalidates: [['bills'], ['accounts'], ['transactions']],
-  });
   const networkName = NETWORKS.find((n) => n.value === network)?.label ?? '';
+  const alreadySaved = saved.data?.data.some(
+    (b) => b.biller_id === billerId && b.customer_id === local,
+  );
 
   const onApproved = async () => {
     if (!ready || !price) return false;
-    setPayError(undefined);
-    try {
-      const payment = await pay.mutateAsync({
-        body: {
-          biller_id: billerId,
-          product_id: product?.id,
-          customer_id: local,
-          amount: toApiMoney(price),
-          source_account_id: source.id,
-        },
-      });
-      setConfirming(false);
-      router.replace({ pathname: '/bills/receipt/[id]', params: { id: payment.id } });
-      return true;
-    } catch (e) {
-      setPayError(sendErrorMessage(e as Error).message);
-      return false;
-    }
+    return checkout.submit(
+      {
+        biller_id: billerId,
+        product_id: product?.id,
+        customer_id: local,
+        amount: toApiMoney(price),
+        source_account_id: source.id,
+        ...(savingName ? { save_as: savingName } : {}),
+      },
+      schedule,
+      () => setConfirming(false),
+    );
   };
 
   const what = isData ? (product?.name ?? 'data') : 'airtime';
+  const verb = schedule ? 'Schedule' : 'Buy';
 
   return (
     <Screen
@@ -120,10 +135,10 @@ export function TopUpScreen({ category }: { category: 'airtime' | 'data' }) {
       edges={['top', 'bottom']}
       footer={
         <Button
-          label={price && ready ? `Buy ${formatMoney(price, { trimZeroMinor: true })}` : 'Buy'}
+          label={price && ready ? `${verb} ${formatMoney(price, { trimZeroMinor: true })}` : verb}
           disabled={!ready}
           onPress={() => {
-            pay.resetIntent();
+            checkout.reset();
             setConfirming(true);
           }}
         />
@@ -225,12 +240,21 @@ export function TopUpScreen({ category }: { category: 'airtime' | 'data' }) {
         </View>
       )}
 
+      <BillOptions
+        schedule={schedule}
+        onScheduleChange={setSchedule}
+        nickname={nickname}
+        onNicknameChange={setNickname}
+        canSave={complete && billerId !== null && saved.data !== undefined && !alreadySaved}
+        suggestedName={`${networkName} ${local}`.trim()}
+      />
+
       <ConfirmSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        subtitle={price ? `Buy ${formatMoney(price)} ${networkName} ${what} for ${local}` : ''}
+        subtitle={price ? `${verb} ${formatMoney(price)} ${networkName} ${what} for ${local}` : ''}
         onApproved={onApproved}
-        error={payError}
+        error={checkout.error}
       />
     </Screen>
   );

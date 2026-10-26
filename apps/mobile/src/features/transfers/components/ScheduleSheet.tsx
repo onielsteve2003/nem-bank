@@ -23,6 +23,11 @@ interface Props {
   onClose: () => void;
   /** null means "send it now" again. */
   onApply: (choice: ScheduleChoice | null) => void;
+  /** Whether a repeat may stop on a last day. Bill schedules run until cancelled. */
+  allowEnd?: boolean;
+  nowLabel?: string;
+  /** Shown after the schedule's description. */
+  footnote?: string;
 }
 
 const isoToDisplay = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
@@ -32,7 +37,14 @@ const isoToDisplay = (iso: string) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${
  * month from a first day, until cancelled or a last day. Mount it only while
  * open, so it starts from the current choice each time.
  */
-export function ScheduleSheet({ value, onClose, onApply }: Props) {
+export function ScheduleSheet({
+  value,
+  onClose,
+  onApply,
+  allowEnd = true,
+  nowLabel = 'Send now instead',
+  footnote = 'The fee applies to each payment.',
+}: Props) {
   const { spacing } = useTheme();
   const today = lagosToday();
   const presets = startPresets(today);
@@ -111,7 +123,7 @@ export function ScheduleSheet({ value, onClose, onApply }: Props) {
           )}
         </View>
 
-        {frequency !== 'once' && (
+        {frequency !== 'once' && allowEnd && (
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
               Ends
@@ -139,7 +151,7 @@ export function ScheduleSheet({ value, onClose, onApply }: Props) {
           </Text>
         ) : choice ? (
           <Text variant="bodySmall" color="textMuted" accessibilityLiveRegion="polite">
-            {describeSchedule(choice)}, at about 9 am. The fee applies to each payment.
+            {describeSchedule(choice)}, at about 9 am. {footnote}
           </Text>
         ) : null}
 
@@ -149,7 +161,7 @@ export function ScheduleSheet({ value, onClose, onApply }: Props) {
           disabled={!ready}
           onPress={() => choice && onApply(choice)}
         />
-        {value && <Button label="Send now instead" variant="ghost" onPress={() => onApply(null)} />}
+        {value && <Button label={nowLabel} variant="ghost" onPress={() => onApply(null)} />}
       </View>
     </BottomSheet>
   );

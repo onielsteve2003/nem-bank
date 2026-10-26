@@ -71,3 +71,31 @@ export const topUpBillerId = (network: MobileNetwork, category: 'airtime' | 'dat
 
 /** Quick airtime amounts, in naira. */
 export const AIRTIME_PRESETS = [100, 200, 500, 1_000, 2_000, 5_000] as const;
+
+/** "nine_mobile-data" → "nine_mobile"; null for billers that are not a network's. */
+export function networkOfBiller(billerId: string): MobileNetwork | null {
+  const network = billerId.slice(0, billerId.lastIndexOf('-'));
+  return NETWORKS.some((n) => n.value === network) ? (network as MobileNetwork) : null;
+}
+
+/** A saved biller opened from the hub: its provider and number, filled in. */
+export interface BillPrefill {
+  billerId?: string;
+  customerId?: string;
+}
+
+type Schedule = Schema<'BillSchedule'>;
+
+export const isLiveSchedule = (s: Schedule) => s.status === 'active' || s.status === 'paused';
+
+/** Live schedules first (soonest next), then ended ones newest first. */
+export function sortBillSchedules(list: Schedule[]): Schedule[] {
+  const rank = (s: Schedule) => (isLiveSchedule(s) ? 0 : 1);
+  return [...list].sort(
+    (a, b) =>
+      rank(a) - rank(b) ||
+      (isLiveSchedule(a)
+        ? (a.next_run_at ?? '9').localeCompare(b.next_run_at ?? '9')
+        : b.created_at.localeCompare(a.created_at)),
+  );
+}

@@ -10,6 +10,7 @@ import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
 import { BillReceiptScreen, tokenMessage } from '../screens/BillReceiptScreen';
+import { BillSchedulesScreen } from '../screens/BillSchedulesScreen';
 import { BillsHubScreen } from '../screens/BillsHubScreen';
 import { TopUpScreen } from '../screens/TopUpScreen';
 import { UtilityScreen } from '../screens/UtilityScreen';
@@ -17,7 +18,13 @@ import { UtilityScreen } from '../screens/UtilityScreen';
 const mockPush = jest.fn();
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: mockReplace, back: jest.fn() }),
+  useRouter: () => ({
+    push: mockPush,
+    replace: mockReplace,
+    back: jest.fn(),
+    dismissTo: jest.fn(),
+  }),
+  useLocalSearchParams: () => ({}),
 }));
 
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
@@ -179,5 +186,91 @@ describe('electricity and cable TV', () => {
     await fireEvent.changeText(screen.getByLabelText('Smartcard number'), '1234567890');
     expect(await screen.findByText('Current plan: GOtv Max')).toBeTruthy();
     expect(screen.getByText('Current plan · Renew')).toBeTruthy();
+  });
+});
+
+describe('saved billers and scheduled bills', () => {
+  const pin = async () => {
+    for (const digit of DEMO_PIN) {
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+  };
+
+  it('saves the biller when paying and opens it filled in from the hub', async () => {
+    const repos = bank();
+    await render(
+      wrap(
+        repos,
+        <UtilityScreen
+          category="cable_tv"
+          prefill={{ billerId: 'gotv', customerId: '1234567890' }}
+        />,
+      ),
+    );
+    // Prefilled: the smartcard is checked without typing anything.
+    expect(await screen.findByText('Current plan: GOtv Max')).toBeTruthy();
+    await fireEvent.press(screen.getByText('GOtv Jolli'));
+    await fireEvent.press(await screen.findByRole('switch', { name: /Save for next time/ }));
+    await fireEvent.changeText(screen.getByLabelText('Save as'), 'Mum’s decoder');
+    await fireEvent.press(await screen.findByRole('button', { name: /^Pay ₦5,800/ }));
+    await pin();
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled());
+    expect((await repos.bills.listSaved()).data).toContainEqual(
+      expect.objectContaining({ nickname: 'Mum’s decoder', customer_id: '1234567890' }),
+    );
+
+    mockPush.mockClear();
+    await render(wrap(repos, <BillsHubScreen />));
+    await fireEvent.press(await screen.findByText('Mum’s decoder'));
+    expect(mockPush).toHaveBeenLastCalledWith({
+      pathname: '/bills/[category]',
+      params: { category: 'cable_tv', biller: 'gotv', customer: '1234567890' },
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Remove Mum’s decoder' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remove' }));
+    await waitFor(async () =>
+      expect((await repos.bills.listSaved()).data.map((b) => b.nickname)).not.toContain(
+        'Mum’s decoder',
+      ),
+    );
+  });
+
+  it('schedules a monthly top-up instead of paying now', async () => {
+    const repos = bank();
+    await render(
+      wrap(
+        repos,
+        <TopUpScreen
+          category="airtime"
+          prefill={{ billerId: 'glo-airtime', customerId: '08051234567' }}
+        />,
+      ),
+    );
+    await fireEvent.press(screen.getByRole('togglebutton', { name: '₦1,000' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'When: now' }));
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: 'Every month' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Use this schedule' }));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Schedule ₦1,000/ }));
+    await pin();
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenLastCalledWith(
+        expect.objectContaining({ pathname: '/bills/scheduled' }),
+      ),
+    );
+    expect((await repos.bills.listPayments()).data).toHaveLength(0);
+    const [schedule] = (await repos.bills.listSchedules()).data;
+    expect(schedule).toMatchObject({
+      biller_name: 'Glo Airtime',
+      frequency: 'monthly',
+      status: 'active',
+    });
+
+    await render(wrap(repos, <BillSchedulesScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Glo Airtime, ₦1,000.00/ }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Cancel schedule' }));
+    await waitFor(async () =>
+      expect((await repos.bills.listSchedules()).data[0]!.status).toBe('cancelled'),
+    );
+    expect(await screen.findByText('Ended')).toBeTruthy();
   });
 });

@@ -1,5 +1,4 @@
 import { formatMoney, parseMajor } from '@nem/shared';
-import { useRouter } from 'expo-router';
 import { CircleCheck, Hash } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -22,12 +21,14 @@ import {
 import { isApiError } from '@/data';
 import { ConfirmSheet } from '@/features/transfers/components/ConfirmSheet';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
-import { sendErrorMessage } from '@/features/transfers/confirm';
+import type { ScheduleChoice } from '@/features/transfers/schedule';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
-import { useMoneyMutation, useRepoQuery } from '@/lib/query';
+import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
-import { categoryMeta, CUSTOMER_LABEL } from '../bills';
+import { categoryMeta, CUSTOMER_LABEL, type BillPrefill } from '../bills';
+import { useBillCheckout } from '../checkout';
+import { BillOptions } from '../components/BillOptions';
 
 type Category = 'electricity' | 'cable_tv';
 
@@ -38,8 +39,13 @@ const ID_LENGTH: Record<Category, number> = { electricity: 11, cable_tv: 10 };
  * Electricity and cable TV (BILL-2): pick the provider, check the meter or
  * smartcard against it, then buy units or a plan.
  */
-export function UtilityScreen({ category }: { category: Category }) {
-  const router = useRouter();
+export function UtilityScreen({
+  category,
+  prefill,
+}: {
+  category: Category;
+  prefill?: BillPrefill;
+}) {
   const { colors, radius, spacing } = useTheme();
   const meta = categoryMeta(category);
   const isPower = category === 'electricity';
@@ -47,13 +53,16 @@ export function UtilityScreen({ category }: { category: Category }) {
   const source = accounts.data?.data.find((a) => a.currency === 'NGN');
 
   const billers = useRepoQuery('bills', 'listBillers', { query: { category } });
-  const [billerId, setBillerId] = useState<string | null>(null);
+  const [billerId, setBillerId] = useState<string | null>(prefill?.billerId ?? null);
   const biller = billers.data?.data.find((b) => b.id === billerId);
-  const [customerId, setCustomerId] = useState('');
+  const [customerId, setCustomerId] = useState(prefill?.customerId ?? '');
   const [amount, setAmount] = useState('');
   const [productId, setProductId] = useState<string | null>(null);
   const [confirming, setConfirming] = useState(false);
-  const [payError, setPayError] = useState<string>();
+  const [schedule, setSchedule] = useState<ScheduleChoice | null>(null);
+  const [nickname, setNickname] = useState<string | null>(null);
+  const saved = useRepoQuery('bills', 'listSaved');
+  const checkout = useBillCheckout();
 
   const digits = customerId.replace(/\D/g, '');
   const complete = digits.length === ID_LENGTH[category];
@@ -84,32 +93,27 @@ export function UtilityScreen({ category }: { category: Category }) {
       : undefined
     : plan && fromApiMoney(plan.amount);
   const tooSmall = isPower && price !== undefined && min !== undefined && price.amount < min.amount;
-  const ready = Boolean(customer && price && !tooSmall && source);
-
-  const pay = useMoneyMutation('bills', 'pay', {
-    invalidates: [['bills'], ['accounts'], ['transactions']],
-  });
+  const savingName = schedule ? null : nickname?.trim();
+  const ready = Boolean(customer && price && !tooSmall && source && savingName !== '');
+  const alreadySaved = saved.data?.data.some(
+    (b) => b.biller_id === billerId && b.customer_id === digits,
+  );
+  const verb = schedule ? 'Schedule' : 'Pay';
 
   const onApproved = async () => {
     if (!customer || !price || !source) return false;
-    setPayError(undefined);
-    try {
-      const payment = await pay.mutateAsync({
-        body: {
-          biller_id: customer.biller_id,
-          product_id: plan?.id,
-          customer_id: customer.customer_id,
-          amount: toApiMoney(price),
-          source_account_id: source.id,
-        },
-      });
-      setConfirming(false);
-      router.replace({ pathname: '/bills/receipt/[id]', params: { id: payment.id } });
-      return true;
-    } catch (e) {
-      setPayError(sendErrorMessage(e as Error).message);
-      return false;
-    }
+    return checkout.submit(
+      {
+        biller_id: customer.biller_id,
+        product_id: plan?.id,
+        customer_id: customer.customer_id,
+        amount: toApiMoney(price),
+        source_account_id: source.id,
+        ...(savingName ? { save_as: savingName } : {}),
+      },
+      schedule,
+      () => setConfirming(false),
+    );
   };
 
   return (
@@ -118,10 +122,10 @@ export function UtilityScreen({ category }: { category: Category }) {
       edges={['top', 'bottom']}
       footer={
         <Button
-          label={price && ready ? `Pay ${formatMoney(price, { trimZeroMinor: true })}` : 'Pay'}
+          label={price && ready ? `${verb} ${formatMoney(price, { trimZeroMinor: true })}` : verb}
           disabled={!ready}
           onPress={() => {
-            pay.resetIntent();
+            checkout.reset();
             setConfirming(true);
           }}
         />
@@ -263,6 +267,17 @@ export function UtilityScreen({ category }: { category: Category }) {
           </View>
         ))}
 
+      {customer && (
+        <BillOptions
+          schedule={schedule}
+          onScheduleChange={setSchedule}
+          nickname={nickname}
+          onNicknameChange={setNickname}
+          canSave={saved.data !== undefined && !alreadySaved}
+          suggestedName={`${biller?.name.replace(' (prepaid)', '') ?? ''} ${isPower ? 'meter' : 'decoder'}`.trim()}
+        />
+      )}
+
       <Text variant="caption" color="textMuted">
         Billers are simulated: payments complete instantly and no real provider is charged.
       </Text>
@@ -272,11 +287,11 @@ export function UtilityScreen({ category }: { category: Category }) {
         onClose={() => setConfirming(false)}
         subtitle={
           price && customer
-            ? `Pay ${formatMoney(price)} to ${biller?.name}${plan ? ` for ${plan.name}` : ''}, ${customer.customer_name}`
+            ? `${verb} ${formatMoney(price)} to ${biller?.name}${plan ? ` for ${plan.name}` : ''}, ${customer.customer_name}`
             : ''
         }
         onApproved={onApproved}
-        error={payError}
+        error={checkout.error}
       />
     </Screen>
   );

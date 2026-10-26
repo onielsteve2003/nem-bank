@@ -1,12 +1,17 @@
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Receipt } from 'lucide-react-native';
+import type { Schema } from '@nem/contracts';
+import { CalendarClock, Receipt, Trash2 } from 'lucide-react-native';
+import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
+  Card,
+  Dialog,
   EmptyState,
   ErrorState,
   Icon,
+  IconButton,
   ListItem,
   PressableScale,
   Screen,
@@ -18,7 +23,7 @@ import {
 } from '@/components';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { fromApiMoney } from '@/lib/money';
-import { useRepoQuery } from '@/lib/query';
+import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { BILL_CATEGORIES, categoryMeta, CUSTOMER_LABEL, shortDate } from '../bills';
@@ -35,6 +40,10 @@ export function BillsHubScreen() {
   const saved = useRepoQuery('bills', 'listSaved');
   const payments = useRepoQuery('bills', 'listPayments', { query: { limit: RECENT } });
   const recent = payments.data?.data.slice(0, RECENT) ?? [];
+  const schedules = useRepoQuery('bills', 'listSchedules');
+  const upcoming = schedules.data?.data.filter((s) => s.status === 'active').length ?? 0;
+  const [removing, setRemoving] = useState<Schema<'SavedBiller'> | null>(null);
+  const remove = useRepoMutation('bills', 'removeSaved', { invalidates: [['bills']] });
 
   return (
     <Screen
@@ -77,11 +86,36 @@ export function BillsHubScreen() {
               leading={categoryMeta(s.category).icon}
               title={s.nickname}
               subtitle={`${s.biller_name} · ${s.customer_id}`}
-              onPress={() => router.push(`/bills/${s.category}`)}
+              accessibilityHint="Pay this bill with the details filled in"
+              onPress={() =>
+                router.push({
+                  pathname: '/bills/[category]',
+                  params: { category: s.category, biller: s.biller_id, customer: s.customer_id },
+                })
+              }
+              trailing={
+                <IconButton
+                  icon={Trash2}
+                  variant="ghost"
+                  accessibilityLabel={`Remove ${s.nickname}`}
+                  onPress={() => setRemoving(s)}
+                />
+              }
             />
           ))}
         </View>
       )}
+
+      <Card padded={false}>
+        <ListItem
+          leading={CalendarClock}
+          title="Scheduled bills"
+          subtitle={
+            upcoming > 0 ? `${upcoming} coming up` : 'Pay a bill later, or every day, week or month'
+          }
+          onPress={() => router.push('/bills/scheduled')}
+        />
+      </Card>
 
       <View>
         <SectionHeader title="Recent bills" />
@@ -115,6 +149,23 @@ export function BillsHubScreen() {
           ))
         )}
       </View>
+
+      <Dialog
+        open={removing !== null}
+        title={`Remove ${removing?.nickname ?? 'this biller'}?`}
+        message="You can save it again the next time you pay it."
+        confirmLabel="Remove"
+        destructive
+        loading={remove.isPending}
+        onCancel={() => setRemoving(null)}
+        onConfirm={() =>
+          removing &&
+          remove.mutate(
+            { path: { saved_biller_id: removing.id } },
+            { onSettled: () => setRemoving(null) },
+          )
+        }
+      />
     </Screen>
   );
 }
