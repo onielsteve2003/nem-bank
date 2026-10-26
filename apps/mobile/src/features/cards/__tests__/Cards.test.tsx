@@ -312,3 +312,34 @@ describe('new card', () => {
     });
   });
 });
+
+describe('replace and terminate', () => {
+  it('replaces the card after the PIN, keeping its settings on a new number', async () => {
+    const repos = bank();
+    const [old] = (await repos.cards.list()).data;
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Replace card/ }));
+    expect(screen.getByText(/You get a new card number/)).toBeTruthy();
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Replace card' }).at(-1)!);
+    await enterPin();
+    expect(await screen.findByText(/^Your new card ending \d{4} is ready$/)).toBeTruthy();
+    const cards = (await repos.cards.list()).data;
+    expect(cards.find((c) => c.id === old!.id)!.status).toBe('terminated');
+    const next = cards.find((c) => c.status === 'active')!;
+    expect(next.last4).not.toBe(old!.last4);
+    expect(next.nickname).toBe(old!.nickname);
+    expect(next.controls.spend_limit).toEqual(old!.controls.spend_limit);
+  });
+
+  it('terminates the card for good and lists it as closed', async () => {
+    const repos = bank();
+    await render(wrap(repos, <CardsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: /^Terminate card/ }));
+    expect(screen.getByText(/You can’t undo this/)).toBeTruthy();
+    await fireEvent.press(screen.getAllByRole('button', { name: 'Terminate card' }).at(-1)!);
+    await enterPin();
+    expect(await screen.findByText(/^Card ending \d{4} terminated$/)).toBeTruthy();
+    expect((await repos.cards.list()).data[0]!.status).toBe('terminated');
+    expect(await screen.findByText('Closed cards')).toBeTruthy();
+  });
+});

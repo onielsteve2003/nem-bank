@@ -25,6 +25,7 @@ import { useTheme } from '@/theme';
 import { cardFacts, cardName, closedReason, isOpen } from '../cards';
 import { CardCarousel } from '../components/CardCarousel';
 import { CardControls } from '../components/CardControls';
+import { CardManage } from '../components/CardManage';
 import { CardPayments } from '../components/CardPayments';
 import { CardDetailsPanel } from '../components/CardDetailsPanel';
 import { useCardReveal } from '../hooks/useCardReveal';
@@ -156,6 +157,12 @@ export function CardsScreen() {
             <View style={{ paddingHorizontal: spacing[2], gap: spacing[4] }}>
               <CardControls key={current.id} card={current} />
               <CardPayments key={`payments-${current.id}`} card={current} />
+              <CardManage
+                key={`manage-${current.id}`}
+                card={current}
+                // The old card closes and the new one joins the end of the list.
+                onReplaced={() => choose(open.length - 1)}
+              />
             </View>
           )}
           <View style={{ paddingHorizontal: spacing[4] }}>
