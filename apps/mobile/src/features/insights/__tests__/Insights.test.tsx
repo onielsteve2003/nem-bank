@@ -7,11 +7,13 @@ import { RepositoryProvider, type Repositories } from '@/data';
 import { createMockRepositories } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
-import { usePrivacyStore } from '@/stores';
+import { usePreferencesStore, usePrivacyStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 import { changeOf, donutSlices, monthYearLabel, shiftMonth } from '../insights';
+import { firstShortfall, horizon } from '../forecast';
 import { BudgetsScreen } from '../screens/BudgetsScreen';
+import { ForecastScreen } from '../screens/ForecastScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
 
 jest.mock('expo-router', () => ({
@@ -154,4 +156,41 @@ describe('budgets', () => {
       ),
     );
   }, 20_000);
+});
+
+describe('cash-flow forecast', () => {
+  beforeEach(() => usePrivacyStore.setState({ balancesHidden: false }));
+
+  const point = (date: string, naira: number) => {
+    const m = { amount_minor: String(naira * 100), currency: 'NGN' as const };
+    return { date, balance: m, low: m, high: m };
+  };
+
+  it('plans around the day before payday and finds the first shortfall', () => {
+    const points = [
+      point('2026-11-23', 5_000),
+      point('2026-11-24', -1_000),
+      point('2026-11-25', 200_000),
+      point('2026-11-26', 190_000),
+    ];
+    expect(horizon(points, '2026-11-25')!.date).toBe('2026-11-24');
+    expect(horizon(points, null)!.date).toBe('2026-11-26');
+    expect(firstShortfall(points)!.date).toBe('2026-11-24');
+    expect(firstShortfall(points.slice(2))).toBeUndefined();
+  });
+
+  it('shows the forecast, the why and what is expected', async () => {
+    usePreferencesStore.getState().setAiFeature('forecast', true);
+    await render(wrap(bank(), <ForecastScreen />));
+    expect(await screen.findByLabelText(/^Forecast naira balance, day by day\./)).toBeTruthy();
+    expect(screen.getByText(/^You spend about ₦/)).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'AI: Cash-flow forecast' })).toBeTruthy();
+    expect(screen.getByText(/^Likely between ₦/)).toBeTruthy();
+  });
+
+  it('says it is a simple average when the AI forecast is off', async () => {
+    usePreferencesStore.getState().setAiFeature('forecast', false);
+    await render(wrap(bank(), <ForecastScreen />));
+    expect(await screen.findByText('AI forecast is off · simple average')).toBeTruthy();
+  });
 });

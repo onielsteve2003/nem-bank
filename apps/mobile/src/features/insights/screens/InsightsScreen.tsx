@@ -26,12 +26,13 @@ import { useTheme } from '@/theme';
 
 import { BudgetsSummary } from '../components/BudgetsSummary';
 import { CategoryCompare } from '../components/CategoryCompare';
+import { ForecastCard } from '../components/ForecastCard';
 import { MonthStepper } from '../components/MonthStepper';
 import { changeOf, donutSlices, monthLabel, MONTHS_BACK, shiftMonth } from '../insights';
 
 /**
- * Insights (INS-1, INS-2): where the money went in a month, by category, set
- * against the month before, and this month's budgets. Spending excludes money moved between the customer's own
+ * Insights (INS-1..3): where the money went in a month, by category, set
+ * against the month before, this month's budgets and the cash-flow forecast. Spending excludes money moved between the customer's own
  * pots (savings, ajo, conversions, loan repayments).
  */
 export function InsightsScreen() {
@@ -49,6 +50,7 @@ export function InsightsScreen() {
     { enabled: picked !== null, placeholderData: keepPreviousData },
   );
   const budgets = useRepoQuery('insights', 'listBudgets');
+  const forecast = useRepoQuery('insights', 'getForecast');
   const q = picked === null ? current : other;
   const s = q.data;
 
@@ -137,6 +139,13 @@ export function InsightsScreen() {
             </View>
           </>
         )}
+        {inProgress && forecast.data && (
+          <ForecastCard
+            forecast={forecast.data}
+            hidden={hidden}
+            onOpen={() => router.push('/insights/forecast')}
+          />
+        )}
         {inProgress && budgets.data && (
           <BudgetsSummary
             budgets={budgets.data.data}
@@ -152,7 +161,7 @@ export function InsightsScreen() {
     <Screen
       header={<SendHeader title="Insights" first />}
       edges={['top', 'bottom']}
-      onRefresh={() => void Promise.all([q.refetch(), budgets.refetch()])}
+      onRefresh={() => void Promise.all([q.refetch(), budgets.refetch(), forecast.refetch()])}
       refreshing={q.isRefetching}
     >
       {body}
