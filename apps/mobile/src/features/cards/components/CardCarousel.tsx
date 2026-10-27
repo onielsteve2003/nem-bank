@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import {
   FlatList,
   StyleSheet,
@@ -42,10 +42,11 @@ export function CardCarousel({ cards, index, onIndex, revealed }: Props) {
     const next = Math.round(e.nativeEvent.contentOffset.x / width);
     if (next !== index && next >= 0 && next < cards.length) onIndex(next);
   };
-  const goTo = (i: number) => {
-    onIndex(i);
-    list.current?.scrollToOffset({ offset: i * width, animated: true });
-  };
+  // Taps on a dot, a swipe that settled, or the parent picking a card (a link
+  // to one card, a replaced card) all end here; a swipe is already in place.
+  useEffect(() => {
+    list.current?.scrollToOffset({ offset: index * width, animated: true });
+  }, [index, width]);
 
   return (
     <View style={{ gap: spacing[3] }} onLayout={onLayout}>
@@ -80,7 +81,7 @@ export function CardCarousel({ cards, index, onIndex, revealed }: Props) {
               accessibilityLabel={`Show card ${i + 1} of ${cards.length}`}
               accessibilityState={{ selected: i === index }}
               hitSlop={spacing[3]}
-              onPress={() => goTo(i)}
+              onPress={() => onIndex(i)}
               style={styles.dotTarget}
             >
               <View

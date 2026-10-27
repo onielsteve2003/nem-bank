@@ -15,9 +15,17 @@ import { firstShortfall, horizon } from '../forecast';
 import { BudgetsScreen } from '../screens/BudgetsScreen';
 import { ForecastScreen } from '../screens/ForecastScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
+import { SubscriptionsScreen } from '../screens/SubscriptionsScreen';
+import { daysUntil, nextChargeLabel, paidWith } from '../subscriptions';
 
+const mockDismissTo = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({
+    push: jest.fn(),
+    replace: jest.fn(),
+    back: jest.fn(),
+    dismissTo: mockDismissTo,
+  }),
   useLocalSearchParams: () => ({}),
 }));
 
@@ -192,5 +200,57 @@ describe('cash-flow forecast', () => {
     usePreferencesStore.getState().setAiFeature('forecast', false);
     await render(wrap(bank(), <ForecastScreen />));
     expect(await screen.findByText('AI forecast is off · simple average')).toBeTruthy();
+  });
+});
+
+describe('subscriptions', () => {
+  beforeEach(() => {
+    usePrivacyStore.setState({ balancesHidden: false });
+    mockDismissTo.mockClear();
+  });
+
+  const sub = (card_id: string | null) => ({
+    id: 's1',
+    merchant: 'Netflix',
+    amount: { amount_minor: '700000', currency: 'NGN' as const },
+    frequency: 'monthly' as const,
+    last_charged_at: '2026-10-03T09:00:00Z',
+    next_expected_at: '2026-11-02',
+    card_id,
+  });
+
+  it('counts the days to the next charge and says when it is due', () => {
+    expect(daysUntil('2026-11-02', '2026-10-27')).toBe(6);
+    expect(nextChargeLabel('2026-11-02', '2026-10-27')).toBe('Next charge Mon, 2 Nov (in 6 days)');
+    expect(nextChargeLabel('2026-10-28', '2026-10-27')).toBe('Next charge tomorrow');
+    expect(nextChargeLabel('2026-10-27', '2026-10-27')).toBe('Next charge today');
+    expect(nextChargeLabel('2026-10-20', '2026-10-27')).toMatch(/^Was due /);
+  });
+
+  it('warns when the card that pays is frozen, and falls back to the wallet with no card', () => {
+    const card = { id: 'c1', last4: '4321', status: 'frozen', type: 'standard', nickname: null };
+    const frozen = paidWith(sub('c1'), [card as never]);
+    expect(frozen).toMatchObject({ kind: 'card', label: 'Standard card ending 4321' });
+    expect(frozen.kind === 'card' && frozen.warning).toMatch(/frozen/);
+    expect(paidWith(sub(null), []).kind).toBe('wallet');
+  });
+
+  it('lists seeded subscriptions with a monthly total and links to the paying card', async () => {
+    await render(wrap(bank(), <SubscriptionsScreen />));
+    expect(await screen.findByText('Netflix')).toBeTruthy();
+    expect(screen.getByText('Spotify')).toBeTruthy();
+    expect(screen.getByText('DStv Compact')).toBeTruthy();
+    expect(screen.getByLabelText(/^Subscriptions a month/)).toBeTruthy();
+    const controls = await screen.findAllByRole('button', { name: 'Card controls' });
+    fireEvent.press(controls[0]!);
+    expect(mockDismissTo).toHaveBeenCalledWith({
+      pathname: '/cards',
+      params: { card: expect.any(String) },
+    });
+  });
+
+  it('shows a subscriptions card on Insights', async () => {
+    await render(wrap(bank()));
+    expect(await screen.findByLabelText(/^\d+ subscriptions, ₦[\d,.]+ a month\./)).toBeTruthy();
   });
 });

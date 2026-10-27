@@ -28,11 +28,13 @@ import { BudgetsSummary } from '../components/BudgetsSummary';
 import { CategoryCompare } from '../components/CategoryCompare';
 import { ForecastCard } from '../components/ForecastCard';
 import { MonthStepper } from '../components/MonthStepper';
+import { SubscriptionsCard } from '../components/SubscriptionsCard';
 import { changeOf, donutSlices, monthLabel, MONTHS_BACK, shiftMonth } from '../insights';
 
 /**
- * Insights (INS-1..3): where the money went in a month, by category, set
- * against the month before, this month's budgets and the cash-flow forecast. Spending excludes money moved between the customer's own
+ * Insights (INS-1..4): where the money went in a month, by category, set
+ * against the month before, this month's budgets, the cash-flow forecast and
+ * detected subscriptions. Spending excludes money moved between the customer's own
  * pots (savings, ajo, conversions, loan repayments).
  */
 export function InsightsScreen() {
@@ -51,6 +53,7 @@ export function InsightsScreen() {
   );
   const budgets = useRepoQuery('insights', 'listBudgets');
   const forecast = useRepoQuery('insights', 'getForecast');
+  const subscriptions = useRepoQuery('insights', 'listSubscriptions');
   const q = picked === null ? current : other;
   const s = q.data;
 
@@ -146,6 +149,13 @@ export function InsightsScreen() {
             onOpen={() => router.push('/insights/forecast')}
           />
         )}
+        {inProgress && subscriptions.data && (
+          <SubscriptionsCard
+            list={subscriptions.data}
+            hidden={hidden}
+            onOpen={() => router.push('/insights/subscriptions')}
+          />
+        )}
         {inProgress && budgets.data && (
           <BudgetsSummary
             budgets={budgets.data.data}
@@ -161,7 +171,14 @@ export function InsightsScreen() {
     <Screen
       header={<SendHeader title="Insights" first />}
       edges={['top', 'bottom']}
-      onRefresh={() => void Promise.all([q.refetch(), budgets.refetch(), forecast.refetch()])}
+      onRefresh={() =>
+        void Promise.all([
+          q.refetch(),
+          budgets.refetch(),
+          forecast.refetch(),
+          subscriptions.refetch(),
+        ])
+      }
       refreshing={q.isRefetching}
     >
       {body}

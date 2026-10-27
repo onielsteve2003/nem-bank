@@ -26,8 +26,10 @@ import { PhysicalCardScreen } from '../screens/PhysicalCardScreen';
 
 const mockPush = jest.fn();
 const mockBack = jest.fn();
+let mockParams: { card?: string } = {};
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn() }),
+  useRouter: () => ({ push: mockPush, back: mockBack, replace: jest.fn(), setParams: jest.fn() }),
+  useLocalSearchParams: () => mockParams,
   useFocusEffect: jest.fn(),
 }));
 jest.mock('expo-clipboard', () => ({ setStringAsync: jest.fn(async () => true) }));
@@ -157,6 +159,24 @@ describe('cards home', () => {
     expect(await screen.findByText('Trial')).toBeTruthy();
     await fireEvent.press(screen.getByRole('button', { name: 'Show card 2 of 2' }));
     expect(await screen.findByText('Everyday')).toBeTruthy();
+  });
+
+  it('opens on the card a link names, such as the one paying a subscription', async () => {
+    const repos = bank();
+    const { data } = await repos.accounts.list();
+    const everyday = (await repos.cards.list()).data[0]!;
+    await repos.cards.create({
+      body: { account_id: data[0]!.id, type: 'single_use', nickname: 'Trial', design: 'coral' },
+      idempotencyKey: 'card-1',
+    });
+    mockParams = { card: everyday.id };
+    try {
+      await render(wrap(repos, <CardsScreen />));
+      expect(await screen.findByText('Everyday')).toBeTruthy();
+      expect(screen.queryByText('Trial')).toBeNull();
+    } finally {
+      mockParams = {};
+    }
   });
 
   it('shows the details after the PIN, copies them, and hides them after 30 s', async () => {

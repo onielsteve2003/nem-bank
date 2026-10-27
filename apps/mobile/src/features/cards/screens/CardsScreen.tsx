@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CreditCard, Eye, Plus, Truck } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -41,7 +41,9 @@ export function CardsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
   const cards = useRepoQuery('cards', 'list');
-  const [index, setIndex] = useState(0);
+  // `card` picks a card when another screen links here, e.g. a subscription (INS-4).
+  const { card: linked } = useLocalSearchParams<{ card?: string }>();
+  const [picked, setPicked] = useState(0);
   const reveal = useCardReveal();
   const [unlocking, setUnlocking] = useState(false);
   const { hide } = reveal;
@@ -52,12 +54,16 @@ export function CardsScreen() {
   const open = all.filter(isOpen);
   const closed = all.filter((c) => !isOpen(c));
   const atMax = open.length >= MAX_OPEN_CARDS;
+  const linkedAt = linked ? open.findIndex((c) => c.id === linked) : -1;
+  const index = linkedAt >= 0 ? linkedAt : picked;
   const current: Schema<'Card'> | undefined = open[Math.min(index, open.length - 1)];
   const create = () => router.push('/new-card');
   const shown = current && reveal.details?.card_id === current.id ? reveal.details : null;
   const choose = (i: number) => {
     reveal.hide();
-    setIndex(i);
+    setPicked(i);
+    // A linked card counts until the person picks another.
+    if (linked) router.setParams({ card: undefined });
   };
   const unlock = async (proof: { pin: string } | { biometric: string }) => {
     if (!current) return false;
