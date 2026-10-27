@@ -31,6 +31,8 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://grow/insights')).toBe('/insights');
     expect(path('nembank://grow/insights/budgets')).toBe('/insights/budgets');
     expect(path('nembank://grow/insights/forecast')).toBe('/insights/forecast');
+    expect(path('nembank://grow/insights/subscriptions')).toBe('/insights/subscriptions');
+    expect(path('nembank://grow/insights/story/2026-09')).toBe('/insights/story?month=2026-09');
     expect(path('nembank://me/verification')).toBe('/kyc');
     expect(path('nembank://security/devices')).toBe('/me');
     expect(path('nembank://fx')).toBe('/convert');

@@ -1,7 +1,7 @@
 import { formatMoney, isZero, money } from '@nem/shared';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ChartPie } from 'lucide-react-native';
+import { ChartPie, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
 import { View } from 'react-native';
 
@@ -10,6 +10,7 @@ import {
   DonutChart,
   EmptyState,
   ErrorState,
+  ListItem,
   MoneyText,
   Screen,
   SectionHeader,
@@ -32,9 +33,9 @@ import { SubscriptionsCard } from '../components/SubscriptionsCard';
 import { changeOf, donutSlices, monthLabel, MONTHS_BACK, shiftMonth } from '../insights';
 
 /**
- * Insights (INS-1..4): where the money went in a month, by category, set
+ * Insights (INS-1..5): where the money went in a month, by category, set
  * against the month before, this month's budgets, the cash-flow forecast and
- * detected subscriptions. Spending excludes money moved between the customer's own
+ * detected subscriptions, with the way into the Money Story. Spending excludes money moved between the customer's own
  * pots (savings, ajo, conversions, loan repayments).
  */
 export function InsightsScreen() {
@@ -142,6 +143,20 @@ export function InsightsScreen() {
             </View>
           </>
         )}
+        {/* The story is for a finished month: last month while this one runs. */}
+        <Card padded={false}>
+          <ListItem
+            leading={Sparkles}
+            title={`Your ${monthLabel(inProgress ? shiftMonth(s.month, -1) : s.month)} Money Story`}
+            subtitle="Your month in a few slides, to keep or share"
+            onPress={() =>
+              router.push({
+                pathname: '/insights/story',
+                params: { month: inProgress ? shiftMonth(s.month, -1) : s.month },
+              })
+            }
+          />
+        </Card>
         {inProgress && forecast.data && (
           <ForecastCard
             forecast={forecast.data}

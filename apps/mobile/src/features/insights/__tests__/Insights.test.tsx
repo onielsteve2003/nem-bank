@@ -1,5 +1,13 @@
 import { QueryClient } from '@tanstack/react-query';
-import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
+import {
+  act,
+  configure,
+  fireEvent,
+  render,
+  renderHook,
+  screen,
+  waitFor,
+} from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
@@ -15,7 +23,10 @@ import { firstShortfall, horizon } from '../forecast';
 import { BudgetsScreen } from '../screens/BudgetsScreen';
 import { ForecastScreen } from '../screens/ForecastScreen';
 import { InsightsScreen } from '../screens/InsightsScreen';
+import { SLIDE_MS, useStoryPlayer } from '../hooks/useStoryPlayer';
+import { MoneyStoryScreen } from '../screens/MoneyStoryScreen';
 import { SubscriptionsScreen } from '../screens/SubscriptionsScreen';
+import { shareSummary, shareText } from '../story';
 import { daysUntil, nextChargeLabel, paidWith } from '../subscriptions';
 
 const mockDismissTo = jest.fn();
@@ -252,5 +263,75 @@ describe('subscriptions', () => {
   it('shows a subscriptions card on Insights', async () => {
     await render(wrap(bank()));
     expect(await screen.findByLabelText(/^\d+ subscriptions, ₦[\d,.]+ a month\./)).toBeTruthy();
+  });
+});
+
+describe('money story', () => {
+  beforeEach(() => usePrivacyStore.setState({ balancesHidden: false }));
+
+  const naira = (n: number) => ({ amount_minor: String(n * 100), currency: 'NGN' as const });
+
+  it('shares the shape of the month without a single amount', () => {
+    const summary = shareSummary({
+      month: '2026-09',
+      share_image_url: null,
+      slides: [
+        { kind: 'total_spent', title: 'You spent', body: '40 payments', amount: naira(200_000) },
+        {
+          kind: 'top_category',
+          title: 'Top category',
+          body: '',
+          amount: naira(50_000),
+          category: 'food',
+        },
+        { kind: 'saved', title: 'You saved', body: '', amount: naira(10_000) },
+        { kind: 'compared', title: 'Less than last month', body: '', amount: naira(1) },
+      ],
+    });
+    expect(summary).toEqual({
+      month: 'September 2026',
+      lines: ['Most went on Food & drink (25%)', 'Less than last month', 'Put money aside'],
+    });
+    expect(shareText(summary)).not.toMatch(/₦|\d,\d{3}/);
+  });
+
+  it('moves on by itself, stops on the last slide and keeps its place when paused', async () => {
+    jest.useFakeTimers();
+    try {
+      const { result } = await renderHook(() => useStoryPlayer(3));
+      await act(() => jest.advanceTimersByTime(SLIDE_MS));
+      expect(result.current.index).toBe(1);
+      await act(() => jest.advanceTimersByTime(SLIDE_MS / 2));
+      await act(() => result.current.setPaused(true));
+      await act(() => jest.advanceTimersByTime(SLIDE_MS * 3));
+      expect(result.current.index).toBe(1);
+      await act(() => result.current.setPaused(false));
+      await act(() => jest.advanceTimersByTime(SLIDE_MS / 2 + 50));
+      expect(result.current.index).toBe(2);
+      await act(() => jest.advanceTimersByTime(SLIDE_MS * 3));
+      expect(result.current.index).toBe(2);
+      await act(() => result.current.previous());
+      expect(result.current.index).toBe(1);
+    } finally {
+      jest.useRealTimers();
+    }
+  });
+
+  it('steps through last month’s story and ends on a share card with no amounts', async () => {
+    await render(wrap(bank(), <MoneyStoryScreen />));
+    expect(await screen.findByText(/^Your \w+ \d{4}$/)).toBeTruthy();
+    expect(screen.getByLabelText(/^Slide 1 of \d+$/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Next slide' }));
+    expect(await screen.findByText('You spent')).toBeTruthy();
+    while (!screen.queryByRole('button', { name: 'Share my story' })) {
+      await fireEvent.press(screen.getByRole('button', { name: 'Next slide' }));
+    }
+    const card = screen.getByLabelText(/^Share card\. My \w+ \d{4} with Nem\./);
+    expect(card.props.accessibilityLabel).not.toMatch(/₦/);
+  });
+
+  it('opens the story from Insights', async () => {
+    await render(wrap(bank()));
+    expect(await screen.findByText(/^Your \w+ Money Story$/)).toBeTruthy();
   });
 });

@@ -365,7 +365,12 @@ export function insightsRepo(bank: MockBank): InsightsRepo {
         slides.push({
           kind: 'biggest_day',
           title: 'Biggest day',
-          body: `${biggest[0]} was your biggest spending day.`,
+          body: `${new Date(`${biggest[0]}T12:00:00Z`).toLocaleDateString('en-NG', {
+            weekday: 'long',
+            day: 'numeric',
+            month: 'long',
+            timeZone: 'UTC',
+          })} was your biggest spending day.`,
           amount: api(money(biggest[1], 'NGN')),
         });
       slides.push({

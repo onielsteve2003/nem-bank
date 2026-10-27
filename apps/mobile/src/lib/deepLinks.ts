@@ -67,6 +67,11 @@ const ROUTES: Route[] = [
   { pattern: 'grow/insights', to: () => '/insights' },
   { pattern: 'grow/insights/budgets', to: () => '/insights/budgets' },
   { pattern: 'grow/insights/forecast', to: () => '/insights/forecast' },
+  { pattern: 'grow/insights/subscriptions', to: () => '/insights/subscriptions' },
+  {
+    pattern: 'grow/insights/story/:month',
+    to: ({ month = '' }) => ({ pathname: '/insights/story', params: { month } }),
+  },
   { pattern: 'grow/*', to: () => '/grow' },
   { pattern: 'me', to: () => '/me' },
   { pattern: 'me/verification', to: () => '/kyc' },
