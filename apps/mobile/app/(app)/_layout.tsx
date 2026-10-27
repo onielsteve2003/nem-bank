@@ -41,6 +41,7 @@ export default function AppLayout() {
         <Stack.Screen name="ajo" options={{ presentation: 'modal' }} />
         <Stack.Screen name="credit" options={{ presentation: 'modal' }} />
         <Stack.Screen name="insights" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="security" options={{ presentation: 'modal' }} />
         <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
         <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
       </Stack>

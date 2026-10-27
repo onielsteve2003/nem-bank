@@ -5,6 +5,7 @@ import {
   FileText,
   LayoutGrid,
   LogOut,
+  ShieldCheck,
   SlidersHorizontal,
 } from 'lucide-react-native';
 
@@ -12,10 +13,12 @@ import { Card, ListItem } from '@/components';
 import { useSignOut } from '@/features/auth/hooks/useSessionActions';
 import { PlaceholderScreen } from '@/features/shell/PlaceholderScreen';
 import { devToolsEnabled } from '@/lib/env';
+import { useRepoQuery } from '@/lib/query';
 
 export default function MeRoute() {
   const router = useRouter();
   const signOut = useSignOut();
+  const checkup = useRepoQuery('security', 'getCheckup');
   return (
     <PlaceholderScreen
       title="Me"
@@ -23,6 +26,16 @@ export default function MeRoute() {
       message="Your profile, security, settings and help."
     >
       <Card padded={false}>
+        <ListItem
+          title="Security"
+          subtitle={
+            checkup.data
+              ? `Checkup score ${checkup.data.score} of 100`
+              : 'Checkup, devices, limits and panic button'
+          }
+          leading={ShieldCheck}
+          onPress={() => router.push('/security')}
+        />
         <ListItem
           title="Verify your identity"
           subtitle="Raise your limits"

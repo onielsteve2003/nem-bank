@@ -75,7 +75,17 @@ export function ListItem({
 
   const rowStyle = { gap: spacing[3], paddingHorizontal: spacing[4], paddingVertical: spacing[3] };
 
-  if (!onPress) return <View style={[styles.row, rowStyle]}>{content}</View>;
+  if (!onPress)
+    return (
+      // A static row with a label reads as one item instead of three fragments.
+      <View
+        accessible={accessibilityLabel !== undefined}
+        accessibilityLabel={accessibilityLabel}
+        style={[styles.row, rowStyle]}
+      >
+        {content}
+      </View>
+    );
 
   return (
     <Pressable
