@@ -159,9 +159,7 @@ export function resubmitWhat(submission: Submission): string {
  * What a reviewer decided and what to do next (KYC-5), or null when there is
  * nothing to say: no submission yet, or it was approved.
  */
-export function reviewState(
-  submission: Submission | null | undefined,
-): {
+export function reviewState(submission: Submission | null | undefined): {
   status: 'pending' | 'rejected' | 'resubmit';
   title: string;
   message: string;
