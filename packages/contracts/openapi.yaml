@@ -5239,6 +5239,23 @@ paths:
                 $ref: '#/components/schemas/DemoClock'
         '403':
           $ref: '#/components/responses/Forbidden'
+  /v1/demo/kyc-tier:
+    post:
+      tags: [demo]
+      operationId: demoSetKycTier
+      summary: Put the demo persona on a KYC tier
+      description: Lets the demo walk the upgrade flows again. Lower tiers clear the verifications and documents above them.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoKycTierRequest'
+      responses:
+        '204':
+          description: The persona is on that tier.
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/demo/reset:
     post:
       tags: [demo]
@@ -12262,6 +12279,12 @@ components:
           type: integer
           minimum: 1
           maximum: 365
+    DemoKycTierRequest:
+      type: object
+      required: [tier]
+      properties:
+        tier:
+          $ref: '#/components/schemas/KycTier'
     DemoClock:
       type: object
       required: [now, offset_days]

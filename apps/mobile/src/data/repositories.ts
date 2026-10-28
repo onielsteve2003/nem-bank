@@ -253,6 +253,7 @@ export const REPOSITORY_METHODS = {
     inboundTransfer: 'demoInboundTransfer',
     failNextTransfer: 'demoFailNextTransfer',
     timeTravel: 'demoTimeTravel',
+    setKycTier: 'demoSetKycTier',
     reset: 'demoReset',
   },
 } as const satisfies Readonly<Record<string, MethodMap>>;

@@ -16,6 +16,23 @@ const UNLOCKS: Record<KycTier, Schema<'TierInfo'>['unlocks']> = {
   3: ['credit', 'higher_limits'],
 };
 
+/**
+ * Puts the customer on a tier as if they had verified up to it and no
+ * further: what a new sign-up starts with, and the demo's way back down.
+ */
+export function setKycTier(bank: MockBank, tier: KycTier) {
+  const kyc = bank.world.kyc;
+  bank.user.kyc_tier = tier;
+  bank.user.kyc_status = tier === 3 ? 'approved' : 'not_started';
+  kyc.status = bank.user.kyc_status;
+  if (tier < 2) kyc.verifiedIds = [];
+  else if (!kyc.verifiedIds.length) kyc.verifiedIds = ['bvn'];
+  if (tier < 3) {
+    kyc.documents = [];
+    kyc.submissions = [];
+  }
+}
+
 export function processKyc(bank: MockBank): boolean {
   const cutoff = new Date(bank.now().getTime() - REVIEW_MS).toISOString();
   const due = bank.world.kyc.submissions.filter(

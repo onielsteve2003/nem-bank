@@ -3985,6 +3985,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/demo/kyc-tier': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Put the demo persona on a KYC tier
+     * @description Lets the demo walk the upgrade flows again. Lower tiers clear the verifications and documents above them.
+     */
+    post: operations['demoSetKycTier'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/demo/reset': {
     parameters: {
       query?: never;
@@ -7371,6 +7391,9 @@ export interface components {
     };
     DemoTimeTravelRequest: {
       days: number;
+    };
+    DemoKycTierRequest: {
+      tier: components['schemas']['KycTier'];
     };
     DemoClock: {
       now: components['schemas']['Timestamp'];
@@ -14187,6 +14210,29 @@ export interface operations {
         content: {
           'application/json': components['schemas']['DemoClock'];
         };
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  demoSetKycTier: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DemoKycTierRequest'];
+      };
+    };
+    responses: {
+      /** @description The persona is on that tier. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
       };
       403: components['responses']['Forbidden'];
     };

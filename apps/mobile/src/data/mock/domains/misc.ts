@@ -8,6 +8,8 @@ import { demoFund, receiveExternal, transferInternal } from '../ledger';
 import type { MockBank } from '../runtime';
 import { customerTransactions } from '../views';
 
+import { setKycTier } from './kyc';
+
 /** NDPA: data subject requests are answered within 30 days. */
 const PRIVACY_DAYS = 30;
 const MAX_TIME_TRAVEL_DAYS = 400;
@@ -132,6 +134,9 @@ export function demoRepo(bank: MockBank): DemoRepo {
       bank.world.clockOffsetDays += body.days;
       bank.tick();
       return { now: bank.nowIso(), offset_days: bank.world.clockOffsetDays };
+    },
+    async setKycTier({ body }) {
+      setKycTier(bank, body.tier);
     },
     async reset() {
       await bank.reset();

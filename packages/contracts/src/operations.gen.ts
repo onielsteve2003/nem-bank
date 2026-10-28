@@ -427,6 +427,13 @@ export const OPERATIONS = {
     idempotent: false,
     signed: false,
   },
+  demoSetKycTier: {
+    method: 'POST',
+    path: '/v1/demo/kyc-tier',
+    auth: 'bearer',
+    idempotent: false,
+    signed: false,
+  },
   demoTimeTravel: {
     method: 'POST',
     path: '/v1/demo/time-travel',

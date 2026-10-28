@@ -31,9 +31,17 @@ export function ScenarioSection() {
   const [outcome, setOutcome] = useState<string>();
   const repos = useRepositories();
   const goals = useRepoQuery('savings', 'listGoals');
+  const me = useRepoQuery('users', 'getMe');
   const projected = goals.data ? projectGoalsInterest(goals.data.data, days) : null;
 
   const onError = (error: ApiError) => toast.show({ message: error.problem.title, tone: 'error' });
+  // Limits, wallets, credit and the security checkup all follow the tier.
+  const setTier = useRepoMutation('demo', 'setKycTier', {
+    invalidates: [[]],
+    onError,
+    onSuccess: (_, { body }) =>
+      toast.show({ message: `You're on KYC Tier ${body.tier} now`, tone: 'success' }),
+  });
   const failNext = useRepoMutation('demo', 'failNextTransfer', {
     invalidates: [],
     onError,
@@ -103,6 +111,22 @@ export function ScenarioSection() {
           loading={travel.isPending}
           onPress={() => void jump().catch(() => undefined)}
         />
+      </View>
+      <View style={{ gap: spacing[2] }}>
+        <ChipRow label="KYC tier">
+          {([1, 2, 3] as const).map((tier) => (
+            <Chip
+              key={tier}
+              label={`Tier ${tier}`}
+              selected={me.data?.kyc_tier === tier}
+              disabled={setTier.isPending}
+              onPress={() => setTier.mutate({ body: { tier } })}
+            />
+          ))}
+        </ChipRow>
+        <Text variant="bodySmall" color="textMuted">
+          Drop to a lower tier to walk the verification flows again.
+        </Text>
       </View>
       <Button
         label="End my session"

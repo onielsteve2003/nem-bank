@@ -16,6 +16,7 @@ import type { AuthRepo, DevicesRepo, UsersRepo } from '../../repositories';
 import { addMinutes, maskEmail } from '../convert';
 import type { MockBank } from '../runtime';
 import { endDuress, startDuress } from './duress';
+import { setKycTier } from './kyc';
 import type { OtpRecord } from '../world';
 
 /** The demo bank sends no email: every OTP is this code, and the UI says so. */
@@ -249,6 +250,8 @@ export function authRepo(bank: MockBank): AuthRepo {
         nemtag: null,
         has_pin: body.pin !== undefined,
       });
+      // A new customer has only given their name, phone, email and birthday.
+      setKycTier(bank, 1);
       bank.world.auth.password = body.password;
       if (body.pin !== undefined) {
         Object.assign(bank.world.auth, {
