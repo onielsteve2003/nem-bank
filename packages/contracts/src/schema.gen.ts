@@ -2409,7 +2409,7 @@ export interface paths {
     put?: never;
     /**
      * Verify a BVN or NIN
-     * @description Checked against sandbox test numbers (KYC-2). Passing it upgrades to Tier 2. The number is field-encrypted at rest.
+     * @description Checked against sandbox test numbers and, when sent, the date of birth on the record (KYC-2). Passing both upgrades to Tier 2. The number is field-encrypted at rest.
      */
     post: operations['verifyIdentityNumber'];
     delete?: never;
@@ -6198,6 +6198,8 @@ export interface components {
       /** @enum {string} */
       type: 'bvn' | 'nin';
       number: string;
+      /** @description Checked against the date of birth on the BVN or NIN record. */
+      date_of_birth?: components['schemas']['Date'];
     };
     IdentityVerification: {
       /** @enum {string} */
@@ -6206,6 +6208,8 @@ export interface components {
       name_match: components['schemas']['NameMatch'];
       /** @description True while only sandbox test numbers are accepted. */
       sandbox: boolean;
+      /** @description Whether the date of birth sent matches the record. Absent when none was sent. */
+      date_of_birth_match?: boolean;
       tier: components['schemas']['KycTier'];
     };
     /** @enum {string} */

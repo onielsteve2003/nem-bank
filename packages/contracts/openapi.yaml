@@ -3232,7 +3232,7 @@ paths:
       tags: [kyc]
       operationId: verifyIdentityNumber
       summary: Verify a BVN or NIN
-      description: Checked against sandbox test numbers (KYC-2). Passing it upgrades to Tier 2. The number is field-encrypted at rest.
+      description: Checked against sandbox test numbers and, when sent, the date of birth on the record (KYC-2). Passing both upgrades to Tier 2. The number is field-encrypted at rest.
       requestBody:
         required: true
         content:
@@ -10009,6 +10009,9 @@ components:
           type: string
           pattern: '^[0-9]{11}$'
           writeOnly: true
+        date_of_birth:
+          $ref: '#/components/schemas/Date'
+          description: Checked against the date of birth on the BVN or NIN record.
     IdentityVerification:
       type: object
       required: [type, verified, name_match, sandbox, tier]
@@ -10023,6 +10026,9 @@ components:
         sandbox:
           type: boolean
           description: True while only sandbox test numbers are accepted.
+        date_of_birth_match:
+          type: boolean
+          description: Whether the date of birth sent matches the record. Absent when none was sent.
         tier:
           $ref: '#/components/schemas/KycTier'
     KycDocumentKind:

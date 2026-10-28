@@ -81,9 +81,15 @@ export function kycRepo(bank: MockBank): KycRepo {
     async verifyIdentity({ body }) {
       if (!/^\d{11}$/.test(body.number))
         throw problem(422, 'validation_failed', `A ${body.type.toUpperCase()} has 11 digits`);
-      // Sandbox numbers: anything but all zeros belongs to the customer.
-      const verified = !/^0+$/.test(body.number);
-      const match = verified
+      // Sandbox numbers: anything but all zeros belongs to the customer, and
+      // the record holds the date of birth they signed up with.
+      const found = !/^0+$/.test(body.number);
+      const dobMatch =
+        body.date_of_birth === undefined
+          ? undefined
+          : body.date_of_birth === bank.user.date_of_birth;
+      const verified = found && dobMatch !== false;
+      const match = found
         ? nameMatch(accountName(bank), accountName(bank))
         : { result: 'no_match' as const, confidence: 0, expected_name: accountName(bank) };
       if (verified) {
@@ -91,7 +97,14 @@ export function kycRepo(bank: MockBank): KycRepo {
           bank.world.kyc.verifiedIds.push(body.type);
         if (bank.user.kyc_tier < 2) bank.user.kyc_tier = 2;
       }
-      return { type: body.type, verified, name_match: match, sandbox: true, tier: bank.tier() };
+      return {
+        type: body.type,
+        verified,
+        name_match: match,
+        sandbox: true,
+        ...(found && dobMatch !== undefined && { date_of_birth_match: dobMatch }),
+        tier: bank.tier(),
+      };
     },
     async uploadDocument({ body }) {
       if (!body.file) throw problem(422, 'validation_failed', 'Choose a photo first');

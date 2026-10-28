@@ -10,7 +10,12 @@ import { Icon } from './Icon';
 import { Text } from './Text';
 
 export type PaidFeature =
-  'smsOtp' | 'ussd' | 'internationalTransfer' | 'physicalCard' | 'realMoney';
+  | 'smsOtp'
+  | 'ussd'
+  | 'internationalTransfer'
+  | 'physicalCard'
+  | 'identityVerification'
+  | 'realMoney';
 
 /** The features PRD §11 gates, with the partner each needs and how the hookup would work. */
 export const PAID_FEATURES: Record<
@@ -51,6 +56,15 @@ export const PAID_FEATURES: Record<
       'The CardProcessor interface gains an adapter for a licensed issuer.',
       'The card is printed, posted and activated in the app with the PIN.',
       'Virtual cards already use the same freeze, limit and channel controls.',
+    ],
+  },
+  identityVerification: {
+    name: 'Real BVN and NIN checks',
+    partner: 'a licensed identity verification provider',
+    steps: [
+      'The IdentityVerifier interface gains an adapter for a provider with NIBSS and NIMC access.',
+      'The number, name and date of birth are checked live, and the number is stored encrypted.',
+      'Until then, the bank accepts sandbox test numbers only.',
     ],
   },
   realMoney: {
