@@ -1,20 +1,18 @@
-import { NEMTAG_MAX_LENGTH, nemtagIdeas, nemtagProblem, normalizeNemtag } from '@nem/shared';
-import { AtSign, Check, X } from 'lucide-react-native';
+import { NEMTAG_MAX_LENGTH, nemtagIdeas } from '@nem/shared';
+import { AtSign } from 'lucide-react-native';
 import { useState } from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
-import { Button, Icon, Screen, Text, TextField } from '@/components';
+import { Button, Screen, Text, TextField } from '@/components';
 import { isApiError } from '@/data';
 import { queryKeys, useRepoMutation, useRepoQuery } from '@/lib/query';
-import { useDebounced } from '@/lib/useDebounced';
 import { useSessionStore } from '@/stores';
 import { useTheme } from '@/theme';
 
+import { NemtagStatusLine } from '../components/NemtagStatusLine';
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { useSignOut } from '../hooks/useSessionActions';
-
-/** Waits for typing to pause, so the bank is asked once per pause, not per key. */
-export const NEMTAG_CHECK_DELAY_MS = 400;
+import { useNemtagCheck } from '../useNemtagCheck';
 
 /**
  * The last onboarding step (AUTH-10): a unique @nemtag friends can pay instead
@@ -29,25 +27,10 @@ export function ChooseNemtagScreen() {
   const [input, setInput] = useState('');
   const [error, setError] = useState<string>();
 
-  const tag = normalizeNemtag(input);
-  const shape = tag ? nemtagProblem(tag) : null;
-  const settled = useDebounced(tag, NEMTAG_CHECK_DELAY_MS);
-  const ready = tag !== '' && shape === null;
-
+  const { tag, available, checking, suggestions, status } = useNemtagCheck(input);
   const me = useRepoQuery('users', 'getMe');
-  const availability = useRepoQuery(
-    'users',
-    'checkNemtag',
-    { path: { nemtag: settled } },
-    { enabled: ready && settled === tag, staleTime: 10_000 },
-  );
   const save = useRepoMutation('users', 'setNemtag', { invalidates: [queryKeys.domain('users')] });
-
-  const result = ready && settled === tag ? availability.data : undefined;
-  const checking = ready && (settled !== tag || availability.isFetching);
-  const available = result?.nemtag === tag && result.available;
   const ideas = me.data ? nemtagIdeas(me.data.first_name, me.data.last_name) : [];
-  const suggestions = result && !result.available ? result.suggestions.slice(0, 3) : [];
 
   const choose = (next: string) => {
     setInput(next);
@@ -72,18 +55,6 @@ export function ChooseNemtagScreen() {
     );
   };
 
-  const status = (() => {
-    if (!tag) return null;
-    if (shape) return { tone: 'danger' as const, text: shape };
-    if (checking) return { tone: 'textMuted' as const, text: `Checking @${tag}…` };
-    if (availability.isError) {
-      return { tone: 'danger' as const, text: "We couldn't check right now. Try again." };
-    }
-    if (available) return { tone: 'success' as const, text: `@${tag} is yours if you want it` };
-    if (result) return { tone: 'danger' as const, text: `@${tag} is taken` };
-    return null;
-  })();
-
   const footer = (
     <View style={{ padding: spacing[4], gap: spacing[2] }}>
       {error && (
@@ -101,8 +72,6 @@ export function ChooseNemtagScreen() {
       <Button label="Sign out" variant="ghost" size="sm" onPress={() => void signOut()} />
     </View>
   );
-
-  const StatusIcon = status?.tone === 'success' ? Check : X;
 
   return (
     <Screen
@@ -134,23 +103,7 @@ export function ChooseNemtagScreen() {
           onSubmitEditing={submit}
           autoFocus
         />
-        {status && (
-          <View
-            style={[styles.row, { gap: spacing[1] }]}
-            accessible
-            accessibilityLiveRegion="polite"
-            accessibilityLabel={status.text}
-          >
-            {status.tone === 'textMuted' ? (
-              <ActivityIndicator size="small" />
-            ) : (
-              <Icon icon={StatusIcon} size="sm" color={status.tone} />
-            )}
-            <Text variant="bodySmall" color={status.tone}>
-              {status.text}
-            </Text>
-          </View>
-        )}
+        {status && <NemtagStatusLine status={status} checking={checking} />}
         {(suggestions.length > 0 || (!tag && ideas.length > 0)) && (
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
@@ -175,6 +128,5 @@ export function ChooseNemtagScreen() {
 }
 
 const styles = StyleSheet.create({
-  row: { flexDirection: 'row', alignItems: 'center' },
   chips: { flexDirection: 'row', flexWrap: 'wrap' },
 });

@@ -346,7 +346,10 @@ export interface paths {
       cookie?: never;
     };
     get?: never;
-    /** Claim my @nemtag */
+    /**
+     * Claim or change my @nemtag
+     * @description A tag can change once every 30 days (409 `nemtag_cooldown` until `nemtag_changeable_at`). The old tag stays reserved for you for 30 days, so nobody else can take it while people still use it.
+     */
     put: operations['setNemtag'];
     post?: never;
     delete?: never;
@@ -4614,6 +4617,11 @@ export interface components {
       nemtag: components['schemas']['Nemtag'] | null;
       /** Format: uri */
       avatar_url?: string | null;
+      /**
+       * Format: date-time
+       * @description When the @nemtag can next change (once every 30 days). Null or absent means now. Claiming the first tag doesn't start the wait.
+       */
+      nemtag_changeable_at?: string | null;
       kyc_tier: components['schemas']['KycTier'];
       kyc_status: components['schemas']['KycStatus'];
       has_pin: boolean;
@@ -4625,6 +4633,11 @@ export interface components {
     };
     UpdateUserRequest: {
       preferred_name?: string | null;
+      /**
+       * Format: uri
+       * @description A JPEG or PNG profile photo as a data URI (up to 1 MB), or null to remove it.
+       */
+      avatar_url?: string | null;
     };
     NemtagAvailability: {
       nemtag: components['schemas']['Nemtag'];

@@ -13,7 +13,7 @@ import {
 
 import { problem } from '../../errors';
 import type { AuthRepo, DevicesRepo, UsersRepo } from '../../repositories';
-import { addMinutes, maskEmail } from '../convert';
+import { addDays, addMinutes, maskEmail } from '../convert';
 import type { MockBank } from '../runtime';
 import { endDuress, startDuress } from './duress';
 import { setKycTier } from './kyc';
@@ -437,6 +437,11 @@ export function authRepo(bank: MockBank): AuthRepo {
   };
 }
 
+/** How often a @nemtag can change, and how long an old one stays reserved. */
+const NEMTAG_CHANGE_DAYS = 30;
+/** The largest profile photo the bank keeps, as a data URI. */
+const AVATAR_MAX_LENGTH = 1_048_576;
+
 export function usersRepo(bank: MockBank): UsersRepo {
   const taken = (tag: string) =>
     RESERVED_NEMTAGS.includes(tag) ||
@@ -449,6 +454,14 @@ export function usersRepo(bank: MockBank): UsersRepo {
     async updateMe({ body }) {
       if (body.preferred_name !== undefined)
         bank.user.preferred_name = body.preferred_name?.trim() || null;
+      if (body.avatar_url !== undefined) {
+        const photo = body.avatar_url;
+        if (photo !== null && !/^data:image\/(jpeg|png);base64,/.test(photo))
+          throw problem(422, 'validation_failed', 'Use a JPEG or PNG photo');
+        if (photo !== null && photo.length > AVATAR_MAX_LENGTH)
+          throw problem(422, 'validation_failed', 'That photo is too large. Choose a smaller one.');
+        bank.user.avatar_url = photo;
+      }
       return bank.user;
     },
     async checkNemtag({ path }) {
@@ -469,8 +482,28 @@ export function usersRepo(bank: MockBank): UsersRepo {
       const tag = normalizeNemtag(body.nemtag);
       const shape = nemtagProblem(tag);
       if (shape) throw problem(422, 'validation_failed', shape);
-      if (taken(tag)) throw problem(409, 'nemtag_taken', `@${tag} is taken`);
+      if (tag === bank.user.nemtag)
+        throw problem(422, 'validation_failed', `@${tag} is already your @nemtag`);
+      const previous = bank.user.nemtag;
+      const wait = bank.user.nemtag_changeable_at;
+      if (previous && wait && wait > bank.nowIso()) {
+        throw problem(409, 'nemtag_cooldown', 'You changed your @nemtag recently', {
+          detail: `You can change it again after ${wait.slice(0, 10)}`,
+        });
+      }
+      // Your own old tags are still yours to take back while they are held.
+      const held = (bank.world.heldNemtags ??= []).filter((h) => h.until > bank.nowIso());
+      const mine = held.some((h) => h.nemtag === tag);
+      if (taken(tag) && !mine) throw problem(409, 'nemtag_taken', `@${tag} is taken`);
       bank.user.nemtag = tag;
+      if (previous) {
+        const until = addDays(bank.now(), NEMTAG_CHANGE_DAYS).toISOString();
+        bank.world.heldNemtags = [
+          ...held.filter((h) => h.nemtag !== tag),
+          { nemtag: previous, until },
+        ];
+        bank.user.nemtag_changeable_at = until;
+      }
       return bank.user;
     },
     async setPin({ body }) {

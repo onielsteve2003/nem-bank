@@ -9,6 +9,7 @@ import {
   OctagonX,
   ShieldCheck,
   SlidersHorizontal,
+  UserRound,
 } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
@@ -120,6 +121,13 @@ export function MeScreen() {
       <View style={{ gap: spacing[2] }}>
         <SectionHeader title="Account" />
         <Card padded={false}>
+          <ListItem
+            title="Profile"
+            subtitle="Photo, name and @nemtag"
+            leading={UserRound}
+            onPress={() => router.push('/profile')}
+          />
+          <Divider />
           <ListItem
             title="Verify your identity"
             subtitle="Raise your limits"

@@ -88,6 +88,8 @@ export interface World {
   /** Demo Controls time travel: days added to the device clock. */
   clockOffsetDays: number;
   failNextTransfer: boolean;
+  /** The customer's old @nemtags, reserved for them until `until` (absent in older saves). */
+  heldNemtags?: { nemtag: string; until: string }[];
   accountMeta: Record<string, { accountNumber: string; nickname: string | null }>;
   people: Person[];
   auth: {

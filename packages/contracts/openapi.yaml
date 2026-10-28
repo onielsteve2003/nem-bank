@@ -501,7 +501,8 @@ paths:
     put:
       tags: [users]
       operationId: setNemtag
-      summary: Claim my @nemtag
+      summary: Claim or change my @nemtag
+      description: A tag can change once every 30 days (409 `nemtag_cooldown` until `nemtag_changeable_at`). The old tag stays reserved for you for 30 days, so nobody else can take it while people still use it.
       requestBody:
         required: true
         content:
@@ -6545,6 +6546,10 @@ components:
         avatar_url:
           type: [string, 'null']
           format: uri
+        nemtag_changeable_at:
+          type: [string, 'null']
+          format: date-time
+          description: When the @nemtag can next change (once every 30 days). Null or absent means now. Claiming the first tag doesn't start the wait.
         kyc_tier:
           $ref: '#/components/schemas/KycTier'
         kyc_status:
@@ -6566,6 +6571,11 @@ components:
         preferred_name:
           type: [string, 'null']
           maxLength: 50
+        avatar_url:
+          type: [string, 'null']
+          format: uri
+          maxLength: 1048576
+          description: A JPEG or PNG profile photo as a data URI (up to 1 MB), or null to remove it.
     NemtagAvailability:
       type: object
       required: [nemtag, available, suggestions]
