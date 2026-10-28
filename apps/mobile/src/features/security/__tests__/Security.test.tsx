@@ -1,3 +1,4 @@
+import { money } from '@nem/shared';
 import { QueryClient } from '@tanstack/react-query';
 import { configure, fireEvent, render, screen, waitFor } from '@testing-library/react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -5,13 +6,22 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { ModalSheetHost, ToastProvider } from '@/components';
 import { RepositoryProvider, type Repositories } from '@/data';
 import { createMockRepositories } from '@/data/mock';
+import { DEMO_PIN } from '@/data/mock/domains/auth';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
 import { DevicesScreen } from '../screens/DevicesScreen';
+import { LimitsScreen } from '../screens/LimitsScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
-import { checkupAction, deviceStatus, scoreBand, splitCheckup } from '../security';
+import {
+  checkupAction,
+  deviceStatus,
+  limitChange,
+  limitsProblem,
+  scoreBand,
+  splitCheckup,
+} from '../security';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
@@ -181,5 +191,81 @@ describe('devices and sessions', () => {
     expect((await repos.security.listSessions()).data).toHaveLength(1);
     expect((await repos.devices.list()).data).toHaveLength(2);
     expect(screen.getByText('You’re here')).toBeTruthy();
+  });
+});
+
+const naira = (n: number) => money(BigInt(n) * 100n, 'NGN');
+
+describe('self-set limits', () => {
+  const cap = naira(200_000);
+
+  it('treats removing a limit as raising it', () => {
+    expect(limitChange(null, naira(5_000))).toBe('lower');
+    expect(limitChange(naira(5_000), null)).toBe('raise');
+    expect(limitChange(naira(5_000), naira(6_000))).toBe('raise');
+    expect(limitChange(naira(5_000), naira(4_000))).toBe('lower');
+    expect(limitChange(null, null)).toBe('same');
+  });
+
+  it('keeps limits under the KYC cap and single under daily', () => {
+    expect(limitsProblem(naira(200_001), null, cap)).toMatch(/daily limit can't be above/);
+    expect(limitsProblem(null, naira(300_000), cap)).toMatch(/single transfer can't be above/);
+    expect(limitsProblem(naira(10_000), naira(20_000), cap)).toBe(
+      "A single transfer can't be above your daily limit",
+    );
+    expect(limitsProblem(naira(20_000), naira(10_000), cap)).toBeUndefined();
+  });
+
+  it('bank: raising needs a step-up and still waits 24 hours', async () => {
+    const repos = bank();
+    const body = (n: number | null) => ({
+      daily_limit: n === null ? null : { amount_minor: String(n * 100), currency: 'NGN' as const },
+      single_limit: null,
+    });
+    await repos.security.setLimits({ body: body(20_000) });
+    await expect(repos.security.setLimits({ body: body(50_000) })).rejects.toMatchObject({
+      problem: { code: 'step_up_required' },
+    });
+    const challenge = await repos.auth.startStepUp({
+      body: { purpose: 'limit_increase', resource_id: 'self_limits' },
+    });
+    const { step_up_token } = await repos.auth.verifyStepUp({
+      path: { step_up_id: challenge.step_up_id },
+      body: { pin: DEMO_PIN },
+    });
+    const raised = await repos.security.setLimits({
+      body: body(50_000),
+      stepUpToken: step_up_token,
+    });
+    expect(raised.daily_limit?.amount_minor).toBe('2000000');
+    expect(raised.pending_increase?.daily_limit?.amount_minor).toBe('5000000');
+    const lowered = await repos.security.setLimits({ body: body(10_000) });
+    expect(lowered.pending_increase).toBeNull();
+  });
+
+  it('lowers a limit at once from the screen and the checkup counts it', async () => {
+    const repos = bank();
+    await render(wrap(repos, <LimitsScreen />));
+    await fireEvent.press(await screen.findByLabelText('Daily limit, No limit. Change'));
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: '₦20,000' }));
+    expect(screen.getByText('Lowering a limit applies straight away.')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+    expect(await screen.findByLabelText('Daily limit, ₦20,000. Change')).toBeTruthy();
+    expect(
+      (await repos.security.getCheckup()).items.find((i) => i.id === 'self_limit_set')?.done,
+    ).toBe(true);
+  });
+
+  it('asks for the PIN before raising and shows the waiting increase', async () => {
+    const repos = bank();
+    await repos.security.setLimits({
+      body: { daily_limit: { amount_minor: '2000000', currency: 'NGN' }, single_limit: null },
+    });
+    await render(wrap(repos, <LimitsScreen />));
+    await fireEvent.press(await screen.findByLabelText('Daily limit, ₦20,000. Change'));
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: '₦50,000' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Raise in 24 hours' }));
+    expect(await screen.findByText('Raise your limit. It starts in 24 hours.')).toBeTruthy();
+    expect((await repos.security.getLimits()).pending_increase).toBeNull();
   });
 });

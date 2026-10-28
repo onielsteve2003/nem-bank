@@ -37,7 +37,7 @@ import { ScoreRing } from '../components/ScoreRing';
 import { SecurityQuestionSheet } from '../components/SecurityQuestionSheet';
 import { checkupAction, splitCheckup } from '../security';
 
-/** The security tools. A tool without an `href` gets its screen in a later task (T14.3–T14.7). */
+/** The security tools. A tool without an `href` gets its screen in a later task (T14.4–T14.7). */
 const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[] = [
   { title: 'Panic button', subtitle: 'Freeze every card and stop money going out', icon: OctagonX },
   {
@@ -46,7 +46,12 @@ const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[
     icon: MonitorSmartphone,
     href: '/security/devices',
   },
-  { title: 'Your limits', subtitle: 'Set a daily limit below your KYC cap', icon: Gauge },
+  {
+    title: 'Your limits',
+    subtitle: 'Set a daily limit below your KYC cap',
+    icon: Gauge,
+    href: '/security/limits',
+  },
   { title: 'Duress PIN', subtitle: 'A PIN that opens a decoy if you’re forced', icon: UserX },
   { title: 'Scam checker', subtitle: 'Paste a message, link or account number', icon: ScanSearch },
   { title: 'Login and payment alerts', subtitle: 'Choose what we tell you about', icon: Bell },

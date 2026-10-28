@@ -274,9 +274,13 @@ export function securityRepo(bank: MockBank): SecurityRepo {
         now !== null && (next === null || next.amount > fromApi(now).amount);
       const loosens = raises(daily, current.daily) || raises(single, current.single);
       const value = { daily: body.daily_limit, single: body.single_limit };
-      if (!loosens || bank.hasValidStepUp(stepUpToken, 'limit_increase')) {
+      if (!loosens) {
+        // Tightening (or keeping) applies at once and cancels any waiting increase.
         bank.world.selfLimits = { ...value, pending: null };
       } else {
+        // Raising needs the customer to confirm it is them, and still waits 24
+        // hours, so someone who gets into the app can't raise and spend at once.
+        bank.consumeStepUp(stepUpToken, 'limit_increase');
         current.pending = {
           ...value,
           effectiveAt: addMinutes(bank.now(), LIMIT_INCREASE_DELAY_HOURS * 60).toISOString(),

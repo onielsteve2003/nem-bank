@@ -1,4 +1,5 @@
 import type { Schema } from '@nem/contracts';
+import { compare, formatMoney, type Money } from '@nem/shared';
 import type { Href } from 'expo-router';
 import { ShieldAlert, ShieldCheck, ShieldHalf, type LucideIcon } from 'lucide-react-native';
 
@@ -38,8 +39,10 @@ export function checkupAction(id: Item['id']): CheckupAction {
       return { kind: 'question' };
     case 'single_device':
       return { kind: 'route', href: '/security/devices' };
+    case 'self_limit_set':
+      return { kind: 'route', href: '/security/limits' };
     default:
-      // Limits (T14.3), duress PIN (T14.5), alerts (T14.7) and biometrics
+      // Duress PIN (T14.5), alerts (T14.7) and biometrics
       // (settings, T19) get their screens in later tasks.
       return null;
   }
@@ -64,3 +67,28 @@ export function deviceStatus(d: Schema<'Device'>, now: Date = new Date()): { lab
 /** Sign-ins that can be ended from here: everything except this one. */
 export const otherSessions = (sessions: readonly Schema<'Session'>[]) =>
   sessions.filter((s) => !s.current);
+
+/** A self-set limit; `null` means none, so only the KYC cap applies. */
+export type Limit = Money | null;
+
+/**
+ * Whether a new limit tightens or loosens protection. Removing a limit counts
+ * as raising it. Loosening needs a PIN and waits 24 hours (SEC-3).
+ */
+export function limitChange(current: Limit, next: Limit): 'lower' | 'raise' | 'same' {
+  if (current === null) return next === null ? 'same' : 'lower';
+  if (next === null) return 'raise';
+  const c = compare(next, current);
+  return c === 0 ? 'same' : c < 0 ? 'lower' : 'raise';
+}
+
+/** Why a pair of limits can't be saved, or undefined. The bank checks the same rules. */
+export function limitsProblem(daily: Limit, single: Limit, cap: Money): string | undefined {
+  if (daily && compare(daily, cap) > 0)
+    return `Your daily limit can't be above your KYC cap of ${formatMoney(cap, { trimZeroMinor: true })}`;
+  if (single && compare(single, cap) > 0)
+    return `A single transfer can't be above your KYC cap of ${formatMoney(cap, { trimZeroMinor: true })}`;
+  if (daily && single && compare(single, daily) > 0)
+    return "A single transfer can't be above your daily limit";
+  return undefined;
+}

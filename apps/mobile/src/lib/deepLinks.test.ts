@@ -35,6 +35,7 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://grow/insights/story/2026-09')).toBe('/insights/story?month=2026-09');
     expect(path('nembank://me/verification')).toBe('/kyc');
     expect(path('nembank://security/devices')).toBe('/security/devices');
+    expect(path('nembank://security/limits')).toBe('/security/limits');
     expect(path('nembank://security/duress')).toBe('/security');
     expect(path('nembank://fx')).toBe('/convert');
   });
