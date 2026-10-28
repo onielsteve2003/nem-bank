@@ -49,8 +49,10 @@ export function checkupAction(id: Item['id']): CheckupAction {
       return { kind: 'route', href: '/security/limits' };
     case 'duress_pin_set':
       return { kind: 'route', href: '/security/duress' };
+    case 'alerts_on':
+      return { kind: 'route', href: '/security/alerts' };
     default:
-      // Alerts (T14.7) and biometrics
+      // Biometrics
       // (settings, T19) get their screens in later tasks.
       return null;
   }
@@ -134,4 +136,21 @@ export function scamVerdict(v: Schema<'ScamCheckResult'>['verdict']): Band {
     default:
       return { label: 'No warning signs found', icon: ShieldCheck, color: 'success' };
   }
+}
+
+/** Payment alert thresholds offered as presets, in naira. Zero means every payment. */
+export const ALERT_THRESHOLDS = [0, 1_000, 5_000, 20_000, 100_000] as const;
+
+/** A payment alert threshold in words. */
+export function alertThresholdLabel(threshold: Money): string {
+  if (threshold.amount === 0n) return 'Every payment';
+  return `${formatMoney(threshold, { trimZeroMinor: true })} or more`;
+}
+
+/** The device whose cool-off keeps new-device alerts on, if any (AUTH-8). */
+export function coolingOffDevice(
+  devices: readonly Schema<'Device'>[],
+  now: Date = new Date(),
+): Schema<'Device'> | undefined {
+  return devices.find((d) => d.cool_off_until && new Date(d.cool_off_until) > now);
 }

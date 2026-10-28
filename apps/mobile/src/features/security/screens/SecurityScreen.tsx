@@ -37,8 +37,8 @@ import { ScoreRing } from '../components/ScoreRing';
 import { SecurityQuestionSheet } from '../components/SecurityQuestionSheet';
 import { checkupAction, panicSummary, splitCheckup } from '../security';
 
-/** The security tools. A tool without an `href` gets its screen in a later task (T14.7). */
-const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[] = [
+/** The security tools, each with its own screen. */
+const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href: Href }[] = [
   {
     title: 'Panic button',
     subtitle: 'Freeze every card and stop money going out',
@@ -69,7 +69,12 @@ const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[
     icon: ScanSearch,
     href: '/security/scam',
   },
-  { title: 'Login and payment alerts', subtitle: 'Choose what we tell you about', icon: Bell },
+  {
+    title: 'Login and payment alerts',
+    subtitle: 'Choose what we tell you about',
+    icon: Bell,
+    href: '/security/alerts',
+  },
 ];
 
 function CheckupRow({ item, onFix }: { item: Schema<'CheckupItem'>; onFix?: () => void }) {
@@ -217,26 +222,15 @@ export function SecurityScreen() {
       <View style={{ gap: spacing[2] }}>
         <SectionHeader title="Tools" />
         <Card padded={false}>
-          {TOOLS.map(({ href, ...t }) =>
-            href ? (
-              <ListItem
-                key={t.title}
-                title={t.title}
-                subtitle={t.subtitle}
-                leading={t.icon}
-                onPress={() => router.push(href)}
-              />
-            ) : (
-              <ListItem
-                key={t.title}
-                title={t.title}
-                subtitle={t.subtitle}
-                leading={t.icon}
-                trailing={<Badge label="Soon" tone="neutral" />}
-                accessibilityLabel={`${t.title}. ${t.subtitle}. Coming soon`}
-              />
-            ),
-          )}
+          {TOOLS.map(({ href, ...t }) => (
+            <ListItem
+              key={t.title}
+              title={t.title}
+              subtitle={t.subtitle}
+              leading={t.icon}
+              onPress={() => router.push(href)}
+            />
+          ))}
         </Card>
       </View>
       {asking && (

@@ -11,6 +11,7 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
+import { AlertsScreen } from '../screens/AlertsScreen';
 import { DevicesScreen } from '../screens/DevicesScreen';
 import { DuressScreen } from '../screens/DuressScreen';
 import { LimitsScreen } from '../screens/LimitsScreen';
@@ -18,7 +19,9 @@ import { PanicScreen } from '../screens/PanicScreen';
 import { ScamCheckScreen } from '../screens/ScamCheckScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
 import {
+  alertThresholdLabel,
   checkupAction,
+  coolingOffDevice,
   deviceStatus,
   guessScamKind,
   limitChange,
@@ -91,7 +94,8 @@ describe('security checkup rules', () => {
     expect(checkupAction('kyc_tier_2')).toEqual({ kind: 'route', href: '/kyc' });
     expect(checkupAction('security_question_set')).toEqual({ kind: 'question' });
     expect(checkupAction('duress_pin_set')).toEqual({ kind: 'route', href: '/security/duress' });
-    expect(checkupAction('alerts_on')).toBeNull();
+    expect(checkupAction('alerts_on')).toEqual({ kind: 'route', href: '/security/alerts' });
+    expect(checkupAction('biometrics_on')).toBeNull();
   });
 });
 
@@ -451,5 +455,55 @@ describe('scam checker', () => {
     });
     await fireEvent.press(screen.getByRole('button', { name: 'Check it' }));
     expect(await screen.findByText('Other customers have reported this account.')).toBeTruthy();
+  });
+});
+
+describe('login and payment alerts', () => {
+  it('says the threshold in words and finds a device in cool-off', () => {
+    expect(alertThresholdLabel(money(0n, 'NGN'))).toBe('Every payment');
+    expect(alertThresholdLabel(money(500_000n, 'NGN'))).toBe('₦5,000 or more');
+    const now = new Date('2026-10-28T12:00:00Z');
+    const device = (cool: string | null) => ({ id: cool ?? 'x', cool_off_until: cool }) as never;
+    expect(coolingOffDevice([device(null), device('2026-10-28T11:00:00Z')], now)).toBeUndefined();
+    expect(coolingOffDevice([device('2026-10-29T11:00:00Z')], now)).toBeTruthy();
+  });
+
+  it('bank: keeps new-device alerts on during a cool-off and refuses a negative threshold', async () => {
+    const repos = bank();
+    const prefs = await repos.security.getAlerts();
+    await expect(
+      repos.security.setAlerts({
+        body: { ...prefs, transaction_alert_threshold: { amount_minor: '-100', currency: 'NGN' } },
+      }),
+    ).rejects.toMatchObject({ problem: { code: 'validation_failed' } });
+    const devices = (await repos.devices.list()).data;
+    const cooling = devices.some(
+      (d) => d.cool_off_until && new Date(d.cool_off_until) > new Date(),
+    );
+    const saved = await repos.security.setAlerts({ body: { ...prefs, new_device_alerts: false } });
+    expect(saved.new_device_alerts).toBe(cooling);
+  });
+
+  it('turns login alerts off after confirming, and the checkup notices', async () => {
+    const repos = bank();
+    await render(wrap(repos, <AlertsScreen />));
+    await fireEvent.press(await screen.findByRole('switch', { name: 'Login alerts' }));
+    expect(await screen.findByText('Turn off login alerts?')).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Turn off' }));
+    await waitFor(async () => expect((await repos.security.getAlerts()).login_alerts).toBe(false));
+    const checkup = await repos.security.getCheckup();
+    expect(checkup.items.find((i) => i.id === 'alerts_on')?.done).toBe(false);
+  });
+
+  it('sets a payment alert threshold with one tap', async () => {
+    const repos = bank();
+    await render(wrap(repos, <AlertsScreen />));
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: '₦5,000 or more' }));
+    await waitFor(async () =>
+      expect((await repos.security.getAlerts()).transaction_alert_threshold.amount_minor).toBe(
+        '500000',
+      ),
+    );
+    expect(screen.getByText(/Smaller payments still show/)).toBeTruthy();
   });
 });

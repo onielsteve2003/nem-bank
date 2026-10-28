@@ -365,9 +365,17 @@ export function securityRepo(bank: MockBank): SecurityRepo {
       return bank.world.alertPreferences;
     },
     async setAlerts({ body }) {
-      fromApi(body.transaction_alert_threshold);
-      bank.world.alertPreferences = body;
-      return body;
+      const threshold = fromApi(body.transaction_alert_threshold);
+      if (threshold.currency !== 'NGN' || threshold.amount < 0n) {
+        throw problem(422, 'validation_failed', 'Use a naira amount of zero or more');
+      }
+      // New-device alerts stay on while any device is in its cool-off (AUTH-8).
+      const coolingOff = bank.world.devices.some(
+        (d) => d.cool_off_until !== null && d.cool_off_until > bank.nowIso(),
+      );
+      const saved = { ...body, new_device_alerts: body.new_device_alerts || coolingOff };
+      bank.world.alertPreferences = saved;
+      return saved;
     },
   };
 }
