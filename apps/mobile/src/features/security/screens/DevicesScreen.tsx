@@ -29,10 +29,7 @@ import { deviceStatus, otherSessions } from '../security';
 type Device = Schema<'Device'>;
 type Session = Schema<'Session'>;
 type Pending =
-  | { kind: 'device'; item: Device }
-  | { kind: 'session'; item: Session }
-  | { kind: 'all' }
-  | null;
+  { kind: 'device'; item: Device } | { kind: 'session'; item: Session } | { kind: 'all' } | null;
 
 const PLATFORM_ICON = { ios: Smartphone, android: Smartphone, web: Globe } as const;
 
