@@ -36,9 +36,11 @@ export function checkupAction(id: Item['id']): CheckupAction {
       return { kind: 'route', href: '/kyc' };
     case 'security_question_set':
       return { kind: 'question' };
+    case 'single_device':
+      return { kind: 'route', href: '/security/devices' };
     default:
-      // Devices (T14.2), limits (T14.3), duress PIN (T14.5), alerts (T14.7) and
-      // biometrics (settings, T19) get their screens in later tasks.
+      // Limits (T14.3), duress PIN (T14.5), alerts (T14.7) and biometrics
+      // (settings, T19) get their screens in later tasks.
       return null;
   }
 }
@@ -50,3 +52,15 @@ export const SECURITY_QUESTIONS = [
   'In which town did your parents meet?',
   'What was the first thing you ever bought with your own money?',
 ] as const;
+
+/** A device's trust in words: a new device has lower limits until its cool-off ends (AUTH-8). */
+export function deviceStatus(d: Schema<'Device'>, now: Date = new Date()): { label: string } {
+  if (d.cool_off_until && new Date(d.cool_off_until) > now)
+    return { label: 'New device, lower limits for now' };
+  if (!d.trusted) return { label: 'Not trusted yet' };
+  return { label: d.hardware_backed ? 'Trusted, key in secure hardware' : 'Trusted' };
+}
+
+/** Sign-ins that can be ended from here: everything except this one. */
+export const otherSessions = (sessions: readonly Schema<'Session'>[]) =>
+  sessions.filter((s) => !s.current);

@@ -9,8 +9,9 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
+import { DevicesScreen } from '../screens/DevicesScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
-import { checkupAction, scoreBand, splitCheckup } from '../security';
+import { checkupAction, deviceStatus, scoreBand, splitCheckup } from '../security';
 
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: jest.fn(), back: jest.fn() }),
@@ -101,6 +102,7 @@ describe('security center', () => {
         'Panic button. Freeze every card and stop money going out. Coming soon',
       ),
     ).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Devices and sessions/ })).toBeTruthy();
   });
 
   it('adds a security question and the score goes up', async () => {
@@ -134,5 +136,50 @@ describe('security center', () => {
         .queryAllByRole('button', { name: 'Fix this' })
         .some((b) => b.props.accessibilityHint === 'Set a duress PIN'),
     ).toBe(false);
+  });
+});
+
+describe('devices and sessions', () => {
+  it('describes a device’s trust in words', () => {
+    const base = {
+      trusted: true,
+      hardware_backed: true,
+      cool_off_until: null,
+    } as unknown as Parameters<typeof deviceStatus>[0];
+    expect(deviceStatus(base).label).toBe('Trusted, key in secure hardware');
+    expect(deviceStatus({ ...base, hardware_backed: false }).label).toBe('Trusted');
+    expect(deviceStatus({ ...base, trusted: false }).label).toBe('Not trusted yet');
+    expect(
+      deviceStatus({ ...base, cool_off_until: '2026-01-02T00:00:00Z' }, new Date('2026-01-01'))
+        .label,
+    ).toBe('New device, lower limits for now');
+  });
+
+  it('removes another device, which ends its sign-ins and lifts the score', async () => {
+    const repos = bank();
+    const before = (await repos.security.getCheckup()).score;
+    await render(wrap(repos, <DevicesScreen />));
+    expect(await screen.findByText('This device')).toBeTruthy();
+    expect(screen.getAllByText('Chrome on Windows')).toHaveLength(2);
+    const remove = screen
+      .getAllByRole('button', { name: 'Remove' })
+      .find((b) => b.props.accessibilityHint === 'Chrome on Windows');
+    await fireEvent.press(remove!);
+    await fireEvent.press(await screen.findByRole('button', { name: 'Remove device' }));
+    await waitFor(() => expect(screen.queryAllByText('Chrome on Windows')).toHaveLength(0));
+    expect((await repos.devices.list()).data).toHaveLength(1);
+    expect((await repos.security.listSessions()).data.every((s) => s.current)).toBe(true);
+    expect((await repos.security.getCheckup()).score).toBe(before + 10);
+  });
+
+  it('signs out another session but keeps the device', async () => {
+    const repos = bank();
+    await render(wrap(repos, <DevicesScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Sign out' }));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Sign out now' }));
+    await waitFor(() => expect(screen.queryByRole('button', { name: 'Sign out' })).toBeNull());
+    expect((await repos.security.listSessions()).data).toHaveLength(1);
+    expect((await repos.devices.list()).data).toHaveLength(2);
+    expect(screen.getByText('You’re here')).toBeTruthy();
   });
 });

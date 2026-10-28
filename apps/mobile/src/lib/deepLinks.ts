@@ -77,6 +77,7 @@ const ROUTES: Route[] = [
   { pattern: 'me/verification', to: () => '/kyc' },
   { pattern: 'kyc', to: () => '/kyc' },
   { pattern: 'security', to: () => '/security' },
+  { pattern: 'security/devices', to: () => '/security/devices' },
   { pattern: 'security/*', to: () => '/security' },
   { pattern: 'family', to: () => '/me' },
   { pattern: 'family/*', to: () => '/me' },

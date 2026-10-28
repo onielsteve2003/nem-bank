@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { useRouter } from 'expo-router';
+import { useRouter, type Href } from 'expo-router';
 import {
   Bell,
   Circle,
@@ -9,6 +9,7 @@ import {
   OctagonX,
   ScanSearch,
   UserX,
+  type LucideIcon,
 } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -36,19 +37,20 @@ import { ScoreRing } from '../components/ScoreRing';
 import { SecurityQuestionSheet } from '../components/SecurityQuestionSheet';
 import { checkupAction, splitCheckup } from '../security';
 
-/** The security tools. Each gets its screen in its own task (T14.2–T14.7). */
-const TOOLS = [
+/** The security tools. A tool without an `href` gets its screen in a later task (T14.3–T14.7). */
+const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[] = [
   { title: 'Panic button', subtitle: 'Freeze every card and stop money going out', icon: OctagonX },
   {
     title: 'Devices and sessions',
     subtitle: 'See where you’re signed in',
     icon: MonitorSmartphone,
+    href: '/security/devices',
   },
   { title: 'Your limits', subtitle: 'Set a daily limit below your KYC cap', icon: Gauge },
   { title: 'Duress PIN', subtitle: 'A PIN that opens a decoy if you’re forced', icon: UserX },
   { title: 'Scam checker', subtitle: 'Paste a message, link or account number', icon: ScanSearch },
   { title: 'Login and payment alerts', subtitle: 'Choose what we tell you about', icon: Bell },
-] as const;
+];
 
 function CheckupRow({ item, onFix }: { item: Schema<'CheckupItem'>; onFix?: () => void }) {
   const { spacing } = useTheme();
@@ -172,16 +174,26 @@ export function SecurityScreen() {
       <View style={{ gap: spacing[2] }}>
         <SectionHeader title="Tools" />
         <Card padded={false}>
-          {TOOLS.map((t) => (
-            <ListItem
-              key={t.title}
-              title={t.title}
-              subtitle={t.subtitle}
-              leading={t.icon}
-              trailing={<Badge label="Soon" tone="neutral" />}
-              accessibilityLabel={`${t.title}. ${t.subtitle}. Coming soon`}
-            />
-          ))}
+          {TOOLS.map(({ href, ...t }) =>
+            href ? (
+              <ListItem
+                key={t.title}
+                title={t.title}
+                subtitle={t.subtitle}
+                leading={t.icon}
+                onPress={() => router.push(href)}
+              />
+            ) : (
+              <ListItem
+                key={t.title}
+                title={t.title}
+                subtitle={t.subtitle}
+                leading={t.icon}
+                trailing={<Badge label="Soon" tone="neutral" />}
+                accessibilityLabel={`${t.title}. ${t.subtitle}. Coming soon`}
+              />
+            ),
+          )}
         </Card>
       </View>
       {asking && (
