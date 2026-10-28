@@ -295,9 +295,11 @@ describe('panic button', () => {
   it('needs a step-up to turn off, then unfreezes the cards it froze', async () => {
     const repos = bank();
     await repos.security.activatePanic();
-    await expect(repos.security.releasePanic({ stepUpToken: 'not-a-token' })).rejects.toMatchObject({
-      problem: { code: 'step_up_required' },
-    });
+    await expect(repos.security.releasePanic({ stepUpToken: 'not-a-token' })).rejects.toMatchObject(
+      {
+        problem: { code: 'step_up_required' },
+      },
+    );
     const challenge = await repos.auth.startStepUp({
       body: { purpose: 'unfreeze', resource_id: 'panic' },
     });
