@@ -84,8 +84,8 @@ const ROUTES: Route[] = [
   { pattern: 'security/scam', to: () => '/security/scam' },
   { pattern: 'security/alerts', to: () => '/security/alerts' },
   { pattern: 'security/*', to: () => '/security' },
-  { pattern: 'family', to: () => '/me' },
-  { pattern: 'family/*', to: () => '/me' },
+  { pattern: 'family', to: () => '/family' },
+  { pattern: 'family/*', to: () => '/family' },
   { pattern: 'disputes/:id', to: () => '/me' },
   { pattern: 'demo-controls', to: () => '/demo-controls' },
   // Signed-out screens

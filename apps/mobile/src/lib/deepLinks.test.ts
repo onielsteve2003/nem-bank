@@ -41,6 +41,8 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://security/scam')).toBe('/security/scam');
     expect(path('nembank://security/alerts')).toBe('/security/alerts');
     expect(path('nembank://fx')).toBe('/convert');
+    expect(path('nembank://family')).toBe('/family');
+    expect(path('nembank://family/approvals')).toBe('/family');
   });
 
   it('marks signed-out screens and pay pages as public, the rest as needing auth', () => {

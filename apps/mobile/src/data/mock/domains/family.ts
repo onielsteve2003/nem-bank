@@ -1,5 +1,13 @@
 import type { Schema } from '@nem/contracts';
-import { add, money, negate, transferFee } from '@nem/shared';
+import {
+  add,
+  money,
+  negate,
+  nemtagProblem,
+  normalizeNemtag,
+  RESERVED_NEMTAGS,
+  transferFee,
+} from '@nem/shared';
 
 import { isApiError, problem } from '../../errors';
 import type { FamilyRepo } from '../../repositories';
@@ -160,10 +168,17 @@ export function familyRepo(bank: MockBank): FamilyRepo {
       const years = age(body.date_of_birth, bank.now());
       if (years < 6 || years >= 18)
         throw problem(422, 'validation_failed', 'Dependants are 6 to 17 years old');
-      const tag = body.nemtag.toLowerCase().replace(/^@/, '');
-      if (!/^[a-z0-9_]{3,20}$/.test(tag))
-        throw problem(422, 'validation_failed', 'Use 3–20 letters, numbers or _');
-      if (bank.world.people.some((p) => p.nemtag === tag) || tag === bank.user.nemtag) {
+      if (!body.first_name.trim() || !body.last_name.trim())
+        throw problem(422, 'validation_failed', 'Add their first and last name');
+      const tag = normalizeNemtag(body.nemtag);
+      const shape = nemtagProblem(tag);
+      if (shape) throw problem(422, 'validation_failed', shape);
+      if (
+        RESERVED_NEMTAGS.includes(tag) ||
+        bank.world.people.some((p) => p.nemtag === tag) ||
+        bank.world.dependants.some((d) => d.profile.nemtag === tag) ||
+        tag === bank.user.nemtag
+      ) {
         throw problem(409, 'nemtag_taken', `@${tag} is taken`);
       }
       checkControls(body.controls);
@@ -199,7 +214,7 @@ export function familyRepo(bank: MockBank): FamilyRepo {
       bank.world.dependants.push(record);
       return {
         dependant: dependantView(bank, record),
-        setup_code: String(Math.floor(100_000 + Math.random() * 900_000)),
+        setup_code: String(Math.floor(10_000_000 + Math.random() * 90_000_000)),
         setup_code_expires_at: addDays(bank.now(), 1).toISOString(),
       };
     },

@@ -446,6 +446,7 @@ export function usersRepo(bank: MockBank): UsersRepo {
   const taken = (tag: string) =>
     RESERVED_NEMTAGS.includes(tag) ||
     bank.world.people.some((p) => p.nemtag === tag) ||
+    bank.world.dependants.some((d) => d.profile.nemtag === tag) ||
     tag === bank.user.nemtag;
   return {
     async getMe() {

@@ -10,6 +10,7 @@ import {
   ShieldCheck,
   SlidersHorizontal,
   UserRound,
+  Users,
 } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
@@ -133,6 +134,13 @@ export function MeScreen() {
             subtitle="Raise your limits"
             leading={BadgeCheck}
             onPress={() => router.push('/kyc')}
+          />
+          <Divider />
+          <ListItem
+            title="Family"
+            subtitle="Your children’s accounts and limits"
+            leading={Users}
+            onPress={() => router.push('/family')}
           />
           <Divider />
           <ListItem
