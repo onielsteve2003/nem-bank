@@ -10,20 +10,17 @@ import {
   PaidFeatureNotice,
   Screen,
   SectionHeader,
-  SelectSheet,
   Skeleton,
   SkeletonGroup,
   Text,
-  TextField,
 } from '@/components';
 import { isApiError } from '@/data';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
-import { addressComplete, addressProblems, NIGERIAN_STATES, type DeliveryAddress } from '../cards';
-
-const STATE_OPTIONS = NIGERIAN_STATES.map((s) => ({ value: s, label: s }));
+import { addressComplete, toApiAddress, type DeliveryAddress } from '../cards';
+import { AddressFields } from '../components/AddressFields';
 
 const WHAT_YOU_GET = [
   'A Verve debit card on your NGN account, with your name printed on it',
@@ -55,9 +52,6 @@ export function PhysicalCardScreen() {
   const header = <SendHeader title="Physical card" first />;
   const naira = accounts.data?.data.find((a) => a.currency === 'NGN');
   const holder = me.data ? `${me.data.first_name} ${me.data.last_name}` : 'Your name';
-  const problems = addressProblems(address);
-  const set = (field: keyof DeliveryAddress) => (value: string) =>
-    setAddress((a) => ({ ...a, [field]: value }));
 
   const submit = () => {
     if (!naira || !addressComplete(address)) return;
@@ -66,14 +60,7 @@ export function PhysicalCardScreen() {
       {
         body: {
           account_id: naira.id,
-          delivery_address: {
-            line1: address.line1.trim(),
-            ...(address.line2.trim() && { line2: address.line2.trim() }),
-            city: address.city.trim(),
-            state: address.state,
-            ...(address.postalCode.trim() && { postal_code: address.postalCode.trim() }),
-            country: 'NG',
-          },
+          delivery_address: toApiAddress(address),
         },
       },
       {
@@ -146,49 +133,7 @@ export function PhysicalCardScreen() {
       </Card>
 
       <SectionHeader title="Deliver to" />
-      <View style={{ gap: spacing[3] }}>
-        <TextField
-          label="Address"
-          placeholder="12 Admiralty Way"
-          value={address.line1}
-          onChangeText={set('line1')}
-          autoComplete="street-address"
-          error={problems.line1}
-        />
-        <TextField
-          label="Apartment, landmark"
-          optional
-          placeholder="Flat 3, opposite the filling station"
-          value={address.line2}
-          onChangeText={set('line2')}
-        />
-        <TextField
-          label="City or town"
-          placeholder="Lekki"
-          value={address.city}
-          onChangeText={set('city')}
-          autoCapitalize="words"
-          error={problems.city}
-        />
-        <SelectSheet
-          label="State"
-          title="State"
-          placeholder="Choose a state"
-          options={STATE_OPTIONS}
-          value={address.state || null}
-          onChange={set('state')}
-        />
-        <TextField
-          label="Postal code"
-          optional
-          placeholder="106104"
-          keyboardType="number-pad"
-          maxLength={6}
-          value={address.postalCode}
-          onChangeText={set('postalCode')}
-          error={problems.postalCode}
-        />
-      </View>
+      <AddressFields value={address} onChange={setAddress} />
 
       <Card>
         <View style={{ gap: spacing[2] }}>

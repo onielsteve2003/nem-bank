@@ -179,3 +179,13 @@ export function addressProblems(
 export const addressComplete = (a: DeliveryAddress) =>
   Boolean(a.line1.trim() && a.city.trim() && a.state) &&
   Object.keys(addressProblems(a)).length === 0;
+
+/** A typed address in the API's shape: trimmed, optional fields left out when empty. */
+export const toApiAddress = (a: DeliveryAddress): Schema<'Address'> => ({
+  line1: a.line1.trim(),
+  ...(a.line2.trim() && { line2: a.line2.trim() }),
+  city: a.city.trim(),
+  state: a.state,
+  ...(a.postalCode.trim() && { postal_code: a.postalCode.trim() }),
+  country: 'NG',
+});

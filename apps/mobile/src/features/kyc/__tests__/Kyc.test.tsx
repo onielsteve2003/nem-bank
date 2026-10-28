@@ -9,7 +9,17 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
-import { displayDate, identityProblem, kycStatusText, nextTier, upgradeHref } from '../kyc';
+import {
+  displayDate,
+  expiryProblem,
+  identityProblem,
+  idNumberProblem,
+  kycStatusText,
+  nextTier,
+  photoProblem,
+  upgradeHref,
+} from '../kyc';
+import { DocumentsScreen } from '../screens/DocumentsScreen';
 import { IdentityScreen } from '../screens/IdentityScreen';
 import { KycScreen } from '../screens/KycScreen';
 
@@ -17,6 +27,11 @@ const mockPush = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
   useLocalSearchParams: () => ({}),
+}));
+
+jest.mock('expo-camera', () => ({
+  CameraView: () => null,
+  useCameraPermissions: () => [{ granted: false, canAskAgain: true }, jest.fn()],
 }));
 
 configure({ defaultIncludeHiddenElements: true });
@@ -87,6 +102,34 @@ describe('KYC rules', () => {
 
   it('shows dates the way people type them', () => {
     expect(displayDate('2000-03-14')).toBe('14/03/2000');
+  });
+
+  it('starts Tier 3 at the documents screen', () => {
+    expect(upgradeHref(overview(2))).toBe('/kyc/documents');
+  });
+
+  it('checks ID numbers by type', () => {
+    expect(idNumberProblem('national_id', '')).toBeUndefined();
+    expect(idNumberProblem('national_id', '12345678901')).toBeUndefined();
+    expect(idNumberProblem('national_id', '1234')).toMatch(/national id number/);
+    expect(idNumberProblem('international_passport', 'a01234567')).toBeUndefined();
+    expect(idNumberProblem('international_passport', '01234567')).toMatch(/A01234567/);
+  });
+
+  it('turns away an expired ID', () => {
+    const today = new Date('2026-10-28T12:00:00Z');
+    expect(expiryProblem(null, '', today)).toBeUndefined();
+    expect(expiryProblem(null, '31/02/2030', today)).toMatch(/real date/);
+    expect(expiryProblem('2026-10-28', '28/10/2026', today)).toMatch(/expired/);
+    expect(expiryProblem('2030-01-01', '01/01/2030', today)).toBeUndefined();
+  });
+
+  it('says what was wrong with a photo', () => {
+    const doc = (status: string, quality_issues: string[] = []) =>
+      ({ id: 'd', kind: 'id_front', status, quality_issues, uploaded_at: '' }) as never;
+    expect(photoProblem(doc('uploaded'))).toBeUndefined();
+    expect(photoProblem(doc('rejected', ['blurry']))).toMatch(/blurry/);
+    expect(photoProblem(doc('rejected', ['face_not_found']))).toMatch(/see your face/);
   });
 
   it('offers no upgrade at the top or while a reviewer has your documents', () => {
@@ -182,5 +225,47 @@ describe('IdentityScreen', () => {
     expect(screen.getByLabelText('National Identification Number')).toBeOnTheScreen();
     await fireEvent.press(screen.getByRole('button', { name: 'Real verification' }));
     expect(await screen.findByText(/Real BVN and NIN checks requires/)).toBeOnTheScreen();
+  });
+});
+
+describe('DocumentsScreen', () => {
+  const next = () => fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+  it('sends an ID, a selfie, details and an address for review', async () => {
+    const repos = await bank(2);
+    await render(wrap(repos, <DocumentsScreen />));
+    expect(await screen.findByText('Step 1 of 4')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Continue' })).toBeDisabled();
+    await fireEvent.press(screen.getByRole('button', { name: 'Use a sample ID' }));
+    expect(await screen.findByText('ID photo added')).toBeOnTheScreen();
+    await next();
+
+    await fireEvent.press(await screen.findByRole('button', { name: 'Use a sample selfie' }));
+    expect(await screen.findByText('Selfie added')).toBeOnTheScreen();
+    await next();
+
+    // ID prefill needs consent first.
+    const fill = await screen.findByRole('button', { name: 'Fill from photo' });
+    expect(fill).toBeDisabled();
+    await fireEvent.press(screen.getByRole('checkbox', { name: /Let Nem read my ID photo/ }));
+    await fireEvent.press(fill);
+    expect(await screen.findByText(/Check every field/)).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('ID number'), '1234');
+    expect(screen.getByText(/doesn’t look like a national id number/)).toBeOnTheScreen();
+    await fireEvent.changeText(screen.getByLabelText('ID number'), '12345678901');
+    await next();
+
+    await fireEvent.changeText(screen.getByLabelText('Address'), '12 Admiralty Way');
+    await fireEvent.changeText(screen.getByLabelText('City or town'), 'Lekki');
+    await fireEvent.press(screen.getByLabelText(/State/));
+    await fireEvent.press(await screen.findByText('Lagos'));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Send for review' }));
+    expect(await screen.findByText('We’re checking your documents')).toBeOnTheScreen();
+    expect((await repos.kyc.getOverview()).status).toBe('pending_review');
+  });
+
+  it('asks for a BVN or NIN first below Tier 2', async () => {
+    await render(wrap(await bank(1), <DocumentsScreen />));
+    expect(await screen.findByText('Verify your BVN or NIN first')).toBeOnTheScreen();
   });
 });
