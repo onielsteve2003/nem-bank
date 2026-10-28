@@ -15,13 +15,16 @@ import { DevicesScreen } from '../screens/DevicesScreen';
 import { DuressScreen } from '../screens/DuressScreen';
 import { LimitsScreen } from '../screens/LimitsScreen';
 import { PanicScreen } from '../screens/PanicScreen';
+import { ScamCheckScreen } from '../screens/ScamCheckScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
 import {
   checkupAction,
   deviceStatus,
+  guessScamKind,
   limitChange,
   limitsProblem,
   panicSummary,
+  scamVerdict,
   scoreBand,
   splitCheckup,
 } from '../security';
@@ -408,5 +411,45 @@ describe('duress PIN', () => {
     expect(await screen.findByText('Your duress PIN is on')).toBeTruthy();
     const checkup = await repos.security.getCheckup();
     expect(checkup.items.find((i) => i.id === 'duress_pin_set')?.done).toBe(true);
+  });
+});
+
+describe('scam checker', () => {
+  it('guesses what was pasted', () => {
+    expect(guessScamKind('0123 456 789')).toBe('account_number');
+    expect(guessScamKind('https://bit.ly/nem-bvn')).toBe('link');
+    expect(guessScamKind('gtbank-verify.com/login')).toBe('link');
+    expect(guessScamKind('Your account is blocked, send your OTP')).toBe('message');
+    expect(guessScamKind('012345678')).toBe('message');
+  });
+
+  it('names each verdict in words', () => {
+    expect(scamVerdict('likely_scam')).toMatchObject({ label: 'Likely a scam', color: 'danger' });
+    expect(scamVerdict('suspicious')).toMatchObject({ label: 'Be careful', color: 'warning' });
+    expect(scamVerdict('looks_safe').color).toBe('success');
+  });
+
+  it('flags a bank-impersonation message with its reasons', async () => {
+    await render(wrap(bank(), <ScamCheckScreen />));
+    await fireEvent.changeText(
+      screen.getByLabelText('What do you want checked?'),
+      'URGENT: your account is blocked. Send the OTP we sent you to reactivate it',
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Check it' }));
+    expect(await screen.findByText('Likely a scam')).toBeTruthy();
+    expect(screen.getByText(/No bank ever asks for these/)).toBeTruthy();
+    expect(screen.getByText(/threatens to block your account/)).toBeTruthy();
+  });
+
+  it('switches to an account check by itself and says when it was reported', async () => {
+    await render(wrap(bank(), <ScamCheckScreen />));
+    await fireEvent.changeText(screen.getByLabelText('What do you want checked?'), '0123454444');
+    expect(
+      screen.getByRole('togglebutton', { name: 'Account number' }).props.accessibilityState,
+    ).toMatchObject({
+      selected: true,
+    });
+    await fireEvent.press(screen.getByRole('button', { name: 'Check it' }));
+    expect(await screen.findByText('Other customers have reported this account.')).toBeTruthy();
   });
 });

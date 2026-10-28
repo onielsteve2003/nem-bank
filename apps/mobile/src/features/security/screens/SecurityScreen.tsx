@@ -37,7 +37,7 @@ import { ScoreRing } from '../components/ScoreRing';
 import { SecurityQuestionSheet } from '../components/SecurityQuestionSheet';
 import { checkupAction, panicSummary, splitCheckup } from '../security';
 
-/** The security tools. A tool without an `href` gets its screen in a later task (T14.6, T14.7). */
+/** The security tools. A tool without an `href` gets its screen in a later task (T14.7). */
 const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[] = [
   {
     title: 'Panic button',
@@ -63,7 +63,12 @@ const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[
     icon: UserX,
     href: '/security/duress',
   },
-  { title: 'Scam checker', subtitle: 'Paste a message, link or account number', icon: ScanSearch },
+  {
+    title: 'Scam checker',
+    subtitle: 'Paste a message, link or account number',
+    icon: ScanSearch,
+    href: '/security/scam',
+  },
   { title: 'Login and payment alerts', subtitle: 'Choose what we tell you about', icon: Bell },
 ];
 

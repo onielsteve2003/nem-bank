@@ -1,7 +1,13 @@
 import type { Schema } from '@nem/contracts';
 import { compare, formatMoney, type Money } from '@nem/shared';
 import type { Href } from 'expo-router';
-import { ShieldAlert, ShieldCheck, ShieldHalf, type LucideIcon } from 'lucide-react-native';
+import {
+  ShieldAlert,
+  ShieldCheck,
+  ShieldHalf,
+  ShieldX,
+  type LucideIcon,
+} from 'lucide-react-native';
 
 type Item = Schema<'CheckupItem'>;
 
@@ -103,4 +109,29 @@ export function limitsProblem(daily: Limit, single: Limit, cap: Money): string |
   if (daily && single && compare(single, daily) > 0)
     return "A single transfer can't be above your daily limit";
   return undefined;
+}
+
+export type ScamKind = Schema<'ScamCheckRequest'>['kind'];
+
+/**
+ * What was pasted, so the right check runs without asking: ten digits is an
+ * account number, a single web address is a link, anything else a message.
+ */
+export function guessScamKind(text: string): ScamKind {
+  const t = text.trim();
+  if (/^[\d\s-]+$/.test(t) && t.replace(/\D/g, '').length === 10) return 'account_number';
+  if (/^(https?:\/\/)?[a-z0-9-]+(\.[a-z0-9-]+)+(\/\S*)?$/i.test(t)) return 'link';
+  return 'message';
+}
+
+/** The scam checker's verdict in words and icon, never colour alone (SEC-6). */
+export function scamVerdict(v: Schema<'ScamCheckResult'>['verdict']): Band {
+  switch (v) {
+    case 'likely_scam':
+      return { label: 'Likely a scam', icon: ShieldX, color: 'danger' };
+    case 'suspicious':
+      return { label: 'Be careful', icon: ShieldAlert, color: 'warning' };
+    default:
+      return { label: 'No warning signs found', icon: ShieldCheck, color: 'success' };
+  }
 }

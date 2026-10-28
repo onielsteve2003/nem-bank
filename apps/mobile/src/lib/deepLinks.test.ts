@@ -38,6 +38,7 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://security/limits')).toBe('/security/limits');
     expect(path('nembank://security/panic')).toBe('/security/panic');
     expect(path('nembank://security/duress')).toBe('/security/duress');
+    expect(path('nembank://security/scam')).toBe('/security/scam');
     expect(path('nembank://fx')).toBe('/convert');
   });
 
