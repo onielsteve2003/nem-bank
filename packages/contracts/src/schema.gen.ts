@@ -2293,7 +2293,7 @@ export interface paths {
     post: operations['activatePanic'];
     /**
      * Turn panic mode off
-     * @description Unblocks outgoing money. Cards stay frozen until each is unfrozen.
+     * @description Unblocks outgoing money and unfreezes the cards panic mode froze. Needs step-up.
      */
     delete: operations['releasePanic'];
     options?: never;

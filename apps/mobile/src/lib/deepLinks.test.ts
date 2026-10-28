@@ -36,6 +36,7 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://me/verification')).toBe('/kyc');
     expect(path('nembank://security/devices')).toBe('/security/devices');
     expect(path('nembank://security/limits')).toBe('/security/limits');
+    expect(path('nembank://security/panic')).toBe('/security/panic');
     expect(path('nembank://security/duress')).toBe('/security');
     expect(path('nembank://fx')).toBe('/convert');
   });

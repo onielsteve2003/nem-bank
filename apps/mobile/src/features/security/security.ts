@@ -68,6 +68,16 @@ export function deviceStatus(d: Schema<'Device'>, now: Date = new Date()): { lab
 export const otherSessions = (sessions: readonly Schema<'Session'>[]) =>
   sessions.filter((s) => !s.current);
 
+/** What panic mode did, in words. */
+export function panicSummary(p: Schema<'PanicState'>): string {
+  if (!p.active) return 'Panic mode is off.';
+  const cards =
+    p.cards_frozen === 0
+      ? 'No cards needed freezing'
+      : `${p.cards_frozen} ${p.cards_frozen === 1 ? 'card' : 'cards'} frozen`;
+  return `${cards}${p.outgoing_blocked ? ' and no money can leave your account' : ''}.`;
+}
+
 /** A self-set limit; `null` means none, so only the KYC cap applies. */
 export type Limit = Money | null;
 

@@ -13,12 +13,14 @@ import { ThemeProvider } from '@/theme';
 
 import { DevicesScreen } from '../screens/DevicesScreen';
 import { LimitsScreen } from '../screens/LimitsScreen';
+import { PanicScreen } from '../screens/PanicScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
 import {
   checkupAction,
   deviceStatus,
   limitChange,
   limitsProblem,
+  panicSummary,
   scoreBand,
   splitCheckup,
 } from '../security';
@@ -107,11 +109,7 @@ describe('security center', () => {
     expect(screen.getByText('Do next')).toBeTruthy();
     expect(screen.getByText('Set a duress PIN')).toBeTruthy();
     expect(screen.getByText('Done')).toBeTruthy();
-    expect(
-      screen.getByLabelText(
-        'Panic button. Freeze every card and stop money going out. Coming soon',
-      ),
-    ).toBeTruthy();
+    expect(screen.getByRole('button', { name: /Panic button/ })).toBeTruthy();
     expect(screen.getByRole('button', { name: /Devices and sessions/ })).toBeTruthy();
   });
 
@@ -267,5 +265,55 @@ describe('self-set limits', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Raise in 24 hours' }));
     expect(await screen.findByText('Raise your limit. It starts in 24 hours.')).toBeTruthy();
     expect((await repos.security.getLimits()).pending_increase).toBeNull();
+  });
+});
+
+describe('panic button', () => {
+  it('says what panic mode did', () => {
+    const state = { active: true, activated_at: null, cards_frozen: 1, outgoing_blocked: true };
+    expect(panicSummary(state)).toBe('1 card frozen and no money can leave your account.');
+    expect(panicSummary({ ...state, cards_frozen: 0 })).toBe(
+      'No cards needed freezing and no money can leave your account.',
+    );
+    expect(panicSummary({ ...state, active: false })).toBe('Panic mode is off.');
+  });
+
+  it('freezes every card and blocks sending after one confirmed tap', async () => {
+    const repos = bank();
+    const active = (await repos.cards.list()).data.filter((c) => c.status === 'active').length;
+    await render(wrap(repos, <PanicScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Freeze everything' }));
+    const buttons = await screen.findAllByRole('button', { name: 'Freeze everything' });
+    await fireEvent.press(buttons.at(-1)!);
+    expect(await screen.findByText('Panic mode is on')).toBeTruthy();
+    const state = await repos.security.getPanic();
+    expect(state).toMatchObject({ active: true, cards_frozen: active, outgoing_blocked: true });
+    expect((await repos.cards.list()).data.some((c) => c.status === 'active')).toBe(false);
+    expect(screen.getByRole('button', { name: 'Turn off panic mode' })).toBeTruthy();
+  });
+
+  it('needs a step-up to turn off, then unfreezes the cards it froze', async () => {
+    const repos = bank();
+    await repos.security.activatePanic();
+    await expect(repos.security.releasePanic({ stepUpToken: 'not-a-token' })).rejects.toMatchObject({
+      problem: { code: 'step_up_required' },
+    });
+    const challenge = await repos.auth.startStepUp({
+      body: { purpose: 'unfreeze', resource_id: 'panic' },
+    });
+    const { step_up_token } = await repos.auth.verifyStepUp({
+      path: { step_up_id: challenge.step_up_id },
+      body: { pin: DEMO_PIN },
+    });
+    expect((await repos.security.releasePanic({ stepUpToken: step_up_token })).active).toBe(false);
+    expect((await repos.cards.list()).data.some((c) => c.status === 'active')).toBe(true);
+  });
+
+  it('shows panic mode on the security center', async () => {
+    const repos = bank();
+    await repos.security.activatePanic();
+    await render(wrap(repos));
+    expect(await screen.findByText('Panic mode is on')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Manage' })).toBeTruthy();
   });
 });

@@ -3106,7 +3106,7 @@ paths:
       tags: [security]
       operationId: releasePanic
       summary: Turn panic mode off
-      description: Unblocks outgoing money. Cards stay frozen until each is unfrozen.
+      description: Unblocks outgoing money and unfreezes the cards panic mode froze. Needs step-up.
       parameters:
         - $ref: '#/components/parameters/StepUpTokenHeader'
       responses:

@@ -35,11 +35,16 @@ import { useTheme } from '@/theme';
 
 import { ScoreRing } from '../components/ScoreRing';
 import { SecurityQuestionSheet } from '../components/SecurityQuestionSheet';
-import { checkupAction, splitCheckup } from '../security';
+import { checkupAction, panicSummary, splitCheckup } from '../security';
 
-/** The security tools. A tool without an `href` gets its screen in a later task (T14.4–T14.7). */
+/** The security tools. A tool without an `href` gets its screen in a later task (T14.5–T14.7). */
 const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href?: Href }[] = [
-  { title: 'Panic button', subtitle: 'Freeze every card and stop money going out', icon: OctagonX },
+  {
+    title: 'Panic button',
+    subtitle: 'Freeze every card and stop money going out',
+    icon: OctagonX,
+    href: '/security/panic',
+  },
   {
     title: 'Devices and sessions',
     subtitle: 'See where you’re signed in',
@@ -102,6 +107,7 @@ export function SecurityScreen() {
   const toast = useToast();
   const { spacing } = useTheme();
   const q = useRepoQuery('security', 'getCheckup');
+  const panic = useRepoQuery('security', 'getPanic');
   const [asking, setAsking] = useState(false);
   const checkup = q.data;
 
@@ -175,6 +181,28 @@ export function SecurityScreen() {
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
     >
+      {panic.data?.active && (
+        <Card>
+          <View style={{ gap: spacing[3] }} accessibilityRole="alert">
+            <View style={[styles.row, { gap: spacing[2], alignItems: 'center' }]}>
+              <Icon icon={OctagonX} color="danger" accessibilityLabel="Panic mode on" />
+              <Text variant="bodyStrong">Panic mode is on</Text>
+            </View>
+            <Text variant="bodySmall" color="textMuted">
+              {panicSummary(panic.data)}
+            </Text>
+            <View style={styles.start}>
+              <Button
+                label="Manage"
+                size="sm"
+                variant="secondary"
+                onPress={() => router.push('/security/panic')}
+                accessibilityHint="Panic mode"
+              />
+            </View>
+          </View>
+        </Card>
+      )}
       {body}
       <View style={{ gap: spacing[2] }}>
         <SectionHeader title="Tools" />
