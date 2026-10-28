@@ -254,6 +254,7 @@ export const REPOSITORY_METHODS = {
     failNextTransfer: 'demoFailNextTransfer',
     timeTravel: 'demoTimeTravel',
     setKycTier: 'demoSetKycTier',
+    setKycReview: 'demoSetKycReview',
     reset: 'demoReset',
   },
 } as const satisfies Readonly<Record<string, MethodMap>>;

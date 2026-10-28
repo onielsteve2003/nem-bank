@@ -4005,6 +4005,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/demo/kyc-review': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    get?: never;
+    put?: never;
+    /**
+     * Choose how the sandbox reviewer decides
+     * @description Applies to the next Tier 3 submission the sandbox reviews, so the demo can show approved, rejected and resubmit outcomes. The choice is used once.
+     */
+    post: operations['demoSetKycReview'];
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/demo/reset': {
     parameters: {
       query?: never;
@@ -7398,6 +7418,10 @@ export interface components {
     };
     DemoKycTierRequest: {
       tier: components['schemas']['KycTier'];
+    };
+    DemoKycReviewRequest: {
+      /** @enum {string} */
+      outcome: 'approve' | 'reject' | 'resubmit';
     };
     DemoClock: {
       now: components['schemas']['Timestamp'];
@@ -14232,6 +14256,29 @@ export interface operations {
     };
     responses: {
       /** @description The persona is on that tier. */
+      204: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content?: never;
+      };
+      403: components['responses']['Forbidden'];
+    };
+  };
+  demoSetKycReview: {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody: {
+      content: {
+        'application/json': components['schemas']['DemoKycReviewRequest'];
+      };
+    };
+    responses: {
+      /** @description The next review will end this way. */
       204: {
         headers: {
           [name: string]: unknown;

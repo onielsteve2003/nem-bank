@@ -33,21 +33,57 @@ export function setKycTier(bank: MockBank, tier: KycTier) {
   }
 }
 
+/** What the sandbox reviewer says when it doesn't approve (KYC-5). */
+const REVIEW_FINDINGS = {
+  reject: {
+    reason: 'The name on your ID doesn’t match the name on your BVN record.',
+    resubmit: undefined,
+  },
+  resubmit: {
+    reason: 'Your selfie was too dark to compare with your ID.',
+    resubmit: ['selfie'] as Schema<'KycDocumentKind'>[],
+  },
+} as const;
+
+const REVIEW_NOTICES = {
+  approved: {
+    title: 'You are now Tier 3',
+    body: 'Your ID was approved. Higher limits and credit are unlocked.',
+  },
+  rejected: {
+    title: 'Your Tier 3 upgrade wasn’t approved',
+    body: 'See why and try again with different documents.',
+  },
+  resubmit: {
+    title: 'We need a document again',
+    body: 'One of your photos couldn’t be used. Send a new one to finish Tier 3.',
+  },
+} as const;
+
 export function processKyc(bank: MockBank): boolean {
   const cutoff = new Date(bank.now().getTime() - REVIEW_MS).toISOString();
-  const due = bank.world.kyc.submissions.filter(
+  const kyc = bank.world.kyc;
+  const due = kyc.submissions.filter(
     (s) => s.status === 'pending_review' && s.submitted_at <= cutoff,
   );
   for (const submission of due) {
-    submission.status = 'approved';
+    const outcome = kyc.nextReview ?? 'approve';
+    delete kyc.nextReview;
     submission.reviewed_at = bank.nowIso();
-    bank.user.kyc_tier = 3;
-    bank.user.kyc_status = 'approved';
-    bank.world.kyc.status = 'approved';
+    if (outcome === 'approve') {
+      submission.status = 'approved';
+      bank.user.kyc_tier = 3;
+    } else {
+      const finding = REVIEW_FINDINGS[outcome];
+      submission.status = outcome === 'reject' ? 'rejected' : 'resubmit';
+      submission.rejection_reason = finding.reason;
+      if (finding.resubmit) submission.resubmit_documents = [...finding.resubmit];
+    }
+    bank.user.kyc_status = submission.status;
+    kyc.status = submission.status;
     bank.notify({
       category: 'security',
-      title: 'You are now Tier 3',
-      body: 'Your ID was approved. Higher limits and credit are unlocked.',
+      ...REVIEW_NOTICES[submission.status as keyof typeof REVIEW_NOTICES],
       deep_link: 'nembank://me/verification',
     });
   }

@@ -137,3 +137,66 @@ export function expiryProblem(iso: string | null, typed: string, today: Date): s
     ? 'This ID has expired. Use one that hasn’t.'
     : undefined;
 }
+
+type Submission = Schema<'KycSubmission'>;
+
+const DOCUMENT_NAMES: Record<Schema<'KycDocumentKind'>, string> = {
+  id_front: 'a new photo of your ID',
+  id_back: 'a photo of the back of your ID',
+  selfie: 'a new selfie',
+  proof_of_address: 'proof of your address',
+};
+
+/** The documents a reviewer asked for again, as one phrase ("a new selfie"). */
+export function resubmitWhat(submission: Submission): string {
+  const kinds = submission.resubmit_documents ?? [];
+  if (!kinds.length) return 'your documents again';
+  const names = kinds.map((k) => DOCUMENT_NAMES[k]);
+  return names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+}
+
+/**
+ * What a reviewer decided and what to do next (KYC-5), or null when there is
+ * nothing to say: no submission yet, or it was approved.
+ */
+export function reviewState(
+  submission: Submission | null | undefined,
+): {
+  status: 'pending' | 'rejected' | 'resubmit';
+  title: string;
+  message: string;
+  action?: string;
+} | null {
+  switch (submission?.status) {
+    case 'pending_review':
+      return {
+        status: 'pending',
+        title: 'We’re checking your documents',
+        message: 'This usually takes a few minutes. We’ll tell you when it’s done.',
+      };
+    case 'rejected':
+      return {
+        status: 'rejected',
+        title: 'Not approved',
+        message: submission.rejection_reason ?? 'We couldn’t approve these documents.',
+        action: 'Try again',
+      };
+    case 'resubmit':
+      return {
+        status: 'resubmit',
+        title: `We need ${resubmitWhat(submission)}`,
+        message: submission.rejection_reason ?? 'One of your photos couldn’t be used.',
+        action: 'Send again',
+      };
+    default:
+      return null;
+  }
+}
+
+/** The Tier 3 steps a reviewer's finding points at, so the flow can flag them. */
+export function stepsToFix(submission: Submission | null | undefined): number[] {
+  if (submission?.status === 'rejected') return [0, 2];
+  if (submission?.status !== 'resubmit') return [];
+  const kinds = submission.resubmit_documents ?? [];
+  return kinds.map((k) => (k === 'selfie' ? 1 : k === 'proof_of_address' ? 3 : 0));
+}

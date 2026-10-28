@@ -138,6 +138,9 @@ export function demoRepo(bank: MockBank): DemoRepo {
     async setKycTier({ body }) {
       setKycTier(bank, body.tier);
     },
+    async setKycReview({ body }) {
+      bank.world.kyc.nextReview = body.outcome;
+    },
     async reset() {
       await bank.reset();
     },

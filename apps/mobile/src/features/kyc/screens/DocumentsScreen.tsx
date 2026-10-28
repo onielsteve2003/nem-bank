@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { parseDisplayDate } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Clock, ScanText, ShieldAlert } from 'lucide-react-native';
+import { Clock, RotateCcw, ScanText, ShieldAlert } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -13,6 +13,7 @@ import {
   Chip,
   EmptyState,
   ErrorState,
+  Icon,
   Screen,
   SectionHeader,
   Skeleton,
@@ -36,6 +37,8 @@ import {
   ID_DOCUMENTS,
   idNumberProblem,
   photoProblem,
+  reviewState,
+  stepsToFix,
   type IdDocument,
 } from '../kyc';
 
@@ -172,6 +175,13 @@ export function DocumentsScreen() {
     );
   };
 
+  // After a rejection or a resubmit request, say what to fix where it applies.
+  const review = reviewState(overview.data.latest_submission);
+  const fixHere =
+    review &&
+    review.status !== 'pending' &&
+    (step === 0 || stepsToFix(overview.data.latest_submission).includes(step));
+
   const last = step === STEPS.length - 1;
   const footer = (
     <View style={{ gap: spacing[2] }}>
@@ -205,6 +215,20 @@ export function DocumentsScreen() {
           {STEPS[step]}
         </Text>
       </View>
+
+      {fixHere && (
+        <Card variant="outline">
+          <View style={[styles.fix, { gap: spacing[3] }]} accessible>
+            <Icon icon={RotateCcw} color="warning" accessibilityLabel="To fix" />
+            <View style={[styles.flex, { gap: spacing[1] }]}>
+              <Text variant="bodyStrong">{review.title}</Text>
+              <Text variant="bodySmall" color="textMuted">
+                {review.message}
+              </Text>
+            </View>
+          </View>
+        </Card>
+      )}
 
       {step === 0 && (
         <>
@@ -296,5 +320,7 @@ export function DocumentsScreen() {
 
 const styles = StyleSheet.create({
   wrap: { flexDirection: 'row', flexWrap: 'wrap' },
+  fix: { flexDirection: 'row', alignItems: 'flex-start' },
+  flex: { flex: 1 },
   between: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: 12 },
 });

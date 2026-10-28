@@ -160,6 +160,8 @@ export interface World {
     documents: Schema<'KycDocument'>[];
     submissions: Schema<'KycSubmission'>[];
     verifiedIds: ('bvn' | 'nin')[];
+    /** How the sandbox reviewer decides the next submission (Demo Controls); approve when unset. */
+    nextReview?: Schema<'DemoKycReviewRequest'>['outcome'];
   };
   disputes: Schema<'Dispute'>[];
   attachments: Schema<'Attachment'>[];

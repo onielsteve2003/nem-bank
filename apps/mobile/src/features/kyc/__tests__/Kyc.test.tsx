@@ -17,6 +17,9 @@ import {
   kycStatusText,
   nextTier,
   photoProblem,
+  resubmitWhat,
+  reviewState,
+  stepsToFix,
   upgradeHref,
 } from '../kyc';
 import { DocumentsScreen } from '../screens/DocumentsScreen';
@@ -36,11 +39,17 @@ jest.mock('expo-camera', () => ({
 
 configure({ defaultIncludeHiddenElements: true });
 
+/** The demo clock; tests move it to let the sandbox reviewer decide. */
+let clockOffset = 0;
+beforeEach(() => {
+  clockOffset = 0;
+});
+
 /** A bank whose customer is on `tier` (the demo persona starts fully verified). */
 const bank = async (tier: 1 | 2 | 3 = 1) => {
   const repos = createMockRepositories({
     store: createMemoryStore(),
-    clock: () => new Date(Date.now()),
+    clock: () => new Date(Date.now() + clockOffset),
     simulation: { latency: 'off' },
   });
   await repos.demo.setKycTier({ body: { tier } });
@@ -69,6 +78,30 @@ const wrap = (repos: Repositories, ui: React.ReactElement = <KycScreen />) => (
     </RepositoryProvider>
   </SafeAreaProvider>
 );
+
+/** Sends a Tier 3 submission with sample photos, as the documents screen would. */
+const submitTier3 = async (repos: Repositories) => {
+  const docs = await Promise.all(
+    (['id_front', 'selfie'] as const).map((kind) =>
+      repos.kyc.uploadDocument({ body: { kind, file: 'x'.repeat(4_000) } }),
+    ),
+  );
+  return repos.kyc.submit({
+    body: {
+      target_tier: 3,
+      id_type: 'national_id',
+      id_number: '12345678901',
+      document_ids: docs.map((d) => d.id),
+      address: { line1: '12 Admiralty Way', city: 'Lekki', state: 'Lagos', country: 'NG' },
+    },
+  });
+};
+
+/** Lets the sandbox reviewer (10 s) decide. */
+const review = async (repos: Repositories) => {
+  clockOffset += 11_000;
+  return repos.kyc.getOverview();
+};
 
 const overview = (tier: 1 | 2 | 3, status = 'not_started') =>
   ({ tier, status, tiers: [], latest_submission: null, demo_limits: true }) as never;
@@ -138,6 +171,41 @@ describe('KYC rules', () => {
   });
 });
 
+describe('review states', () => {
+  const submission = (status: string, extra = {}) =>
+    ({
+      id: 's',
+      target_tier: 3,
+      status,
+      submitted_at: '2026-10-28T10:00:00Z',
+      reviewed_at: null,
+      rejection_reason: null,
+      ...extra,
+    }) as never;
+
+  it('says nothing before a submission or after approval', () => {
+    expect(reviewState(null)).toBeNull();
+    expect(reviewState(submission('approved'))).toBeNull();
+  });
+
+  it('gives the reason and the way forward', () => {
+    expect(reviewState(submission('rejected', { rejection_reason: 'Blurry' }))).toMatchObject({
+      status: 'rejected',
+      message: 'Blurry',
+      action: 'Try again',
+    });
+    expect(reviewState(submission('pending_review'))?.action).toBeUndefined();
+  });
+
+  it('names the documents wanted again and the steps to fix', () => {
+    const s = submission('resubmit', { resubmit_documents: ['id_front', 'selfie'] });
+    expect(resubmitWhat(s)).toBe('a new photo of your ID and a new selfie');
+    expect(stepsToFix(s)).toEqual([0, 1]);
+    expect(stepsToFix(submission('rejected'))).toEqual([0, 2]);
+    expect(stepsToFix(submission('pending_review'))).toEqual([]);
+  });
+});
+
 describe('KycScreen', () => {
   it('shows your tier, its limits and every tier', async () => {
     await render(wrap(await bank()));
@@ -164,24 +232,52 @@ describe('KycScreen', () => {
 
   it('waits while a reviewer has your documents', async () => {
     const repos = await bank(2);
-    const docs = await Promise.all(
-      (['id_front', 'selfie'] as const).map((kind) =>
-        repos.kyc.uploadDocument({ body: { kind, file: 'x'.repeat(4_000) } }),
-      ),
-    );
-    await repos.kyc.submit({
-      body: {
-        target_tier: 3,
-        id_type: 'national_id',
-        id_number: '12345678901',
-        document_ids: docs.map((d) => d.id),
-        address: { line1: '12 Admiralty Way', city: 'Lekki', state: 'Lagos', country: 'NG' },
-      },
-    });
+    await submitTier3(repos);
     await render(wrap(repos));
     expect(await screen.findByText(/being reviewed/)).toBeOnTheScreen();
-    expect(screen.getByText('We’re checking your documents.')).toBeOnTheScreen();
+    expect(screen.getByText('We’re checking your documents')).toBeOnTheScreen();
+    expect(screen.getByText(/^Sent /)).toBeOnTheScreen();
     expect(screen.queryByRole('button', { name: /Upgrade to Tier 3/ })).toBeNull();
+  });
+
+  it('shows why an upgrade was rejected and lets you try again', async () => {
+    const repos = await bank(2);
+    await repos.demo.setKycReview({ body: { outcome: 'reject' } });
+    await submitTier3(repos);
+    expect(await review(repos)).toMatchObject({ tier: 2, status: 'rejected' });
+    await render(wrap(repos));
+    expect(await screen.findByText('Not approved')).toBeOnTheScreen();
+    expect(screen.getByText(/name on your ID doesn’t match/)).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Try again' }));
+    expect(mockPush).toHaveBeenCalledWith('/kyc/documents');
+  });
+
+  it('asks for the documents a reviewer wants again', async () => {
+    const repos = await bank(2);
+    await repos.demo.setKycReview({ body: { outcome: 'resubmit' } });
+    await submitTier3(repos);
+    await review(repos);
+    await render(wrap(repos));
+    expect(await screen.findByText('We need a new selfie')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Send again' })).toBeEnabled();
+  });
+
+  it('approves by default and shows when', async () => {
+    const repos = await bank(2);
+    await submitTier3(repos);
+    expect(await review(repos)).toMatchObject({ tier: 3, status: 'approved' });
+    await render(wrap(repos));
+    expect(await screen.findByText(/fully verified/)).toBeOnTheScreen();
+    expect(screen.getByText('Approved')).toBeOnTheScreen();
+  });
+
+  it('uses a demo review choice once', async () => {
+    const repos = await bank(2);
+    await repos.demo.setKycReview({ body: { outcome: 'reject' } });
+    await submitTier3(repos);
+    await review(repos);
+    await submitTier3(repos);
+    expect(await review(repos)).toMatchObject({ tier: 3, status: 'approved' });
   });
 });
 
@@ -262,6 +358,16 @@ describe('DocumentsScreen', () => {
     await fireEvent.press(await screen.findByRole('button', { name: 'Send for review' }));
     expect(await screen.findByText('We’re checking your documents')).toBeOnTheScreen();
     expect((await repos.kyc.getOverview()).status).toBe('pending_review');
+  });
+
+  it('says what to fix after a resubmit request', async () => {
+    const repos = await bank(2);
+    await repos.demo.setKycReview({ body: { outcome: 'resubmit' } });
+    await submitTier3(repos);
+    await review(repos);
+    await render(wrap(repos, <DocumentsScreen />));
+    expect(await screen.findByText('We need a new selfie')).toBeOnTheScreen();
+    expect(screen.getByText(/selfie was too dark/)).toBeOnTheScreen();
   });
 
   it('asks for a BVN or NIN first below Tier 2', async () => {

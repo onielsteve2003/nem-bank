@@ -5256,6 +5256,23 @@ paths:
           description: The persona is on that tier.
         '403':
           $ref: '#/components/responses/Forbidden'
+  /v1/demo/kyc-review:
+    post:
+      tags: [demo]
+      operationId: demoSetKycReview
+      summary: Choose how the sandbox reviewer decides
+      description: Applies to the next Tier 3 submission the sandbox reviews, so the demo can show approved, rejected and resubmit outcomes. The choice is used once.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/DemoKycReviewRequest'
+      responses:
+        '204':
+          description: The next review will end this way.
+        '403':
+          $ref: '#/components/responses/Forbidden'
   /v1/demo/reset:
     post:
       tags: [demo]
@@ -12291,6 +12308,13 @@ components:
       properties:
         tier:
           $ref: '#/components/schemas/KycTier'
+    DemoKycReviewRequest:
+      type: object
+      required: [outcome]
+      properties:
+        outcome:
+          type: string
+          enum: [approve, reject, resubmit]
     DemoClock:
       type: object
       required: [now, offset_days]

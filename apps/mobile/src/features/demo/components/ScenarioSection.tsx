@@ -16,6 +16,16 @@ import { describeTravel, snapshot } from '../timeTravel';
 
 import { ChipRow, DemoSection } from './DemoSection';
 
+const REVIEW_OUTCOMES = [
+  { outcome: 'approve', label: 'Approve', toast: 'The next Tier 3 review will be approved.' },
+  { outcome: 'reject', label: 'Reject', toast: 'The next Tier 3 review will be rejected.' },
+  {
+    outcome: 'resubmit',
+    label: 'Ask for a new selfie',
+    toast: 'The next Tier 3 review will ask for a new selfie.',
+  },
+] as const;
+
 const dateFormat = new Intl.DateTimeFormat('en-NG', {
   day: 'numeric',
   month: 'short',
@@ -41,6 +51,18 @@ export function ScenarioSection() {
     onError,
     onSuccess: (_, { body }) =>
       toast.show({ message: `You're on KYC Tier ${body.tier} now`, tone: 'success' }),
+  });
+  const [review, setReview] = useState<(typeof REVIEW_OUTCOMES)[number]['outcome']>('approve');
+  const setKycReview = useRepoMutation('demo', 'setKycReview', {
+    invalidates: [],
+    onError,
+    onSuccess: (_, { body }) => {
+      setReview(body.outcome);
+      toast.show({
+        message: REVIEW_OUTCOMES.find((o) => o.outcome === body.outcome)!.toast,
+        tone: 'info',
+      });
+    },
   });
   const failNext = useRepoMutation('demo', 'failNextTransfer', {
     invalidates: [],
@@ -126,6 +148,22 @@ export function ScenarioSection() {
         </ChipRow>
         <Text variant="bodySmall" color="textMuted">
           Drop to a lower tier to walk the verification flows again.
+        </Text>
+      </View>
+      <View style={{ gap: spacing[2] }}>
+        <ChipRow label="Next Tier 3 review">
+          {REVIEW_OUTCOMES.map(({ outcome, label }) => (
+            <Chip
+              key={outcome}
+              label={label}
+              selected={review === outcome}
+              disabled={setKycReview.isPending}
+              onPress={() => setKycReview.mutate({ body: { outcome } })}
+            />
+          ))}
+        </ChipRow>
+        <Text variant="bodySmall" color="textMuted">
+          The sandbox reviewer decides about 10 seconds after you send your documents.
         </Text>
       </View>
       <Button
