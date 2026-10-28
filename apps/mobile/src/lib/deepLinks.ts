@@ -80,6 +80,7 @@ const ROUTES: Route[] = [
   { pattern: 'security/devices', to: () => '/security/devices' },
   { pattern: 'security/limits', to: () => '/security/limits' },
   { pattern: 'security/panic', to: () => '/security/panic' },
+  { pattern: 'security/duress', to: () => '/security/duress' },
   { pattern: 'security/*', to: () => '/security' },
   { pattern: 'family', to: () => '/me' },
   { pattern: 'family/*', to: () => '/me' },

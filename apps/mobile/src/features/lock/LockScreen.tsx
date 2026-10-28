@@ -1,3 +1,4 @@
+import { useQueryClient } from '@tanstack/react-query';
 import { Fingerprint, ScanFace, Zap } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
@@ -29,6 +30,7 @@ export function LockScreen() {
   const isDemo = useSessionStore((s) => s.session?.isDemo ?? false);
   const signOut = useSignOut();
   const verify = useRepoMutation('users', 'verifyPin', { invalidates: [] });
+  const queryClient = useQueryClient();
   const [error, setError] = useState<string>();
   const [biometrics, setBiometrics] = useState(NO_BIOMETRICS);
   const [resetting, setResetting] = useState(false);
@@ -68,6 +70,9 @@ export function LockScreen() {
       const result = await verify.mutateAsync({ body: { pin } });
       if (result.valid) {
         setError(undefined);
+        // The bank may now show a decoy (duress PIN, SEC-5), and the app can't
+        // tell which PIN this was: drop everything cached so nothing real shows.
+        void queryClient.resetQueries();
         unlock();
         return true;
       }

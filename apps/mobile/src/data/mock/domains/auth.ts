@@ -15,6 +15,7 @@ import { problem } from '../../errors';
 import type { AuthRepo, DevicesRepo, UsersRepo } from '../../repositories';
 import { addMinutes, maskEmail } from '../convert';
 import type { MockBank } from '../runtime';
+import { endDuress, startDuress } from './duress';
 import type { OtpRecord } from '../world';
 
 /** The demo bank sends no email: every OTP is this code, and the UI says so. */
@@ -159,6 +160,8 @@ export function checkPin(bank: MockBank, pin: string): Schema<'PinVerification'>
   }
   if (pin === auth.pin || (auth.duressPin !== null && pin === auth.duressPin)) {
     Object.assign(auth, { pinFailures: 0, pinLockedUntil: null, pinLockouts: 0 });
+    if (pin === auth.pin) endDuress(bank);
+    else startDuress(bank);
     return { valid: true, attempts_remaining: PIN_MAX_ATTEMPTS, locked_until: null };
   }
   auth.pinFailures += 1;

@@ -11,11 +11,12 @@ import {
 
 import { problem } from '../../errors';
 import type { AccountsRepo, StatementsRepo, TransactionsRepo } from '../../repositories';
-import { addDays, api, maskAccount, newestFirst, notFound, paginate } from '../convert';
+import { addDays, api, fromApi, maskAccount, newestFirst, notFound, paginate } from '../convert';
 import { NEM_BANK } from '../directory';
 import { sha256Hex, textPdf } from '../documents';
 import type { MockBank } from '../runtime';
 import { accountName, accountView, customerTransactions, entryOf, transactionsFor } from '../views';
+import { DECOY_MAX_TRANSACTION, inDuress } from './duress';
 
 const HOLD_LABELS: Record<Schema<'HoldReason'>, string> = {
   card_authorization: 'Card payment waiting to settle',
@@ -132,12 +133,21 @@ function detail(bank: MockBank, id: string): Schema<'TransactionDetail'> {
   };
 }
 
+/** Decoy activity (SEC-5): only small naira amounts, to match the decoy balance. */
+function smallNaira(amount: Schema<'Money'>): boolean {
+  const m = fromApi(amount);
+  const size = m.amount < 0n ? -m.amount : m.amount;
+  return m.currency === 'NGN' && size <= DECOY_MAX_TRANSACTION.amount;
+}
+
 export function transactionsRepo(bank: MockBank): TransactionsRepo {
   return {
     async list({ query } = {}) {
       const q = query?.q?.trim().toLowerCase();
+      const decoy = inDuress(bank);
       const items = customerTransactions(bank).filter(
         (t) =>
+          (!decoy || smallNaira(t.amount)) &&
           (!query?.account_id || t.account_id === query.account_id) &&
           (!query?.type?.length || query.type.includes(t.type)) &&
           (!query?.currency || t.amount.currency === query.currency) &&

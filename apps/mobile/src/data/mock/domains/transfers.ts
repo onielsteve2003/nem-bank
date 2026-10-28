@@ -26,6 +26,7 @@ import {
 import type { MockBank } from '../runtime';
 import { accountName, customerTransactions, nemParty, transferView } from '../views';
 import type { Person, ScheduledRecord, TransferRecord } from '../world';
+import { decoyBalance, inDuress } from './duress';
 
 type Destination = Schema<'TransferDestination'>;
 
@@ -343,7 +344,10 @@ export function sendMoney(bank: MockBank, input: SendInput): TransferRecord {
   }
   const fee = feeFor(amount, resolved.rail);
   assertWithinDailyLimit(bank.ledger, source.id, amount, bank.limits(), bank.nowIso());
-  if (bank.ledger.available(source.id).amount < add(amount, fee).amount) {
+  const duress = inDuress(bank);
+  const available = bank.ledger.available(source.id);
+  // In duress the decoy balance is what the person forcing you can see and spend.
+  if ((duress ? decoyBalance('NGN', available) : available).amount < add(amount, fee).amount) {
     throw problem(422, 'insufficient_funds', 'Insufficient funds', {
       detail: `You need ${formatMoney(add(amount, fee))} including the fee.`,
     });
@@ -382,6 +386,14 @@ export function sendMoney(bank: MockBank, input: SendInput): TransferRecord {
   };
   event(record, 'risk_checked', 'Security checks done', at);
   bank.world.transfers.push(record);
+
+  if (duress) {
+    // SEC-5: looks sent, moves nothing. The customer's real PIN marks it stopped.
+    record.duressBlocked = true;
+    setStatus(bank, record, 'processing');
+    event(record, 'processing', `Sent to ${record.recipient.bank_name}`, at);
+    return record;
+  }
 
   const steppedUp = bank.hasValidStepUp(input.stepUpToken, 'transfer');
   const hold = (reason: 'fraud_review' | 'delayed_transfer') =>

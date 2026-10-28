@@ -12,6 +12,7 @@ import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
 import { DevicesScreen } from '../screens/DevicesScreen';
+import { DuressScreen } from '../screens/DuressScreen';
 import { LimitsScreen } from '../screens/LimitsScreen';
 import { PanicScreen } from '../screens/PanicScreen';
 import { SecurityScreen } from '../screens/SecurityScreen';
@@ -86,7 +87,8 @@ describe('security checkup rules', () => {
   it('sends each to-do to the screen that fixes it', () => {
     expect(checkupAction('kyc_tier_2')).toEqual({ kind: 'route', href: '/kyc' });
     expect(checkupAction('security_question_set')).toEqual({ kind: 'question' });
-    expect(checkupAction('duress_pin_set')).toBeNull();
+    expect(checkupAction('duress_pin_set')).toEqual({ kind: 'route', href: '/security/duress' });
+    expect(checkupAction('alerts_on')).toBeNull();
   });
 });
 
@@ -135,15 +137,10 @@ describe('security center', () => {
     ).toBe(true);
   });
 
-  it('says which fixes are still to come rather than offering a dead button', async () => {
+  it('offers a fix for the duress PIN', async () => {
     await render(wrap(bank()));
     await screen.findByText('Set a duress PIN');
-    expect(screen.getAllByText('You can fix this soon').length).toBeGreaterThan(0);
-    expect(
-      screen
-        .queryAllByRole('button', { name: 'Fix this' })
-        .some((b) => b.props.accessibilityHint === 'Set a duress PIN'),
-    ).toBe(false);
+    expect(fixFor('Set a duress PIN')).toBeTruthy();
   });
 });
 
@@ -317,5 +314,99 @@ describe('panic button', () => {
     await render(wrap(repos));
     expect(await screen.findByText('Panic mode is on')).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Manage' })).toBeTruthy();
+  });
+});
+
+describe('duress PIN', () => {
+  const DURESS = '7319';
+  const stepUpToken = async (repos: Repositories, pin = DEMO_PIN) => {
+    const challenge = await repos.auth.startStepUp({
+      body: { purpose: 'pin_reset', resource_id: 'duress_pin' },
+    });
+    return (
+      await repos.auth.verifyStepUp({ path: { step_up_id: challenge.step_up_id }, body: { pin } })
+    ).step_up_token;
+  };
+  const ngn = async (repos: Repositories) =>
+    (await repos.accounts.list()).data.find((a) => a.currency === 'NGN')!;
+
+  it('bank: the duress PIN unlocks into a decoy, payments move nothing, the real PIN ends it', async () => {
+    const repos = bank();
+    await repos.security.setDuressPin({
+      body: { pin: DURESS },
+      stepUpToken: await stepUpToken(repos),
+    });
+    const real = await ngn(repos);
+    const beneficiary = (await repos.beneficiaries.list()).data.find((b) => b.kind === 'bank')!;
+
+    expect((await repos.users.verifyPin({ body: { pin: DURESS } })).valid).toBe(true);
+    const decoy = await ngn(repos);
+    expect(BigInt(decoy.available_balance.amount_minor)).toBeLessThanOrEqual(385_000n);
+    const activity = (await repos.transactions.list()).data;
+    expect(activity.every((t) => BigInt(t.amount.amount_minor) <= 1_000_000n)).toBe(true);
+    // The checkup does not give the duress PIN away, and removing it does nothing.
+    const checkup = await repos.security.getCheckup();
+    expect(checkup.items.find((i) => i.id === 'duress_pin_set')?.done).toBe(false);
+    await repos.security.removeDuressPin({ stepUpToken: await stepUpToken(repos, DURESS) });
+
+    const sent = await repos.transfers.create({
+      body: {
+        source_account_id: real.id,
+        destination: { kind: 'beneficiary', beneficiary_id: beneficiary.id },
+        amount: { amount_minor: '200000', currency: 'NGN' },
+        save_beneficiary: false,
+      },
+      idempotencyKey: 'duress-1',
+    });
+    expect(sent.status).toBe('processing');
+    await expect(
+      repos.transfers.create({
+        body: {
+          source_account_id: real.id,
+          destination: { kind: 'beneficiary', beneficiary_id: beneficiary.id },
+          amount: { amount_minor: '1000000', currency: 'NGN' },
+          save_beneficiary: false,
+        },
+        idempotencyKey: 'duress-2',
+      }),
+    ).rejects.toMatchObject({ problem: { code: 'insufficient_funds' } });
+
+    expect((await repos.users.verifyPin({ body: { pin: DEMO_PIN } })).valid).toBe(true);
+    expect((await ngn(repos)).available_balance).toEqual(real.available_balance);
+    const stopped = await repos.transfers.get({ path: { transfer_id: sent.id } });
+    expect(stopped.status).toBe('failed');
+    expect(stopped.timeline.at(-1)?.label).toBe('Stopped by Nem');
+    // Still set: the removal in duress was ignored.
+    const after = await repos.security.getCheckup();
+    expect(after.items.find((i) => i.id === 'duress_pin_set')?.done).toBe(true);
+  });
+
+  it('bank: refuses a duress PIN that matches the real PIN', async () => {
+    const repos = bank();
+    await expect(
+      repos.security.setDuressPin({
+        body: { pin: DEMO_PIN },
+        stepUpToken: await stepUpToken(repos),
+      }),
+    ).rejects.toMatchObject({ problem: { code: 'validation_failed' } });
+  });
+
+  it('sets a duress PIN: entered twice, then approved with the real PIN', async () => {
+    const repos = bank();
+    await render(wrap(repos, <DuressScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Set a duress PIN' }));
+    const type = async (pin: string) => {
+      for (const d of pin) await fireEvent.press(screen.getByRole('button', { name: d }));
+    };
+    await type('1111');
+    expect(await screen.findByText(/Too easy to guess/)).toBeTruthy();
+    await type(DURESS);
+    await screen.findByText('Enter it again');
+    await type(DURESS);
+    await screen.findByText("Confirm it's you");
+    await type(DEMO_PIN);
+    expect(await screen.findByText('Your duress PIN is on')).toBeTruthy();
+    const checkup = await repos.security.getCheckup();
+    expect(checkup.items.find((i) => i.id === 'duress_pin_set')?.done).toBe(true);
   });
 });

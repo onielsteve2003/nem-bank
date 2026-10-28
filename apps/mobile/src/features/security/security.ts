@@ -41,8 +41,10 @@ export function checkupAction(id: Item['id']): CheckupAction {
       return { kind: 'route', href: '/security/devices' };
     case 'self_limit_set':
       return { kind: 'route', href: '/security/limits' };
+    case 'duress_pin_set':
+      return { kind: 'route', href: '/security/duress' };
     default:
-      // Duress PIN (T14.5), alerts (T14.7) and biometrics
+      // Alerts (T14.7) and biometrics
       // (settings, T19) get their screens in later tasks.
       return null;
   }

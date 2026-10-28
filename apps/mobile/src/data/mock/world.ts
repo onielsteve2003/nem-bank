@@ -29,6 +29,8 @@ export interface TransferRecord extends Schema<'Transfer'> {
   paysRequestId: string | null;
   /** Demo Controls "fail next transfer" was armed when this one was sent. */
   willFail: boolean;
+  /** Sent in duress mode (SEC-5): looks on its way, never moves money. */
+  duressBlocked?: boolean;
 }
 
 export interface ScheduledRecord extends Schema<'ScheduledTransfer'> {
@@ -120,6 +122,8 @@ export interface World {
     } | null;
   };
   panic: { active: boolean; activatedAt: string | null; frozenCardIds: string[] };
+  /** Duress mode (SEC-5); `alerts` are the silent alerts staff see. Missing in older snapshots. */
+  duress?: { active: boolean; triggeredAt: string | null; alerts: string[] };
   categoryOverrides: Record<string, Schema<'Category'>>;
   /** Idempotency for operations whose result is a record rather than one ledger entry. */
   idempotency: Record<string, { fingerprint: string; id: string }>;

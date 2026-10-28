@@ -7,6 +7,7 @@ import { NEM_BANK } from './directory';
 import type { JournalEntry, LedgerAccount } from './ledger';
 import type { MockBank } from './runtime';
 import type { Person, TransferRecord } from './world';
+import { decoyBalance, inDuress } from './domains/duress';
 
 // Read models: what the API would return, computed from the ledger on each read so
 // a balance can never disagree with the postings behind it.
@@ -65,8 +66,15 @@ export function accountView(bank: MockBank, account: LedgerAccount): Schema<'Acc
     kind: account.kind === 'customer_current' ? 'ngn_current' : 'fx_wallet',
     status: account.status,
     nickname: meta?.nickname ?? null,
-    ledger_balance: api(account.balance),
-    available_balance: api(bank.ledger.available(account.id)),
+    ...(inDuress(bank)
+      ? {
+          ledger_balance: api(decoyBalance(account.currency, account.balance)),
+          available_balance: api(decoyBalance(account.currency, bank.ledger.available(account.id))),
+        }
+      : {
+          ledger_balance: api(account.balance),
+          available_balance: api(bank.ledger.available(account.id)),
+        }),
     max_balance: cap && cap.currency === account.currency ? api(cap) : null,
     receiving_details: receiving,
     opened_at: account.createdAt,

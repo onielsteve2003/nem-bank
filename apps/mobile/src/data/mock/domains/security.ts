@@ -7,6 +7,7 @@ import { addMinutes, api, fromApi, positive } from '../convert';
 import { externalAccountName } from '../directory';
 import type { MockBank } from '../runtime';
 import { assertStrongPin } from './auth';
+import { inDuress } from './duress';
 
 const LIMIT_INCREASE_DELAY_HOURS = 24;
 
@@ -234,7 +235,8 @@ export function securityRepo(bank: MockBank): SecurityRepo {
         kyc_tier_2: bank.tier() >= 2,
         biometrics_on: w.auth.biometricsOn,
         security_question_set: w.auth.securityQuestion !== null,
-        duress_pin_set: w.auth.duressPin !== null,
+        // In duress the checkup must not give the duress PIN away.
+        duress_pin_set: w.auth.duressPin !== null && !inDuress(bank),
         self_limit_set: w.selfLimits.daily !== null,
         single_device: w.devices.length === 1,
         alerts_on: w.alertPreferences.login_alerts && w.alertPreferences.new_device_alerts,
@@ -327,6 +329,8 @@ export function securityRepo(bank: MockBank): SecurityRepo {
     async setDuressPin({ body, stepUpToken }) {
       bank.consumeStepUp(stepUpToken, 'pin_reset');
       assertStrongPin(body.pin, bank.user.date_of_birth);
+      // In duress, changing it "works" but keeps the customer's own duress PIN.
+      if (inDuress(bank)) return;
       if (body.pin === bank.world.auth.pin) {
         throw problem(422, 'validation_failed', 'Your duress PIN must be different from your PIN');
       }
@@ -334,6 +338,7 @@ export function securityRepo(bank: MockBank): SecurityRepo {
     },
     async removeDuressPin({ stepUpToken }) {
       bank.consumeStepUp(stepUpToken, 'pin_reset');
+      if (inDuress(bank)) return;
       bank.world.auth.duressPin = null;
     },
     async setSecurityQuestion({ body }) {
