@@ -13,6 +13,7 @@ import { Icon, Text } from '@/components';
 import { useTheme } from '@/theme';
 
 import type { WelcomeSlide } from '../welcomeSlides';
+import { useTranslation } from 'react-i18next';
 
 const ART_SIZE = 96;
 const DOT = 8;
@@ -28,6 +29,7 @@ export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] })
   const scroller = useRef<ComponentRef<typeof ScrollView>>(null);
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
+  const { t } = useTranslation();
 
   const goTo = (next: number) => {
     const clamped = Math.max(0, Math.min(slides.length - 1, next));
@@ -48,6 +50,7 @@ export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] })
   };
 
   const current = slides[index];
+  const slideOf = (n: number) => t('auth.welcome.slideOf', { n, total: slides.length });
 
   return (
     <View style={styles.root}>
@@ -55,8 +58,12 @@ export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] })
         style={styles.root}
         accessible
         accessibilityRole="adjustable"
-        accessibilityLabel={current ? `${current.title}. ${current.body}` : undefined}
-        accessibilityValue={{ text: `Slide ${index + 1} of ${slides.length}` }}
+        accessibilityLabel={
+          current
+            ? `${t(`auth.welcome.slides.${current.key}.title`)}. ${t(`auth.welcome.slides.${current.key}.body`)}`
+            : undefined
+        }
+        accessibilityValue={{ text: slideOf(index + 1) }}
         accessibilityActions={[{ name: 'increment' }, { name: 'decrement' }]}
         onAccessibilityAction={onAccessibilityAction}
         onLayout={(event) => setWidth(event.nativeEvent.layout.width)}
@@ -86,9 +93,9 @@ export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] })
               >
                 <Icon icon={slide.icon} size="xl" color="primaryText" />
               </View>
-              <Text variant="h1">{slide.title}</Text>
+              <Text variant="h1">{t(`auth.welcome.slides.${slide.key}.title`)}</Text>
               <Text color="textMuted" style={styles.body}>
-                {slide.body}
+                {t(`auth.welcome.slides.${slide.key}.body`)}
               </Text>
             </View>
           ))}
@@ -100,7 +107,7 @@ export function WelcomeCarousel({ slides }: { slides: readonly WelcomeSlide[] })
           <Pressable
             key={slide.key}
             accessibilityRole="button"
-            accessibilityLabel={`Slide ${i + 1} of ${slides.length}`}
+            accessibilityLabel={slideOf(i + 1)}
             accessibilityState={{ selected: i === index }}
             hitSlop={{ top: 18, bottom: 18, left: 4, right: 4 }}
             onPress={() => goTo(i)}

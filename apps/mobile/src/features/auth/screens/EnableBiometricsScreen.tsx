@@ -19,19 +19,21 @@ import { useTheme } from '@/theme';
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { deviceRegistration } from '../device';
 import { useSignupStore } from '../signupStore';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 function finishErrorMessage(error: unknown): string {
-  if (!isApiError(error)) return "We couldn't set up this device. Try again.";
+  if (!isApiError(error)) return i18n.t('auth.biometrics.setupFailed');
   switch (error.problem.code) {
     case 'weak_password':
     case 'weak_pin':
-      return `${error.problem.title}. Go back and change it.`;
+      return i18n.t('auth.biometrics.goBack', { problem: error.problem.title });
     case 'invalid_otp':
-      return 'Your email check has expired. Start sign-up again.';
+      return i18n.t('auth.biometrics.emailExpired');
     case 'offline':
-      return "You're offline. Reconnect and try again.";
+      return i18n.t('common.offline');
     default:
-      return `${error.problem.title}. Try again.`;
+      return i18n.t('common.problemTryAgain', { problem: error.problem.title });
   }
 }
 
@@ -42,6 +44,7 @@ function finishErrorMessage(error: unknown): string {
  */
 export function EnableBiometricsScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   // A snapshot: clearing the store on success must not redirect this screen mid-exit.
   const [signup] = useState(() => useSignupStore.getState().pending);
   const setSession = useSessionStore((s) => s.setSession);
@@ -69,8 +72,11 @@ export function EnableBiometricsScreen() {
     setBusy(biometric ? 'on' : 'off');
     try {
       // Confirm the face or finger now, so a failed scan never leaves a key nobody can read.
-      if (biometric && !(await authenticateWithBiometrics(`Turn on ${label} for Nem Bank`))) {
-        setError(`${label} wasn't confirmed. Try again, or choose Not now.`);
+      if (
+        biometric &&
+        !(await authenticateWithBiometrics(t('auth.biometrics.prompt', { label })))
+      ) {
+        setError(t('auth.biometrics.notConfirmed', { label }));
         return;
       }
       const key = await createDeviceKey({ biometric });
@@ -106,14 +112,14 @@ export function EnableBiometricsScreen() {
       {found.available ? (
         <>
           <Button
-            label={`Turn on ${label}`}
+            label={t('auth.biometrics.turnOn', { label })}
             loading={busy === 'on'}
             disabled={busy !== null}
             fullWidth
             onPress={() => void finish(true)}
           />
           <Button
-            label="Not now"
+            label={t('auth.biometrics.notNow')}
             variant="ghost"
             loading={busy === 'off'}
             disabled={busy !== null}
@@ -123,7 +129,7 @@ export function EnableBiometricsScreen() {
         </>
       ) : (
         <Button
-          label="Open my account"
+          label={t('auth.biometrics.openAccount')}
           loading={busy === 'off'}
           disabled={checking || busy !== null}
           fullWidth
@@ -139,34 +145,30 @@ export function EnableBiometricsScreen() {
         <>
           <View style={{ gap: spacing[3] }}>
             <Icon icon={BiometricIcon} size="xl" color="primaryText" />
-            <Text variant="h1">Use {label}?</Text>
-            <Text color="textMuted">
-              Unlock the app and approve payments with {label} instead of typing your PIN.
-            </Text>
+            <Text variant="h1">{t('auth.biometrics.title', { label })}</Text>
+            <Text color="textMuted">{t('auth.biometrics.intro', { label })}</Text>
           </View>
           <View style={{ gap: spacing[3] }}>
             <Point icon={ShieldCheck}>
-              Your {label === 'Face ID' ? 'face' : 'fingerprint'} never leaves this phone. Nem Bank
-              only learns that the check passed.
+              {label === 'Face ID'
+                ? t('auth.biometrics.privateFace')
+                : t('auth.biometrics.privateFinger')}
             </Point>
-            <Point icon={KeyRound}>
-              This phone gets its own security key, locked behind {label}, so payments can only be
-              approved from here.
-            </Point>
+            <Point icon={KeyRound}>{t('auth.biometrics.key', { label })}</Point>
           </View>
         </>
       ) : (
         <View style={{ gap: spacing[3] }}>
           <Icon icon={KeyRound} size="xl" color="primaryText" />
-          <Text variant="h1">Finish setting up</Text>
+          <Text variant="h1">{t('auth.biometrics.finish')}</Text>
           <Text color="textMuted">
             {checking
-              ? 'Checking this device…'
+              ? t('auth.biometrics.checking')
               : found.blockedBy === 'expoGo'
-                ? 'Expo Go cannot use Face ID: Apple only lets an app use it when the app asks for it itself. You will use your PIN in this demo; the installed Nem Bank app supports Face ID.'
+                ? t('auth.biometrics.expoGo')
                 : Platform.OS === 'web'
-                  ? 'Browsers cannot use Face ID or fingerprints, so you will use your PIN here. The phone app supports both.'
-                  : 'No Face ID or fingerprint is set up on this device, so you will use your PIN. You can turn it on later in Security.'}
+                  ? t('auth.biometrics.web')
+                  : t('auth.biometrics.none')}
           </Text>
         </View>
       )}
@@ -174,7 +176,7 @@ export function EnableBiometricsScreen() {
   );
 }
 
-function Point({ icon, children }: { icon: LucideIcon; children: string | string[] }) {
+function Point({ icon, children }: { icon: LucideIcon; children: string }) {
   const { spacing } = useTheme();
   return (
     <View style={[styles.point, { gap: spacing[3] }]}>

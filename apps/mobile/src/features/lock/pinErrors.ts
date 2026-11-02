@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatLockoutWait } from '@nem/shared';
+import i18n from '@/lib/i18n';
 
 /** The words under the PIN pad after a wrong PIN or a lockout (AUTH-4). */
 export function pinErrorMessage(
@@ -8,8 +9,7 @@ export function pinErrorMessage(
 ): string {
   if (result.locked_until) {
     const wait = formatLockoutWait((Date.parse(result.locked_until) - now) / 60_000);
-    return `Too many wrong tries. Try again in ${wait}, or tap Forgot PIN.`;
+    return i18n.t('lock.lockedOut', { wait });
   }
-  const left = result.attempts_remaining;
-  return `Wrong PIN. ${left} ${left === 1 ? 'try' : 'tries'} left.`;
+  return i18n.t('lock.wrong', { count: result.attempts_remaining });
 }

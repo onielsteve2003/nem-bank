@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { Icon, Text } from '@/components';
 import { useSessionStore } from '@/stores';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 const untilFormat = new Intl.DateTimeFormat('en-NG', {
   weekday: 'short',
@@ -39,10 +40,11 @@ export function CoolOffBanner() {
   const { colors, spacing, radius } = useTheme();
   const until = useSessionStore((s) => s.session?.coolOffUntil ?? null);
   const active = useStillBefore(until);
+  const { t } = useTranslation();
   if (!until || !active) return null;
 
-  const title = 'New device: lower limits';
-  const detail = `To keep your money safe, sending limits are lower on this device until ${formatCoolOffEnd(until)}.`;
+  const title = t('auth.coolOff.title');
+  const detail = t('auth.coolOff.detail', { time: formatCoolOffEnd(until) });
 
   return (
     <View

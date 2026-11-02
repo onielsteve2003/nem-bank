@@ -8,6 +8,7 @@ import { useLockStore, useSessionStore } from '@/stores';
 import { deviceRegistration } from '../device';
 
 import type { LoginFormValues } from '../loginForm';
+import i18n from '@/lib/i18n';
 
 /**
  * Password login (AUTH-7). A device the bank already knows sends its ID; one it
@@ -73,7 +74,7 @@ export function useQuickLogin() {
     // The system prompt makes the app inactive; this keeps the privacy cover away.
     setAuthenticating(true);
     try {
-      signature = await signWithDeviceKey(challenge.nonce, 'Log in to Nem Bank');
+      signature = await signWithDeviceKey(challenge.nonce, i18n.t('auth.login.biometricsPrompt'));
     } catch {
       return false;
     } finally {

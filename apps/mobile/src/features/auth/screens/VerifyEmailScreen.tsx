@@ -12,11 +12,13 @@ import { useTheme } from '@/theme';
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { formatCountdown, otpErrorMessage, useSecondsUntil } from '../otp';
 import { useSignupStore } from '../signupStore';
+import { useTranslation } from 'react-i18next';
 
 /** Step 2 of sign-up: the 6-digit email code (AUTH-2). SMS is a paid feature. */
 export function VerifyEmailScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const pending = useSignupStore((s) => s.pending);
   const setOtp = useSignupStore((s) => s.setOtp);
   const markVerified = useSignupStore((s) => s.verified);
@@ -72,13 +74,13 @@ export function VerifyEmailScreen() {
           setAttemptsLeft(fresh.attempts_remaining);
           setError(undefined);
           setCode('');
-          setNotice(`We sent a new code to ${fresh.destination_masked}.`);
+          setNotice(t('auth.verify.sentAgain', { destination: fresh.destination_masked }));
         },
         onError: (e) =>
           setError(
             isApiError(e) && e.problem.code === 'rate_limited'
-              ? 'Wait a moment before asking for another code.'
-              : "We couldn't send a new code. Try again.",
+              ? t('auth.verify.wait')
+              : t('common.resendFailed'),
           ),
       },
     );
@@ -87,14 +89,18 @@ export function VerifyEmailScreen() {
   const footer = (
     <View style={{ padding: spacing[4], gap: spacing[2] }}>
       <Button
-        label="Verify"
+        label={t('auth.verify.verify')}
         loading={verify.isPending}
         disabled={code.length < 6 || outOfAttempts}
         fullWidth
         onPress={() => submit(code)}
       />
       <Button
-        label={resendIn > 0 ? `Resend code in ${formatCountdown(resendIn)}` : 'Resend code'}
+        label={
+          resendIn > 0
+            ? t('common.resendCodeIn', { time: formatCountdown(resendIn) })
+            : t('common.resendCode')
+        }
         variant="secondary"
         loading={resend.isPending}
         disabled={resendIn > 0}
@@ -107,9 +113,9 @@ export function VerifyEmailScreen() {
   return (
     <Screen header={<SignupStepHeader step={2} />} footer={footer} padded edges={['top', 'bottom']}>
       <View style={{ gap: spacing[2] }}>
-        <Text variant="h1">Check your email</Text>
+        <Text variant="h1">{t('auth.verify.title')}</Text>
         <Text color="textMuted">
-          Enter the 6-digit code we sent to {otp.destination_masked}. It works for 10 minutes.
+          {t('auth.verify.intro', { destination: otp.destination_masked })}
         </Text>
       </View>
 
@@ -121,7 +127,7 @@ export function VerifyEmailScreen() {
         }}
         onComplete={submit}
         error={error}
-        help={env.apiMode === 'mock' ? `Demo bank: the code is always ${DEMO_OTP}.` : undefined}
+        help={env.apiMode === 'mock' ? t('common.demoOtp', { code: DEMO_OTP }) : undefined}
         autoFocus
       />
 
@@ -132,7 +138,7 @@ export function VerifyEmailScreen() {
       )}
 
       <Button
-        label="Use SMS instead"
+        label={t('auth.verify.sms')}
         variant="ghost"
         size="sm"
         onPress={() => setSmsOpen(true)}

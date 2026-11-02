@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { IconButton, Text } from '@/components';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 /** Details, email code, password, PIN. Biometrics is an optional extra at the end. */
 export const SIGNUP_STEPS = 4;
@@ -15,18 +16,20 @@ export const SIGNUP_STEPS = 4;
 export function SignupStepHeader({ step, label }: { step?: number; label?: string }) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={[styles.header, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       {router.canGoBack() && (
         <IconButton
           icon={ArrowLeft}
-          accessibilityLabel="Back"
+          accessibilityLabel={t('common.back')}
           variant="ghost"
           onPress={() => router.back()}
         />
       )}
       <Text variant="label" color="textMuted" style={styles.flex}>
-        {label ?? (step ? `Step ${step} of ${SIGNUP_STEPS}` : 'Almost done')}
+        {label ??
+          (step ? t('auth.step.of', { step, total: SIGNUP_STEPS }) : t('auth.step.almostDone'))}
       </Text>
     </View>
   );

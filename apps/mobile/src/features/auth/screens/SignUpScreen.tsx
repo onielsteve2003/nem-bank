@@ -19,11 +19,13 @@ import {
   type SignupFormValues,
 } from '../signupForm';
 import { useSignupStore } from '../signupStore';
+import { useTranslation } from 'react-i18next';
 
 /** Step 1 of sign-up: who you are (AUTH-1). The bank emails a code for step 2. */
 export function SignUpScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const startSignup = useSignupStore((s) => s.start);
 
   const {
@@ -59,7 +61,11 @@ export function SignUpScreen() {
               placed = true;
             }
           }
-          if (!placed) setError('root.server', { message: `${error.message}. Try again.` });
+          if (!placed) {
+            setError('root.server', {
+              message: t('common.problemTryAgain', { problem: error.message }),
+            });
+          }
         },
       },
     );
@@ -74,18 +80,20 @@ export function SignUpScreen() {
           {errors.root.server.message}
         </Text>
       )}
-      <Button label="Continue" loading={signup.isPending} fullWidth onPress={() => void submit()} />
+      <Button
+        label={t('common.continue')}
+        loading={signup.isPending}
+        fullWidth
+        onPress={() => void submit()}
+      />
     </View>
   );
 
   return (
     <Screen header={header} footer={footer} padded edges={['top', 'bottom']}>
       <View style={{ gap: spacing[2] }}>
-        <Text variant="h1">Create your account</Text>
-        <Text color="textMuted">
-          Use your legal name as it appears on your ID. We will email you a code to confirm it is
-          you.
-        </Text>
+        <Text variant="h1">{t('auth.signup.title')}</Text>
+        <Text color="textMuted">{t('auth.signup.intro')}</Text>
       </View>
 
       <View style={{ gap: spacing[4] }}>
@@ -95,7 +103,7 @@ export function SignUpScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="First name"
+              label={t('auth.signup.firstName')}
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}
@@ -115,7 +123,7 @@ export function SignUpScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="Last name"
+              label={t('auth.signup.lastName')}
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}
@@ -135,7 +143,7 @@ export function SignUpScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="Email"
+              label={t('auth.signup.email')}
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}
@@ -157,8 +165,8 @@ export function SignUpScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="Phone number"
-              help="A Nigerian mobile number. We send security alerts to it."
+              label={t('auth.signup.phone')}
+              help={t('auth.signup.phoneHelp')}
               placeholder="0803 123 4567"
               value={field.value}
               onChangeText={field.onChange}
@@ -179,8 +187,8 @@ export function SignUpScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="Date of birth"
-              help="You must be 18 or older."
+              label={t('auth.signup.dateOfBirth')}
+              help={t('auth.signup.dateOfBirthHelp')}
               placeholder="DD/MM/YYYY"
               value={field.value}
               onChangeText={(text) => field.onChange(formatDateEntry(text))}
@@ -197,8 +205,8 @@ export function SignUpScreen() {
           name="consent"
           render={({ field }) => (
             <Checkbox
-              label="I agree to the Terms of Service and the Privacy Policy"
-              help="Nem Bank processes your details under the Nigeria Data Protection Act 2023."
+              label={t('auth.signup.consent')}
+              help={t('auth.signup.consentHelp')}
               checked={field.value}
               onChange={field.onChange}
               error={errors.consent?.message}
@@ -208,7 +216,7 @@ export function SignUpScreen() {
       </View>
 
       <Button
-        label="I already have an account"
+        label={t('auth.signup.haveAccount')}
         variant="ghost"
         size="sm"
         onPress={() => router.replace('/login')}

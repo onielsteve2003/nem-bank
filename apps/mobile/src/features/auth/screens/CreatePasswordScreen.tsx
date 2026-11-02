@@ -10,11 +10,13 @@ import { useTheme } from '@/theme';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { useSignupStore } from '../signupStore';
+import { useTranslation } from 'react-i18next';
 
 /** Step 3 of sign-up: a password the meter and the bank both accept (AUTH-3). */
 export function CreatePasswordScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const pending = useSignupStore((s) => s.pending);
   const savePassword = useSignupStore((s) => s.setPassword);
   const [password, setPassword] = useState(pending?.password ?? '');
@@ -43,23 +45,20 @@ export function CreatePasswordScreen() {
 
   const footer = (
     <View style={{ padding: spacing[4] }}>
-      <Button label="Continue" fullWidth onPress={submit} />
+      <Button label={t('common.continue')} fullWidth onPress={submit} />
     </View>
   );
 
   return (
     <Screen header={<SignupStepHeader step={3} />} footer={footer} padded edges={['top', 'bottom']}>
       <View style={{ gap: spacing[2] }}>
-        <Text variant="h1">Create a password</Text>
-        <Text color="textMuted">
-          You will use it to log in. A short phrase of three or four words is strong and easy to
-          remember.
-        </Text>
+        <Text variant="h1">{t('auth.password.title')}</Text>
+        <Text color="textMuted">{t('auth.password.intro')}</Text>
       </View>
 
       <View style={{ gap: spacing[3] }}>
         <TextField
-          label="Password"
+          label={t('auth.password.label')}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -88,7 +87,7 @@ export function CreatePasswordScreen() {
           <View style={[styles.row, { gap: spacing[1] }]}>
             <Icon icon={Check} size="sm" color="success" />
             <Text variant="bodySmall" color="success">
-              Good to go
+              {t('auth.password.good')}
             </Text>
           </View>
         )}

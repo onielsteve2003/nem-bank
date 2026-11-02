@@ -10,12 +10,14 @@ import { useTheme } from '@/theme';
 import { WelcomeCarousel } from '../components/WelcomeCarousel';
 import { useDemoSignIn } from '../hooks/useSessionActions';
 import { WELCOME_SLIDES } from '../welcomeSlides';
+import { useTranslation } from 'react-i18next';
 
 /** First screen for a signed-out visitor: what Nem Bank is, that it is a demo, and a one-tap way in (AUTH-11). */
 export function WelcomeScreen() {
   const router = useRouter();
   const { colors, spacing } = useTheme();
   const demo = useDemoSignIn();
+  const { t } = useTranslation();
 
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
@@ -31,7 +33,7 @@ export function WelcomeScreen() {
         </Text>
         {devToolsEnabled && (
           <Button
-            label="Design system"
+            label={t('auth.welcome.designSystem')}
             variant="ghost"
             size="sm"
             icon={LayoutGrid}
@@ -47,35 +49,34 @@ export function WelcomeScreen() {
           <View style={[styles.disclaimer, { gap: spacing[3] }]}>
             <Icon icon={Info} size="md" color="info" />
             <Text variant="bodySmall" color="textMuted" style={styles.flex}>
-              <Text variant="bodySmall">Not a real bank. </Text>
-              Nem Bank is a portfolio demo: balances and transfers are simulated and no real money
-              moves. Never enter real card or bank details.
+              <Text variant="bodySmall">{t('auth.welcome.notReal')}</Text>
+              {t('auth.welcome.disclaimer')}
             </Text>
           </View>
         </Card>
 
         {/* The route gate opens Home once the session is stored. */}
         <Button
-          label="Try the demo"
-          accessibilityHint="Signs you in as Tolu, a demo customer with six months of history"
+          label={t('auth.welcome.tryDemo')}
+          accessibilityHint={t('auth.welcome.tryDemoHint')}
           loading={demo.isPending}
           fullWidth
           onPress={() => demo.mutate({ body: { persona: 'tolu' } })}
         />
         {demo.isError && (
           <Text variant="caption" color="danger" accessibilityRole="alert">
-            {demo.error.message}. Try again.
+            {t('common.problemTryAgain', { problem: demo.error.message })}
           </Text>
         )}
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Button
-            label="Create account"
+            label={t('auth.welcome.createAccount')}
             variant="secondary"
             style={styles.flex}
             onPress={() => router.push('/sign-up')}
           />
           <Button
-            label="Log in"
+            label={t('common.logIn')}
             variant="ghost"
             style={styles.flex}
             onPress={() => router.push('/login')}
@@ -86,7 +87,9 @@ export function WelcomeScreen() {
           color="textMuted"
           style={[styles.center, { paddingBottom: spacing[2] }]}
         >
-          Data: {env.apiMode === 'mock' ? 'mock bank (on device)' : env.apiUrl}
+          {t('auth.welcome.data', {
+            source: env.apiMode === 'mock' ? t('auth.welcome.mockSource') : env.apiUrl,
+          })}
         </Text>
       </View>
     </SafeAreaView>

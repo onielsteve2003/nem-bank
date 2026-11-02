@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 
 import { isApiError, type ApiError } from '@/data';
+import i18n from '@/lib/i18n';
 
 // Email code helpers shared by sign-up, forgot password and step-up (AUTH-2, AUTH-9).
 
@@ -21,20 +22,20 @@ export function formatCountdown(seconds: number): string {
 
 /** What the user is told for a failed check. Attempts come from the challenge (AUTH-2). */
 export function otpErrorMessage(error: ApiError | Error, attemptsLeft: number): string {
-  if (!isApiError(error)) return "We couldn't check the code. Try again.";
+  if (!isApiError(error)) return i18n.t('auth.otp.checkFailed');
   switch (error.problem.code) {
     case 'invalid_otp':
       return attemptsLeft > 0
-        ? `That code is not right. ${attemptsLeft} attempt${attemptsLeft === 1 ? '' : 's'} left.`
-        : 'That code is not right, and that was the last try. Ask for a new code.';
+        ? i18n.t('auth.otp.wrong', { count: attemptsLeft })
+        : i18n.t('auth.otp.lastTry');
     case 'otp_expired':
     case 'not_found':
-      return 'This code has expired. Ask for a new one.';
+      return i18n.t('auth.otp.expired');
     case 'rate_limited':
-      return 'Too many wrong codes. Ask for a new one.';
+      return i18n.t('auth.otp.tooMany');
     case 'offline':
-      return "You're offline. Reconnect and try again.";
+      return i18n.t('common.offline');
     default:
-      return "We couldn't check the code. Try again.";
+      return i18n.t('auth.otp.checkFailed');
   }
 }

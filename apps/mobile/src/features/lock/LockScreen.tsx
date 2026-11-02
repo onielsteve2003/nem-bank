@@ -17,6 +17,7 @@ import { useLockStore, useSessionStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { pinErrorMessage } from './pinErrors';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Unlocks the app with Face ID / fingerprint or the transaction PIN (AUTH-5,
@@ -35,17 +36,18 @@ export function LockScreen() {
   const [biometrics, setBiometrics] = useState(NO_BIOMETRICS);
   const [resetting, setResetting] = useState(false);
   const toast = useToast();
+  const { t } = useTranslation();
   const prompted = useRef(false);
   useSecureScreen();
 
   const tryBiometrics = useCallback(
     async (label: string) => {
       setAuthenticating(true);
-      const ok = await authenticateWithBiometrics(`Unlock Nem Bank with ${label}`);
+      const ok = await authenticateWithBiometrics(t('lock.biometricsPrompt', { label }));
       setAuthenticating(false);
       if (ok) unlock();
     },
-    [setAuthenticating, unlock],
+    [setAuthenticating, unlock, t],
   );
 
   useEffect(() => {
@@ -79,9 +81,7 @@ export function LockScreen() {
       setError(pinErrorMessage(result));
     } catch (e) {
       setError(
-        isApiError(e) && e.problem.code === 'offline'
-          ? "You're offline, so your PIN can't be checked. Reconnect and try again."
-          : "We couldn't check your PIN. Try again.",
+        isApiError(e) && e.problem.code === 'offline' ? t('lock.offline') : t('lock.checkFailed'),
       );
     }
     return false;
@@ -94,7 +94,7 @@ export function LockScreen() {
           onCancel={() => setResetting(false)}
           onDone={() => {
             unlock();
-            toast.show({ message: 'Your new PIN is set.', tone: 'success' });
+            toast.show({ message: t('lock.newPinSet'), tone: 'success' });
           }}
         />
       </SafeAreaView>
@@ -111,15 +111,15 @@ export function LockScreen() {
       </View>
       <View style={styles.pad}>
         <PinPad
-          title="Welcome back"
-          subtitle={isDemo ? `Enter your PIN. Demo PIN is ${DEMO_PIN}` : 'Enter your PIN to unlock'}
+          title={t('lock.title')}
+          subtitle={isDemo ? t('lock.demoSubtitle', { pin: DEMO_PIN }) : t('lock.subtitle')}
           error={error}
           onComplete={onComplete}
           accessory={
             biometrics.available
               ? {
                   icon: biometrics.label === 'Face ID' ? ScanFace : Fingerprint,
-                  accessibilityLabel: `Use ${biometrics.label}`,
+                  accessibilityLabel: t('lock.useBiometrics', { label: biometrics.label }),
                   onPress: () => void tryBiometrics(biometrics.label),
                 }
               : undefined
@@ -128,7 +128,7 @@ export function LockScreen() {
       </View>
       <View style={[styles.links, { gap: spacing[4], marginBottom: spacing[4] }]}>
         <Button
-          label="Forgot PIN?"
+          label={t('lock.forgotPin')}
           variant="ghost"
           size="sm"
           onPress={() => {
@@ -136,7 +136,12 @@ export function LockScreen() {
             setResetting(true);
           }}
         />
-        <Button label="Sign out" variant="ghost" size="sm" onPress={() => void signOut()} />
+        <Button
+          label={t('common.signOut')}
+          variant="ghost"
+          size="sm"
+          onPress={() => void signOut()}
+        />
       </View>
     </SafeAreaView>
   );

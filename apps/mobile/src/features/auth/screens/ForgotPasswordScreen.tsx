@@ -14,6 +14,7 @@ import { useTheme } from '@/theme';
 import { PasswordStrengthMeter } from '../components/PasswordStrengthMeter';
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { formatCountdown, otpErrorMessage, useSecondsUntil } from '../otp';
+import { useTranslation } from 'react-i18next';
 
 /** What the user is told when the new password is refused (AUTH-9). */
 export function resetErrorMessage(error: ApiError | Error, attemptsLeft: number): string {
@@ -32,6 +33,7 @@ export function ForgotPasswordScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [email, setEmail] = useState('');
   const [emailError, setEmailError] = useState<string>();
   const [challenge, setChallenge] = useState<Schema<'OtpChallenge'> | null>(null);
@@ -66,8 +68,8 @@ export function ForgotPasswordScreen() {
         onError: (e) =>
           setEmailError(
             isApiError(e) && e.problem.code === 'offline'
-              ? "You're offline. Reconnect and try again."
-              : "We couldn't send a code. Try again.",
+              ? t('common.offline')
+              : t('common.sendCodeFailed'),
           ),
       },
     );
@@ -84,7 +86,7 @@ export function ForgotPasswordScreen() {
           setCode('');
           setError(undefined);
         },
-        onError: () => setError("We couldn't send a new code. Try again."),
+        onError: () => setError(t('common.resendFailed')),
       },
     );
   };
@@ -97,7 +99,7 @@ export function ForgotPasswordScreen() {
       {
         onSuccess: () => {
           toast.show({
-            message: 'Password changed. Log in with your new password.',
+            message: t('auth.forgot.changed'),
             tone: 'success',
           });
           router.back();
@@ -121,24 +123,27 @@ export function ForgotPasswordScreen() {
   if (!challenge) {
     const footer = (
       <View style={{ padding: spacing[4] }}>
-        <Button label="Send code" loading={start.isPending} fullWidth onPress={sendCode} />
+        <Button
+          label={t('auth.forgot.sendCode')}
+          loading={start.isPending}
+          fullWidth
+          onPress={sendCode}
+        />
       </View>
     );
     return (
       <Screen
-        header={<SignupStepHeader label="Reset password" />}
+        header={<SignupStepHeader label={t('auth.forgot.header')} />}
         footer={footer}
         padded
         edges={['top', 'bottom']}
       >
         <View style={{ gap: spacing[2] }}>
-          <Text variant="h1">Forgot your password?</Text>
-          <Text color="textMuted">
-            Enter the email on your account. We will send a code so you can choose a new password.
-          </Text>
+          <Text variant="h1">{t('auth.forgot.title')}</Text>
+          <Text color="textMuted">{t('auth.forgot.intro')}</Text>
         </View>
         <TextField
-          label="Email"
+          label={t('auth.signup.email')}
           value={email}
           onChangeText={setEmail}
           error={emailError}
@@ -158,14 +163,18 @@ export function ForgotPasswordScreen() {
   const footer = (
     <View style={{ padding: spacing[4], gap: spacing[2] }}>
       <Button
-        label="Save new password"
+        label={t('auth.forgot.save')}
         loading={reset.isPending}
         disabled={attemptsLeft <= 0}
         fullWidth
         onPress={save}
       />
       <Button
-        label={resendIn > 0 ? `Resend code in ${formatCountdown(resendIn)}` : 'Resend code'}
+        label={
+          resendIn > 0
+            ? t('common.resendCodeIn', { time: formatCountdown(resendIn) })
+            : t('common.resendCode')
+        }
         variant="secondary"
         loading={resend.isPending}
         disabled={resendIn > 0}
@@ -177,16 +186,15 @@ export function ForgotPasswordScreen() {
 
   return (
     <Screen
-      header={<SignupStepHeader label="Reset password" />}
+      header={<SignupStepHeader label={t('auth.forgot.header')} />}
       footer={footer}
       padded
       edges={['top', 'bottom']}
     >
       <View style={{ gap: spacing[2] }}>
-        <Text variant="h1">Choose a new password</Text>
+        <Text variant="h1">{t('auth.forgot.chooseTitle')}</Text>
         <Text color="textMuted">
-          If {challenge.destination_masked} has an account, we sent it a 6-digit code. It works for
-          10 minutes.
+          {t('auth.forgot.chooseIntro', { destination: challenge.destination_masked })}
         </Text>
       </View>
 
@@ -197,13 +205,13 @@ export function ForgotPasswordScreen() {
           if (error && attemptsLeft > 0) setError(undefined);
         }}
         error={error}
-        help={env.apiMode === 'mock' ? `Demo bank: the code is always ${DEMO_OTP}.` : undefined}
+        help={env.apiMode === 'mock' ? t('common.demoOtp', { code: DEMO_OTP }) : undefined}
         autoFocus
       />
 
       <View style={{ gap: spacing[3] }}>
         <TextField
-          label="New password"
+          label={t('auth.forgot.newPassword')}
           value={password}
           onChangeText={setPassword}
           secureTextEntry
@@ -219,7 +227,7 @@ export function ForgotPasswordScreen() {
         />
         {password.length > 0 && <PasswordStrengthMeter check={check} />}
         <Text variant="bodySmall" color="textMuted">
-          Changing your password signs you out on every other device.
+          {t('auth.forgot.signsOut')}
         </Text>
       </View>
     </Screen>

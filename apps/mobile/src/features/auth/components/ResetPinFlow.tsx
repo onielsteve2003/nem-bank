@@ -12,6 +12,7 @@ import { useTheme } from '@/theme';
 
 import { formatCountdown, otpErrorMessage, useSecondsUntil } from '../otp';
 import { weakPinMessage } from '../screens/CreatePinScreen';
+import { useTranslation } from 'react-i18next';
 
 type Stage =
   | { kind: 'intro' }
@@ -26,6 +27,7 @@ type Stage =
  */
 export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCancel: () => void }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [stage, setStage] = useState<Stage>({ kind: 'intro' });
   const [code, setCode] = useState('');
   const [error, setError] = useState<string>();
@@ -51,8 +53,8 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
         onError: (e) =>
           setError(
             isApiError(e) && e.problem.code === 'offline'
-              ? "You're offline. Reconnect and try again."
-              : "We couldn't send a code. Try again.",
+              ? t('common.offline')
+              : t('common.sendCodeFailed'),
           ),
       },
     );
@@ -89,7 +91,7 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
           setError(undefined);
           setCode('');
         },
-        onError: () => setError("We couldn't send a new code. Try again."),
+        onError: () => setError(t('common.resendFailed')),
       },
     );
   };
@@ -106,7 +108,7 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
       if (stage.kind !== 'confirm') return false;
       if (pin !== stage.pin) {
         setStage({ kind: 'choose', token: stage.token });
-        setError("The PINs didn't match. Choose your new PIN again.");
+        setError(t('auth.resetPin.mismatch'));
         return false;
       }
       try {
@@ -118,12 +120,12 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
         const problem = isApiError(e) ? e.problem : null;
         if (problem?.code === 'weak_pin' || problem?.code === 'validation_failed') {
           setStage({ kind: 'choose', token: stage.token });
-          setError(`${problem.title}. Choose another PIN.`);
+          setError(t('auth.resetPin.chooseAnother', { problem: problem.title }));
         } else if (problem?.code === 'step_up_required' || problem?.code === 'forbidden') {
           setStage({ kind: 'intro' });
-          setError('That took too long. Ask for a new code.');
+          setError(t('auth.resetPin.tooLong'));
         } else {
-          setError("We couldn't save your PIN. Try again.");
+          setError(t('auth.resetPin.saveFailed'));
         }
         return false;
       }
@@ -133,22 +135,22 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
         {stage.kind === 'choose' ? (
           <PinPad
             key="choose"
-            title="Choose a new PIN"
-            subtitle="4 digits to approve payments and unlock the app"
+            title={t('auth.resetPin.choose')}
+            subtitle={t('auth.pin.subtitle')}
             error={error}
             onComplete={choose}
           />
         ) : (
           <PinPad
             key="confirm"
-            title="Confirm your new PIN"
-            subtitle="Enter the same 4 digits again"
+            title={t('auth.resetPin.confirm')}
+            subtitle={t('auth.pin.confirmSubtitle')}
             error={error}
             onComplete={confirm}
           />
         )}
         <Button
-          label="Cancel"
+          label={t('common.cancel')}
           variant="ghost"
           size="sm"
           onPress={onCancel}
@@ -162,11 +164,11 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
     <View style={[styles.pad, { padding: spacing[4], gap: spacing[6] }]}>
       <View style={{ gap: spacing[2] }}>
         <Icon icon={KeyRound} size="xl" color="primaryText" />
-        <Text variant="h1">Reset your PIN</Text>
+        <Text variant="h1">{t('auth.resetPin.title')}</Text>
         <Text color="textMuted">
           {otp
-            ? `Enter the 6-digit code we sent to ${otp.destination_masked}.`
-            : 'To keep your money safe, we will email you a code to confirm it is you. Then you can choose a new PIN.'}
+            ? t('auth.resetPin.codeSent', { destination: otp.destination_masked })
+            : t('auth.resetPin.intro')}
         </Text>
       </View>
 
@@ -179,7 +181,7 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
           }}
           onComplete={checkCode}
           error={error}
-          help={env.apiMode === 'mock' ? `Demo bank: the code is always ${DEMO_OTP}.` : undefined}
+          help={env.apiMode === 'mock' ? t('common.demoOtp', { code: DEMO_OTP }) : undefined}
           autoFocus
         />
       )}
@@ -193,14 +195,18 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
         {otp ? (
           <>
             <Button
-              label="Continue"
+              label={t('common.continue')}
               loading={verify.isPending}
               disabled={code.length < 6 || attemptsLeft <= 0}
               fullWidth
               onPress={() => checkCode(code)}
             />
             <Button
-              label={resendIn > 0 ? `Resend code in ${formatCountdown(resendIn)}` : 'Resend code'}
+              label={
+                resendIn > 0
+                  ? t('common.resendCodeIn', { time: formatCountdown(resendIn) })
+                  : t('common.resendCode')
+              }
               variant="secondary"
               loading={resend.isPending}
               disabled={resendIn > 0}
@@ -209,9 +215,14 @@ export function ResetPinFlow({ onDone, onCancel }: { onDone: () => void; onCance
             />
           </>
         ) : (
-          <Button label="Email me a code" loading={start.isPending} fullWidth onPress={sendCode} />
+          <Button
+            label={t('auth.resetPin.emailMe')}
+            loading={start.isPending}
+            fullWidth
+            onPress={sendCode}
+          />
         )}
-        <Button label="Cancel" variant="ghost" fullWidth onPress={onCancel} />
+        <Button label={t('common.cancel')} variant="ghost" fullWidth onPress={onCancel} />
       </View>
     </View>
   );

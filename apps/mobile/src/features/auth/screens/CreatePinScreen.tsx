@@ -8,13 +8,15 @@ import { useSecureScreen } from '@/lib/screenCapture';
 
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { useSignupStore } from '../signupStore';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 /** Why a PIN is refused before it ever reaches the bank (AUTH-4). */
 export function weakPinMessage(pin: string, dateOfBirth?: string): string | undefined {
   if (dateOfBirth && isDateOfBirthPin(pin, dateOfBirth)) {
-    return "Don't use your date of birth. Pick another PIN.";
+    return i18n.t('auth.pin.dateOfBirth');
   }
-  if (isWeakPin(pin)) return 'Too easy to guess. Avoid repeats and runs like 1234.';
+  if (isWeakPin(pin)) return i18n.t('auth.pin.weak');
   return undefined;
 }
 
@@ -25,6 +27,7 @@ export function CreatePinScreen() {
   const savePin = useSignupStore((s) => s.setPin);
   const [first, setFirst] = useState<string | null>(null);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
   useSecureScreen();
 
   if (!pending?.password) return <Redirect href="/sign-up" />;
@@ -41,7 +44,7 @@ export function CreatePinScreen() {
   const confirm = async (pin: string) => {
     if (pin !== first) {
       setFirst(null);
-      setError("The PINs didn't match. Choose your PIN again.");
+      setError(t('auth.pin.mismatch'));
       return false;
     }
     setError(undefined);
@@ -56,16 +59,16 @@ export function CreatePinScreen() {
         {first === null ? (
           <PinPad
             key="choose"
-            title="Create your PIN"
-            subtitle="4 digits to approve payments and unlock the app"
+            title={t('auth.pin.create')}
+            subtitle={t('auth.pin.subtitle')}
             error={error}
             onComplete={choose}
           />
         ) : (
           <PinPad
             key="confirm"
-            title="Confirm your PIN"
-            subtitle="Enter the same 4 digits again"
+            title={t('auth.pin.confirm')}
+            subtitle={t('auth.pin.confirmSubtitle')}
             error={error}
             onComplete={confirm}
           />

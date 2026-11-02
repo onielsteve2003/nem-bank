@@ -18,6 +18,7 @@ import {
   type LoginFormInput,
   type LoginFormValues,
 } from '../loginForm';
+import { useTranslation } from 'react-i18next';
 
 const DEMO_EMAIL = 'tolu.demo@example.com';
 
@@ -28,6 +29,7 @@ const DEMO_EMAIL = 'tolu.demo@example.com';
  */
 export function LoginScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const router = useRouter();
   const passwordLogin = usePasswordLogin();
   const quickLogin = useQuickLogin();
@@ -63,10 +65,10 @@ export function LoginScreen() {
     setQuickBusy(true);
     try {
       if (!(await quickLogin())) {
-        setQuickError(`${offer.label} wasn't confirmed. Try again, or use your password.`);
+        setQuickError(t('auth.login.biometricsCancelled', { label: offer.label }));
       }
     } catch {
-      setQuickError(`${offer.label} login isn't working right now. Use your password.`);
+      setQuickError(t('auth.login.biometricsBroken', { label: offer.label }));
     } finally {
       setQuickBusy(false);
     }
@@ -92,7 +94,7 @@ export function LoginScreen() {
         </Text>
       )}
       <Button
-        label="Log in"
+        label={t('common.logIn')}
         loading={isSubmitting}
         disabled={busy}
         fullWidth
@@ -103,20 +105,20 @@ export function LoginScreen() {
 
   return (
     <Screen
-      header={<SignupStepHeader label="Log in" />}
+      header={<SignupStepHeader label={t('common.logIn')} />}
       footer={footer}
       padded
       edges={['top', 'bottom']}
     >
       <View style={{ gap: spacing[2] }}>
-        <Text variant="h1">Welcome back</Text>
-        <Text color="textMuted">Log in with your email or phone number and your password.</Text>
+        <Text variant="h1">{t('auth.login.title')}</Text>
+        <Text color="textMuted">{t('auth.login.intro')}</Text>
       </View>
 
       {offer?.available && (
         <View style={{ gap: spacing[3] }}>
           <Button
-            label={`Log in with ${offer.label}`}
+            label={t('auth.login.withBiometrics', { label: offer.label })}
             icon={BiometricIcon}
             variant="secondary"
             loading={quickBusy}
@@ -129,7 +131,7 @@ export function LoginScreen() {
               {quickError}
             </Text>
           )}
-          <Divider label="or use your password" />
+          <Divider label={t('auth.login.orPassword')} />
         </View>
       )}
 
@@ -140,7 +142,7 @@ export function LoginScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="Email or phone number"
+              label={t('auth.login.identifier')}
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}
@@ -162,7 +164,7 @@ export function LoginScreen() {
           render={({ field }) => (
             <TextField
               ref={field.ref}
-              label="Password"
+              label={t('auth.login.password')}
               value={field.value}
               onChangeText={field.onChange}
               onBlur={field.onBlur}
@@ -178,7 +180,7 @@ export function LoginScreen() {
           )}
         />
         <Button
-          label="Forgot password?"
+          label={t('auth.login.forgot')}
           variant="ghost"
           size="sm"
           onPress={() => router.push('/forgot-password')}
@@ -186,8 +188,7 @@ export function LoginScreen() {
         />
         {env.apiMode === 'mock' && (
           <Text variant="bodySmall" color="textMuted">
-            Demo bank: log in as {DEMO_EMAIL} with {DEMO_PASSWORD}, or with the details you signed
-            up with.
+            {t('auth.login.demoHint', { email: DEMO_EMAIL, password: DEMO_PASSWORD })}
           </Text>
         )}
       </View>

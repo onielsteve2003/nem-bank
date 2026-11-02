@@ -3,7 +3,19 @@
     "tryAgain": "Try again",
     "goHome": "Go to Home",
     "matchPhone": "Match phone",
-    "saveFailed": "That didn't save. Try again."
+    "saveFailed": "That didn't save. Try again.",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "signOut": "Sign out",
+    "logIn": "Log in",
+    "back": "Back",
+    "offline": "You're offline. Reconnect and try again.",
+    "problemTryAgain": "{{problem}}. Try again.",
+    "resendCode": "Resend code",
+    "resendCodeIn": "Resend code in {{time}}",
+    "demoOtp": "Demo bank: the code is always {{code}}.",
+    "sendCodeFailed": "We couldn't send a code. Try again.",
+    "resendFailed": "We couldn't send a new code. Try again."
   },
   "tabs": {
     "home": "Home",
@@ -97,5 +109,195 @@
     "securityAlertsHint": "Sign-ins, new devices and large payments",
     "aiFeatures": "AI features",
     "aiFeaturesHint": "Switch each AI feature on or off"
+  },
+  "auth": {
+    "welcome": {
+      "designSystem": "Design system",
+      "slides": {
+        "speed": {
+          "title": "Banking that moves at your speed",
+          "body": "Send to any Nigerian bank or @nemtag in seconds, with the fee shown before you pay."
+        },
+        "fx": {
+          "title": "Four currencies, one app",
+          "body": "Hold naira, dollars, pounds and euros. Convert at a locked rate and see the exact amount you get."
+        },
+        "ajo": {
+          "title": "Save on your own or with your circle",
+          "body": "Goals, locked savings and Ajo groups that pay each member out in turn."
+        },
+        "security": {
+          "title": "Security you can see",
+          "body": "Face ID, a device-bound key on every payment, and a plain-English reason whenever a transfer is held."
+        }
+      },
+      "slideOf": "Slide {{n}} of {{total}}",
+      "notReal": "Not a real bank. ",
+      "disclaimer": "Nem Bank is a portfolio demo: balances and transfers are simulated and no real money moves. Never enter real card or bank details.",
+      "tryDemo": "Try the demo",
+      "tryDemoHint": "Signs you in as Tolu, a demo customer with six months of history",
+      "createAccount": "Create account",
+      "data": "Data: {{source}}",
+      "mockSource": "mock bank (on device)"
+    },
+    "step": {
+      "of": "Step {{step}} of {{total}}",
+      "almostDone": "Almost done",
+      "last": "Last step"
+    },
+    "otp": {
+      "checkFailed": "We couldn't check the code. Try again.",
+      "wrong_one": "That code is not right. {{count}} attempt left.",
+      "wrong_other": "That code is not right. {{count}} attempts left.",
+      "lastTry": "That code is not right, and that was the last try. Ask for a new code.",
+      "expired": "This code has expired. Ask for a new one.",
+      "tooMany": "Too many wrong codes. Ask for a new one."
+    },
+    "login": {
+      "title": "Welcome back",
+      "intro": "Log in with your email or phone number and your password.",
+      "identifier": "Email or phone number",
+      "identifierInvalid": "Enter your email or a Nigerian mobile number",
+      "identifierRequired": "Enter your email or phone number",
+      "password": "Password",
+      "passwordRequired": "Enter your password",
+      "failed": "We couldn't log you in. Try again.",
+      "wrongDetails": "That email, phone number or password is not right.",
+      "tooMany": "Too many tries. Wait a few minutes, or reset your password.",
+      "withBiometrics": "Log in with {{label}}",
+      "orPassword": "or use your password",
+      "biometricsCancelled": "{{label}} wasn't confirmed. Try again, or use your password.",
+      "biometricsBroken": "{{label}} login isn't working right now. Use your password.",
+      "biometricsPrompt": "Log in to Nem Bank",
+      "forgot": "Forgot password?",
+      "demoHint": "Demo bank: log in as {{email}} with {{password}}, or with the details you signed up with."
+    },
+    "signup": {
+      "title": "Create your account",
+      "intro": "Use your legal name as it appears on your ID. We will email you a code to confirm it is you.",
+      "firstName": "First name",
+      "lastName": "Last name",
+      "email": "Email",
+      "phone": "Phone number",
+      "phoneHelp": "A Nigerian mobile number. We send security alerts to it.",
+      "dateOfBirth": "Date of birth",
+      "dateOfBirthHelp": "You must be 18 or older.",
+      "dateInvalid": "Enter a real date as DD/MM/YYYY",
+      "dateRequired": "Enter your date of birth",
+      "consent": "I agree to the Terms of Service and the Privacy Policy",
+      "consentHelp": "Nem Bank processes your details under the Nigeria Data Protection Act 2023.",
+      "consentRequired": "Agree to the terms and privacy policy to continue",
+      "haveAccount": "I already have an account"
+    },
+    "verify": {
+      "title": "Check your email",
+      "intro": "Enter the 6-digit code we sent to {{destination}}. It works for 10 minutes.",
+      "verify": "Verify",
+      "sentAgain": "We sent a new code to {{destination}}.",
+      "wait": "Wait a moment before asking for another code.",
+      "sms": "Use SMS instead"
+    },
+    "password": {
+      "title": "Create a password",
+      "intro": "You will use it to log in. A short phrase of three or four words is strong and easy to remember.",
+      "label": "Password",
+      "good": "Good to go",
+      "strength": "Password strength",
+      "strengthValue": "Strength: {{label}}"
+    },
+    "pin": {
+      "dateOfBirth": "Don't use your date of birth. Pick another PIN.",
+      "weak": "Too easy to guess. Avoid repeats and runs like 1234.",
+      "mismatch": "The PINs didn't match. Choose your PIN again.",
+      "create": "Create your PIN",
+      "subtitle": "4 digits to approve payments and unlock the app",
+      "confirm": "Confirm your PIN",
+      "confirmSubtitle": "Enter the same 4 digits again"
+    },
+    "biometrics": {
+      "setupFailed": "We couldn't set up this device. Try again.",
+      "goBack": "{{problem}}. Go back and change it.",
+      "emailExpired": "Your email check has expired. Start sign-up again.",
+      "prompt": "Turn on {{label}} for Nem Bank",
+      "notConfirmed": "{{label}} wasn't confirmed. Try again, or choose Not now.",
+      "turnOn": "Turn on {{label}}",
+      "notNow": "Not now",
+      "openAccount": "Open my account",
+      "title": "Use {{label}}?",
+      "intro": "Unlock the app and approve payments with {{label}} instead of typing your PIN.",
+      "privateFace": "Your face never leaves this phone. Nem Bank only learns that the check passed.",
+      "privateFinger": "Your fingerprint never leaves this phone. Nem Bank only learns that the check passed.",
+      "key": "This phone gets its own security key, locked behind {{label}}, so payments can only be approved from here.",
+      "finish": "Finish setting up",
+      "checking": "Checking this device…",
+      "expoGo": "Expo Go cannot use Face ID: Apple only lets an app use it when the app asks for it itself. You will use your PIN in this demo; the installed Nem Bank app supports Face ID.",
+      "web": "Browsers cannot use Face ID or fingerprints, so you will use your PIN here. The phone app supports both.",
+      "none": "No Face ID or fingerprint is set up on this device, so you will use your PIN. You can turn it on later in Security."
+    },
+    "forgot": {
+      "header": "Reset password",
+      "title": "Forgot your password?",
+      "intro": "Enter the email on your account. We will send a code so you can choose a new password.",
+      "sendCode": "Send code",
+      "changed": "Password changed. Log in with your new password.",
+      "save": "Save new password",
+      "chooseTitle": "Choose a new password",
+      "chooseIntro": "If {{destination}} has an account, we sent it a 6-digit code. It works for 10 minutes.",
+      "newPassword": "New password",
+      "signsOut": "Changing your password signs you out on every other device."
+    },
+    "nemtag": {
+      "taken": "Someone just took @{{tag}}. Try another.",
+      "saveFailed": "We couldn't save your @nemtag. Try again.",
+      "claimTag": "Claim @{{tag}}",
+      "claim": "Claim @nemtag",
+      "title": "Choose your @nemtag",
+      "intro": "Friends can pay you with your @nemtag instead of your account number. Use 3 to 20 letters, numbers or _, starting with a letter.",
+      "label": "@nemtag",
+      "tryThese": "Try one of these",
+      "ideas": "Ideas",
+      "yours": "@{{tag}} is your @nemtag now",
+      "checking": "Checking @{{tag}}…",
+      "checkFailed": "We couldn't check right now. Try again.",
+      "available": "@{{tag}} is yours if you want it",
+      "isTaken": "@{{tag}} is taken"
+    },
+    "resetPin": {
+      "mismatch": "The PINs didn't match. Choose your new PIN again.",
+      "chooseAnother": "{{problem}}. Choose another PIN.",
+      "tooLong": "That took too long. Ask for a new code.",
+      "saveFailed": "We couldn't save your PIN. Try again.",
+      "choose": "Choose a new PIN",
+      "confirm": "Confirm your new PIN",
+      "title": "Reset your PIN",
+      "codeSent": "Enter the 6-digit code we sent to {{destination}}.",
+      "intro": "To keep your money safe, we will email you a code to confirm it is you. Then you can choose a new PIN.",
+      "emailMe": "Email me a code"
+    },
+    "coolOff": {
+      "title": "New device: lower limits",
+      "detail": "To keep your money safe, sending limits are lower on this device until {{time}}."
+    },
+    "newDevice": {
+      "title": "New device signed in",
+      "message": "This is the first time you've logged in here. For the next 24 hours your sending limits are lower on this device, and we've told your other devices.",
+      "ok": "Got it",
+      "notMe": "This wasn't me",
+      "signedOut": "Signed out on every device. Reset your password to keep them out."
+    }
+  },
+  "lock": {
+    "biometricsPrompt": "Unlock Nem Bank with {{label}}",
+    "offline": "You're offline, so your PIN can't be checked. Reconnect and try again.",
+    "checkFailed": "We couldn't check your PIN. Try again.",
+    "newPinSet": "Your new PIN is set.",
+    "title": "Welcome back",
+    "demoSubtitle": "Enter your PIN. Demo PIN is {{pin}}",
+    "subtitle": "Enter your PIN to unlock",
+    "useBiometrics": "Use {{label}}",
+    "forgotPin": "Forgot PIN?",
+    "lockedOut": "Too many wrong tries. Try again in {{wait}}, or tap Forgot PIN.",
+    "wrong_one": "Wrong PIN. {{count}} try left.",
+    "wrong_other": "Wrong PIN. {{count}} tries left."
   }
 }

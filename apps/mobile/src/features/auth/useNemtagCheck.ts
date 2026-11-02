@@ -3,6 +3,7 @@ import { nemtagProblem, normalizeNemtag } from '@nem/shared';
 import type { TextColor } from '@/components';
 import { useRepoQuery } from '@/lib/query';
 import { useDebounced } from '@/lib/useDebounced';
+import i18n from '@/lib/i18n';
 
 /** Waits for typing to pause, so the bank is asked once per pause, not per key. */
 export const NEMTAG_CHECK_DELAY_MS = 400;
@@ -39,12 +40,11 @@ export function useNemtagCheck(input: string, current?: string | null) {
   const status = ((): NemtagStatus | null => {
     if (!tag) return null;
     if (shape) return { tone: 'danger', text: shape };
-    if (yours) return { tone: 'textMuted', text: `@${tag} is your @nemtag now` };
-    if (checking) return { tone: 'textMuted', text: `Checking @${tag}…` };
-    if (availability.isError)
-      return { tone: 'danger', text: "We couldn't check right now. Try again." };
-    if (available) return { tone: 'success', text: `@${tag} is yours if you want it` };
-    if (result) return { tone: 'danger', text: `@${tag} is taken` };
+    if (yours) return { tone: 'textMuted', text: i18n.t('auth.nemtag.yours', { tag }) };
+    if (checking) return { tone: 'textMuted', text: i18n.t('auth.nemtag.checking', { tag }) };
+    if (availability.isError) return { tone: 'danger', text: i18n.t('auth.nemtag.checkFailed') };
+    if (available) return { tone: 'success', text: i18n.t('auth.nemtag.available', { tag }) };
+    if (result) return { tone: 'danger', text: i18n.t('auth.nemtag.isTaken', { tag }) };
     return null;
   })();
 

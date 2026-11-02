@@ -9,6 +9,7 @@ import {
   TERMS_VERSION,
 } from '@nem/shared';
 import { z } from 'zod';
+import i18n from '@/lib/i18n';
 
 // The sign-up details form (AUTH-1). Fields hold what the user typed; parsing
 // turns them into the API's shapes (E.164 phone, ISO date of birth).
@@ -25,12 +26,14 @@ export const signupFormSchema = z.object({
       if (iso) return iso;
       ctx.addIssue({
         code: 'custom',
-        message: value.trim() ? 'Enter a real date as DD/MM/YYYY' : 'Enter your date of birth',
+        message: value.trim()
+          ? i18n.t('auth.signup.dateInvalid')
+          : i18n.t('auth.signup.dateRequired'),
       });
       return z.NEVER;
     })
     .pipe(dateOfBirthSchema),
-  consent: z.boolean().refine(Boolean, 'Agree to the terms and privacy policy to continue'),
+  consent: z.boolean().refine(Boolean, { error: () => i18n.t('auth.signup.consentRequired') }),
 });
 
 export type SignupFormInput = z.input<typeof signupFormSchema>;

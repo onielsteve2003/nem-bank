@@ -13,6 +13,7 @@ import { NemtagStatusLine } from '../components/NemtagStatusLine';
 import { SignupStepHeader } from '../components/SignupStepHeader';
 import { useSignOut } from '../hooks/useSessionActions';
 import { useNemtagCheck } from '../useNemtagCheck';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The last onboarding step (AUTH-10): a unique @nemtag friends can pay instead
@@ -22,6 +23,7 @@ import { useNemtagCheck } from '../useNemtagCheck';
  */
 export function ChooseNemtagScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const nemtagChosen = useSessionStore((s) => s.nemtagChosen);
   const signOut = useSignOut();
   const [input, setInput] = useState('');
@@ -46,10 +48,10 @@ export function ChooseNemtagScreen() {
         onError: (e) =>
           setError(
             isApiError(e) && e.problem.code === 'nemtag_taken'
-              ? `Someone just took @${tag}. Try another.`
+              ? t('auth.nemtag.taken', { tag })
               : isApiError(e) && e.problem.code === 'offline'
-                ? "You're offline. Reconnect and try again."
-                : "We couldn't save your @nemtag. Try again.",
+                ? t('common.offline')
+                : t('auth.nemtag.saveFailed'),
           ),
       },
     );
@@ -63,34 +65,36 @@ export function ChooseNemtagScreen() {
         </Text>
       )}
       <Button
-        label={available ? `Claim @${tag}` : 'Claim @nemtag'}
+        label={available ? t('auth.nemtag.claimTag', { tag }) : t('auth.nemtag.claim')}
         loading={save.isPending}
         disabled={!available}
         fullWidth
         onPress={submit}
       />
-      <Button label="Sign out" variant="ghost" size="sm" onPress={() => void signOut()} />
+      <Button
+        label={t('common.signOut')}
+        variant="ghost"
+        size="sm"
+        onPress={() => void signOut()}
+      />
     </View>
   );
 
   return (
     <Screen
-      header={<SignupStepHeader label="Last step" />}
+      header={<SignupStepHeader label={t('auth.step.last')} />}
       footer={footer}
       padded
       edges={['top', 'bottom']}
     >
       <View style={{ gap: spacing[2] }}>
-        <Text variant="h1">Choose your @nemtag</Text>
-        <Text color="textMuted">
-          Friends can pay you with your @nemtag instead of your account number. Use 3 to 20 letters,
-          numbers or _, starting with a letter.
-        </Text>
+        <Text variant="h1">{t('auth.nemtag.title')}</Text>
+        <Text color="textMuted">{t('auth.nemtag.intro')}</Text>
       </View>
 
       <View style={{ gap: spacing[3] }}>
         <TextField
-          label="@nemtag"
+          label={t('auth.nemtag.label')}
           leadingIcon={AtSign}
           value={input}
           onChangeText={choose}
@@ -107,7 +111,7 @@ export function ChooseNemtagScreen() {
         {(suggestions.length > 0 || (!tag && ideas.length > 0)) && (
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
-              {tag ? 'Try one of these' : 'Ideas'}
+              {tag ? t('auth.nemtag.tryThese') : t('auth.nemtag.ideas')}
             </Text>
             <View style={[styles.chips, { gap: spacing[2] }]}>
               {(tag ? suggestions : ideas).map((idea) => (
