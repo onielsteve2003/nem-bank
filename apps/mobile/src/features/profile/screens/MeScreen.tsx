@@ -11,6 +11,7 @@ import {
   LogOut,
   MonitorSmartphone,
   OctagonX,
+  Settings,
   ShieldCheck,
   SlidersHorizontal,
   UserRound,
@@ -176,6 +177,15 @@ export function MeScreen() {
           />
         </Card>
       </View>
+
+      <Card padded={false}>
+        <ListItem
+          title="Settings"
+          subtitle="Theme, privacy mode, low data, motion and alerts"
+          leading={Settings}
+          onPress={() => router.push('/settings')}
+        />
+      </Card>
 
       <View style={{ gap: spacing[2] }}>
         <SectionHeader title="Help" />

@@ -47,7 +47,13 @@ export const DEFAULT_PREFERENCES: Preferences = {
   },
 };
 
+/** `system` follows the phone's setting; `always` reduces motion in Nem whatever the phone says. */
+export type ReduceMotion = 'system' | 'always';
+
 export interface PreferencesState extends Preferences {
+  /** Device-only (SET-4): an accessibility choice for this phone, not synced to the bank. */
+  reduceMotion: ReduceMotion;
+  setReduceMotion: (reduceMotion: ReduceMotion) => void;
   setAppearance: (appearance: Appearance) => void;
   setLanguage: (language: Language) => void;
   setLowDataMode: (on: boolean) => void;
@@ -97,6 +103,8 @@ export const usePreferencesStore = create<PreferencesState>()(
   persist(
     (set) => ({
       ...DEFAULT_PREFERENCES,
+      reduceMotion: 'system',
+      setReduceMotion: (reduceMotion) => set({ reduceMotion }),
       setAppearance: (appearance) => set({ appearance }),
       setLanguage: (language) => set({ language }),
       setLowDataMode: (lowDataMode) => set({ lowDataMode }),

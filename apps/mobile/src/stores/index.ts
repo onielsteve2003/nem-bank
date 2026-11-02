@@ -22,6 +22,7 @@ export {
   type Language,
   type Preferences,
   type PreferencesState,
+  type ReduceMotion,
 } from './preferences';
 export { useBalancesHidden, usePrivacyStore, type PrivacyState } from './privacy';
 export {
