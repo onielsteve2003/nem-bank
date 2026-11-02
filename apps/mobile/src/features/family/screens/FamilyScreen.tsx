@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { UserPlus, Users } from 'lucide-react-native';
+import { ListChecks, UserPlus, Users } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -28,6 +28,8 @@ export function FamilyScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
   const q = useRepoQuery('family', 'listDependants');
+  const approvals = useRepoQuery('family', 'listApprovals', { query: { status: 'pending' } });
+  const waiting = approvals.data?.data.length ?? 0;
   const header = <SendHeader title="Family" first />;
   const add = () => router.push('/family/add');
 
@@ -69,8 +71,19 @@ export function FamilyScreen() {
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
     >
+      <Button
+        label={waiting ? `Approvals (${waiting} waiting)` : 'Approvals'}
+        icon={ListChecks}
+        variant={waiting ? 'primary' : 'secondary'}
+        fullWidth
+        onPress={() => router.push('/family/approvals')}
+      />
       {children.map((child) => (
-        <Card key={child.id}>
+        <Card
+          key={child.id}
+          onPress={() => router.push({ pathname: '/family/[id]', params: { id: child.id } })}
+          accessibilityLabel={`${child.profile.name}: limits, allowance and activity`}
+        >
           <View style={{ gap: spacing[3] }}>
             <View style={[styles.row, { gap: spacing[3] }]}>
               <Avatar name={child.profile.name} size="md" />

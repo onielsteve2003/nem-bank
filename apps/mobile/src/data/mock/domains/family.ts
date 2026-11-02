@@ -32,6 +32,7 @@ function nextAllowance(
 ): string {
   const next = new Date(from);
   if (allowance.frequency === 'weekly') {
+    // Monday = 1 … Sunday = 7, as the contract says; getUTCDay counts Sunday as 0.
     const target = (allowance.day ?? 5) % 7;
     const diff = (target - next.getUTCDay() + 7) % 7 || 7;
     next.setUTCDate(next.getUTCDate() + diff);
@@ -238,7 +239,7 @@ export function familyRepo(bank: MockBank): FamilyRepo {
       positive(body.amount, 'NGN');
       if (
         body.day !== undefined &&
-        (body.frequency === 'weekly' ? body.day < 0 || body.day > 6 : body.day < 1 || body.day > 28)
+        (body.frequency === 'weekly' ? body.day < 1 || body.day > 7 : body.day < 1 || body.day > 28)
       ) {
         throw problem(
           422,

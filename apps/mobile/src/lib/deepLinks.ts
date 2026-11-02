@@ -85,6 +85,11 @@ const ROUTES: Route[] = [
   { pattern: 'security/alerts', to: () => '/security/alerts' },
   { pattern: 'security/*', to: () => '/security' },
   { pattern: 'family', to: () => '/family' },
+  { pattern: 'family/approvals', to: () => '/family/approvals' },
+  {
+    pattern: 'family/:id',
+    to: ({ id = '' }) => ({ pathname: '/family/[id]', params: { id } }),
+  },
   { pattern: 'family/*', to: () => '/family' },
   { pattern: 'disputes/:id', to: () => '/me' },
   { pattern: 'demo-controls', to: () => '/demo-controls' },

@@ -11,17 +11,22 @@ import { ThemeProvider } from '@/theme';
 
 import {
   ageOn,
+  allowanceSummary,
   controlsSummary,
   DEFAULT_CONTROLS,
   dependantAgeProblem,
   formatSetupCode,
 } from '../family';
 import { AddDependantScreen } from '../screens/AddDependantScreen';
+import { ApprovalsScreen } from '../screens/ApprovalsScreen';
+import { DependantScreen } from '../screens/DependantScreen';
 import { FamilyScreen } from '../screens/FamilyScreen';
 
 const mockPush = jest.fn();
+const mockParams: { id?: string } = {};
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
+  useLocalSearchParams: () => mockParams,
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
 jest.mock('expo-local-authentication', () => ({
@@ -34,10 +39,15 @@ jest.mock('expo-local-authentication', () => ({
 
 configure({ defaultIncludeHiddenElements: true });
 
+/** Moves the mock bank's clock forward, so allowances and approvals come due. */
+let skew = 0;
+const later = (ms: number) => (skew += ms);
+beforeEach(() => (skew = 0));
+
 const bank = () =>
   createMockRepositories({
     store: createMemoryStore(),
-    clock: () => new Date(Date.now()),
+    clock: () => new Date(Date.now() + skew),
     simulation: { latency: 'off' },
   });
 
@@ -116,6 +126,16 @@ describe('family rules', () => {
       'Can pay Nem users only',
     ]);
     expect(formatSetupCode('12345678')).toBe('1234 5678');
+  });
+
+  it('says an allowance the way a parent would', () => {
+    const amount = { amount_minor: '200000', currency: 'NGN' as const };
+    expect(allowanceSummary({ amount, frequency: 'weekly', day: 5, source_account_id: 'a' })).toBe(
+      '₦2,000 every Friday',
+    );
+    expect(
+      allowanceSummary({ amount, frequency: 'monthly', day: 21, source_account_id: 'a' }),
+    ).toBe('₦2,000 on the 21st of each month');
   });
 });
 
@@ -203,5 +223,65 @@ describe('AddDependantScreen', () => {
     await waitFor(async () => expect((await repos.family.listDependants()).data).toHaveLength(1));
     const [child] = (await repos.family.listDependants()).data;
     expect(child!.controls.daily_spend_limit.amount_minor).toBe('1000000');
+  });
+});
+
+describe('DependantScreen', () => {
+  it('changes limits, pauses spending and sets an allowance', async () => {
+    const repos = bank();
+    const { dependant } = await addChild(repos);
+    mockParams.id = dependant.id;
+    await render(wrap(repos, <DependantScreen />));
+    expect(await screen.findByText('Nothing yet')).toBeOnTheScreen();
+
+    const [daily] = screen.getAllByRole('togglebutton', { name: '₦20,000' });
+    await fireEvent.press(daily!);
+    await fireEvent.press(screen.getByRole('switch', { name: 'Pause spending' }));
+    await waitFor(async () =>
+      expect(
+        (await repos.family.getDependant({ path: { dependant_id: dependant.id } })).controls,
+      ).toMatchObject({ paused: true, daily_spend_limit: { amount_minor: '2000000' } }),
+    );
+
+    await fireEvent.press(screen.getByRole('togglebutton', { name: 'Monthly' }));
+    await fireEvent.press(screen.getByRole('togglebutton', { name: 'Day 14' }));
+    await fireEvent.press(screen.getByRole('button', { name: 'Set allowance' }));
+    expect(await screen.findByText('₦2,000 on the 14th of each month')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Stop allowance' }));
+    expect(await screen.findByRole('button', { name: 'Set allowance' })).toBeOnTheScreen();
+  });
+});
+
+describe('ApprovalsScreen', () => {
+  it('approves a child’s transfer with your PIN', async () => {
+    const repos = bank();
+    const { dependant } = await addChild(repos);
+    const [own] = (await repos.accounts.list()).data.filter((a) => a.currency === 'NGN');
+    await repos.family.setAllowance({
+      path: { dependant_id: dependant.id },
+      body: {
+        amount: { amount_minor: '1000000', currency: 'NGN' },
+        frequency: 'weekly',
+        day: 1,
+        source_account_id: own!.id,
+      },
+    });
+    later(8 * 24 * 3_600_000);
+    await render(wrap(repos, <ApprovalsScreen />));
+    expect(
+      await screen.findByText(
+        'Ada Bello → ' + (await repos.family.listApprovals()).data[0]!.recipient.name,
+      ),
+    ).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Approve' }));
+    for (const digit of DEMO_PIN)
+      await fireEvent.press(screen.getByRole('button', { name: digit }));
+    expect(await screen.findByText('Approved')).toBeOnTheScreen();
+    expect(screen.getByText('Nothing to approve')).toBeOnTheScreen();
+  });
+
+  it('shows an empty queue', async () => {
+    await render(wrap(bank(), <ApprovalsScreen />));
+    expect(await screen.findByText('Nothing to approve')).toBeOnTheScreen();
   });
 });
