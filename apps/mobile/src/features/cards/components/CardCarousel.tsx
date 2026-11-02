@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import {
   FlatList,
   StyleSheet,
@@ -31,6 +32,7 @@ export type Props = {
  */
 export function CardCarousel({ cards, index, onIndex, revealed }: Props) {
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   const list = useRef<FlatList<Card>>(null);
   const window = useWindowDimensions();
   const [measured, setMeasured] = useState(0);
@@ -78,7 +80,7 @@ export function CardCarousel({ cards, index, onIndex, revealed }: Props) {
             <PressableScale
               key={c.id}
               accessibilityRole="button"
-              accessibilityLabel={`Show card ${i + 1} of ${cards.length}`}
+              accessibilityLabel={t('cards.carousel.dot', { index: i + 1, count: cards.length })}
               accessibilityState={{ selected: i === index }}
               hitSlop={spacing[3]}
               onPress={() => onIndex(i)}

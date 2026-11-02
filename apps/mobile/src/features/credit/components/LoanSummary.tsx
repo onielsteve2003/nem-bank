@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Badge, Card, MoneyText, Text } from '@/components';
@@ -18,6 +19,7 @@ type Props = {
 /** What is left to repay, how far along the loan is, and the next payment. */
 export function LoanSummary({ loan, onPress }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const status = LOAN_STATUS[loan.status];
   const pct = repaidPct(loan);
   const total = formatMoney(money(loanTotalKobo(loan), 'NGN'));
@@ -29,25 +31,27 @@ export function LoanSummary({ loan, onPress }: Props) {
   return (
     <Card
       onPress={onPress}
-      accessibilityLabel={onPress ? `Your loan, ${status.label}` : undefined}
-      accessibilityHint={onPress ? 'Opens the loan and its schedule' : undefined}
+      accessibilityLabel={
+        onPress ? t('credit.summary.yourLoan', { status: status.label }) : undefined
+      }
+      accessibilityHint={onPress ? t('credit.summary.opens') : undefined}
     >
       <View style={{ gap: spacing[3] }}>
         <View style={[styles.row, styles.between]}>
           <Text variant="bodySmall" color="textMuted">
-            Left to repay
+            {t('credit.summary.left')}
           </Text>
           <Badge label={status.label} tone={status.tone} />
         </View>
         <MoneyText
           value={fromApiMoney(loan.outstanding)}
           variant="amountLarge"
-          label="Left to repay"
+          label={t('credit.summary.left')}
         />
         <View
           accessible
           accessibilityRole="progressbar"
-          accessibilityLabel={`${pct}% of ${total} repaid`}
+          accessibilityLabel={t('credit.summary.repaidOf', { pct, total })}
           accessibilityValue={{ min: 0, max: 100, now: pct }}
           style={[styles.track, { backgroundColor: colors.border, borderRadius: radius.pill }]}
         >
@@ -64,10 +68,11 @@ export function LoanSummary({ loan, onPress }: Props) {
         </View>
         <Text variant="bodySmall" color="textMuted">
           {next && nextLeft
-            ? `Next payment ${formatMoney(nextLeft)} on ${formatGoalDate(next.due_date)}${
-                loan.auto_repay ? ', taken automatically' : ''
-              }`
-            : `All ${total} repaid`}
+            ? t(loan.auto_repay ? 'credit.summary.nextAuto' : 'credit.summary.next', {
+                amount: formatMoney(nextLeft),
+                date: formatGoalDate(next.due_date),
+              })
+            : t('credit.summary.allRepaid', { total })}
         </Text>
       </View>
     </Card>

@@ -1,6 +1,7 @@
 import { add, compare, formatMoney, parseMajor } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -36,6 +37,7 @@ const MIN_LOCK = parseMajor(String(MIN_LOCK_NAIRA), 'NGN');
 export function NewLockScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [typed, setTyped] = useState('');
   const [term, setTerm] = useState<number>(90);
   const [accepted, setAccepted] = useState(false);
@@ -59,6 +61,7 @@ export function NewLockScreen() {
     { enabled: valid },
   );
   const q = valid ? quote.data : undefined;
+  const min = `₦${MIN_LOCK_NAIRA.toLocaleString('en-NG')}`;
 
   const run = async () => {
     if (!amount || !naira) return false;
@@ -83,11 +86,17 @@ export function NewLockScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Lock money" />}
+      header={<SendHeader title={t('savings.newLock.title')} />}
       edges={['top', 'bottom']}
       footer={
         <Button
-          label={amount && valid ? `Lock ${formatMoney(amount, { trimZeroMinor: true })}` : 'Lock'}
+          label={
+            amount && valid
+              ? t('savings.newLock.lockAmount', {
+                  amount: formatMoney(amount, { trimZeroMinor: true }),
+                })
+              : t('savings.newLock.lock')
+          }
           disabled={!q || !accepted || !naira}
           onPress={() => {
             create.resetIntent();
@@ -105,21 +114,19 @@ export function NewLockScreen() {
         }}
         maxWholeDigits={9}
         help={
-          available
-            ? `${formatMoney(available)} available · lock at least ₦${MIN_LOCK_NAIRA.toLocaleString('en-NG')}`
-            : undefined
+          available ? t('savings.newLock.help', { amount: formatMoney(available), min }) : undefined
         }
         error={
           tooSmall
-            ? `Lock at least ₦${MIN_LOCK_NAIRA.toLocaleString('en-NG')}`
+            ? t('savings.newLock.tooSmall', { min })
             : tooMuch
-              ? 'More than you have in your naira account'
+              ? t('common.moreThanNaira')
               : undefined
         }
       />
 
       <View style={{ gap: spacing[2] }}>
-        <Text variant="label">Lock it for</Text>
+        <Text variant="label">{t('savings.newLock.termLabel')}</Text>
         <View accessibilityRole="radiogroup" style={[styles.chips, { gap: spacing[2] }]}>
           {LOCK_TERMS.map((days) => (
             <Chip
@@ -140,14 +147,20 @@ export function NewLockScreen() {
           <>
             <Card>
               <View style={{ gap: spacing[3] }}>
-                <DetailRow label="Rate" value={`${ratePct(q.rate_bps)} a year, fixed`} />
                 <DetailRow
-                  label="Interest at maturity"
+                  label={t('savings.locks.rate')}
+                  value={t('savings.locks.rateFixed', { rate: ratePct(q.rate_bps) })}
+                />
+                <DetailRow
+                  label={t('savings.locks.interestAtMaturity')}
                   value={formatMoney(fromApiMoney(q.interest_at_maturity))}
                 />
-                <DetailRow label="Matures on" value={formatGoalDate(q.maturity_date)} />
                 <DetailRow
-                  label="You get back"
+                  label={t('savings.newLock.maturesOn')}
+                  value={formatGoalDate(q.maturity_date)}
+                />
+                <DetailRow
+                  label={t('savings.newLock.youGetBack')}
                   value={formatMoney(
                     add(fromApiMoney(q.amount), fromApiMoney(q.interest_at_maturity)),
                   )}
@@ -156,25 +169,27 @@ export function NewLockScreen() {
             </Card>
             <Card>
               <View style={{ gap: spacing[2] }}>
-                <Text variant="bodyStrong">If you break it early</Text>
+                <Text variant="bodyStrong">{t('savings.newLock.ifBreak')}</Text>
                 <Text variant="bodySmall" color="textMuted">
-                  {q.early_break_explanation} The penalty is {ratePct(q.early_break_penalty_bps)} of
-                  the interest earned so far.
+                  {t('savings.newLock.penalty', {
+                    explanation: q.early_break_explanation,
+                    rate: ratePct(q.early_break_penalty_bps),
+                  })}
                 </Text>
               </View>
             </Card>
             <Checkbox
-              label="I understand the early-break penalty"
+              label={t('savings.newLock.accept')}
               checked={accepted}
               onChange={setAccepted}
             />
           </>
         ) : quote.isError ? (
           <Text variant="bodySmall" color="danger" accessibilityRole="alert">
-            We couldn&apos;t get a rate. Change the amount or try again.
+            {t('savings.newLock.quoteFailed')}
           </Text>
         ) : (
-          <SkeletonGroup accessibilityLabel="Getting your rate">
+          <SkeletonGroup accessibilityLabel={t('savings.newLock.quoteLoading')}>
             <Skeleton height={160} />
           </SkeletonGroup>
         ))}
@@ -183,7 +198,9 @@ export function NewLockScreen() {
         open={confirming}
         onClose={() => setConfirming(false)}
         subtitle={
-          amount ? `Lock ${formatMoney(amount)} for ${termLabel(term)} from your naira account` : ''
+          amount
+            ? t('savings.newLock.confirm', { amount: formatMoney(amount), term: termLabel(term) })
+            : ''
         }
         onApproved={run}
         error={error}

@@ -1,10 +1,12 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
 import { Minus, Sparkles, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Icon, MoneyText, Text } from '@/components';
 import { CATEGORIES } from '@/features/transactions/categories';
+import i18n from '@/lib/i18n';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
@@ -26,11 +28,17 @@ const CHANGE: Record<
 function changeText(change: Change, before: CategorySpend['previous_amount'], prev: string) {
   switch (change.kind) {
     case 'new':
-      return `Nothing here in ${prev}`;
+      return i18n.t('insights.compare.new', { month: prev });
     case 'same':
-      return `${prev}: ${formatMoney(fromApiMoney(before))}`;
+      return i18n.t('insights.compare.same', {
+        month: prev,
+        amount: formatMoney(fromApiMoney(before)),
+      });
     default:
-      return `${formatMoney(money(change.minor, before.currency))} ${change.kind} than ${prev}`;
+      return i18n.t(`insights.compare.${change.kind}`, {
+        amount: formatMoney(money(change.minor, before.currency)),
+        month: prev,
+      });
   }
 }
 
@@ -44,6 +52,7 @@ export type Props = {
 /** Every category this month, each set against the month before (INS-1). */
 export function CategoryCompare({ categories, month, inProgress, hidden }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const prev = monthLabel(shiftMonth(month, -1));
   return (
     <Card padded={false}>
@@ -58,14 +67,19 @@ export function CategoryCompare({ categories, month, inProgress, hidden }: Props
           );
           const look = CHANGE[change.kind];
           const text = hidden
-            ? `Compared with ${prev}`
+            ? t('insights.compare.withMonth', { month: prev })
             : changeText(change, c.previous_amount, prev);
           return (
             <View
               key={c.category}
               style={[styles.row, { gap: spacing[3], padding: spacing[4] }]}
               accessible
-              accessibilityLabel={`${meta.label}: ${hidden ? 'hidden' : formatMoney(now)}, ${c.share_pct}% of spending. ${text}.`}
+              accessibilityLabel={t('insights.compare.row', {
+                category: meta.label,
+                amount: hidden ? t('common.hidden') : formatMoney(now),
+                pct: c.share_pct,
+                change: text,
+              })}
             >
               <View
                 style={[styles.icon, { backgroundColor: colors.raised, borderRadius: radius.md }]}

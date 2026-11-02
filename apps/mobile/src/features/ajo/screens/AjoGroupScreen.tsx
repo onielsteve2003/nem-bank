@@ -2,6 +2,7 @@ import { formatMoney, nemtagProblem, normalizeNemtag } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { AtSign, Link2, Play, Share2, XCircle } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Share, View } from 'react-native';
 
 import {
@@ -38,6 +39,7 @@ import { AjoDetails } from '../components/AjoDetails';
 export function AjoGroupScreen({ id }: { id: string }) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const group = useRepoQuery('ajo', 'getGroup', { path: { group_id: id } });
   const me = useRepoQuery('users', 'getMe');
   const [tag, setTag] = useState('');
@@ -54,11 +56,11 @@ export function AjoGroupScreen({ id }: { id: string }) {
   const g = group.data;
   if (group.isError || !g) {
     return (
-      <Screen header={<SendHeader title="Ajo" />} edges={['top', 'bottom']}>
+      <Screen header={<SendHeader title={t('ajo.title')} />} edges={['top', 'bottom']}>
         {group.isError ? (
-          <ErrorState title="We couldn't load this ajo" onRetry={() => group.refetch()} />
+          <ErrorState title={t('ajo.group.failed')} onRetry={() => group.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading ajo">
+          <SkeletonGroup accessibilityLabel={t('ajo.group.loading')}>
             <Skeleton height={120} />
             <Skeleton height={240} />
           </SkeletonGroup>
@@ -89,8 +91,7 @@ export function AjoGroupScreen({ id }: { id: string }) {
       { path: { group_id: id }, body: { nemtags: [clean] } },
       {
         onSuccess: () => setTag(''),
-        onError: (e) =>
-          setTagError(isApiError(e) ? e.problem.title : "We couldn't invite them. Try again."),
+        onError: (e) => setTagError(isApiError(e) ? e.problem.title : t('ajo.group.inviteFailed')),
       },
     );
   };
@@ -122,33 +123,33 @@ export function AjoGroupScreen({ id }: { id: string }) {
 
       {forming && (
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title={full ? 'Everyone is in' : 'Invite people'} />
+          <SectionHeader title={t(full ? 'ajo.group.everyoneIn' : 'ajo.group.invitePeople')} />
           {!full && (
             <Card>
               <View style={{ gap: spacing[3] }}>
                 <Button
-                  label="Share invite link"
+                  label={t('ajo.group.shareLink')}
                   icon={Share2}
                   variant="secondary"
                   loading={invite.isPending && !tag}
                   onPress={() => void share()}
                 />
                 <TextField
-                  label="Or add by Nem tag"
-                  placeholder="@emeka"
+                  label={t('ajo.group.addByTag')}
+                  placeholder={t('ajo.group.tagPlaceholder')}
                   leadingIcon={AtSign}
                   autoCapitalize="none"
                   autoCorrect={false}
                   value={tag}
-                  onChangeText={(t) => {
-                    setTag(t);
+                  onChangeText={(text) => {
+                    setTag(text);
                     setTagError(undefined);
                   }}
                   onSubmitEditing={addTag}
                   error={tagError}
                 />
                 <Button
-                  label="Add"
+                  label={t('ajo.group.add')}
                   icon={Link2}
                   variant="ghost"
                   disabled={!tag.trim()}
@@ -161,7 +162,7 @@ export function AjoGroupScreen({ id }: { id: string }) {
           {isOrganiser ? (
             <>
               <Button
-                label="Start ajo"
+                label={t('ajo.group.start')}
                 icon={Play}
                 disabled={!full}
                 onPress={() => {
@@ -171,13 +172,15 @@ export function AjoGroupScreen({ id }: { id: string }) {
               />
               <Text variant="caption" color="textMuted">
                 {full
-                  ? `Starting collects the first ${formatMoney(contribution, { trimZeroMinor: true })} from each person.`
-                  : `You can start once all ${g.member_count} people are in.`}
+                  ? t('ajo.group.startCollects', {
+                      amount: formatMoney(contribution, { trimZeroMinor: true }),
+                    })
+                  : t('ajo.group.startWhenFull', { count: g.member_count })}
               </Text>
             </>
           ) : (
             <Text variant="caption" color="textMuted">
-              {g.created_by.name} starts it once everyone is in. Nothing is paid until then.
+              {t('ajo.group.organiserStarts', { name: g.created_by.name })}
             </Text>
           )}
         </View>
@@ -191,7 +194,7 @@ export function AjoGroupScreen({ id }: { id: string }) {
 
       {forming && (
         <Button
-          label={isOrganiser ? 'Cancel ajo' : 'Leave ajo'}
+          label={t(isOrganiser ? 'ajo.group.cancel' : 'ajo.group.leave')}
           icon={XCircle}
           variant="ghost"
           onPress={() => setLeaving(true)}
@@ -201,20 +204,16 @@ export function AjoGroupScreen({ id }: { id: string }) {
       <ConfirmSheet
         open={starting}
         onClose={() => setStarting(false)}
-        subtitle={`Start ${g.name} and pay your first ${formatMoney(contribution)}`}
+        subtitle={t('ajo.group.startStep', { name: g.name, amount: formatMoney(contribution) })}
         onApproved={runStart}
         error={startError}
       />
       <Dialog
         open={leaving}
-        title={isOrganiser ? `Cancel ${g.name}?` : `Leave ${g.name}?`}
-        message={
-          isOrganiser
-            ? 'Everyone who joined is told it is off. Nothing has been paid yet.'
-            : 'Your place goes back to the organiser. Nothing has been paid yet.'
-        }
-        confirmLabel={isOrganiser ? 'Cancel ajo' : 'Leave'}
-        cancelLabel="Keep it"
+        title={t(isOrganiser ? 'ajo.group.cancelTitle' : 'ajo.group.leaveTitle', { name: g.name })}
+        message={isOrganiser ? t('ajo.group.cancelMessage') : t('ajo.group.leaveMessage')}
+        confirmLabel={t(isOrganiser ? 'ajo.group.cancel' : 'ajo.group.leaveConfirm')}
+        cancelLabel={t('common.keepIt')}
         destructive
         loading={leave.isPending}
         onCancel={() => setLeaving(false)}

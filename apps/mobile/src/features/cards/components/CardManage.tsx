@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { RefreshCw, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { BottomSheet, Button, ListItem, SectionHeader, Text, useToast } from '@/components';
@@ -21,28 +22,6 @@ export type Props = {
   onReplaced?: (card: Card) => void;
 };
 
-const COPY: Record<Action, { title: string; points: string[]; confirm: string }> = {
-  replace: {
-    title: 'Replace this card',
-    points: [
-      'You get a new card number, expiry and CVV straight away.',
-      'This card stops working now. Payments already pending still settle.',
-      'Your name, look, limit and merchant lock move to the new card.',
-      'Update any subscriptions that use this card.',
-    ],
-    confirm: 'Replace card',
-  },
-  terminate: {
-    title: 'Terminate this card',
-    points: [
-      'The card closes for good. You can’t undo this.',
-      'New payments are declined. Payments already pending still settle.',
-      'Its payments stay in your history.',
-    ],
-    confirm: 'Terminate card',
-  },
-};
-
 /**
  * Closing a card (CARD-6): replace it with a new number when it may have
  * leaked, or terminate it for good. Both say what happens first, then need the
@@ -50,6 +29,7 @@ const COPY: Record<Action, { title: string; points: string[]; confirm: string }>
  */
 export function CardManage({ card, onReplaced }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const toast = useToast();
   const [sheet, setSheet] = useState<Action | null>(null);
   const [confirming, setConfirming] = useState<Action | null>(null);
@@ -65,11 +45,14 @@ export function CardManage({ card, onReplaced }: Props) {
     try {
       if (action === 'replace') {
         const next = await replace.mutateAsync({ path });
-        toast.show({ message: `Your new card ending ${next.last4} is ready`, tone: 'success' });
+        toast.show({
+          message: t('cards.manage.replace.done', { last4: next.last4 }),
+          tone: 'success',
+        });
         onReplaced?.(next);
       } else {
         await terminate.mutateAsync({ path });
-        toast.show({ message: `Card ending ${card.last4} terminated` });
+        toast.show({ message: t('cards.manage.terminate.done', { last4: card.last4 }) });
       }
       haptic('success');
       setConfirming(null);
@@ -78,38 +61,46 @@ export function CardManage({ card, onReplaced }: Props) {
       setError(
         isApiError(e)
           ? e.problem.code === 'offline'
-            ? "You're offline. Reconnect and try again."
+            ? t('common.offline')
             : (e.problem.detail ?? e.problem.title)
-          : 'That didn’t go through. Try again; it won’t happen twice.',
+          : t('cards.manage.failed'),
       );
       return false;
     }
   };
 
-  const copy = sheet ? COPY[sheet] : null;
+  const copy = sheet
+    ? {
+        title: t(`cards.manage.${sheet}.title`),
+        points: t(`cards.manage.${sheet}.points`, { returnObjects: true }),
+        confirm: t(`cards.manage.${sheet}.confirm`),
+      }
+    : null;
 
   return (
     <View>
       <View style={{ paddingHorizontal: spacing[2] }}>
-        <SectionHeader title="Manage card" />
+        <SectionHeader title={t('cards.manage.title')} />
       </View>
       <ListItem
         leading={RefreshCw}
-        title="Replace card"
-        subtitle="New number if this one may have leaked"
+        title={t('cards.manage.replace.confirm')}
+        subtitle={t('cards.manage.replace.subtitle')}
         onPress={() => setSheet('replace')}
       />
       <ListItem
         leading={Trash2}
-        title="Terminate card"
-        subtitle="Close it for good"
+        title={t('cards.manage.terminate.confirm')}
+        subtitle={t('cards.manage.terminate.subtitle')}
         onPress={() => setSheet('terminate')}
       />
 
       <BottomSheet open={sheet !== null} onClose={() => setSheet(null)} title={copy?.title}>
         {copy && sheet && (
           <View style={{ gap: spacing[4] }}>
-            <Text color="textMuted">{`${cardName(card)} · ends ${card.last4}`}</Text>
+            <Text color="textMuted">
+              {t('cards.nameEnds', { name: cardName(card), last4: card.last4 })}
+            </Text>
             <View style={{ gap: spacing[2] }}>
               {copy.points.map((p) => (
                 <Text key={p}>{`•  ${p}`}</Text>
@@ -125,7 +116,12 @@ export function CardManage({ card, onReplaced }: Props) {
                 setSheet(null);
               }}
             />
-            <Button label="Keep card" variant="ghost" fullWidth onPress={() => setSheet(null)} />
+            <Button
+              label={t('cards.manage.keep')}
+              variant="ghost"
+              fullWidth
+              onPress={() => setSheet(null)}
+            />
           </View>
         )}
       </BottomSheet>
@@ -134,8 +130,8 @@ export function CardManage({ card, onReplaced }: Props) {
         onClose={() => setConfirming(null)}
         subtitle={
           confirming === 'terminate'
-            ? `Terminate the card ending ${card.last4}`
-            : `Replace the card ending ${card.last4}`
+            ? t('cards.manage.terminate.step', { last4: card.last4 })
+            : t('cards.manage.replace.step', { last4: card.last4 })
         }
         error={error}
         onApproved={run}

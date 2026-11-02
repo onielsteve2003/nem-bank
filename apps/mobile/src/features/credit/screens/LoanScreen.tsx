@@ -1,5 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { CircleCheck } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -44,15 +45,16 @@ type Props = {
  */
 export function LoanScreen({ id, justBorrowed = false }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const query = useRepoQuery('credit', 'getLoan', { path: { loan_id: id } });
   const loan = query.data;
 
   let body;
   if (query.isError) {
-    body = <ErrorState title="We couldn't load this loan" onRetry={() => query.refetch()} />;
+    body = <ErrorState title={t('credit.loan.failed')} onRetry={() => query.refetch()} />;
   } else if (!loan) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your loan">
+      <SkeletonGroup accessibilityLabel={t('credit.loan.loading')}>
         <Skeleton height={180} />
         <Skeleton height={240} />
       </SkeletonGroup>
@@ -67,11 +69,11 @@ export function LoanScreen({ id, justBorrowed = false }: Props) {
               style={[styles.row, { gap: spacing[3] }]}
               accessible
               accessibilityRole="alert"
-              accessibilityLabel={`${principal} is in your naira account`}
+              accessibilityLabel={t('credit.loan.inNaira', { amount: principal })}
             >
               <Icon icon={CircleCheck} color="success" />
               <Text variant="bodyStrong" style={styles.flex}>
-                {principal} is in your naira account
+                {t('credit.loan.inNaira', { amount: principal })}
               </Text>
             </View>
           </Card>
@@ -80,14 +82,20 @@ export function LoanScreen({ id, justBorrowed = false }: Props) {
         {loan.status !== 'repaid' && <LoanActions loan={loan} />}
         <Card>
           <View style={{ gap: spacing[3] }}>
-            <DetailRow label="Borrowed" value={principal} />
-            <DetailRow label="APR" value={`${aprLabel(loan.apr_bps)} a year`} />
-            <DetailRow label="Term" value={tenorLabel(loan.tenor_days)} />
-            <DetailRow label="Paid out on" value={paidOut.format(new Date(loan.disbursed_at))} />
+            <DetailRow label={t('credit.loan.borrowed')} value={principal} />
+            <DetailRow
+              label={t('credit.loan.apr')}
+              value={t('credit.loan.aprYear', { apr: aprLabel(loan.apr_bps) })}
+            />
+            <DetailRow label={t('credit.loan.term')} value={tenorLabel(loan.tenor_days)} />
+            <DetailRow
+              label={t('credit.loan.paidOutOn')}
+              value={paidOut.format(new Date(loan.disbursed_at))}
+            />
           </View>
         </Card>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Repayment schedule" />
+          <SectionHeader title={t('credit.loan.schedule')} />
           <Card>
             <InstallmentList installments={loan.schedule} showStatus />
           </Card>
@@ -98,7 +106,7 @@ export function LoanScreen({ id, justBorrowed = false }: Props) {
 
   return (
     <Screen
-      header={<SendHeader title="Your loan" />}
+      header={<SendHeader title={t('credit.loan.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void query.refetch()}
       refreshing={query.isRefetching}

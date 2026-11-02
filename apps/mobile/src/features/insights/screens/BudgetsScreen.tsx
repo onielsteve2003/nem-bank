@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { Plus, Wallet } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -29,6 +30,7 @@ import { BudgetSheet } from '../components/BudgetSheet';
  */
 export function BudgetsScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = useBalancesHidden();
   const budgets = useRepoQuery('insights', 'listBudgets');
   // undefined = closed, null = a new budget.
@@ -38,10 +40,10 @@ export function BudgetsScreen() {
 
   let body;
   if (budgets.isError && !budgets.data) {
-    body = <ErrorState title="We couldn't load your budgets" onRetry={() => budgets.refetch()} />;
+    body = <ErrorState title={t('insights.budgets.failed')} onRetry={() => budgets.refetch()} />;
   } else if (!budgets.data) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your budgets">
+      <SkeletonGroup accessibilityLabel={t('insights.budgets.loading')}>
         <Skeleton height={96} />
         <Skeleton height={96} />
       </SkeletonGroup>
@@ -50,9 +52,9 @@ export function BudgetsScreen() {
     body = (
       <EmptyState
         icon={Wallet}
-        title="No budgets yet"
-        message="Set a monthly limit for a category and we’ll tell you at 80% and again at 100%."
-        actionLabel="Add a budget"
+        title={t('insights.budgets.emptyTitle')}
+        message={t('insights.budgets.intro')}
+        actionLabel={t('insights.budgets.add')}
         onAction={() => setEditing(null)}
       />
     );
@@ -70,11 +72,11 @@ export function BudgetsScreen() {
           </View>
         </Card>
         <Text variant="caption" color="textMuted">
-          Budgets reset on the 1st of each month. Money moved into your own savings doesn’t count.
+          {t('insights.budgets.reset')}
         </Text>
         {free.length > 0 && (
           <Button
-            label="Add a budget"
+            label={t('insights.budgets.add')}
             icon={Plus}
             variant="secondary"
             onPress={() => setEditing(null)}
@@ -86,7 +88,7 @@ export function BudgetsScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Budgets" />}
+      header={<SendHeader title={t('insights.budgets.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void budgets.refetch()}
       refreshing={budgets.isRefetching}

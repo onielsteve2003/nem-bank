@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from 'react';
 import { AppState } from 'react-native';
 
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { useRepoMutation } from '@/lib/query';
 
 import { StepUpCancelled, StepUpNeedsPin, useStepUp, type StepUpProof } from './useStepUp';
@@ -25,11 +26,11 @@ export type CardReveal = {
 
 const failure = (e: unknown) => {
   if (isApiError(e)) {
-    if (e.problem.code === 'offline') return "You're offline. Reconnect to see card details.";
-    if (e.problem.code === 'invalid_state') return 'This card is closed, so its details are gone.';
+    if (e.problem.code === 'offline') return i18n.t('cards.details.offline');
+    if (e.problem.code === 'invalid_state') return i18n.t('cards.details.closed');
     return e.problem.detail ?? e.problem.title;
   }
-  return "We couldn't show the details. Try again.";
+  return i18n.t('cards.details.failed');
 };
 
 /**
@@ -84,7 +85,7 @@ export function useCardReveal(): CardReveal {
     } catch (e) {
       if (e instanceof StepUpCancelled) return false;
       if (e instanceof StepUpNeedsPin) {
-        setError('Face ID isn’t set up for this here. Enter your PIN.');
+        setError(i18n.t('common.faceIdUsePin'));
         return false;
       }
       setError(failure(e));

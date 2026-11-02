@@ -1,6 +1,8 @@
 import type { Schema } from '@nem/contracts';
 import { money, type Money } from '@nem/shared';
 
+import i18n, { localized } from '@/lib/i18n';
+
 type Lock = Schema<'LockedSaving'>;
 
 /** The terms a lock can run for (SAV-4), with the demo bank's yearly rates. */
@@ -11,7 +13,10 @@ export const MIN_LOCK_NAIRA = 10_000;
 export const ratePct = (bps: number) => `${bps / 100}%`;
 
 /** 365 → "1 year", 90 → "90 days". */
-export const termLabel = (days: number) => (days === 365 ? '1 year' : `${days} days`);
+export const termLabel = (days: number) =>
+  days === 365
+    ? i18n.t('savings.locks.term.year')
+    : i18n.t('savings.locks.term.days', { count: days });
 
 /** What breaking now keeps: the penalty comes out of interest only, rounded in the customer's favour. */
 export function keptOnBreak(lock: Lock, accrued: Money): Money {
@@ -33,8 +38,8 @@ export function sortLocks(locks: readonly Lock[]): Lock[] {
   return [...active.sort((a, b) => a.maturity_date.localeCompare(b.maturity_date)), ...ended];
 }
 
-export const LOCK_STATUS: Record<Lock['status'], string> = {
-  active: 'Locked',
-  matured: 'Matured',
-  broken: 'Broken early',
-};
+export const LOCK_STATUS = localized<Lock['status']>({
+  active: 'savings.locks.status.active',
+  matured: 'savings.locks.status.matured',
+  broken: 'savings.locks.status.broken',
+});

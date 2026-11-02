@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { negate } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Clock, Receipt } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -36,6 +37,7 @@ const PENDING_REFRESH_MS = 15_000;
 export function CardPayments({ card }: Props) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const payments = useRepoQuery(
     'cards',
     'listTransactions',
@@ -60,33 +62,30 @@ export function CardPayments({ card }: Props) {
   return (
     <View style={{ gap: spacing[1] }}>
       <View style={{ paddingHorizontal: spacing[2] }}>
-        <SectionHeader title="Payments" />
+        <SectionHeader title={t('cards.payments.title')} />
       </View>
       {payments.isError ? (
-        <ErrorState
-          title="We couldn't load this card's payments"
-          onRetry={() => payments.refetch()}
-        />
+        <ErrorState title={t('cards.payments.failed')} onRetry={() => payments.refetch()} />
       ) : !payments.data ? (
         <View style={{ paddingHorizontal: spacing[2] }}>
-          <SkeletonGroup accessibilityLabel="Loading payments">
+          <SkeletonGroup accessibilityLabel={t('cards.payments.loading')}>
             <Skeleton height={48} />
             <Skeleton height={48} />
           </SkeletonGroup>
         </View>
       ) : pending.length + done.length === 0 ? (
         <Text color="textMuted" style={{ paddingHorizontal: spacing[2] }}>
-          No payments with this card yet.
+          {t('cards.payments.empty')}
         </Text>
       ) : (
         <>
           {pending.length > 0 && (
             <>
               <Text variant="label" style={{ paddingHorizontal: spacing[2] }}>
-                Pending
+                {t('cards.payments.pending')}
               </Text>
               <Text variant="caption" color="textMuted" style={{ paddingHorizontal: spacing[2] }}>
-                Held from your balance until the merchant settles, usually within a few days.
+                {t('cards.payments.pendingHelp')}
               </Text>
               {pending.map(row)}
             </>
@@ -97,7 +96,7 @@ export function CardPayments({ card }: Props) {
                 variant="label"
                 style={{ paddingHorizontal: spacing[2], paddingTop: spacing[2] }}
               >
-                Settled
+                {t('cards.payments.settled')}
               </Text>
               {done.map(row)}
             </>
@@ -109,6 +108,7 @@ export function CardPayments({ card }: Props) {
 }
 
 function PaymentRow({ payment: p, onPress }: { payment: Payment; onPress?: () => void }) {
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const pending = p.status === 'authorized';
   const when = formatWhen(pending ? p.authorized_at : (p.settled_at ?? p.authorized_at));
@@ -116,7 +116,7 @@ function PaymentRow({ payment: p, onPress }: { payment: Payment; onPress?: () =>
     <ListItem
       leading={pending ? Clock : Receipt}
       title={p.merchant.name}
-      subtitle={pending ? `Authorised ${when}` : when}
+      subtitle={pending ? t('cards.payments.authorised', { when }) : when}
       onPress={onPress}
       showChevron={false}
       trailing={
@@ -127,7 +127,7 @@ function PaymentRow({ payment: p, onPress }: { payment: Payment; onPress?: () =>
             color={p.status === 'reversed' ? 'textMuted' : 'text'}
             masked={hidden}
             align="right"
-            label={pending ? 'Pending' : 'Paid'}
+            label={t(pending ? 'cards.payments.pending' : 'cards.payments.paid')}
           />
           {pending ? <StatusPill status="pending" /> : null}
           {p.status === 'reversed' ? <StatusPill status="reversed" /> : null}

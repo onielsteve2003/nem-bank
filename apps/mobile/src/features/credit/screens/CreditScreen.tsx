@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { HandCoins, RefreshCw, ShieldCheck } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -33,9 +34,6 @@ const checkedFormat = new Intl.DateTimeFormat('en-NG', {
   minute: '2-digit',
 });
 
-const STANDARD_RULES =
-  'Standard rules: salary paid into Nem in the last three months, KYC Tier 3 and no loan still being repaid.';
-
 /**
  * Credit hub (CRD-1): whether the customer can borrow, up to how much, their
  * score band, and every reason behind the decision. Credit always explains
@@ -44,6 +42,7 @@ const STANDARD_RULES =
 export function CreditScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const aiOn = usePreferencesStore((s) => s.ai.creditScoring);
   const check = useRepoQuery('credit', 'getEligibility');
   const loans = useRepoQuery('credit', 'listLoans');
@@ -56,12 +55,10 @@ export function CreditScreen() {
 
   let body;
   if (check.isError) {
-    body = (
-      <ErrorState title="We couldn't check what you can borrow" onRetry={() => check.refetch()} />
-    );
+    body = <ErrorState title={t('credit.hub.failed')} onRetry={() => check.refetch()} />;
   } else if (!e) {
     body = (
-      <SkeletonGroup accessibilityLabel="Checking what you can borrow">
+      <SkeletonGroup accessibilityLabel={t('credit.hub.loading')}>
         <Skeleton height={200} />
         <Skeleton height={160} />
       </SkeletonGroup>
@@ -82,36 +79,39 @@ export function CreditScreen() {
             <View style={[styles.row, { gap: spacing[2] }]}>
               {aiOn ? (
                 <AIBadge
-                  feature="Credit scoring"
+                  feature={t('credit.hub.aiFeature')}
                   explanation={e.ai.explanation}
-                  fallback={STANDARD_RULES}
+                  fallback={t('credit.hub.standardRules')}
                 />
               ) : (
                 <Text variant="caption" color="textMuted">
-                  AI scoring is off · standard check
+                  {t('credit.hub.aiOff')}
                 </Text>
               )}
             </View>
             <View style={{ gap: spacing[1] }}>
               <Text variant="bodySmall" color="textMuted">
-                {e.eligible ? 'You can borrow up to' : 'You can’t borrow yet'}
+                {t(e.eligible ? 'credit.hub.canBorrow' : 'credit.hub.cannotBorrow')}
               </Text>
               {e.eligible ? (
                 <MoneyText
                   value={fromApiMoney(e.max_amount)}
                   variant="amountLarge"
                   trimZeroMinor
-                  label="You can borrow up to"
+                  label={t('credit.hub.canBorrow')}
                 />
               ) : (
-                <Text variant="h2">Here’s why, and what to do</Text>
+                <Text variant="h2">{t('credit.hub.why')}</Text>
               )}
             </View>
 
             <View
               style={{ gap: spacing[2] }}
               accessible
-              accessibilityLabel={`Credit score band: ${SCORE_BANDS[band]?.label ?? e.score_band}, ${band + 1} of 4`}
+              accessibilityLabel={t('credit.hub.bandLabel', {
+                band: SCORE_BANDS[band]?.label ?? e.score_band,
+                position: band + 1,
+              })}
             >
               <View style={[styles.row, { gap: spacing[1] }]}>
                 {SCORE_BANDS.map((b, i) => (
@@ -131,15 +131,17 @@ export function CreditScreen() {
                 ))}
               </View>
               <View style={[styles.row, styles.between]}>
-                <Text variant="bodyStrong">{SCORE_BANDS[band]?.label} score</Text>
+                <Text variant="bodyStrong">
+                  {t('credit.hub.bandScore', { band: SCORE_BANDS[band]?.label })}
+                </Text>
                 <Text variant="caption" color="textMuted">
-                  Checked {checkedFormat.format(new Date(e.checked_at))}
+                  {t('credit.hub.checked', { when: checkedFormat.format(new Date(e.checked_at)) })}
                 </Text>
               </View>
             </View>
 
             <Button
-              label="Check again"
+              label={t('credit.hub.checkAgain')}
               icon={RefreshCw}
               variant="ghost"
               loading={check.isRefetching}
@@ -149,7 +151,7 @@ export function CreditScreen() {
         </Card>
 
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Why" />
+          <SectionHeader title={t('credit.hub.whyTitle')} />
           <Card>
             <View style={{ gap: spacing[3] }} accessibilityRole="list">
               {sortReasons(e.reasons).map((r) => {
@@ -159,7 +161,10 @@ export function CreditScreen() {
                     key={r.code}
                     style={[styles.row, { gap: spacing[3] }]}
                     accessible
-                    accessibilityLabel={`${impact.label}: ${r.message}`}
+                    accessibilityLabel={t('credit.hub.reason', {
+                      impact: impact.label,
+                      message: r.message,
+                    })}
                   >
                     <Icon icon={impact.icon} color={impact.color} />
                     <Text variant="body" style={styles.flex}>
@@ -174,30 +179,30 @@ export function CreditScreen() {
 
         {step === 'kyc' && (
           <Button
-            label="Verify your identity"
+            label={t('credit.hub.verify')}
             icon={ShieldCheck}
             onPress={() => router.push('/kyc')}
           />
         )}
         {step === 'repay' && (
           <Text variant="bodySmall" color="textMuted">
-            Once your current loan is repaid, check again to borrow.
+            {t('credit.hub.repayFirst')}
           </Text>
         )}
         {step === 'income' && (
           <Text variant="bodySmall" color="textMuted">
-            Have your salary paid into your Nem account. After it arrives, check again.
+            {t('credit.hub.salary')}
           </Text>
         )}
         {e.eligible && (
           <>
             <Button
-              label="See your offer"
+              label={t('credit.hub.seeOffer')}
               icon={HandCoins}
               onPress={() => router.push('/credit/offer')}
             />
             <Text variant="bodySmall" color="textMuted">
-              Rates start at 24% a year. Nothing is borrowed until you accept an offer.
+              {t('credit.hub.rates')}
             </Text>
           </>
         )}
@@ -207,7 +212,7 @@ export function CreditScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Credit" first />}
+      header={<SendHeader title={t('credit.title')} first />}
       edges={['top', 'bottom']}
       onRefresh={refresh}
       refreshing={check.isRefetching || loans.isRefetching}

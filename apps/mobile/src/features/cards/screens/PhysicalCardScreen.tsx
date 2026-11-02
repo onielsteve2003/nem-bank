@@ -1,5 +1,6 @@
 import { Truck } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -22,13 +23,6 @@ import { useTheme } from '@/theme';
 import { addressComplete, toApiAddress, type DeliveryAddress } from '../cards';
 import { AddressFields } from '../components/AddressFields';
 
-const WHAT_YOU_GET = [
-  'A Verve debit card on your NGN account, with your name printed on it',
-  'Contactless and chip and PIN at shops and ATMs',
-  'The same freeze, limit and channel controls as your virtual cards',
-  'Delivered in 5 to 7 working days; activate it in the app with your PIN',
-];
-
 /**
  * Order a physical card (CARD-8), designed in full: what it is, where to post
  * it and what it costs. Printing and posting needs a card partner, so the bank
@@ -36,6 +30,7 @@ const WHAT_YOU_GET = [
  */
 export function PhysicalCardScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const accounts = useRepoQuery('accounts', 'list');
   const me = useRepoQuery('users', 'getMe');
   const order = useRepoMutation('cards', 'requestPhysical', { invalidates: [] });
@@ -49,9 +44,9 @@ export function PhysicalCardScreen() {
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [error, setError] = useState<string>();
 
-  const header = <SendHeader title="Physical card" first />;
+  const header = <SendHeader title={t('cards.physical.title')} first />;
   const naira = accounts.data?.data.find((a) => a.currency === 'NGN');
-  const holder = me.data ? `${me.data.first_name} ${me.data.last_name}` : 'Your name';
+  const holder = me.data ? `${me.data.first_name} ${me.data.last_name}` : t('cards.new.yourName');
 
   const submit = () => {
     if (!naira || !addressComplete(address)) return;
@@ -68,7 +63,7 @@ export function PhysicalCardScreen() {
           if (isApiError(e) && e.code === 'paid_feature_required') setNoticeOpen(true);
           else
             setError(
-              isApiError(e) ? (e.problem.detail ?? e.problem.title) : 'Try again in a moment.',
+              isApiError(e) ? (e.problem.detail ?? e.problem.title) : t('common.tryAgainMoment'),
             );
         },
       },
@@ -78,14 +73,14 @@ export function PhysicalCardScreen() {
   if (accounts.isError) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <ErrorState title="We couldn't load your account" onRetry={() => accounts.refetch()} />
+        <ErrorState title={t('common.accountFailed')} onRetry={() => accounts.refetch()} />
       </Screen>
     );
   }
   if (!accounts.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <SkeletonGroup accessibilityLabel="Loading">
+        <SkeletonGroup accessibilityLabel={t('common.loading')}>
           <Skeleton height={200} radius={16} />
           <Skeleton height={56} />
         </SkeletonGroup>
@@ -105,7 +100,7 @@ export function PhysicalCardScreen() {
             </Text>
           )}
           <Button
-            label="Order card · ₦1,000"
+            label={t('cards.physical.order')}
             icon={Truck}
             disabled={!naira || !addressComplete(address)}
             loading={order.isPending}
@@ -126,27 +121,27 @@ export function PhysicalCardScreen() {
 
       <Card>
         <View style={{ gap: spacing[2] }}>
-          {WHAT_YOU_GET.map((line) => (
+          {t('cards.physical.whatYouGet', { returnObjects: true }).map((line) => (
             <Text key={line}>{`•  ${line}`}</Text>
           ))}
         </View>
       </Card>
 
-      <SectionHeader title="Deliver to" />
+      <SectionHeader title={t('cards.physical.deliverTo')} />
       <AddressFields value={address} onChange={setAddress} />
 
       <Card>
         <View style={{ gap: spacing[2] }}>
           <View style={styles.between}>
-            <Text color="textMuted">Card and delivery</Text>
+            <Text color="textMuted">{t('cards.physical.cardAndDelivery')}</Text>
             <Text>₦1,000.00</Text>
           </View>
           <View style={styles.between}>
-            <Text color="textMuted">Paid from</Text>
-            <Text>NGN account</Text>
+            <Text color="textMuted">{t('cards.physical.paidFrom')}</Text>
+            <Text>{t('cards.physical.ngnAccount')}</Text>
           </View>
           <Text variant="caption" color="textMuted">
-            Charged only once the card is posted.
+            {t('cards.physical.chargedWhenPosted')}
           </Text>
         </View>
       </Card>

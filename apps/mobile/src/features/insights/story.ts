@@ -13,6 +13,7 @@ import {
 } from 'lucide-react-native';
 
 import { CATEGORIES } from '@/features/transactions/categories';
+import i18n from '@/lib/i18n';
 
 import { monthYearLabel } from './insights';
 
@@ -55,12 +56,20 @@ export function shareSummary(story: Story): ShareSummary {
     const whole = spent ? BigInt(spent.amount_minor) : 0n;
     // A share of the month says the shape without the amount; rounded down.
     const pct = whole > 0n && top.amount ? (BigInt(top.amount.amount_minor) * 100n) / whole : null;
-    lines.push(pct !== null ? `Most went on ${label} (${pct}%)` : `Most went on ${label}`);
+    lines.push(
+      pct !== null
+        ? i18n.t('insights.story.mostWentPct', { category: label, pct: String(pct) })
+        : i18n.t('insights.story.mostWent', { category: label }),
+    );
   }
   if (compared) lines.push(compared.title);
-  if (saved?.amount && BigInt(saved.amount.amount_minor) > 0n) lines.push('Put money aside');
+  if (saved?.amount && BigInt(saved.amount.amount_minor) > 0n)
+    lines.push(i18n.t('insights.story.putAside'));
   return { month: monthYearLabel(story.month), lines };
 }
 
 export const shareText = (summary: ShareSummary) =>
-  [`My ${summary.month} with Nem`, ...summary.lines.map((l) => `• ${l}`)].join('\n');
+  [
+    i18n.t('insights.story.myWithNem', { month: summary.month }),
+    ...summary.lines.map((l) => `• ${l}`),
+  ].join('\n');

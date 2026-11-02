@@ -3,6 +3,7 @@ import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { ChartPie, Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -41,6 +42,7 @@ import { changeOf, donutSlices, monthLabel, MONTHS_BACK, shiftMonth } from '../i
 export function InsightsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = useBalancesHidden();
   // null = the current month, whatever the bank's clock says it is.
   const [picked, setPicked] = useState<string | null>(null);
@@ -60,10 +62,10 @@ export function InsightsScreen() {
 
   let body;
   if (q.isError && !s) {
-    body = <ErrorState title="We couldn't load your spending" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('insights.home.failed')} onRetry={() => q.refetch()} />;
   } else if (!s || !latest) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your spending">
+      <SkeletonGroup accessibilityLabel={t('insights.home.loading')}>
         <Skeleton height={44} />
         <Skeleton height={320} />
         <Skeleton height={200} />
@@ -79,9 +81,12 @@ export function InsightsScreen() {
     const compare = hidden
       ? null
       : change.kind === 'more' || change.kind === 'less'
-        ? `${formatMoney(money(change.minor, total.currency))} ${change.kind} than ${prev}`
+        ? t(`insights.home.${change.kind}`, {
+            amount: formatMoney(money(change.minor, total.currency)),
+            month: prev,
+          })
         : !isZero(before)
-          ? `${prev} in all: ${formatMoney(before)}`
+          ? t('insights.home.inAll', { month: prev, amount: formatMoney(before) })
           : null;
 
     body = (
@@ -95,8 +100,10 @@ export function InsightsScreen() {
         {isZero(total) ? (
           <EmptyState
             icon={ChartPie}
-            title={`Nothing spent in ${monthLabel(s.month)}${inProgress ? ' yet' : ''}`}
-            message="Card payments, bills and transfers to other people show up here."
+            title={t(inProgress ? 'insights.home.nothingYet' : 'insights.home.nothing', {
+              month: monthLabel(s.month),
+            })}
+            message={t('insights.home.nothingMessage')}
           />
         ) : (
           <>
@@ -104,7 +111,9 @@ export function InsightsScreen() {
               <View style={{ gap: spacing[3] }}>
                 <View style={{ gap: spacing[1] }}>
                   <Text variant="bodySmall" color="textMuted">
-                    {inProgress ? `Spent in ${monthLabel(s.month)} so far` : 'You spent'}
+                    {inProgress
+                      ? t('insights.home.soFar', { month: monthLabel(s.month) })
+                      : t('insights.home.youSpent')}
                   </Text>
                   <MoneyText value={total} variant="amountLarge" masked={hidden} />
                   {compare && (
@@ -114,21 +123,21 @@ export function InsightsScreen() {
                   )}
                 </View>
                 <DonutChart
-                  title={`Spending by category in ${monthLabel(s.month)}`}
+                  title={t('insights.home.donut', { month: monthLabel(s.month) })}
                   data={slices.map((d) => ({ label: d.label, value: Number(d.minor) }))}
                   formatValue={(_, i) =>
                     hidden ? `₦${MASK}` : formatMoney(money(slices[i]!.minor, total.currency))
                   }
                   center={
                     <Text variant="caption" color="textMuted">
-                      {s.categories.length} {s.categories.length === 1 ? 'category' : 'categories'}
+                      {t('insights.home.categories', { count: s.categories.length })}
                     </Text>
                   }
                 />
               </View>
             </Card>
             <View style={{ gap: spacing[2] }}>
-              <SectionHeader title={`Compared with ${prev}`} />
+              <SectionHeader title={t('insights.compare.withMonth', { month: prev })} />
               <CategoryCompare
                 categories={s.categories}
                 month={s.month}
@@ -137,7 +146,7 @@ export function InsightsScreen() {
               />
               {inProgress && (
                 <Text variant="caption" color="textMuted">
-                  The month isn’t over, so a category only shows as up once it passes {prev}.
+                  {t('insights.home.notOver', { month: prev })}
                 </Text>
               )}
             </View>
@@ -147,8 +156,10 @@ export function InsightsScreen() {
         <Card padded={false}>
           <ListItem
             leading={Sparkles}
-            title={`Your ${monthLabel(inProgress ? shiftMonth(s.month, -1) : s.month)} Money Story`}
-            subtitle="Your month in a few slides, to keep or share"
+            title={t('insights.home.storyTitle', {
+              month: monthLabel(inProgress ? shiftMonth(s.month, -1) : s.month),
+            })}
+            subtitle={t('insights.home.storySubtitle')}
             onPress={() =>
               router.push({
                 pathname: '/insights/story',
@@ -184,7 +195,7 @@ export function InsightsScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Insights" first />}
+      header={<SendHeader title={t('insights.title')} first />}
       edges={['top', 'bottom']}
       onRefresh={() =>
         void Promise.all([

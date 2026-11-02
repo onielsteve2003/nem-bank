@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
 import { Lock } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -50,6 +51,7 @@ export function NewCardScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const accounts = useRepoQuery('accounts', 'list');
   const me = useRepoQuery('users', 'getMe');
   const [currency, setCurrency] = useState<CardCurrency>('NGN');
@@ -61,11 +63,11 @@ export function NewCardScreen() {
   const [error, setError] = useState<string>();
   const create = useMoneyMutation('cards', 'create', { invalidates: [['cards']] });
 
-  const header = <SendHeader title="New virtual card" first />;
+  const header = <SendHeader title={t('cards.new.title')} first />;
   const wallet = accounts.data?.data.find((a) => a.currency === currency);
   const hasUsd = accounts.data?.data.some((a) => a.currency === 'USD') ?? false;
   const needsMerchant = type === 'merchant_locked' && !merchant;
-  const holder = me.data ? `${me.data.first_name} ${me.data.last_name}` : 'Your name';
+  const holder = me.data ? `${me.data.first_name} ${me.data.last_name}` : t('cards.new.yourName');
 
   const onApproved = useCallback(async () => {
     if (!wallet) return false;
@@ -82,13 +84,11 @@ export function NewCardScreen() {
       });
       setConfirming(false);
       haptic('success');
-      toast.show({ message: `Your card ending ${card.last4} is ready`, tone: 'success' });
+      toast.show({ message: t('cards.new.ready', { last4: card.last4 }), tone: 'success' });
       router.back();
       return true;
     } catch (e) {
-      const message = isApiError(e)
-        ? (e.problem.detail ?? e.problem.title)
-        : "We couldn't create the card. Try again; you won't get two.";
+      const message = isApiError(e) ? (e.problem.detail ?? e.problem.title) : t('cards.new.failed');
       setError(message);
       // A refusal (tier, card limit) will not change on retry: show it on the screen.
       if (isApiError(e) && e.problem.status < 500 && e.problem.code !== 'offline') {
@@ -96,19 +96,19 @@ export function NewCardScreen() {
       }
       return false;
     }
-  }, [wallet, create, type, design, nickname, merchant, toast, router]);
+  }, [wallet, create, type, design, nickname, merchant, toast, router, t]);
 
   if (accounts.isError) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <ErrorState title="We couldn't load your wallets" onRetry={() => accounts.refetch()} />
+        <ErrorState title={t('common.walletsFailed')} onRetry={() => accounts.refetch()} />
       </Screen>
     );
   }
   if (!accounts.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <SkeletonGroup accessibilityLabel="Loading">
+        <SkeletonGroup accessibilityLabel={t('common.loading')}>
           <Skeleton height={200} radius={16} />
           <Skeleton height={56} />
         </SkeletonGroup>
@@ -128,7 +128,7 @@ export function NewCardScreen() {
             </Text>
           )}
           <Button
-            label="Create card"
+            label={t('cards.new.create')}
             icon={Lock}
             disabled={!wallet || needsMerchant}
             onPress={() => {
@@ -148,12 +148,12 @@ export function NewCardScreen() {
         tilt={false}
       />
 
-      <SectionHeader title="Spends from" />
+      <SectionHeader title={t('cards.new.spendsFrom')} />
       <View style={[styles.chips, { gap: spacing[2] }]}>
         {CURRENCIES.map((c) => (
           <Chip
             key={c}
-            label={`${c} wallet`}
+            label={t('cards.new.wallet', { currency: c })}
             selected={c === currency}
             disabled={c === 'USD' && !hasUsd}
             onPress={() => setCurrency(c)}
@@ -162,15 +162,15 @@ export function NewCardScreen() {
       </View>
       {!hasUsd && (
         <Text variant="caption" color="textMuted">
-          Open a USD wallet on Home to make a dollar card.
+          {t('cards.new.needUsd')}
         </Text>
       )}
 
-      <SectionHeader title="Type" />
+      <SectionHeader title={t('cards.new.type')} />
       <CardTypeOptions value={type} onChange={setType} />
       {type === 'merchant_locked' && (
         <View style={{ gap: spacing[2] }}>
-          <Text variant="label">Locked to</Text>
+          <Text variant="label">{t('cards.new.lockedTo')}</Text>
           <View style={[styles.chips, { gap: spacing[2] }]}>
             {LOCKABLE_MERCHANTS.map((m) => (
               <Chip
@@ -183,23 +183,23 @@ export function NewCardScreen() {
           </View>
           {needsMerchant && (
             <Text variant="caption" color="textMuted">
-              Pick the one merchant this card will work at.
+              {t('cards.new.pickMerchant')}
             </Text>
           )}
         </View>
       )}
 
       <TextField
-        label="Card name"
+        label={t('cards.new.name')}
         optional
-        placeholder={`${CARD_TYPES[type].label} card`}
+        placeholder={t('cards.typeCard', { type: CARD_TYPES[type].label })}
         value={nickname}
         onChangeText={setNickname}
         maxLength={NICKNAME_MAX}
-        help={`Up to ${NICKNAME_MAX} characters, like "Netflix" or "Travel".`}
+        help={t('cards.new.nameHelp', { max: NICKNAME_MAX })}
       />
 
-      <SectionHeader title="Look" />
+      <SectionHeader title={t('cards.new.look')} />
       <View style={[styles.chips, { gap: spacing[2] }]}>
         {CARD_DESIGNS.map((d) => (
           <Chip
@@ -214,7 +214,10 @@ export function NewCardScreen() {
       <ConfirmSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        subtitle={`Create a ${CARD_TYPES[type].label.toLowerCase()} ${currency} card`}
+        subtitle={t('cards.new.confirm', {
+          type: CARD_TYPES[type].label.toLowerCase(),
+          currency,
+        })}
         onApproved={onApproved}
         error={error}
       />

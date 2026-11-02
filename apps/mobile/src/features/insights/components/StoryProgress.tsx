@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { useAnimatedStyle, type SharedValue } from 'react-native-reanimated';
 
@@ -37,11 +38,12 @@ function Segment({
 /** The bars across the top of a story: done, filling, still to come. */
 export function StoryProgress({ count, index, progress }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View
       style={[styles.row, { gap: spacing[1] }]}
       accessible
-      accessibilityLabel={`Slide ${index + 1} of ${count}`}
+      accessibilityLabel={t('insights.story.slide', { index: index + 1, count })}
     >
       {Array.from({ length: count }, (_, i) => (
         <Segment

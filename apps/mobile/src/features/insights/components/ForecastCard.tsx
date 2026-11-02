@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { ChevronRight, TrendingUp, TriangleAlert } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Icon, MoneyText, Text } from '@/components';
@@ -18,14 +19,19 @@ export type Props = {
 /** The forecast in one line on Insights; the chart and the why are a tap away (INS-3). */
 export function ForecastCard({ forecast, hidden, onOpen }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const end = horizon(forecast.points, forecast.next_payday);
   if (!end) return null;
   const short = firstShortfall(forecast.points);
   const balance = fromApiMoney(end.balance);
-  const when = forecast.next_payday ? 'Before payday' : `By ${longDate(end.date)}`;
-  const summary = `${when} you’ll have about ${hidden ? 'hidden' : formatMoney(balance)}.${
-    short ? ` Your balance could run out around ${longDate(short.date)}.` : ''
-  }`;
+  const when = forecast.next_payday
+    ? t('insights.forecastCard.beforePayday')
+    : t('insights.forecastCard.byDate', { date: longDate(end.date) });
+  const summary =
+    t('insights.forecastCard.summary', {
+      when,
+      amount: hidden ? t('common.hidden') : formatMoney(balance),
+    }) + (short ? t('insights.forecastCard.runOut', { date: longDate(short.date) }) : '');
 
   return (
     <Card
@@ -33,7 +39,7 @@ export function ForecastCard({ forecast, hidden, onOpen }: Props) {
       onPress={onOpen}
       accessibilityRole="button"
       accessibilityLabel={summary}
-      accessibilityHint="Opens the cash-flow forecast"
+      accessibilityHint={t('insights.forecastCard.hint')}
     >
       <View style={[styles.row, { gap: spacing[3] }]}>
         <View style={[styles.icon, { backgroundColor: colors.raised, borderRadius: radius.md }]}>
@@ -45,13 +51,13 @@ export function ForecastCard({ forecast, hidden, onOpen }: Props) {
         </View>
         <View style={[styles.flex, { gap: spacing[1] }]}>
           <Text variant="label" color="textMuted">
-            {when} you’ll have about
+            {t('insights.forecastCard.haveAbout', { when })}
           </Text>
           <MoneyText value={balance} variant="amount" masked={hidden} />
           <Text variant="caption" color={short ? 'danger' : 'textMuted'}>
             {short
-              ? `Could run out around ${longDate(short.date)}`
-              : 'Cash-flow forecast · see how'}
+              ? t('insights.forecastCard.couldRunOut', { date: longDate(short.date) })
+              : t('insights.forecastCard.seeHow')}
           </Text>
         </View>
         <Icon icon={ChevronRight} size="sm" color="textMuted" />

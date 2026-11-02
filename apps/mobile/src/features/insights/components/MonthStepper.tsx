@@ -1,4 +1,5 @@
 import { ChevronLeft, ChevronRight } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { IconButton, Text } from '@/components';
@@ -17,6 +18,7 @@ export type Props = {
 /** Previous / next month, with the month named in the middle. */
 export function MonthStepper({ month, latest, earliest, onChange }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const previous = shiftMonth(month, -1);
   const next = shiftMonth(month, 1);
   return (
@@ -24,7 +26,7 @@ export function MonthStepper({ month, latest, earliest, onChange }: Props) {
       <IconButton
         icon={ChevronLeft}
         variant="ghost"
-        accessibilityLabel={`Show ${monthYearLabel(previous)}`}
+        accessibilityLabel={t('insights.month.show', { month: monthYearLabel(previous) })}
         disabled={month <= earliest}
         onPress={() => onChange(previous)}
       />
@@ -34,7 +36,7 @@ export function MonthStepper({ month, latest, earliest, onChange }: Props) {
       <IconButton
         icon={ChevronRight}
         variant="ghost"
-        accessibilityLabel={`Show ${monthYearLabel(next)}`}
+        accessibilityLabel={t('insights.month.show', { month: monthYearLabel(next) })}
         disabled={month >= latest}
         onPress={() => onChange(next)}
       />

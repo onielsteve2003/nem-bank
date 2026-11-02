@@ -3,6 +3,7 @@ import { CircleAlert, CircleCheck, OctagonAlert, type LucideIcon } from 'lucide-
 
 import type { Tone } from '@/components';
 import { CATEGORIES, type Category } from '@/features/transactions/categories';
+import { withLabel } from '@/lib/i18n';
 
 type Budget = Schema<'Budget'>;
 
@@ -10,9 +11,21 @@ export const BUDGET_STATUS: Record<
   Budget['status'],
   { label: string; tone: Tone; icon: LucideIcon; color: 'success' | 'warning' | 'danger' }
 > = {
-  ok: { label: 'On track', tone: 'success', icon: CircleCheck, color: 'success' },
-  warning: { label: 'Nearly there', tone: 'warning', icon: CircleAlert, color: 'warning' },
-  exceeded: { label: 'Over budget', tone: 'danger', icon: OctagonAlert, color: 'danger' },
+  ok: withLabel('insights.budgetStatus.ok', {
+    tone: 'success',
+    icon: CircleCheck,
+    color: 'success',
+  }),
+  warning: withLabel('insights.budgetStatus.warning', {
+    tone: 'warning',
+    icon: CircleAlert,
+    color: 'warning',
+  }),
+  exceeded: withLabel('insights.budgetStatus.exceeded', {
+    tone: 'danger',
+    icon: OctagonAlert,
+    color: 'danger',
+  }),
 };
 
 /** Income and money moved to the customer's own savings are never spending. */

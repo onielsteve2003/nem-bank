@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 
 import { CATEGORIES } from '@/features/transactions/categories';
+import i18n from '@/lib/i18n';
 
 type CategorySpend = Schema<'CategorySpend'>;
 
@@ -42,7 +43,7 @@ export function donutSlices(categories: readonly CategorySpend[]): Slice[] {
   if (slices.length <= MAX_SLICES) return slices;
   const head = slices.slice(0, MAX_SLICES - 1);
   const rest = slices.slice(MAX_SLICES - 1).reduce((sum, s) => sum + s.minor, 0n);
-  return [...head, { label: 'Everything else', minor: rest }];
+  return [...head, { label: i18n.t('insights.everythingElse'), minor: rest }];
 }
 
 /** `new`: nothing on this category the month before. */

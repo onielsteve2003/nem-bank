@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Icon, MoneyText, PressableScale, Text } from '@/components';
@@ -19,6 +20,7 @@ export type Props = {
 /** One budget: how much of it is used, in a bar, words and an icon (INS-2). */
 export function BudgetRow({ budget, hidden, onPress }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const meta = CATEGORIES[budget.category] ?? CATEGORIES.other;
   const status = BUDGET_STATUS[budget.status];
   const spent = fromApiMoney(budget.spent);
@@ -26,10 +28,22 @@ export function BudgetRow({ budget, hidden, onPress }: Props) {
   const pct = usedPct(budget);
   const gap = limit.amount - spent.amount;
   const left = money(gap < 0n ? -gap : gap, limit.currency);
-  const remaining = hidden ? `${pct}% used` : `${formatMoney(left)} ${gap < 0n ? 'over' : 'left'}`;
-  const label = `${meta.label} budget, ${status.label}. ${
-    hidden ? `${pct}% used` : `${formatMoney(spent)} of ${formatMoney(limit)} spent, ${remaining}`
-  }.`;
+  const remaining = hidden
+    ? t('insights.budgetRow.used', { pct })
+    : t(gap < 0n ? 'insights.budgetRow.over' : 'insights.budgetRow.left', {
+        amount: formatMoney(left),
+      });
+  const label = t('insights.budgetRow.label', {
+    category: meta.label,
+    status: status.label,
+    detail: hidden
+      ? remaining
+      : t('insights.budgetRow.spentOf', {
+          spent: formatMoney(spent),
+          limit: formatMoney(limit),
+          remaining,
+        }),
+  });
 
   return (
     <PressableScale
@@ -37,7 +51,7 @@ export function BudgetRow({ budget, hidden, onPress }: Props) {
       disabled={!onPress}
       accessibilityRole={onPress ? 'button' : undefined}
       accessibilityLabel={label}
-      accessibilityHint={onPress ? 'Change or remove this budget' : undefined}
+      accessibilityHint={onPress ? t('insights.budgetRow.hint') : undefined}
       style={{ padding: spacing[4], gap: spacing[2] }}
     >
       <View style={[styles.row, { gap: spacing[3] }]}>
@@ -69,7 +83,9 @@ export function BudgetRow({ budget, hidden, onPress }: Props) {
       <View style={[styles.row, { gap: spacing[1] }]}>
         <MoneyText value={spent} variant="caption" color="textMuted" masked={hidden} />
         <Text variant="caption" color="textMuted" style={styles.flex}>
-          of {hidden ? `₦${MASK}` : formatMoney(limit, { trimZeroMinor: true })}
+          {t('insights.budgetRow.of', {
+            amount: hidden ? `₦${MASK}` : formatMoney(limit, { trimZeroMinor: true }),
+          })}
         </Text>
         <Text variant="caption" color={gap < 0n ? 'danger' : 'textMuted'}>
           {remaining}

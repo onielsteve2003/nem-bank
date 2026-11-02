@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { compare, formatMoney, money, subtract } from '@nem/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AmountInput, BottomSheet, Button, Chip, Text } from '@/components';
@@ -29,6 +30,7 @@ const naira = (kobo: bigint) => formatMoney(money(kobo, 'NGN'));
  */
 export function RepaySheet({ loan, account, onClose }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const overdue = dueNowKobo(loan);
   const next = nextLeftKobo(loan);
   const owed = fromApiMoney(loan.outstanding);
@@ -63,14 +65,18 @@ export function RepaySheet({ loan, account, onClose }: Props) {
   };
 
   const options: { label: string; kobo: bigint }[] = [
-    ...(overdue > 0n ? [{ label: `Overdue ${naira(overdue)}`, kobo: overdue }] : []),
-    ...(overdue === 0n && next > 0n ? [{ label: `Next payment ${naira(next)}`, kobo: next }] : []),
-    { label: `Pay off ${naira(payoff.amount)}`, kobo: payoff.amount },
+    ...(overdue > 0n
+      ? [{ label: t('credit.repay.overdue', { amount: naira(overdue) }), kobo: overdue }]
+      : []),
+    ...(overdue === 0n && next > 0n
+      ? [{ label: t('credit.repay.next', { amount: naira(next) }), kobo: next }]
+      : []),
+    { label: t('credit.repay.payOff', { amount: naira(payoff.amount) }), kobo: payoff.amount },
   ];
 
   return (
     <>
-      <BottomSheet open={!confirming} onClose={onClose} title="Repay your loan">
+      <BottomSheet open={!confirming} onClose={onClose} title={t('credit.repay.title')}>
         <View style={{ gap: spacing[4] }}>
           <View accessibilityRole="radiogroup" style={[styles.chips, { gap: spacing[2] }]}>
             {options.map((o) => (
@@ -87,19 +93,23 @@ export function RepaySheet({ loan, account, onClose }: Props) {
             value={typed}
             onChangeValue={setTyped}
             maxWholeDigits={9}
-            help={`${formatMoney(available)} available in your naira account`}
+            help={t('common.availableNaira', { amount: formatMoney(available) })}
             error={
               overPayoff
-                ? `${formatMoney(payoff)} clears the whole loan today`
+                ? t('credit.repay.clears', { amount: formatMoney(payoff) })
                 : overBalance
-                  ? 'More than you have in your naira account'
+                  ? t('common.moreThanNaira')
                   : undefined
             }
           />
           <Text variant="bodySmall" color="textMuted">
             {saving.amount > 0n
-              ? `Paying off today costs ${formatMoney(payoff)}: ${formatMoney(saving)} less than the ${formatMoney(owed)} left, because you don't pay interest for the days you no longer borrow.`
-              : `${formatMoney(owed)} is left to repay.`}
+              ? t('credit.repay.saving', {
+                  payoff: formatMoney(payoff),
+                  saving: formatMoney(saving),
+                  owed: formatMoney(owed),
+                })
+              : t('credit.repay.left', { amount: formatMoney(owed) })}
           </Text>
           {error && !confirming && (
             <Text variant="bodySmall" color="danger" accessibilityRole="alert">
@@ -109,10 +119,12 @@ export function RepaySheet({ loan, account, onClose }: Props) {
           <Button
             label={
               paysOff
-                ? 'Pay off the loan'
+                ? t('credit.repay.payOffLoan')
                 : amount
-                  ? `Repay ${formatMoney(amount, { trimZeroMinor: true })}`
-                  : 'Repay'
+                  ? t('credit.repay.repayAmount', {
+                      amount: formatMoney(amount, { trimZeroMinor: true }),
+                    })
+                  : t('credit.repay.repay')
             }
             disabled={!amount || overPayoff || overBalance}
             onPress={() => {
@@ -127,7 +139,9 @@ export function RepaySheet({ loan, account, onClose }: Props) {
         onClose={() => setConfirming(false)}
         subtitle={
           amount
-            ? `${paysOff ? 'Pay off your loan with' : 'Repay'} ${formatMoney(amount)} from your naira account`
+            ? t(paysOff ? 'credit.repay.payOffStep' : 'credit.repay.repayStep', {
+                amount: formatMoney(amount),
+              })
             : ''
         }
         onApproved={run}

@@ -2,9 +2,11 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
 import { CalendarClock, HandCoins, TriangleAlert } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Card, Icon, Switch, Text, useToast } from '@/components';
+import i18n from '@/lib/i18n';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
@@ -20,14 +22,14 @@ type Props = { loan: Schema<'Loan'> };
  */
 export function LoanActions({ loan }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const toast = useToast();
   const [repaying, setRepaying] = useState(false);
   const accounts = useRepoQuery('accounts', 'list');
   const naira = accounts.data?.data.find((a) => a.currency === 'NGN');
   const update = useRepoMutation('credit', 'updateLoan', {
     invalidates: [['credit']],
-    onError: () =>
-      toast.show({ message: "We couldn't change auto-repay. Try again.", tone: 'error' }),
+    onError: () => toast.show({ message: i18n.t('credit.actions.autoFailed'), tone: 'error' }),
   });
   const due = dueNowKobo(loan);
   const dueText = formatMoney(money(due, 'NGN'));
@@ -45,25 +47,32 @@ export function LoanActions({ loan }: Props) {
               style={[styles.row, { gap: spacing[3] }]}
               accessible
               accessibilityRole="alert"
-              accessibilityLabel={overdue ? `${dueText} is overdue` : `${dueText} is due today`}
+              accessibilityLabel={t(
+                overdue ? 'credit.actions.overdue' : 'credit.actions.dueToday',
+                {
+                  amount: dueText,
+                },
+              )}
             >
               <Icon
                 icon={overdue ? TriangleAlert : CalendarClock}
                 color={overdue ? 'danger' : 'warning'}
               />
               <Text variant="bodyStrong" style={styles.flex}>
-                {overdue ? `${dueText} is overdue` : `${dueText} is due today`}
+                {t(overdue ? 'credit.actions.overdue' : 'credit.actions.dueToday', {
+                  amount: dueText,
+                })}
               </Text>
             </View>
             <Text variant="bodySmall" color="textMuted">
               {overdue && loan.auto_repay
-                ? "We couldn't take it automatically: there wasn't enough in your naira account. Add money or pay it now."
+                ? t('credit.actions.autoMissed')
                 : overdue
-                  ? 'Pay it now to bring your loan back on track. Late payments lower what you can borrow next time.'
-                  : 'Auto-repay is off, so pay it today to stay on track.'}
+                  ? t('credit.actions.overdueHelp')
+                  : t('credit.actions.autoOff')}
             </Text>
             <Button
-              label={`Pay ${dueText} now`}
+              label={t('credit.actions.payNow', { amount: dueText })}
               disabled={!naira}
               onPress={() => setRepaying(true)}
             />
@@ -74,8 +83,8 @@ export function LoanActions({ loan }: Props) {
       <Card>
         <View style={{ gap: spacing[2] }}>
           <Switch
-            label="Repay automatically"
-            description="Each payment is taken from your naira account on its due date."
+            label={t('common.repayAutomatically')}
+            description={t('common.repayAutomaticallyHelp')}
             value={autoRepay}
             disabled={update.isPending}
             onValueChange={(v) =>
@@ -83,7 +92,7 @@ export function LoanActions({ loan }: Props) {
             }
           />
           <Button
-            label="Repay early or pay off"
+            label={t('credit.actions.repayEarly')}
             icon={HandCoins}
             variant="secondary"
             disabled={!naira}

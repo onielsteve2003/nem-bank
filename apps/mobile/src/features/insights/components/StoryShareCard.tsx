@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react-native';
 import type { ComponentRef, Ref } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Icon, Text } from '@/components';
@@ -18,12 +19,16 @@ export type Props = {
  */
 export function StoryShareCard({ summary, ref }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View
       ref={ref}
       collapsable={false}
       accessible
-      accessibilityLabel={`Share card. My ${summary.month} with Nem. ${summary.lines.join('. ')}.`}
+      accessibilityLabel={t('insights.story.shareCardLabel', {
+        month: summary.month,
+        lines: summary.lines.join('. '),
+      })}
       style={{
         backgroundColor: colors.surface,
         borderColor: colors.primary,
@@ -36,17 +41,17 @@ export function StoryShareCard({ summary, ref }: Props) {
       <View style={[styles.row, { gap: spacing[2] }]}>
         <Icon icon={Sparkles} color="primaryText" />
         <Text variant="label" color="primaryText">
-          NEM MONEY STORY
+          {t('insights.story.brand')}
         </Text>
       </View>
-      <Text variant="h2">My {summary.month}</Text>
+      <Text variant="h2">{t('insights.story.my', { month: summary.month })}</Text>
       {summary.lines.map((line) => (
         <Text key={line} variant="bodyStrong">
           {line}
         </Text>
       ))}
       <Text variant="caption" color="textMuted">
-        No amounts shared · nem-bank demo
+        {t('insights.story.noAmounts')}
       </Text>
     </View>
   );

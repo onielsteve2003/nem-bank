@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { SelectSheet, TextField } from '@/components';
@@ -16,6 +17,7 @@ export function AddressFields({
   onChange: (next: DeliveryAddress) => void;
 }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const problems = addressProblems(value);
   const set = (field: keyof DeliveryAddress) => (text: string) =>
     onChange({ ...value, [field]: text });
@@ -23,38 +25,38 @@ export function AddressFields({
   return (
     <View style={{ gap: spacing[3] }}>
       <TextField
-        label="Address"
-        placeholder="12 Admiralty Way"
+        label={t('cards.address.line1')}
+        placeholder={t('cards.address.line1Placeholder')}
         value={value.line1}
         onChangeText={set('line1')}
         autoComplete="street-address"
         error={problems.line1}
       />
       <TextField
-        label="Apartment, landmark"
+        label={t('cards.address.line2')}
         optional
-        placeholder="Flat 3, opposite the filling station"
+        placeholder={t('cards.address.line2Placeholder')}
         value={value.line2}
         onChangeText={set('line2')}
       />
       <TextField
-        label="City or town"
-        placeholder="Lekki"
+        label={t('cards.address.city')}
+        placeholder={t('cards.address.cityPlaceholder')}
         value={value.city}
         onChangeText={set('city')}
         autoCapitalize="words"
         error={problems.city}
       />
       <SelectSheet
-        label="State"
-        title="State"
-        placeholder="Choose a state"
+        label={t('cards.address.state')}
+        title={t('cards.address.state')}
+        placeholder={t('cards.address.statePlaceholder')}
         options={STATE_OPTIONS}
         value={value.state || null}
         onChange={set('state')}
       />
       <TextField
-        label="Postal code"
+        label={t('cards.address.postalCode')}
         optional
         placeholder="106104"
         keyboardType="number-pad"

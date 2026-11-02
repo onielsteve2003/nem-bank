@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 
 import { cardName, isOpen } from '@/features/cards/cards';
+import i18n, { localized } from '@/lib/i18n';
 
 import { longDate } from './forecast';
 
@@ -9,11 +10,11 @@ type Card = Schema<'Card'>;
 
 const DAY = 86_400_000;
 
-export const FREQUENCY_LABEL: Record<Subscription['frequency'], string> = {
-  weekly: 'a week',
-  monthly: 'a month',
-  yearly: 'a year',
-};
+export const FREQUENCY_LABEL = localized<Subscription['frequency']>({
+  weekly: 'insights.subscriptions.frequency.weekly',
+  monthly: 'insights.subscriptions.frequency.monthly',
+  yearly: 'insights.subscriptions.frequency.yearly',
+});
 
 /** Whole days from `today` (YYYY-MM-DD) to `date`; negative once it has passed. */
 export const daysUntil = (date: string, today: string) =>
@@ -24,10 +25,10 @@ export const daysUntil = (date: string, today: string) =>
 /** "Next charge today", "… tomorrow", "… Tue, 3 Nov (in 6 days)" or "Was due 1 Nov". */
 export function nextChargeLabel(date: string, today: string): string {
   const days = daysUntil(date, today);
-  if (days < 0) return `Was due ${longDate(date)}`;
-  if (days === 0) return 'Next charge today';
-  if (days === 1) return 'Next charge tomorrow';
-  return `Next charge ${longDate(date)} (in ${days} days)`;
+  if (days < 0) return i18n.t('insights.subscriptions.wasDue', { date: longDate(date) });
+  if (days === 0) return i18n.t('insights.subscriptions.today');
+  if (days === 1) return i18n.t('insights.subscriptions.tomorrow');
+  return i18n.t('insights.subscriptions.inDays', { date: longDate(date), count: days });
 }
 
 export type PaidWith =
@@ -40,12 +41,15 @@ export type PaidWith =
  */
 export function paidWith(sub: Subscription, cards: readonly Card[]): PaidWith {
   const card = sub.card_id ? cards.find((c) => c.id === sub.card_id) : undefined;
-  if (!card) return { kind: 'wallet', label: 'Paid from your wallet as a bill' };
-  const label = `${cardName(card)} ending ${card.last4}`;
+  if (!card) return { kind: 'wallet', label: i18n.t('insights.subscriptions.wallet') };
+  const label = i18n.t('insights.subscriptions.cardEnding', {
+    name: cardName(card),
+    last4: card.last4,
+  });
   const warning = !isOpen(card)
-    ? 'This card is closed, so the next charge will be declined.'
+    ? i18n.t('insights.subscriptions.closed')
     : card.status === 'frozen'
-      ? 'This card is frozen, so the next charge will be declined.'
+      ? i18n.t('insights.subscriptions.frozen')
       : null;
   return { kind: 'card', card, label, warning };
 }

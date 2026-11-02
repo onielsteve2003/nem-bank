@@ -1,5 +1,6 @@
 import { formatMoney, negate } from '@nem/shared';
 import { TriangleAlert } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -25,9 +26,6 @@ import { useTheme } from '@/theme';
 
 import { firstShortfall, horizon, longDate, shortDate } from '../forecast';
 
-const SIMPLE_FORECAST =
-  'Simple forecast: your average daily spending over the last 90 days, plus your salary and the subscriptions you already pay.';
-
 /**
  * Cash-flow forecast (INS-3, AI-4): the naira balance day by day to payday,
  * the range it will likely land in, what is expected in and out, and a plain
@@ -35,6 +33,7 @@ const SIMPLE_FORECAST =
  */
 export function ForecastScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = useBalancesHidden();
   const aiOn = usePreferencesStore((s) => s.ai.forecast);
   const q = useRepoQuery('insights', 'getForecast');
@@ -42,10 +41,10 @@ export function ForecastScreen() {
 
   let body;
   if (q.isError && !f) {
-    body = <ErrorState title="We couldn't work out your forecast" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('insights.forecast.failed')} onRetry={() => q.refetch()} />;
   } else if (!f) {
     body = (
-      <SkeletonGroup accessibilityLabel="Working out your forecast">
+      <SkeletonGroup accessibilityLabel={t('insights.forecast.loading')}>
         <Skeleton height={120} />
         <Skeleton height={200} />
       </SkeletonGroup>
@@ -62,39 +61,41 @@ export function ForecastScreen() {
             {aiOn ? (
               <View style={styles.start}>
                 <AIBadge
-                  feature="Cash-flow forecast"
+                  feature={t('insights.forecast.title')}
                   explanation={f.ai.explanation}
-                  fallback={SIMPLE_FORECAST}
+                  fallback={t('insights.forecast.simple')}
                 />
               </View>
             ) : (
               <Text variant="caption" color="textMuted">
-                AI forecast is off · simple average
+                {t('insights.forecast.aiOff')}
               </Text>
             )}
             {end && (
               <View style={{ gap: spacing[1] }}>
                 <Text variant="bodySmall" color="textMuted">
                   {f.next_payday
-                    ? `The day before payday (${longDate(f.next_payday)}) you’ll have about`
-                    : `On ${longDate(end.date)} you’ll have about`}
+                    ? t('insights.forecast.beforePayday', { date: longDate(f.next_payday) })
+                    : t('insights.forecast.onDate', { date: longDate(end.date) })}
                 </Text>
                 <MoneyText
                   value={fromApiMoney(end.balance)}
                   variant="amountLarge"
                   masked={hidden}
-                  label="Forecast balance"
+                  label={t('insights.forecast.balance')}
                 />
                 {!hidden && (
                   <Text variant="caption" color="textMuted">
-                    Likely between {formatMoney(fromApiMoney(end.low))} and{' '}
-                    {formatMoney(fromApiMoney(end.high))}
+                    {t('insights.forecast.range', {
+                      low: formatMoney(fromApiMoney(end.low)),
+                      high: formatMoney(fromApiMoney(end.high)),
+                    })}
                   </Text>
                 )}
               </View>
             )}
             <LineChart
-              title="Forecast naira balance, day by day"
+              title={t('insights.forecast.chart')}
               data={f.points.map((p) => ({
                 label: shortDate(p.date),
                 value: Number(BigInt(p.balance.amount_minor) / 100n),
@@ -110,15 +111,14 @@ export function ForecastScreen() {
             <View style={[styles.row, { gap: spacing[3] }]} accessible accessibilityRole="alert">
               <Icon icon={TriangleAlert} color="danger" />
               <Text variant="body" style={styles.flex}>
-                At this pace your balance could run out around {longDate(short.date)}. Setting a
-                budget or moving a payment can help.
+                {t('insights.forecast.runOut', { date: longDate(short.date) })}
               </Text>
             </View>
           </Card>
         )}
 
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="How we worked it out" />
+          <SectionHeader title={t('insights.forecast.how')} />
           <Card>
             <Text variant="body">{f.explanation}</Text>
           </Card>
@@ -126,7 +126,7 @@ export function ForecastScreen() {
 
         {f.upcoming.length > 0 && (
           <View style={{ gap: spacing[2] }}>
-            <SectionHeader title="Expected before then" />
+            <SectionHeader title={t('insights.forecast.expected')} />
             <Card padded={false}>
               <View accessibilityRole="list">
                 {f.upcoming.map((u, i) => {
@@ -147,7 +147,11 @@ export function ForecastScreen() {
                           colorBySign
                           signPositive
                           masked={hidden}
-                          label={u.direction === 'credit' ? 'Coming in' : 'Going out'}
+                          label={t(
+                            u.direction === 'credit'
+                              ? 'insights.forecast.in'
+                              : 'insights.forecast.out',
+                          )}
                         />
                       </View>
                     </View>
@@ -158,7 +162,7 @@ export function ForecastScreen() {
           </View>
         )}
         <Text variant="caption" color="textMuted">
-          A forecast, not a promise: it assumes you keep spending the way you have been.
+          {t('insights.forecast.disclaimer')}
         </Text>
       </>
     );
@@ -166,7 +170,7 @@ export function ForecastScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Cash-flow forecast" />}
+      header={<SendHeader title={t('insights.forecast.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}

@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { Plus, Target } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -23,6 +24,7 @@ import { sortGoals } from '../goals';
 export function GoalsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const goals = useRepoQuery('savings', 'listGoals');
   const sorted = goals.data ? sortGoals(goals.data.data) : [];
@@ -39,31 +41,37 @@ export function GoalsScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Savings goals" first />}
+      header={<SendHeader title={t('savings.goals.title')} first />}
       edges={['top', 'bottom']}
-      footer={<Button label="New goal" icon={Plus} onPress={() => router.push('/goals/new')} />}
+      footer={
+        <Button
+          label={t('savings.goals.new')}
+          icon={Plus}
+          onPress={() => router.push('/goals/new')}
+        />
+      }
       onRefresh={() => void goals.refetch()}
       refreshing={goals.isRefetching}
     >
       {goals.isError ? (
-        <ErrorState title="We couldn't load your goals" onRetry={() => goals.refetch()} />
+        <ErrorState title={t('savings.goals.failed')} onRetry={() => goals.refetch()} />
       ) : !goals.data ? (
-        <SkeletonGroup accessibilityLabel="Loading goals">
+        <SkeletonGroup accessibilityLabel={t('savings.goals.loading')}>
           <Skeleton height={88} />
           <Skeleton height={88} />
         </SkeletonGroup>
       ) : open.length === 0 && closed.length === 0 ? (
         <EmptyState
           icon={Target}
-          title="No goals yet"
-          message="Name what you're saving for, set a target and watch it grow. Goals earn 10% a year."
+          title={t('savings.goals.emptyTitle')}
+          message={t('savings.goals.emptyMessage')}
         />
       ) : (
         <>
           <View style={{ gap: spacing[3] }}>{open.map(row)}</View>
           {closed.length > 0 && (
             <View style={{ gap: spacing[3] }}>
-              <SectionHeader title="Closed" />
+              <SectionHeader title={t('savings.goals.closed')} />
               {closed.map(row)}
             </View>
           )}

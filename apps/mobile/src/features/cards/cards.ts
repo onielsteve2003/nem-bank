@@ -3,6 +3,7 @@ import { formatMoney } from '@nem/shared';
 
 import type { CardDesign, CardNetwork } from '@/components';
 import { parseNairaText } from '@/features/transfers/splits';
+import i18n, { withLabel } from '@/lib/i18n';
 import { fromApiMoney } from '@/lib/money';
 
 // Virtual cards (CARD-1): how each card is named, described and drawn.
@@ -14,20 +15,23 @@ export type CardCurrency = Card['currency'];
 /** Simulated networks on Nem's test BINs (CARD-7), drawn with the familiar brand. */
 const NETWORKS: Record<Card['network'], CardNetwork> = { nem_verve: 'verve', nem_visa: 'visa' };
 
-export const CARD_TYPES: Record<CardType, { label: string; description: string }> = {
-  standard: {
-    label: 'Standard',
-    description: 'For everyday spending online and in apps. Freeze or limit it any time.',
+/** A card type's words, read in the current language on access. */
+const cardType = (type: CardType) => ({
+  get label() {
+    return i18n.t(`cards.types.${type}.label`);
   },
-  single_use: {
-    label: 'Single-use',
-    description:
-      'Closes itself after one payment. Use it for a free trial or a site you don’t trust.',
+  get description() {
+    return i18n.t(`cards.types.${type}.description`);
   },
-  merchant_locked: {
-    label: 'Merchant-locked',
-    description: 'Works at one merchant only. A leak there can’t be spent anywhere else.',
-  },
+});
+
+export const CARD_TYPES: Record<
+  CardType,
+  { readonly label: string; readonly description: string }
+> = {
+  standard: cardType('standard'),
+  single_use: cardType('single_use'),
+  merchant_locked: cardType('merchant_locked'),
 };
 
 export const CARD_DESIGNS: { value: CardDesign; label: string }[] = [
@@ -67,19 +71,28 @@ export function bankCardProps(card: Card) {
 }
 
 /** The card's own name, or its type when it has none. */
-export const cardName = (card: Card) => card.nickname ?? `${CARD_TYPES[card.type].label} card`;
+export const cardName = (card: Card) =>
+  card.nickname ?? i18n.t('cards.typeCard', { type: CARD_TYPES[card.type].label });
 
 /** "Single-use · NGN · ends 4821", with the lock and limit when set. */
 export function cardFacts(card: Card): string[] {
-  const facts = [`${CARD_TYPES[card.type].label} · ${card.currency} · ends ${card.last4}`];
+  const facts = [
+    i18n.t('cards.facts.summary', {
+      type: CARD_TYPES[card.type].label,
+      currency: card.currency,
+      last4: card.last4,
+    }),
+  ];
   const lock = card.controls.merchant_lock;
-  if (lock) facts.push(`Only works at ${lock.merchant_name}`);
-  if (card.controls.spend_limit) facts.push(`Limit ${limitSummary(card)}`);
+  if (lock) facts.push(i18n.t('cards.facts.lockedTo', { merchant: lock.merchant_name }));
+  if (card.controls.spend_limit)
+    facts.push(i18n.t('cards.facts.limit', { limit: limitSummary(card) }));
   return facts;
 }
 
 /** Why a closed card is closed, in a word. */
-export const closedReason = (card: Card) => (card.status === 'used' ? 'Used once' : 'Terminated');
+export const closedReason = (card: Card) =>
+  i18n.t(card.status === 'used' ? 'cards.closedReason.used' : 'cards.closedReason.terminated');
 
 /** "5060 9912 3456 7890": the PAN in groups of four, as printed on cards. */
 export const groupPan = (pan: string) => pan.replace(/(\d{4})(?=\d)/g, '$1 ');
@@ -87,9 +100,9 @@ export const groupPan = (pan: string) => pan.replace(/(\d{4})(?=\d)/g, '$1 ');
 export type LimitPeriod = Schema<'SpendLimit'>['period'];
 
 export const LIMIT_PERIODS: { value: LimitPeriod; label: string }[] = [
-  { value: 'per_transaction', label: 'Per payment' },
-  { value: 'daily', label: 'A day' },
-  { value: 'monthly', label: 'A month' },
+  withLabel('cards.limit.periods.per_transaction', { value: 'per_transaction' as const }),
+  withLabel('cards.limit.periods.daily', { value: 'daily' as const }),
+  withLabel('cards.limit.periods.monthly', { value: 'monthly' as const }),
 ];
 
 /** A typed limit ("50,000", "$25.50") in the card's minor units, or null if not a positive amount. */
@@ -98,10 +111,9 @@ export const parseLimit = (text: string) => parseNairaText(text.replace(/\$/g, '
 /** "₦200,000 a day", or "No limit". */
 export function limitSummary(card: Card): string {
   const limit = card.controls.spend_limit;
-  if (!limit) return 'No limit';
-  const period = LIMIT_PERIODS.find((p) => p.value === limit.period)!.label.toLowerCase();
+  if (!limit) return i18n.t('cards.limit.none');
   const amount = formatMoney(fromApiMoney(limit.amount), { trimZeroMinor: true });
-  return `${amount} ${period}`;
+  return i18n.t(`cards.limit.summary.${limit.period}`, { amount });
 }
 
 /** Pending authorisations first, then everything that has settled or dropped off. */
@@ -167,11 +179,11 @@ export function addressProblems(
 ): Partial<Record<keyof DeliveryAddress, string>> {
   const problems: Partial<Record<keyof DeliveryAddress, string>> = {};
   if (a.line1.trim() && a.line1.trim().length < 5)
-    problems.line1 = 'Add the house number and street';
+    problems.line1 = i18n.t('cards.address.problems.line1');
   if (a.city.trim() && !/^[A-Za-z][A-Za-z .'-]+$/.test(a.city.trim()))
-    problems.city = 'Use letters only';
+    problems.city = i18n.t('cards.address.problems.city');
   if (a.postalCode.trim() && !/^\d{6}$/.test(a.postalCode.trim()))
-    problems.postalCode = 'Nigerian postal codes have 6 digits';
+    problems.postalCode = i18n.t('cards.address.problems.postalCode');
   return problems;
 }
 

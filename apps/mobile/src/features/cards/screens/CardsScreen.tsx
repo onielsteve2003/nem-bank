@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { CreditCard, Eye, Plus, Truck } from 'lucide-react-native';
 import { useCallback, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -40,6 +41,7 @@ export const MAX_OPEN_CARDS = 5;
 export function CardsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const cards = useRepoQuery('cards', 'list');
   // `card` picks a card when another screen links here, e.g. a subscription (INS-4).
   const { card: linked } = useLocalSearchParams<{ card?: string }>();
@@ -75,10 +77,15 @@ export function CardsScreen() {
   const header = (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <Text variant="title" accessibilityRole="header" style={styles.flex}>
-        Cards
+        {t('cards.title')}
       </Text>
       {open.length > 0 && !atMax && (
-        <IconButton icon={Plus} accessibilityLabel="New card" variant="ghost" onPress={create} />
+        <IconButton
+          icon={Plus}
+          accessibilityLabel={t('cards.home.newCard')}
+          variant="ghost"
+          onPress={create}
+        />
       )}
     </View>
   );
@@ -97,12 +104,12 @@ export function CardsScreen() {
           kind={
             isApiError(cards.error) && cards.error.problem.code === 'offline' ? 'offline' : 'error'
           }
-          title="We couldn't load your cards"
+          title={t('cards.home.failed')}
           onRetry={() => cards.refetch()}
         />
       ) : !cards.data ? (
         <View style={{ paddingHorizontal: spacing[4] }}>
-          <SkeletonGroup accessibilityLabel="Loading cards">
+          <SkeletonGroup accessibilityLabel={t('cards.home.loading')}>
             <Skeleton height={210} radius={16} />
             <Skeleton height={20} width="60%" />
           </SkeletonGroup>
@@ -110,9 +117,9 @@ export function CardsScreen() {
       ) : open.length === 0 ? (
         <EmptyState
           icon={CreditCard}
-          title="No cards yet"
-          message="Make a virtual card in seconds for online shopping, subscriptions or a single payment."
-          actionLabel="Create a virtual card"
+          title={t('cards.home.emptyTitle')}
+          message={t('cards.home.emptyMessage')}
+          actionLabel={t('cards.home.create')}
           onAction={create}
         />
       ) : (
@@ -131,7 +138,9 @@ export function CardsScreen() {
                 <Text variant="h3" style={styles.flex} numberOfLines={1}>
                   {cardName(current)}
                 </Text>
-                {current.status === 'frozen' && <Badge label="Frozen" tone="info" />}
+                {current.status === 'frozen' && (
+                  <Badge label={t('cards.home.frozen')} tone="info" />
+                )}
               </View>
               {cardFacts(current).map((fact) => (
                 <Text key={fact} color="textMuted">
@@ -150,7 +159,7 @@ export function CardsScreen() {
                 />
               ) : (
                 <Button
-                  label="Show card details"
+                  label={t('cards.details.show')}
                   icon={Eye}
                   variant="secondary"
                   fullWidth
@@ -174,12 +183,11 @@ export function CardsScreen() {
           <View style={{ paddingHorizontal: spacing[4] }}>
             {atMax ? (
               <Text variant="bodySmall" color="textMuted">
-                You have {MAX_OPEN_CARDS} cards, the most you can hold. Terminate one to make
-                another.
+                {t('cards.home.atMax', { max: MAX_OPEN_CARDS })}
               </Text>
             ) : (
               <Button
-                label="Create a virtual card"
+                label={t('cards.home.create')}
                 icon={Plus}
                 variant="ghost"
                 fullWidth
@@ -194,8 +202,8 @@ export function CardsScreen() {
         <View style={{ paddingHorizontal: spacing[2] }}>
           <ListItem
             leading={Truck}
-            title="Order a physical card"
-            subtitle="A Verve card posted to you, for shops and ATMs"
+            title={t('cards.home.physical')}
+            subtitle={t('cards.home.physicalHelp')}
             onPress={() => router.push('/physical-card')}
           />
         </View>
@@ -204,13 +212,13 @@ export function CardsScreen() {
       {closed.length > 0 && (
         <View style={{ paddingHorizontal: spacing[2] }}>
           <View style={{ paddingHorizontal: spacing[2] }}>
-            <SectionHeader title="Closed cards" />
+            <SectionHeader title={t('cards.home.closed')} />
           </View>
           {closed.map((c) => (
             <ListItem
               key={c.id}
               title={cardName(c)}
-              subtitle={`${c.currency} · ends ${c.last4}`}
+              subtitle={t('cards.endsIn', { currency: c.currency, last4: c.last4 })}
               trailing={<Badge label={closedReason(c)} />}
             />
           ))}
@@ -219,7 +227,7 @@ export function CardsScreen() {
       <ConfirmSheet
         open={unlocking}
         onClose={() => setUnlocking(false)}
-        subtitle={current ? `Show details for the card ending ${current.last4}` : ''}
+        subtitle={current ? t('cards.details.showSubtitle', { last4: current.last4 }) : ''}
         error={reveal.error}
         onApproved={(pin) => (pin ? unlock({ pin }) : Promise.resolve(false))}
         approveWithBiometrics={(label) => unlock({ biometric: label })}

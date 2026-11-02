@@ -1,4 +1,5 @@
 import type { Schema } from '@nem/contracts';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { MoneyText, PressableScale, Text } from '@/components';
@@ -19,10 +20,15 @@ export function GoalRow({
   onPress?: () => void;
 }) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityLabel={`${goal.name}, ${goal.progress_pct}% saved. ${goalSubtitle(goal)}`}
+      accessibilityLabel={t('savings.goalRow', {
+        name: goal.name,
+        pct: goal.progress_pct,
+        subtitle: goalSubtitle(goal),
+      })}
       disabled={!onPress}
       onPress={onPress}
       style={[

@@ -75,7 +75,22 @@
     "nemUser": "Nem user",
     "you": "You",
     "removeName": "Remove {{name}}",
-    "loadingDots": "Loading…"
+    "loadingDots": "Loading…",
+    "faceIdUsePin": "Face ID isn’t set up for this here. Enter your PIN.",
+    "confirmItsYou": "Confirm it’s you",
+    "save": "Save",
+    "loading": "Loading",
+    "tryAgainMoment": "Try again in a moment.",
+    "accountFailed": "We couldn't load your account",
+    "moreThanNaira": "More than you have in your naira account",
+    "masked": "••••",
+    "nameYou": "{{name}} (you)",
+    "availableNaira": "{{amount}} available in your naira account",
+    "repayAutomatically": "Repay automatically",
+    "repayAutomaticallyHelp": "Each payment is taken from your naira account on its due date.",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "amountHidden": "amount hidden"
   },
   "tabs": {
     "home": "Home",
@@ -1810,6 +1825,878 @@
       "whyChecking": "Why we are checking",
       "whyAsking": "Why we are asking",
       "reference": "Reference {{reference}}"
+    }
+  },
+  "cards": {
+    "title": "Cards",
+    "types": {
+      "standard": {
+        "label": "Standard",
+        "description": "For everyday spending online and in apps. Freeze or limit it any time."
+      },
+      "single_use": {
+        "label": "Single-use",
+        "description": "Closes itself after one payment. Use it for a free trial or a site you don’t trust."
+      },
+      "merchant_locked": {
+        "label": "Merchant-locked",
+        "description": "Works at one merchant only. A leak there can’t be spent anywhere else."
+      }
+    },
+    "typeCard": "{{type}} card",
+    "facts": {
+      "summary": "{{type}} · {{currency}} · ends {{last4}}",
+      "lockedTo": "Only works at {{merchant}}",
+      "limit": "Limit {{limit}}"
+    },
+    "endsIn": "{{currency}} · ends {{last4}}",
+    "nameEnds": "{{name}} · ends {{last4}}",
+    "closedReason": {
+      "used": "Used once",
+      "terminated": "Terminated"
+    },
+    "limit": {
+      "periods": {
+        "per_transaction": "Per payment",
+        "daily": "A day",
+        "monthly": "A month"
+      },
+      "summary": {
+        "per_transaction": "{{amount}} per payment",
+        "daily": "{{amount}} a day",
+        "monthly": "{{amount}} a month"
+      },
+      "none": "No limit",
+      "title": "Spend limit",
+      "label": "Limit in {{currency}}",
+      "invalid": "Enter an amount above zero",
+      "help": "Payments over this are declined. The card still can’t spend more than its wallet holds.",
+      "save": "Save limit",
+      "remove": "Remove limit"
+    },
+    "address": {
+      "line1": "Address",
+      "line1Placeholder": "12 Admiralty Way",
+      "line2": "Apartment, landmark",
+      "line2Placeholder": "Flat 3, opposite the filling station",
+      "city": "City or town",
+      "cityPlaceholder": "Lekki",
+      "state": "State",
+      "statePlaceholder": "Choose a state",
+      "postalCode": "Postal code",
+      "problems": {
+        "line1": "Add the house number and street",
+        "city": "Use letters only",
+        "postalCode": "Nigerian postal codes have 6 digits"
+      }
+    },
+    "carousel": {
+      "dot": "Show card {{index}} of {{count}}"
+    },
+    "controls": {
+      "title": "Controls",
+      "freeze": "Freeze card",
+      "frozenByPanic": "Panic mode froze this card. Turning panic mode off unfreezes it.",
+      "freezeHelp": "Declines every new payment until you unfreeze it.",
+      "online": "Online payments",
+      "onlineHelp": "Websites and apps",
+      "onlineOn": "Online payments on",
+      "onlineOff": "Online payments off",
+      "international": "International payments",
+      "internationalHelp": "Merchants outside Nigeria",
+      "internationalOn": "International payments on",
+      "internationalOff": "International payments off",
+      "frozen": "Card frozen",
+      "unfrozen": "Card unfrozen",
+      "unfreezeFailed": "We couldn’t unfreeze the card. Try again.",
+      "limitSaved": "Spend limit saved",
+      "limitRemoved": "Spend limit removed",
+      "lockTitle": "Merchant lock",
+      "lockOnly": "Only {{merchant}}",
+      "anyMerchant": "Any merchant",
+      "lockedTo": "Locked to {{merchant}}",
+      "lockRemoved": "Merchant lock removed",
+      "unfreezeSubtitle": "Unfreeze the card ending {{last4}}"
+    },
+    "lock": {
+      "must": "This card only works at one merchant. Pick which.",
+      "optional": "Lock the card to one merchant and it is declined everywhere else."
+    },
+    "details": {
+      "number": "Card number",
+      "expiry": "Expiry",
+      "cvv": "CVV",
+      "row": "{{label}}: {{value}}",
+      "hiding": "Hiding in {{seconds}} s. Only paste these into sites you trust.",
+      "hide": "Hide",
+      "show": "Show card details",
+      "showSubtitle": "Show details for the card ending {{last4}}",
+      "offline": "You're offline. Reconnect to see card details.",
+      "closed": "This card is closed, so its details are gone.",
+      "failed": "We couldn't show the details. Try again."
+    },
+    "manage": {
+      "title": "Manage card",
+      "replace": {
+        "title": "Replace this card",
+        "points": [
+          "You get a new card number, expiry and CVV straight away.",
+          "This card stops working now. Payments already pending still settle.",
+          "Your name, look, limit and merchant lock move to the new card.",
+          "Update any subscriptions that use this card."
+        ],
+        "confirm": "Replace card",
+        "subtitle": "New number if this one may have leaked",
+        "step": "Replace the card ending {{last4}}",
+        "done": "Your new card ending {{last4}} is ready"
+      },
+      "terminate": {
+        "title": "Terminate this card",
+        "points": [
+          "The card closes for good. You can’t undo this.",
+          "New payments are declined. Payments already pending still settle.",
+          "Its payments stay in your history."
+        ],
+        "confirm": "Terminate card",
+        "subtitle": "Close it for good",
+        "step": "Terminate the card ending {{last4}}",
+        "done": "Card ending {{last4}} terminated"
+      },
+      "keep": "Keep card",
+      "failed": "That didn’t go through. Try again; it won’t happen twice."
+    },
+    "payments": {
+      "title": "Payments",
+      "failed": "We couldn't load this card's payments",
+      "loading": "Loading payments",
+      "empty": "No payments with this card yet.",
+      "pending": "Pending",
+      "pendingHelp": "Held from your balance until the merchant settles, usually within a few days.",
+      "settled": "Settled",
+      "authorised": "Authorised {{when}}",
+      "paid": "Paid"
+    },
+    "home": {
+      "newCard": "New card",
+      "failed": "We couldn't load your cards",
+      "loading": "Loading cards",
+      "emptyTitle": "No cards yet",
+      "emptyMessage": "Make a virtual card in seconds for online shopping, subscriptions or a single payment.",
+      "create": "Create a virtual card",
+      "frozen": "Frozen",
+      "atMax": "You have {{max}} cards, the most you can hold. Terminate one to make another.",
+      "physical": "Order a physical card",
+      "physicalHelp": "A Verve card posted to you, for shops and ATMs",
+      "closed": "Closed cards"
+    },
+    "new": {
+      "title": "New virtual card",
+      "yourName": "Your name",
+      "ready": "Your card ending {{last4}} is ready",
+      "failed": "We couldn't create the card. Try again; you won't get two.",
+      "create": "Create card",
+      "spendsFrom": "Spends from",
+      "wallet": "{{currency}} wallet",
+      "needUsd": "Open a USD wallet on Home to make a dollar card.",
+      "type": "Type",
+      "lockedTo": "Locked to",
+      "pickMerchant": "Pick the one merchant this card will work at.",
+      "name": "Card name",
+      "nameHelp": "Up to {{max}} characters, like \"Netflix\" or \"Travel\".",
+      "look": "Look",
+      "confirm": "Create a {{type}} {{currency}} card"
+    },
+    "physical": {
+      "title": "Physical card",
+      "whatYouGet": [
+        "A Verve debit card on your NGN account, with your name printed on it",
+        "Contactless and chip and PIN at shops and ATMs",
+        "The same freeze, limit and channel controls as your virtual cards",
+        "Delivered in 5 to 7 working days; activate it in the app with your PIN"
+      ],
+      "order": "Order card · ₦1,000",
+      "deliverTo": "Deliver to",
+      "cardAndDelivery": "Card and delivery",
+      "paidFrom": "Paid from",
+      "ngnAccount": "NGN account",
+      "chargedWhenPosted": "Charged only once the card is posted."
+    }
+  },
+  "savings": {
+    "autoSave": {
+      "title": "Auto-save",
+      "help": "Move money from your naira account into this goal on a schedule. It stops when you reach the target.",
+      "howMuch": "How much",
+      "howOften": "How often",
+      "frequencies": {
+        "daily": "Every day",
+        "weekly": "Every week",
+        "monthly": "Every month"
+      },
+      "describe": {
+        "daily": "{{amount}} every day",
+        "weekly": "{{amount}} every week",
+        "monthly": "{{amount}} every month"
+      },
+      "fromNaira": "{{rule}} from your naira account",
+      "off": "Off · save on a schedule without thinking about it",
+      "hint": "Turn auto-save on or off, or change it",
+      "saveFailed": "We couldn't save it. Try again."
+    },
+    "progress": {
+      "hidden": "{{pct}}% of the target saved",
+      "shown": "{{saved}} of {{target}} saved"
+    },
+    "goalRow": "{{name}}, {{pct}}% saved. {{subtitle}}",
+    "subtitle": {
+      "completed": "Target reached",
+      "closed": "Closed",
+      "saved": "{{pct}}% saved",
+      "savedBy": "{{pct}}% saved · by {{date}}"
+    },
+    "move": {
+      "addTitle": "Add money to {{name}}",
+      "withdrawTitle": "Withdraw from {{name}}",
+      "availableNaira": "{{amount}} available in your naira account",
+      "inGoal": "{{amount}} in this goal",
+      "moreThanGoal": "More than is in this goal",
+      "withdrawAll": "Withdraw everything",
+      "add": "Add",
+      "withdraw": "Withdraw",
+      "addAmount": "Add {{amount}}",
+      "withdrawAmount": "Withdraw {{amount}}",
+      "withdrawConfirm": "Withdraw {{amount}} to your naira account"
+    },
+    "goal": {
+      "title": "Goal",
+      "failed": "We couldn't load this goal",
+      "loading": "Loading goal",
+      "saved": "Saved",
+      "targetHidden": "Target hidden",
+      "ofTarget": "of {{amount}}",
+      "reachedTitle": "You reached your target",
+      "reachedMessage": "Well done. Keep it here to earn interest, or withdraw it when you're ready.",
+      "target": "Target",
+      "reachBy": "Reach it by",
+      "noDate": "No date",
+      "interest": "Interest",
+      "rateYear": "{{rate}}% a year",
+      "interestEarned": "Interest earned",
+      "projected30": "Projected in 30 days",
+      "projectedYear": "Projected in a year",
+      "projectedNote": "At today's balance. Interest is added daily and paid into this goal.",
+      "close": "Close goal",
+      "closeTitle": "Close {{name}}?",
+      "thisGoal": "this goal",
+      "closeWithMoney": "{{amount}} goes back to your naira account and auto-save stops.",
+      "closeEmpty": "Auto-save stops and the goal moves to Closed.",
+      "closeFailed": "We couldn't close it. Try again."
+    },
+    "goals": {
+      "title": "Savings goals",
+      "new": "New goal",
+      "failed": "We couldn't load your goals",
+      "loading": "Loading goals",
+      "emptyTitle": "No goals yet",
+      "emptyMessage": "Name what you're saving for, set a target and watch it grow. Goals earn 10% a year.",
+      "closed": "Closed"
+    },
+    "grow": {
+      "title": "Grow",
+      "soon": "Soon",
+      "comingSoon": "Coming soon",
+      "entryLabel": "{{title}}. {{subtitle}}",
+      "goalsSubtitle": "{{count}} open · 10% a year",
+      "goalsIdle": "Save towards something",
+      "roundUps": "Round-ups",
+      "roundUpsOn": "On · spare change into a goal",
+      "roundUpsOff": "Off · save the change from every spend",
+      "roundUpsIdle": "Save the change from every spend",
+      "locks": "Locked savings",
+      "locksActive": "{{count}} active · up to 18% a year",
+      "locksNone": "Up to 18% a year for 30 to 365 days",
+      "locksIdle": "Up to 18% a year",
+      "ajo": "Ajo",
+      "ajoGroups_one": "{{count}} group",
+      "ajoGroups_other": "{{count}} groups",
+      "ajoIdle": "Save in turns with people you trust",
+      "credit": "Credit",
+      "creditSubtitle": "See what you could borrow",
+      "insights": "Insights and budgets",
+      "insightsSubtitle": "Where your money goes each month",
+      "totalSaved": "Total saved",
+      "interestEarned": "Interest earned",
+      "roundUpsMonth": "Round-ups this month",
+      "interestNote": "Goals and locked savings earn interest every day, paid into each one.",
+      "failed": "We couldn't load your savings",
+      "loading": "Loading your savings",
+      "yourGoals": "Your goals",
+      "seeAllGoals": "See all goals",
+      "emptyMessage": "Name what you're saving for, set a target and watch it grow.",
+      "startGoal": "Start a goal",
+      "waysToSave": "Ways to save",
+      "borrowPlan": "Borrow and plan",
+      "demo": "Demo money: interest is simulated and paid by Nem's test ledger."
+    },
+    "locks": {
+      "title": "Locked savings",
+      "status": {
+        "active": "Locked",
+        "matured": "Matured",
+        "broken": "Broken early"
+      },
+      "term": {
+        "year": "1 year",
+        "days": "{{count}} days"
+      },
+      "lockedFor": "Locked for {{term}}",
+      "failed": "We couldn't load this lock",
+      "loading": "Loading locked saving",
+      "locked": "Locked",
+      "maturesOn": "Matures on {{date}}",
+      "maturedTitle": "Your lock matured",
+      "maturedMessage": "Your money and all the interest went back to your naira account.",
+      "rate": "Rate",
+      "rateFixed": "{{rate}} a year, fixed",
+      "started": "Started",
+      "matures": "Matures",
+      "interestSoFar": "Interest so far",
+      "interestAtMaturity": "Interest at maturity",
+      "paidOut": "Paid out",
+      "breakNote": "Breaking early keeps your full amount but only {{rate}} of the interest earned so far.",
+      "break": "Break lock early",
+      "breakTitle": "Break this lock early?",
+      "breakMessage": "You get {{total}} today: your {{principal}} plus {{kept}} interest. You lose {{lost}} of interest earned so far, and give up the {{expected}} due at maturity.",
+      "breakConfirm": "Break lock",
+      "keepLocked": "Keep it locked",
+      "breakStep": "Break lock and get {{amount}}",
+      "rowActive": "{{rate}} a year · matures {{date}}",
+      "rowEnded": "{{rate}} a year · {{term}}",
+      "rowTitle": "{{amount}} · {{term}}",
+      "rowLabel": "{{amount}} locked for {{term}}. {{subtitle}}. {{status}}",
+      "lockMoney": "Lock money",
+      "listFailed": "We couldn't load your locked savings",
+      "listLoading": "Loading locked savings",
+      "emptyTitle": "Nothing locked yet",
+      "emptyMessage": "Lock money away for 30 days to a year and earn up to 18% a year. The rate is fixed the day you lock.",
+      "ended": "Ended"
+    },
+    "newGoal": {
+      "title": "New goal",
+      "create": "Create goal",
+      "failed": "We couldn't create the goal. Try again.",
+      "name": "What are you saving for?",
+      "namePlaceholder": "New laptop",
+      "emoji": "Pick an emoji",
+      "target": "Target",
+      "date": "Reach it by (optional)",
+      "datePlaceholder": "DD/MM/YYYY",
+      "dateInvalid": "Use a real date in DD/MM/YYYY",
+      "dateAfterToday": "Pick a day after today",
+      "dateTooFar": "Pick a day within ten years",
+      "note": "Goals earn 10% a year, worked out daily. Take your money out any time."
+    },
+    "newLock": {
+      "title": "Lock money",
+      "lock": "Lock",
+      "lockAmount": "Lock {{amount}}",
+      "help": "{{amount}} available · lock at least {{min}}",
+      "tooSmall": "Lock at least {{min}}",
+      "termLabel": "Lock it for",
+      "maturesOn": "Matures on",
+      "youGetBack": "You get back",
+      "ifBreak": "If you break it early",
+      "penalty": "{{explanation}} The penalty is {{rate}} of the interest earned so far.",
+      "accept": "I understand the early-break penalty",
+      "quoteFailed": "We couldn't get a rate. Change the amount or try again.",
+      "quoteLoading": "Getting your rate",
+      "confirm": "Lock {{amount}} for {{term}} from your naira account"
+    },
+    "roundUps": {
+      "title": "Round-ups",
+      "sources": {
+        "card": {
+          "label": "Card payments",
+          "description": "Online and in-store card spends"
+        },
+        "transfer": {
+          "label": "Transfers",
+          "description": "Money you send to anyone"
+        }
+      },
+      "example": "A {{spend}} spend saves {{saved}}",
+      "failed": "We couldn't load your round-ups",
+      "loading": "Loading round-ups",
+      "needGoalTitle": "Start a goal first",
+      "needGoalMessage": "Round-ups need a goal to save into. Make one, then come back here.",
+      "toggle": "Round up my spending",
+      "toggleHelp": "Save the change from every naira spend",
+      "saveInto": "Save into",
+      "pickGoal": "Pick a goal",
+      "roundTo": "Round up to the next",
+      "historyFailed": "We couldn't load round-ups",
+      "historyLoading": "Loading round-up history",
+      "historyEmpty": "No round-ups yet. They show up here after your next card payment or transfer.",
+      "rowLabel": "Round-up from {{from}}, {{amount}}, {{when}}",
+      "amountHidden": "amount hidden",
+      "history": "History"
+    }
+  },
+  "ajo": {
+    "title": "Ajo",
+    "frequencies": {
+      "daily": "Daily",
+      "weekly": "Weekly",
+      "monthly": "Monthly"
+    },
+    "per": {
+      "daily": "{{amount}} a day",
+      "weekly": "{{amount}} a week",
+      "monthly": "{{amount}} a month"
+    },
+    "duration": {
+      "daily_one": "{{count}} day",
+      "daily_other": "{{count}} days",
+      "weekly_one": "{{count}} week",
+      "weekly_other": "{{count}} weeks",
+      "monthly_one": "{{count}} month",
+      "monthly_other": "{{count}} months"
+    },
+    "subtitle": {
+      "forming": "{{amount}} · {{joined}} of {{total}} joined",
+      "active": "{{amount}} · turn {{turn}} of {{total}}"
+    },
+    "status": {
+      "forming": "Forming",
+      "active": "Active",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    },
+    "inviteMessage": "Join my ajo \"{{name}}\" on Nem: {{contribution}}, {{count}} people, everyone takes the pot once. {{url}}",
+    "payout": {
+      "upcoming": "Upcoming",
+      "collecting": "Collecting",
+      "paid": "Paid out",
+      "short_paid": "Paid short"
+    },
+    "contribution": {
+      "pending": "Not yet",
+      "paid": "Paid",
+      "late": "Late",
+      "defaulted": "Defaulted"
+    },
+    "flag": {
+      "owes": "Owes the ajo",
+      "missed": "Missed {{count}}"
+    },
+    "dashboard": {
+      "inPot": "In the pot",
+      "yourPayout": "Your {{amount}} payout is due {{date}}.",
+      "theirPayout": "{{name}} gets {{amount}} on {{date}}.",
+      "complete": "Everyone has had their turn. {{name}} is complete.",
+      "noPayout": "No payout is due.",
+      "held": "Contributions are taken from each member automatically on the due date and held by Nem until the payout, which only ever goes to the member whose turn it is.",
+      "scheduleFailed": "We couldn't load the schedule",
+      "turnPaid": "Turn {{turn}} · {{paid}} of {{total}} paid",
+      "paidOn": "Paid {{date}}",
+      "attempts_one": "{{count}} attempt so far",
+      "attempts_other": "{{count}} attempts so far",
+      "dueOn": "Due {{date}}",
+      "schedule": "Schedule and history",
+      "turnWho": "Turn {{turn}} · {{who}}",
+      "paidLine": "{{amount}} paid {{date}}",
+      "dueLine": "{{amount}} due {{date}}",
+      "defaulted": "{{count}} defaulted",
+      "missesTitle": "If someone misses a payment",
+      "protected": "The pot is protected by the ledger",
+      "retries": "Retries",
+      "retriesValue": "On the due date and when grace ends",
+      "grace": "Grace period",
+      "graceValue": "{{hours}} hours",
+      "defaulterRule": "A member still unpaid after the grace period is flagged as a defaulter, and everyone in the ajo sees it. Late money that arrives goes straight to that turn's payee.",
+      "owesRule": "A defaulter who has already had their payout owes the ajo: they can't start or join another ajo on Nem until they have paid what they missed."
+    },
+    "details": {
+      "eachPays": "Each person pays",
+      "eachPayout": "Each payout",
+      "people": "People",
+      "runsFor": "Runs for",
+      "payoutOrder": "Payout order",
+      "orderJoined": "Order people joined",
+      "orderRandom": "Random draw at start",
+      "firstPayment": "First payment",
+      "nextPayment": "Next payment",
+      "organiser": "Organiser",
+      "placesLeft_one": "Members · {{count}} place left",
+      "placesLeft_other": "Members · {{count}} places left",
+      "turn": "Turn {{turn}}",
+      "turnDrawn": "Turn drawn at start"
+    },
+    "group": {
+      "failed": "We couldn't load this ajo",
+      "loading": "Loading ajo",
+      "everyoneIn": "Everyone is in",
+      "invitePeople": "Invite people",
+      "shareLink": "Share invite link",
+      "addByTag": "Or add by Nem tag",
+      "tagPlaceholder": "@emeka",
+      "add": "Add",
+      "inviteFailed": "We couldn't invite them. Try again.",
+      "start": "Start ajo",
+      "startCollects": "Starting collects the first {{amount}} from each person.",
+      "startWhenFull": "You can start once all {{count}} people are in.",
+      "organiserStarts": "{{name}} starts it once everyone is in. Nothing is paid until then.",
+      "cancel": "Cancel ajo",
+      "leave": "Leave ajo",
+      "startStep": "Start {{name}} and pay your first {{amount}}",
+      "cancelTitle": "Cancel {{name}}?",
+      "leaveTitle": "Leave {{name}}?",
+      "cancelMessage": "Everyone who joined is told it is off. Nothing has been paid yet.",
+      "leaveMessage": "Your place goes back to the organiser. Nothing has been paid yet.",
+      "leaveConfirm": "Leave"
+    },
+    "invite": {
+      "title": "Ajo invite",
+      "invalidTitle": "This invite link is not valid",
+      "failedTitle": "We couldn't open this invite",
+      "invalidMessage": "Check the link or code with the person who sent it.",
+      "loading": "Loading invite",
+      "started": "This ajo has already started, so it is not taking new people.",
+      "full": "This ajo is full.",
+      "open": "Open ajo",
+      "join": "Join ajo",
+      "invitedYou": "{{name}} invited you to save together.",
+      "alreadyIn": "You are already in this ajo.",
+      "agree": "I'll pay {{contribution}} from my naira account until everyone has had a turn",
+      "joinStep": "Join {{name}}: {{amount}} each turn"
+    },
+    "list": {
+      "start": "Start an ajo",
+      "failed": "We couldn't load your ajo groups",
+      "loading": "Loading ajo groups",
+      "emptyTitle": "No ajo yet",
+      "emptyMessage": "Save in turns with people you trust: everyone pays in each cycle and one person takes the whole pot.",
+      "rowLabel": "{{name}}. {{subtitle}}. {{status}}",
+      "gotInvite": "Got an invite?",
+      "inviteField": "Invite link or code",
+      "invitePlaceholder": "e.g. YABA04",
+      "inviteInvalid": "Paste the whole link or the 6-character code",
+      "openInvite": "Open invite"
+    },
+    "new": {
+      "starts": {
+        "1": "Tomorrow",
+        "7": "In a week",
+        "14": "In 2 weeks"
+      },
+      "rotations": {
+        "fixed": {
+          "label": "In the order people join",
+          "help": "You go first, then each person who joins."
+        },
+        "random_draw": {
+          "label": "Random draw",
+          "help": "Nem draws the order when you start, so nobody picks their turn."
+        }
+      },
+      "failed": "We couldn't create the ajo. Try again.",
+      "create": "Create ajo",
+      "name": "Name",
+      "namePlaceholder": "Lekki Girls Ajo",
+      "howOften": "How often",
+      "people": "People, including you",
+      "between": "Between {{min}} and {{max}}",
+      "fewer": "One person fewer",
+      "more": "One more person",
+      "count": "{{count}} people",
+      "summary": "Everyone pays {{contribution}}; each turn pays out {{pot}}.",
+      "runs": "Runs for {{duration}} from {{date}}, once all {{count}} people are in. Payments come from your naira account."
+    }
+  },
+  "credit": {
+    "title": "Credit",
+    "bands": {
+      "poor": "Poor",
+      "fair": "Fair",
+      "good": "Good",
+      "excellent": "Excellent"
+    },
+    "impact": {
+      "positive": "Helps",
+      "negative": "Holds you back",
+      "neutral": "Noted"
+    },
+    "loanStatus": {
+      "active": "On track",
+      "overdue": "Overdue",
+      "repaid": "Repaid",
+      "defaulted": "In default"
+    },
+    "installment": {
+      "upcoming": "Upcoming",
+      "due": "Due today",
+      "paid": "Paid",
+      "overdue": "Overdue",
+      "partPaid": " · {{amount}} paid",
+      "label": "Payment {{number}}, {{date}}, {{amount}}"
+    },
+    "accept": {
+      "expired": "That offer ran out. Here is a fresh one: check it and borrow again.",
+      "borrow": "Borrow {{amount}}",
+      "step": "Borrow {{amount}} into your naira account and repay {{total}} over {{tenor}}"
+    },
+    "actions": {
+      "autoFailed": "We couldn't change auto-repay. Try again.",
+      "overdue": "{{amount}} is overdue",
+      "dueToday": "{{amount}} is due today",
+      "autoMissed": "We couldn't take it automatically: there wasn't enough in your naira account. Add money or pay it now.",
+      "overdueHelp": "Pay it now to bring your loan back on track. Late payments lower what you can borrow next time.",
+      "autoOff": "Auto-repay is off, so pay it today to stay on track.",
+      "payNow": "Pay {{amount}} now",
+      "repayEarly": "Repay early or pay off"
+    },
+    "summary": {
+      "yourLoan": "Your loan, {{status}}",
+      "opens": "Opens the loan and its schedule",
+      "left": "Left to repay",
+      "repaidOf": "{{pct}}% of {{total}} repaid",
+      "next": "Next payment {{amount}} on {{date}}",
+      "nextAuto": "Next payment {{amount}} on {{date}}, taken automatically",
+      "allRepaid": "All {{total}} repaid"
+    },
+    "repay": {
+      "title": "Repay your loan",
+      "overdue": "Overdue {{amount}}",
+      "next": "Next payment {{amount}}",
+      "payOff": "Pay off {{amount}}",
+      "clears": "{{amount}} clears the whole loan today",
+      "saving": "Paying off today costs {{payoff}}: {{saving}} less than the {{owed}} left, because you don't pay interest for the days you no longer borrow.",
+      "left": "{{amount}} is left to repay.",
+      "payOffLoan": "Pay off the loan",
+      "repayAmount": "Repay {{amount}}",
+      "repay": "Repay",
+      "payOffStep": "Pay off your loan with {{amount}} from your naira account",
+      "repayStep": "Repay {{amount}} from your naira account"
+    },
+    "hub": {
+      "standardRules": "Standard rules: salary paid into Nem in the last three months, KYC Tier 3 and no loan still being repaid.",
+      "failed": "We couldn't check what you can borrow",
+      "loading": "Checking what you can borrow",
+      "aiFeature": "Credit scoring",
+      "aiOff": "AI scoring is off · standard check",
+      "canBorrow": "You can borrow up to",
+      "cannotBorrow": "You can’t borrow yet",
+      "why": "Here’s why, and what to do",
+      "bandLabel": "Credit score band: {{band}}, {{position}} of 4",
+      "bandScore": "{{band}} score",
+      "checked": "Checked {{when}}",
+      "checkAgain": "Check again",
+      "whyTitle": "Why",
+      "reason": "{{impact}}: {{message}}",
+      "verify": "Verify your identity",
+      "repayFirst": "Once your current loan is repaid, check again to borrow.",
+      "salary": "Have your salary paid into your Nem account. After it arrives, check again.",
+      "seeOffer": "See your offer",
+      "rates": "Rates start at 24% a year. Nothing is borrowed until you accept an offer."
+    },
+    "loan": {
+      "title": "Your loan",
+      "failed": "We couldn't load this loan",
+      "loading": "Loading your loan",
+      "inNaira": "{{amount}} is in your naira account",
+      "borrowed": "Borrowed",
+      "apr": "APR",
+      "aprYear": "{{apr}} a year",
+      "term": "Term",
+      "paidOutOn": "Paid out on",
+      "schedule": "Repayment schedule"
+    },
+    "offer": {
+      "title": "Your offer",
+      "failed": "We couldn't load your offer",
+      "loading": "Loading your offer",
+      "cannotTitle": "You can't borrow right now",
+      "cannotMessage": "Go back to Credit to see why and what to do next.",
+      "borrow": "Borrow",
+      "amountSlider": "Amount to borrow",
+      "repayOver": "Repay over",
+      "priceFailed": "We couldn't price this loan",
+      "pricing": "Pricing your loan",
+      "interest": "Interest",
+      "fee": "Fee (1%, once)",
+      "total": "Total to repay",
+      "payments_one": "{{count}} payment. You pay {{total}} in all for {{principal}}. No other charges.",
+      "payments_other": "{{count}} monthly payments. You pay {{total}} in all for {{principal}}. No other charges."
+    }
+  },
+  "insights": {
+    "title": "Insights",
+    "budgetStatus": {
+      "ok": "On track",
+      "warning": "Nearly there",
+      "exceeded": "Over budget"
+    },
+    "budgetRow": {
+      "used": "{{pct}}% used",
+      "left": "{{amount}} left",
+      "over": "{{amount}} over",
+      "label": "{{category}} budget, {{status}}. {{detail}}.",
+      "spentOf": "{{spent}} of {{limit}} spent, {{remaining}}",
+      "hint": "Change or remove this budget",
+      "of": "of {{amount}}"
+    },
+    "budgetSheet": {
+      "exists": "You already have a budget for this category.",
+      "saveFailed": "We couldn't save it. Try again.",
+      "titleEdit": "{{name}} budget",
+      "titleLimit": "Set a monthly limit",
+      "titlePick": "Budget for what?",
+      "limit": "Monthly limit",
+      "spent": "{{amount}} spent this month",
+      "alerts": "We’ll tell you at 80% and again at 100%.",
+      "tooSmall": "Set at least ₦1,000",
+      "save": "Save budget",
+      "add": "Add {{name}} budget",
+      "remove": "Remove budget",
+      "removeTitle": "Remove your {{name}} budget?",
+      "removeMessage": "You’ll stop getting alerts for it. Your spending isn’t affected.",
+      "removeConfirm": "Remove"
+    },
+    "budgets": {
+      "title": "Budgets",
+      "manage": "Manage",
+      "intro": "Set a monthly limit for a category and we’ll tell you at 80% and again at 100%.",
+      "set": "Set a budget",
+      "failed": "We couldn't load your budgets",
+      "loading": "Loading your budgets",
+      "emptyTitle": "No budgets yet",
+      "add": "Add a budget",
+      "reset": "Budgets reset on the 1st of each month. Money moved into your own savings doesn’t count."
+    },
+    "compare": {
+      "new": "Nothing here in {{month}}",
+      "same": "{{month}}: {{amount}}",
+      "more": "{{amount}} more than {{month}}",
+      "less": "{{amount}} less than {{month}}",
+      "withMonth": "Compared with {{month}}",
+      "row": "{{category}}: {{amount}}, {{pct}}% of spending. {{change}}."
+    },
+    "forecastCard": {
+      "beforePayday": "Before payday",
+      "byDate": "By {{date}}",
+      "summary": "{{when}} you’ll have about {{amount}}.",
+      "runOut": " Your balance could run out around {{date}}.",
+      "hint": "Opens the cash-flow forecast",
+      "haveAbout": "{{when}} you’ll have about",
+      "couldRunOut": "Could run out around {{date}}",
+      "seeHow": "Cash-flow forecast · see how"
+    },
+    "month": {
+      "show": "Show {{month}}"
+    },
+    "story": {
+      "slide": "Slide {{index}} of {{count}}",
+      "shareCardLabel": "Share card. My {{month}} with Nem. {{lines}}.",
+      "brand": "NEM MONEY STORY",
+      "my": "My {{month}}",
+      "noAmounts": "No amounts shared · nem-bank demo",
+      "mostWentPct": "Most went on {{category}} ({{pct}}%)",
+      "mostWent": "Most went on {{category}}",
+      "putAside": "Put money aside",
+      "myWithNem": "My {{month}} with Nem",
+      "shareFailed": "We couldn’t open sharing. Try again.",
+      "noneTitle": "No story for this month",
+      "noneMessage": "A story is ready once a month with spending has ended.",
+      "failed": "We couldn't load your story",
+      "loading": "Loading your Money Story",
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "share": "Share my story",
+      "shareHint": "Shares the card above. It has no amounts.",
+      "title": "Money Story",
+      "titleMonth": "Money Story · {{month}}",
+      "play": "Play story",
+      "pause": "Pause story",
+      "close": "Close story"
+    },
+    "subscriptionRow": {
+      "label": "{{merchant}}, {{amount}} {{per}}. {{next}}. {{paidWith}}.",
+      "controls": "Card controls",
+      "controlsHint": "Freeze, limit or lock the card that pays {{merchant}}"
+    },
+    "subscriptionsCard": {
+      "count_one": "{{count}} subscription",
+      "count_other": "{{count}} subscriptions",
+      "label": "{{count}}, {{amount}} a month. Next: {{merchant}}.",
+      "hint": "Opens your subscriptions",
+      "perMonth": "{{count}} a month",
+      "next": "Next: {{merchant}} · card controls inside"
+    },
+    "everythingElse": "Everything else",
+    "forecast": {
+      "title": "Cash-flow forecast",
+      "simple": "Simple forecast: your average daily spending over the last 90 days, plus your salary and the subscriptions you already pay.",
+      "failed": "We couldn't work out your forecast",
+      "loading": "Working out your forecast",
+      "aiOff": "AI forecast is off · simple average",
+      "beforePayday": "The day before payday ({{date}}) you’ll have about",
+      "onDate": "On {{date}} you’ll have about",
+      "balance": "Forecast balance",
+      "range": "Likely between {{low}} and {{high}}",
+      "chart": "Forecast naira balance, day by day",
+      "runOut": "At this pace your balance could run out around {{date}}. Setting a budget or moving a payment can help.",
+      "how": "How we worked it out",
+      "expected": "Expected before then",
+      "in": "Coming in",
+      "out": "Going out",
+      "disclaimer": "A forecast, not a promise: it assumes you keep spending the way you have been."
+    },
+    "home": {
+      "more": "{{amount}} more than {{month}}",
+      "less": "{{amount}} less than {{month}}",
+      "inAll": "{{month}} in all: {{amount}}",
+      "failed": "We couldn't load your spending",
+      "loading": "Loading your spending",
+      "nothing": "Nothing spent in {{month}}",
+      "nothingYet": "Nothing spent in {{month}} yet",
+      "nothingMessage": "Card payments, bills and transfers to other people show up here.",
+      "soFar": "Spent in {{month}} so far",
+      "youSpent": "You spent",
+      "donut": "Spending by category in {{month}}",
+      "categories_one": "{{count}} category",
+      "categories_other": "{{count}} categories",
+      "notOver": "The month isn’t over, so a category only shows as up once it passes {{month}}.",
+      "storyTitle": "Your {{month}} Money Story",
+      "storySubtitle": "Your month in a few slides, to keep or share"
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "frequency": {
+        "weekly": "a week",
+        "monthly": "a month",
+        "yearly": "a year"
+      },
+      "simple": "Without AI we still list merchants that charged you a similar amount in three or more months.",
+      "failed": "We couldn't check your subscriptions",
+      "loading": "Looking for subscriptions",
+      "emptyTitle": "No subscriptions found",
+      "emptyMessage": "When a merchant charges you a similar amount three months running, it shows up here.",
+      "aiFeature": "Subscription detection",
+      "aiOff": "Smart detection is off · simple repeat check",
+      "costYou_one": "{{count}} subscription cost you",
+      "costYou_other": "{{count}} subscriptions cost you",
+      "perMonth": "Subscriptions a month",
+      "monthNaira": "a month, in naira",
+      "nextFirst": "Next charge first",
+      "howToStop": "To stop one, cancel it with the merchant. Freezing or locking the card stops the charge too, but you may still owe the merchant.",
+      "wasDue": "Was due {{date}}",
+      "today": "Next charge today",
+      "tomorrow": "Next charge tomorrow",
+      "inDays": "Next charge {{date}} (in {{count}} days)",
+      "wallet": "Paid from your wallet as a bill",
+      "cardEnding": "{{name}} ending {{last4}}",
+      "closed": "This card is closed, so the next charge will be declined.",
+      "frozen": "This card is frozen, so the next charge will be declined."
     }
   }
 }

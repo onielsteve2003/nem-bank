@@ -2,6 +2,7 @@ import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Users } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { Button, Checkbox, EmptyState, Screen, Skeleton, SkeletonGroup, Text } from '@/components';
@@ -24,6 +25,7 @@ import { AjoDetails } from '../components/AjoDetails';
 export function AjoInviteScreen({ code }: { code: string }) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const invite = useRepoQuery('ajo', 'getInvite', { path: { invite_code: code } });
   const me = useRepoQuery('users', 'getMe');
   const accounts = useRepoQuery('accounts', 'list');
@@ -52,20 +54,16 @@ export function AjoInviteScreen({ code }: { code: string }) {
     }
   };
 
-  const header = <SendHeader title="Ajo invite" first />;
+  const header = <SendHeader title={t('ajo.invite.title')} first />;
   if (invite.isError) {
     const notFound = isApiError(invite.error) && invite.error.problem.status === 404;
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={Users}
-          title={notFound ? 'This invite link is not valid' : "We couldn't open this invite"}
-          message={
-            notFound
-              ? 'Check the link or code with the person who sent it.'
-              : 'Check your connection and try again.'
-          }
-          actionLabel={notFound ? undefined : 'Try again'}
+          title={t(notFound ? 'ajo.invite.invalidTitle' : 'ajo.invite.failedTitle')}
+          message={notFound ? t('ajo.invite.invalidMessage') : t('errors.offlineMessage')}
+          actionLabel={notFound ? undefined : t('common.tryAgain')}
           onAction={notFound ? undefined : () => void invite.refetch()}
         />
       </Screen>
@@ -75,7 +73,7 @@ export function AjoInviteScreen({ code }: { code: string }) {
   if (!g || !me.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <SkeletonGroup accessibilityLabel="Loading invite">
+        <SkeletonGroup accessibilityLabel={t('ajo.invite.loading')}>
           <Skeleton height={80} />
           <Skeleton height={240} />
         </SkeletonGroup>
@@ -89,9 +87,9 @@ export function AjoInviteScreen({ code }: { code: string }) {
   const blocked = member
     ? null
     : g.status !== 'forming'
-      ? 'This ajo has already started, so it is not taking new people.'
+      ? t('ajo.invite.started')
       : full
-        ? 'This ajo is full.'
+        ? t('ajo.invite.full')
         : null;
 
   return (
@@ -100,10 +98,10 @@ export function AjoInviteScreen({ code }: { code: string }) {
       edges={['top', 'bottom']}
       footer={
         member ? (
-          <Button label="Open ajo" onPress={() => openGroup(g.id)} />
+          <Button label={t('ajo.invite.open')} onPress={() => openGroup(g.id)} />
         ) : blocked ? undefined : (
           <Button
-            label="Join ajo"
+            label={t('ajo.invite.join')}
             disabled={!agreed || !naira}
             onPress={() => {
               accept.resetIntent();
@@ -116,13 +114,13 @@ export function AjoInviteScreen({ code }: { code: string }) {
       <View style={{ gap: spacing[1] }}>
         <Text variant="title">{g.name}</Text>
         <Text variant="bodySmall" color="textMuted">
-          {g.created_by.name} invited you to save together.
+          {t('ajo.invite.invitedYou', { name: g.created_by.name })}
         </Text>
       </View>
 
       {member && (
         <Text variant="bodySmall" color="success">
-          You are already in this ajo.
+          {t('ajo.invite.alreadyIn')}
         </Text>
       )}
       {blocked && (
@@ -135,7 +133,9 @@ export function AjoInviteScreen({ code }: { code: string }) {
 
       {!member && !blocked && (
         <Checkbox
-          label={`I'll pay ${contributionLabel(contribution, g.frequency)} from my naira account until everyone has had a turn`}
+          label={t('ajo.invite.agree', {
+            contribution: contributionLabel(contribution, g.frequency),
+          })}
           checked={agreed}
           onChange={setAgreed}
         />
@@ -144,7 +144,7 @@ export function AjoInviteScreen({ code }: { code: string }) {
       <ConfirmSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        subtitle={`Join ${g.name}: ${formatMoney(contribution)} each turn`}
+        subtitle={t('ajo.invite.joinStep', { name: g.name, amount: formatMoney(contribution) })}
         onApproved={run}
         error={error}
       />

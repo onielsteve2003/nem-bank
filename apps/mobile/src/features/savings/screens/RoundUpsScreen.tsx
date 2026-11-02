@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Coins } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -22,6 +23,7 @@ import {
 } from '@/components';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { formatWhen } from '@/features/transactions/TransactionRow';
+import i18n from '@/lib/i18n';
 import { fromApiMoney } from '@/lib/money';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { usePrivacyStore } from '@/stores';
@@ -35,10 +37,16 @@ const STEPS: { value: Settings['round_to']; label: string }[] = [
   { value: '50000', label: '₦500' },
   { value: '100000', label: '₦1,000' },
 ];
-const SOURCES: { value: Source; label: string; description: string }[] = [
-  { value: 'card', label: 'Card payments', description: 'Online and in-store card spends' },
-  { value: 'transfer', label: 'Transfers', description: 'Money you send to anyone' },
-];
+/** Words are read in the current language on access. */
+const SOURCES = (['card', 'transfer'] as const satisfies readonly Source[]).map((value) => ({
+  value,
+  get label() {
+    return i18n.t(`savings.roundUps.sources.${value}.label`);
+  },
+  get description() {
+    return i18n.t(`savings.roundUps.sources.${value}.description`);
+  },
+}));
 const EXAMPLE_SPEND = 123_000n;
 const HISTORY = 20;
 
@@ -46,7 +54,10 @@ const HISTORY = 20;
 export function roundUpExample(step: Settings['round_to']): string {
   const s = BigInt(step);
   const rest = EXAMPLE_SPEND % s;
-  return `A ${formatMoney(money(EXAMPLE_SPEND, 'NGN'))} spend saves ${formatMoney(money(rest === 0n ? 0n : s - rest, 'NGN'))}`;
+  return i18n.t('savings.roundUps.example', {
+    spend: formatMoney(money(EXAMPLE_SPEND, 'NGN')),
+    saved: formatMoney(money(rest === 0n ? 0n : s - rest, 'NGN')),
+  });
 }
 
 /**
@@ -57,6 +68,7 @@ export function roundUpExample(step: Settings['round_to']): string {
 export function RoundUpsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const settings = useRepoQuery('savings', 'getRoundUps');
   const goals = useRepoQuery('savings', 'listGoals');
@@ -90,14 +102,14 @@ export function RoundUpsScreen() {
     if (settings.isError || goals.isError) {
       return (
         <ErrorState
-          title="We couldn't load your round-ups"
+          title={t('savings.roundUps.failed')}
           onRetry={() => void Promise.all([settings.refetch(), goals.refetch()])}
         />
       );
     }
     if (!s || !goals.data) {
       return (
-        <SkeletonGroup accessibilityLabel="Loading round-ups">
+        <SkeletonGroup accessibilityLabel={t('savings.roundUps.loading')}>
           <Skeleton height={220} />
         </SkeletonGroup>
       );
@@ -106,9 +118,9 @@ export function RoundUpsScreen() {
       return (
         <EmptyState
           icon={Coins}
-          title="Start a goal first"
-          message="Round-ups need a goal to save into. Make one, then come back here."
-          actionLabel="Start a goal"
+          title={t('savings.roundUps.needGoalTitle')}
+          message={t('savings.roundUps.needGoalMessage')}
+          actionLabel={t('savings.grow.startGoal')}
           onAction={() => router.push('/goals/new')}
         />
       );
@@ -117,8 +129,8 @@ export function RoundUpsScreen() {
       <View style={{ gap: spacing[4] }}>
         <Card>
           <Switch
-            label="Round up my spending"
-            description="Save the change from every naira spend"
+            label={t('savings.roundUps.toggle')}
+            description={t('savings.roundUps.toggleHelp')}
             value={s.enabled}
             onValueChange={(enabled) => save({ enabled })}
           />
@@ -126,14 +138,14 @@ export function RoundUpsScreen() {
         {s.enabled && (
           <>
             <SelectSheet
-              label="Save into"
-              title="Pick a goal"
+              label={t('savings.roundUps.saveInto')}
+              title={t('savings.roundUps.pickGoal')}
               options={open.map((g) => ({ value: g.id, label: `${g.emoji} ${g.name}` }))}
               value={s.goal_id}
               onChange={(goal_id) => save({ goal_id })}
             />
             <View style={{ gap: spacing[2] }}>
-              <Text variant="label">Round up to the next</Text>
+              <Text variant="label">{t('savings.roundUps.roundTo')}</Text>
               <View accessibilityRole="radiogroup" style={[styles.chips, { gap: spacing[2] }]}>
                 {STEPS.map((step) => (
                   <Chip
@@ -163,7 +175,7 @@ export function RoundUpsScreen() {
         )}
         {update.isError && (
           <Text variant="bodySmall" color="danger" accessibilityRole="alert">
-            We couldn&apos;t save that. Try again.
+            {t('common.saveFailedGeneric')}
           </Text>
         )}
       </View>
@@ -172,11 +184,13 @@ export function RoundUpsScreen() {
 
   const historyList = () => {
     if (history.isError) {
-      return <ErrorState title="We couldn't load round-ups" onRetry={() => history.refetch()} />;
+      return (
+        <ErrorState title={t('savings.roundUps.historyFailed')} onRetry={() => history.refetch()} />
+      );
     }
     if (!history.data) {
       return (
-        <SkeletonGroup accessibilityLabel="Loading round-up history">
+        <SkeletonGroup accessibilityLabel={t('savings.roundUps.historyLoading')}>
           <SkeletonListItem />
           <SkeletonListItem />
         </SkeletonGroup>
@@ -185,24 +199,30 @@ export function RoundUpsScreen() {
     if (history.data.data.length === 0) {
       return (
         <Text variant="bodySmall" color="textMuted">
-          No round-ups yet. They show up here after your next card payment or transfer.
+          {t('savings.roundUps.historyEmpty')}
         </Text>
       );
     }
     return (
       <Card padded={false}>
-        {history.data.data.map((t) => {
-          const from = t.narration.replace(/^Round-up:\s*/, '');
+        {history.data.data.map((tx) => {
+          const from = tx.narration.replace(/^Round-up:\s*/, '');
           return (
             <ListItem
-              key={t.id}
+              key={tx.id}
               leading={Coins}
               title={from}
-              subtitle={formatWhen(t.created_at)}
+              subtitle={formatWhen(tx.created_at)}
               trailing={
-                <MoneyText value={fromApiMoney(t.amount)} variant="bodyStrong" masked={hidden} />
+                <MoneyText value={fromApiMoney(tx.amount)} variant="bodyStrong" masked={hidden} />
               }
-              accessibilityLabel={`Round-up from ${from}, ${hidden ? 'amount hidden' : formatMoney(fromApiMoney(t.amount))}, ${formatWhen(t.created_at)}`}
+              accessibilityLabel={t('savings.roundUps.rowLabel', {
+                from,
+                amount: hidden
+                  ? t('savings.roundUps.amountHidden')
+                  : formatMoney(fromApiMoney(tx.amount)),
+                when: formatWhen(tx.created_at),
+              })}
             />
           );
         })}
@@ -212,14 +232,14 @@ export function RoundUpsScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Round-ups" first />}
+      header={<SendHeader title={t('savings.roundUps.title')} first />}
       edges={['top', 'bottom']}
       onRefresh={() => void Promise.all([settings.refetch(), goals.refetch(), history.refetch()])}
       refreshing={settings.isRefetching || history.isRefetching}
     >
       {settingsCard()}
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="History" />
+        <SectionHeader title={t('savings.roundUps.history')} />
         {historyList()}
       </View>
     </Screen>

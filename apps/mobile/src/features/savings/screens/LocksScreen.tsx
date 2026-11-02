@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Lock, Plus } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -31,6 +32,7 @@ type LockedSaving = Schema<'LockedSaving'>;
 export function LocksScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const locks = useRepoQuery('savings', 'listLocks');
   const sorted = locks.data ? sortLocks(locks.data.data) : [];
@@ -38,16 +40,19 @@ export function LocksScreen() {
   const ended = sorted.filter((l) => l.status !== 'active');
 
   const row = (l: LockedSaving) => {
-    const amount = hidden ? '••••' : formatMoney(fromApiMoney(l.principal));
+    const amount = hidden ? t('common.masked') : formatMoney(fromApiMoney(l.principal));
     const subtitle =
       l.status === 'active'
-        ? `${ratePct(l.rate_bps)} a year · matures ${formatGoalDate(l.maturity_date)}`
-        : `${ratePct(l.rate_bps)} a year · ${termLabel(l.term_days)}`;
+        ? t('savings.locks.rowActive', {
+            rate: ratePct(l.rate_bps),
+            date: formatGoalDate(l.maturity_date),
+          })
+        : t('savings.locks.rowEnded', { rate: ratePct(l.rate_bps), term: termLabel(l.term_days) });
     return (
       <ListItem
         key={l.id}
         leading={Lock}
-        title={`${amount} · ${termLabel(l.term_days)}`}
+        title={t('savings.locks.rowTitle', { amount, term: termLabel(l.term_days) })}
         subtitle={subtitle}
         trailing={
           <Badge
@@ -58,38 +63,49 @@ export function LocksScreen() {
           />
         }
         onPress={() => router.push({ pathname: '/locks/[id]', params: { id: l.id } })}
-        accessibilityLabel={`${amount} locked for ${termLabel(l.term_days)}. ${subtitle}. ${LOCK_STATUS[l.status]}`}
+        accessibilityLabel={t('savings.locks.rowLabel', {
+          amount,
+          term: termLabel(l.term_days),
+          subtitle,
+          status: LOCK_STATUS[l.status],
+        })}
       />
     );
   };
 
   return (
     <Screen
-      header={<SendHeader title="Locked savings" first />}
+      header={<SendHeader title={t('savings.locks.title')} first />}
       edges={['top', 'bottom']}
-      footer={<Button label="Lock money" icon={Plus} onPress={() => router.push('/locks/new')} />}
+      footer={
+        <Button
+          label={t('savings.locks.lockMoney')}
+          icon={Plus}
+          onPress={() => router.push('/locks/new')}
+        />
+      }
       onRefresh={() => void locks.refetch()}
       refreshing={locks.isRefetching}
     >
       {locks.isError ? (
-        <ErrorState title="We couldn't load your locked savings" onRetry={() => locks.refetch()} />
+        <ErrorState title={t('savings.locks.listFailed')} onRetry={() => locks.refetch()} />
       ) : !locks.data ? (
-        <SkeletonGroup accessibilityLabel="Loading locked savings">
+        <SkeletonGroup accessibilityLabel={t('savings.locks.listLoading')}>
           <Skeleton height={72} />
           <Skeleton height={72} />
         </SkeletonGroup>
       ) : sorted.length === 0 ? (
         <EmptyState
           icon={Lock}
-          title="Nothing locked yet"
-          message="Lock money away for 30 days to a year and earn up to 18% a year. The rate is fixed the day you lock."
+          title={t('savings.locks.emptyTitle')}
+          message={t('savings.locks.emptyMessage')}
         />
       ) : (
         <>
           {active.length > 0 && <Card padded={false}>{active.map(row)}</Card>}
           {ended.length > 0 && (
             <View style={{ gap: spacing[2] }}>
-              <SectionHeader title="Ended" />
+              <SectionHeader title={t('savings.locks.ended')} />
               <Card padded={false}>{ended.map(row)}</Card>
             </View>
           )}

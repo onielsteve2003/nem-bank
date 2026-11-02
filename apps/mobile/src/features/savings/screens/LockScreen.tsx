@@ -1,6 +1,7 @@
 import { add, formatMoney, subtract } from '@nem/shared';
 import { Lock as LockIcon, Unlock } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -34,6 +35,7 @@ import { keptOnBreak, LOCK_STATUS, lockProgress, ratePct, termLabel } from '../l
  */
 export function LockScreen({ id }: { id: string }) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const lockQuery = useRepoQuery('savings', 'getLock', { path: { lock_id: id } });
   const [step, setStep] = useState<'disclose' | 'confirm' | null>(null);
@@ -43,7 +45,7 @@ export function LockScreen({ id }: { id: string }) {
   });
 
   const lock = lockQuery.data;
-  const mask = (v: string) => (hidden ? '••••' : v);
+  const mask = (v: string) => (hidden ? t('common.masked') : v);
 
   const run = async () => {
     setError(undefined);
@@ -59,11 +61,11 @@ export function LockScreen({ id }: { id: string }) {
 
   if (lockQuery.isError || !lock) {
     return (
-      <Screen header={<SendHeader title="Locked savings" />} edges={['top', 'bottom']}>
+      <Screen header={<SendHeader title={t('savings.locks.title')} />} edges={['top', 'bottom']}>
         {lockQuery.isError ? (
-          <ErrorState title="We couldn't load this lock" onRetry={() => lockQuery.refetch()} />
+          <ErrorState title={t('savings.locks.failed')} onRetry={() => lockQuery.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading locked saving">
+          <SkeletonGroup accessibilityLabel={t('savings.locks.loading')}>
             <Skeleton height={160} radius={24} />
             <Skeleton height={160} />
           </SkeletonGroup>
@@ -81,7 +83,9 @@ export function LockScreen({ id }: { id: string }) {
 
   return (
     <Screen
-      header={<SendHeader title={`Locked for ${termLabel(lock.term_days)}`} />}
+      header={
+        <SendHeader title={t('savings.locks.lockedFor', { term: termLabel(lock.term_days) })} />
+      }
       edges={['top', 'bottom']}
       onRefresh={() => void lockQuery.refetch()}
       refreshing={lockQuery.isRefetching}
@@ -98,7 +102,12 @@ export function LockScreen({ id }: { id: string }) {
         <Text variant="label" color="textMuted">
           {LOCK_STATUS[lock.status]}
         </Text>
-        <MoneyText value={principal} variant="amountLarge" masked={hidden} label="Locked" />
+        <MoneyText
+          value={principal}
+          variant="amountLarge"
+          masked={hidden}
+          label={t('savings.locks.locked')}
+        />
         {active && (
           <>
             <View
@@ -116,7 +125,7 @@ export function LockScreen({ id }: { id: string }) {
               />
             </View>
             <Text variant="caption" color="textMuted">
-              Matures on {formatGoalDate(lock.maturity_date)}
+              {t('savings.locks.maturesOn', { date: formatGoalDate(lock.maturity_date) })}
             </Text>
           </>
         )}
@@ -125,23 +134,37 @@ export function LockScreen({ id }: { id: string }) {
       {lock.status === 'matured' && (
         <EmptyState
           icon={LockIcon}
-          title="Your lock matured"
-          message="Your money and all the interest went back to your naira account."
+          title={t('savings.locks.maturedTitle')}
+          message={t('savings.locks.maturedMessage')}
         />
       )}
 
       <Card>
         <View style={{ gap: spacing[3] }}>
-          <DetailRow label="Rate" value={`${ratePct(lock.rate_bps)} a year, fixed`} />
-          <DetailRow label="Started" value={formatGoalDate(lock.start_date)} />
-          <DetailRow label="Matures" value={formatGoalDate(lock.maturity_date)} />
-          {active && <DetailRow label="Interest so far" value={mask(formatMoney(accrued))} />}
           <DetailRow
-            label="Interest at maturity"
+            label={t('savings.locks.rate')}
+            value={t('savings.locks.rateFixed', { rate: ratePct(lock.rate_bps) })}
+          />
+          <DetailRow label={t('savings.locks.started')} value={formatGoalDate(lock.start_date)} />
+          <DetailRow
+            label={t('savings.locks.matures')}
+            value={formatGoalDate(lock.maturity_date)}
+          />
+          {active && (
+            <DetailRow
+              label={t('savings.locks.interestSoFar')}
+              value={mask(formatMoney(accrued))}
+            />
+          )}
+          <DetailRow
+            label={t('savings.locks.interestAtMaturity')}
             value={mask(formatMoney(fromApiMoney(lock.expected_interest)))}
           />
           {lock.paid_out && (
-            <DetailRow label="Paid out" value={mask(formatMoney(fromApiMoney(lock.paid_out)))} />
+            <DetailRow
+              label={t('savings.locks.paidOut')}
+              value={mask(formatMoney(fromApiMoney(lock.paid_out)))}
+            />
           )}
         </View>
       </Card>
@@ -149,11 +172,12 @@ export function LockScreen({ id }: { id: string }) {
       {active && (
         <>
           <Text variant="caption" color="textMuted">
-            Breaking early keeps your full amount but only{' '}
-            {ratePct(10_000 - lock.early_break_penalty_bps)} of the interest earned so far.
+            {t('savings.locks.breakNote', {
+              rate: ratePct(10_000 - lock.early_break_penalty_bps),
+            })}
           </Text>
           <Button
-            label="Break lock early"
+            label={t('savings.locks.break')}
             icon={Unlock}
             variant="ghost"
             onPress={() => {
@@ -167,10 +191,16 @@ export function LockScreen({ id }: { id: string }) {
 
       <Dialog
         open={step === 'disclose'}
-        title="Break this lock early?"
-        message={`You get ${formatMoney(add(principal, kept))} today: your ${formatMoney(principal)} plus ${formatMoney(kept)} interest. You lose ${formatMoney(lost)} of interest earned so far, and give up the ${formatMoney(fromApiMoney(lock.expected_interest))} due at maturity.`}
-        confirmLabel="Break lock"
-        cancelLabel="Keep it locked"
+        title={t('savings.locks.breakTitle')}
+        message={t('savings.locks.breakMessage', {
+          total: formatMoney(add(principal, kept)),
+          principal: formatMoney(principal),
+          kept: formatMoney(kept),
+          lost: formatMoney(lost),
+          expected: formatMoney(fromApiMoney(lock.expected_interest)),
+        })}
+        confirmLabel={t('savings.locks.breakConfirm')}
+        cancelLabel={t('savings.locks.keepLocked')}
         destructive
         onCancel={() => setStep(null)}
         onConfirm={() => setStep('confirm')}
@@ -178,7 +208,7 @@ export function LockScreen({ id }: { id: string }) {
       <ConfirmSheet
         open={step === 'confirm'}
         onClose={() => setStep(null)}
-        subtitle={`Break lock and get ${formatMoney(add(principal, kept))}`}
+        subtitle={t('savings.locks.breakStep', { amount: formatMoney(add(principal, kept)) })}
         onApproved={run}
         error={error}
       />

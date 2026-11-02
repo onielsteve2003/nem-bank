@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 
 import { getDeviceKeyInfo, signWithDeviceKey } from '@/lib/deviceKey';
+import i18n from '@/lib/i18n';
 import { useRepoMutation } from '@/lib/query';
 
 /** What the customer gave the ConfirmSheet: their PIN, or Face ID / fingerprint. */
@@ -33,7 +34,9 @@ export function useStepUp() {
     } else {
       if (!(await getDeviceKeyInfo())) throw new StepUpNeedsPin();
       try {
-        body = { signature: await signWithDeviceKey(challenge.step_up_id, 'Confirm it’s you') };
+        body = {
+          signature: await signWithDeviceKey(challenge.step_up_id, i18n.t('common.confirmItsYou')),
+        };
       } catch {
         throw new StepUpCancelled();
       }

@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { compare, formatMoney } from '@nem/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { AmountInput, BottomSheet, Button, Text } from '@/components';
@@ -26,6 +27,7 @@ interface Props {
  */
 export function MoveMoneySheet({ kind, goal, account, onClose }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [typed, setTyped] = useState('');
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
@@ -37,7 +39,6 @@ export function MoveMoneySheet({ kind, goal, account, onClose }: Props) {
   const amount = typedNaira(typed);
   const limit = fromApiMoney(isDeposit ? account.available_balance : goal.balance);
   const tooMuch = amount !== null && compare(amount, limit) > 0;
-  const verb = isDeposit ? 'Add' : 'Withdraw';
 
   const run = async () => {
     if (!amount) return false;
@@ -61,7 +62,11 @@ export function MoveMoneySheet({ kind, goal, account, onClose }: Props) {
       <BottomSheet
         open={!confirming}
         onClose={onClose}
-        title={isDeposit ? `Add money to ${goal.name}` : `Withdraw from ${goal.name}`}
+        title={
+          isDeposit
+            ? t('savings.move.addTitle', { name: goal.name })
+            : t('savings.move.withdrawTitle', { name: goal.name })
+        }
       >
         <View style={{ gap: spacing[4] }}>
           <AmountInput
@@ -71,20 +76,20 @@ export function MoveMoneySheet({ kind, goal, account, onClose }: Props) {
             maxWholeDigits={9}
             help={
               isDeposit
-                ? `${formatMoney(limit)} available in your naira account`
-                : `${formatMoney(limit)} in this goal`
+                ? t('savings.move.availableNaira', { amount: formatMoney(limit) })
+                : t('savings.move.inGoal', { amount: formatMoney(limit) })
             }
             error={
               tooMuch
                 ? isDeposit
-                  ? 'More than you have in your naira account'
-                  : 'More than is in this goal'
+                  ? t('common.moreThanNaira')
+                  : t('savings.move.moreThanGoal')
                 : undefined
             }
           />
           {!isDeposit && limit.amount > 0n && (
             <Button
-              label="Withdraw everything"
+              label={t('savings.move.withdrawAll')}
               variant="ghost"
               onPress={() => setTyped(typedFromKobo(limit.amount))}
             />
@@ -95,7 +100,13 @@ export function MoveMoneySheet({ kind, goal, account, onClose }: Props) {
             </Text>
           )}
           <Button
-            label={amount ? `${verb} ${formatMoney(amount, { trimZeroMinor: true })}` : verb}
+            label={
+              amount
+                ? t(isDeposit ? 'savings.move.addAmount' : 'savings.move.withdrawAmount', {
+                    amount: formatMoney(amount, { trimZeroMinor: true }),
+                  })
+                : t(isDeposit ? 'savings.move.add' : 'savings.move.withdraw')
+            }
             disabled={!amount || tooMuch}
             loading={isDeposit && mutation.isPending}
             onPress={() => {
@@ -110,7 +121,9 @@ export function MoveMoneySheet({ kind, goal, account, onClose }: Props) {
         <ConfirmSheet
           open={confirming}
           onClose={() => setConfirming(false)}
-          subtitle={amount ? `Withdraw ${formatMoney(amount)} to your naira account` : ''}
+          subtitle={
+            amount ? t('savings.move.withdrawConfirm', { amount: formatMoney(amount) }) : ''
+          }
           onApproved={run}
           error={error}
         />

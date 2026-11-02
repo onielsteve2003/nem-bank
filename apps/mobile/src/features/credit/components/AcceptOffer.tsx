@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { Button, Switch, Text } from '@/components';
@@ -30,6 +31,7 @@ type Props = {
 export function AcceptOffer({ offer, pricing = false, onExpired }: Props) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [autoRepay, setAutoRepay] = useState(true);
   const [confirming, setConfirming] = useState(false);
   const [error, setError] = useState<string>();
@@ -55,7 +57,7 @@ export function AcceptOffer({ offer, pricing = false, onExpired }: Props) {
     } catch (e) {
       if (isApiError(e) && e.code === 'offer_expired') {
         setConfirming(false);
-        setError('That offer ran out. Here is a fresh one: check it and borrow again.');
+        setError(t('credit.accept.expired'));
         onExpired();
         return false;
       }
@@ -67,8 +69,8 @@ export function AcceptOffer({ offer, pricing = false, onExpired }: Props) {
   return (
     <View style={{ gap: spacing[2] }}>
       <Switch
-        label="Repay automatically"
-        description="Each payment is taken from your naira account on its due date."
+        label={t('common.repayAutomatically')}
+        description={t('common.repayAutomaticallyHelp')}
         value={autoRepay}
         onValueChange={setAutoRepay}
       />
@@ -78,7 +80,7 @@ export function AcceptOffer({ offer, pricing = false, onExpired }: Props) {
         </Text>
       )}
       <Button
-        label={`Borrow ${principal}`}
+        label={t('credit.accept.borrow', { amount: principal })}
         disabled={!naira || pricing}
         onPress={() => {
           accept.resetIntent();
@@ -88,9 +90,11 @@ export function AcceptOffer({ offer, pricing = false, onExpired }: Props) {
       <ConfirmSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        subtitle={`Borrow ${principal} into your naira account and repay ${formatMoney(
-          fromApiMoney(offer.total_repayment),
-        )} over ${tenorLabel(offer.tenor_days)}`}
+        subtitle={t('credit.accept.step', {
+          amount: principal,
+          total: formatMoney(fromApiMoney(offer.total_repayment)),
+          tenor: tenorLabel(offer.tenor_days),
+        })}
         onApproved={run}
         error={error}
       />

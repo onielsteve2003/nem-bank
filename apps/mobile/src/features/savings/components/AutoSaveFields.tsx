@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Chip, Switch, Text } from '@/components';
@@ -19,11 +20,12 @@ interface Props {
 /** The auto-save rule (SAV-2): off, or an amount every day, week or month. */
 export function AutoSaveFields({ value, onChange }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={{ gap: spacing[3] }}>
       <Switch
-        label="Auto-save"
-        description="Move money from your naira account into this goal on a schedule. It stops when you reach the target."
+        label={t('savings.autoSave.title')}
+        description={t('savings.autoSave.help')}
         value={value !== null}
         onValueChange={(on) => onChange(on ? { amount: 5_000, frequency: 'weekly' } : null)}
       />
@@ -31,7 +33,7 @@ export function AutoSaveFields({ value, onChange }: Props) {
         <>
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
-              How much
+              {t('savings.autoSave.howMuch')}
             </Text>
             <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
               {AUTO_SAVE_PRESETS.map((n) => (
@@ -46,7 +48,7 @@ export function AutoSaveFields({ value, onChange }: Props) {
           </View>
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
-              How often
+              {t('savings.autoSave.howOften')}
             </Text>
             <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
               {(Object.keys(AUTO_SAVE_FREQUENCIES) as AutoSaveFrequency[]).map((f) => (

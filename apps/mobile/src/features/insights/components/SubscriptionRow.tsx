@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { CreditCard, Repeat, TriangleAlert, Wallet } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, MoneyText, Text } from '@/components';
@@ -27,6 +28,7 @@ export function SubscriptionRow({
   onCardControls,
 }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const amount = fromApiMoney(s.amount);
   const per = FREQUENCY_LABEL[s.frequency];
   const next = nextChargeLabel(s.next_expected_at, today);
@@ -37,7 +39,13 @@ export function SubscriptionRow({
       <View
         style={[styles.row, { gap: spacing[3] }]}
         accessible
-        accessibilityLabel={`${s.merchant}, ${hidden ? 'amount hidden' : formatMoney(amount)} ${per}. ${next}. ${paidWith.label}.`}
+        accessibilityLabel={t('insights.subscriptionRow.label', {
+          merchant: s.merchant,
+          amount: hidden ? t('common.amountHidden') : formatMoney(amount),
+          per,
+          next,
+          paidWith: paidWith.label,
+        })}
       >
         <View style={[styles.icon, { backgroundColor: colors.raised, borderRadius: radius.md }]}>
           <Icon icon={Repeat} size="md" color="primaryText" />
@@ -77,11 +85,11 @@ export function SubscriptionRow({
       )}
       {paidWith.kind === 'card' && isOpen(paidWith.card) && (
         <Button
-          label="Card controls"
+          label={t('insights.subscriptionRow.controls')}
           icon={CreditCard}
           variant="secondary"
           size="sm"
-          accessibilityHint={`Freeze, limit or lock the card that pays ${s.merchant}`}
+          accessibilityHint={t('insights.subscriptionRow.controlsHint', { merchant: s.merchant })}
           onPress={() => onCardControls(paidWith.card.id)}
         />
       )}

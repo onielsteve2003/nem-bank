@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/theme';
@@ -14,10 +15,14 @@ export function GoalProgress({
   hidden?: boolean;
 }) {
   const { colors, radius } = useTheme();
+  const { t } = useTranslation();
   const pct = Math.max(0, Math.min(100, goal.progress_pct));
   const label = hidden
-    ? `${pct}% of the target saved`
-    : `${formatMoney(fromApiMoney(goal.balance))} of ${formatMoney(fromApiMoney(goal.target))} saved`;
+    ? t('savings.progress.hidden', { pct })
+    : t('savings.progress.shown', {
+        saved: formatMoney(fromApiMoney(goal.balance)),
+        target: formatMoney(fromApiMoney(goal.target)),
+      });
   return (
     <View
       accessible

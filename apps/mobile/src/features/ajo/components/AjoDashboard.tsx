@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { ShieldAlert } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -35,6 +36,7 @@ const amountOf = (m: Schema<'Money'>) => formatMoney(fromApiMoney(m), { trimZero
  */
 export function AjoDashboard({ group: g, meId }: { group: Group; meId?: string }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const cycles = useRepoQuery('ajo', 'listCycles', { path: { group_id: g.id } });
   const current = cycles.data?.data.find((c) => c.number === g.current_cycle);
   const next = g.next_payout;
@@ -45,28 +47,34 @@ export function AjoDashboard({ group: g, meId }: { group: Group; meId?: string }
         <View style={{ gap: spacing[3] }}>
           <View style={{ gap: spacing[1] }}>
             <Text variant="caption" color="textMuted">
-              In the pot
+              {t('ajo.dashboard.inPot')}
             </Text>
-            <MoneyText value={fromApiMoney(g.pot_balance)} label="In the pot" />
+            <MoneyText value={fromApiMoney(g.pot_balance)} label={t('ajo.dashboard.inPot')} />
           </View>
           <Text variant="body">
             {next
               ? next.member.user_id === meId
-                ? `Your ${amountOf(next.amount)} payout is due ${dateOf(next.at)}.`
-                : `${next.member.name} gets ${amountOf(next.amount)} on ${dateOf(next.at)}.`
+                ? t('ajo.dashboard.yourPayout', {
+                    amount: amountOf(next.amount),
+                    date: dateOf(next.at),
+                  })
+                : t('ajo.dashboard.theirPayout', {
+                    name: next.member.name,
+                    amount: amountOf(next.amount),
+                    date: dateOf(next.at),
+                  })
               : g.status === 'completed'
-                ? `Everyone has had their turn. ${g.name} is complete.`
-                : 'No payout is due.'}
+                ? t('ajo.dashboard.complete', { name: g.name })
+                : t('ajo.dashboard.noPayout')}
           </Text>
           <Text variant="caption" color="textMuted">
-            Contributions are taken from each member automatically on the due date and held by Nem
-            until the payout, which only ever goes to the member whose turn it is.
+            {t('ajo.dashboard.held')}
           </Text>
         </View>
       </Card>
 
       {cycles.isError ? (
-        <ErrorState title="We couldn't load the schedule" onRetry={() => cycles.refetch()} />
+        <ErrorState title={t('ajo.dashboard.scheduleFailed')} onRetry={() => cycles.refetch()} />
       ) : !cycles.data ? (
         <Skeleton height={240} />
       ) : (
@@ -74,7 +82,11 @@ export function AjoDashboard({ group: g, meId }: { group: Group; meId?: string }
           {current && (
             <View style={{ gap: spacing[2] }}>
               <SectionHeader
-                title={`Turn ${current.number} · ${paidCount(current)} of ${current.contributions.length} paid`}
+                title={t('ajo.dashboard.turnPaid', {
+                  turn: current.number,
+                  paid: paidCount(current),
+                  total: current.contributions.length,
+                })}
               />
               <Card padded={false}>
                 {current.contributions.map((c) => {
@@ -83,13 +95,17 @@ export function AjoDashboard({ group: g, meId }: { group: Group; meId?: string }
                     <ListItem
                       key={c.member.user_id}
                       leading={<Avatar name={c.member.name} size="sm" />}
-                      title={c.member.user_id === meId ? `${c.member.name} (you)` : c.member.name}
+                      title={
+                        c.member.user_id === meId
+                          ? t('common.nameYou', { name: c.member.name })
+                          : c.member.name
+                      }
                       subtitle={
                         c.paid_at
-                          ? `Paid ${dateOf(c.paid_at)}`
+                          ? t('ajo.dashboard.paidOn', { date: dateOf(c.paid_at) })
                           : c.attempts > 0
-                            ? `${c.attempts} attempt${c.attempts === 1 ? '' : 's'} so far`
-                            : `Due ${dateOf(current.due_at)}`
+                            ? t('ajo.dashboard.attempts', { count: c.attempts })
+                            : t('ajo.dashboard.dueOn', { date: dateOf(current.due_at) })
                       }
                       trailing={<Badge label={s.label} tone={s.tone} />}
                     />
@@ -100,21 +116,24 @@ export function AjoDashboard({ group: g, meId }: { group: Group; meId?: string }
           )}
 
           <View style={{ gap: spacing[2] }}>
-            <SectionHeader title="Schedule and history" />
+            <SectionHeader title={t('ajo.dashboard.schedule')} />
             <Card padded={false}>
               {cycles.data.data.map((c) => {
                 const s = PAYOUT_STATUS[c.payout_status];
                 const missed = c.contributions.filter((x) => x.status === 'defaulted').length;
                 const done = c.payout_status === 'paid' || c.payout_status === 'short_paid';
-                const who = c.payout_to.user_id === meId ? 'You' : c.payout_to.name;
+                const who = c.payout_to.user_id === meId ? t('common.you') : c.payout_to.name;
                 return (
                   <ListItem
                     key={c.number}
                     leading={<Avatar name={c.payout_to.name} size="sm" />}
-                    title={`Turn ${c.number} · ${who}`}
+                    title={t('ajo.dashboard.turnWho', { turn: c.number, who })}
                     subtitle={[
-                      `${amountOf(c.payout_amount)} ${done ? 'paid' : 'due'} ${dateOf(c.due_at)}`,
-                      missed > 0 ? `${missed} defaulted` : null,
+                      t(done ? 'ajo.dashboard.paidLine' : 'ajo.dashboard.dueLine', {
+                        amount: amountOf(c.payout_amount),
+                        date: dateOf(c.due_at),
+                      }),
+                      missed > 0 ? t('ajo.dashboard.defaulted', { count: missed }) : null,
                     ]
                       .filter(Boolean)
                       .join(' · ')}
@@ -128,22 +147,23 @@ export function AjoDashboard({ group: g, meId }: { group: Group; meId?: string }
       )}
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="If someone misses a payment" />
+        <SectionHeader title={t('ajo.dashboard.missesTitle')} />
         <Card>
           <View style={{ gap: spacing[3] }}>
             <View style={{ flexDirection: 'row', gap: spacing[2], alignItems: 'center' }}>
               <Icon icon={ShieldAlert} color="warning" />
-              <Text variant="bodyStrong">The pot is protected by the ledger</Text>
+              <Text variant="bodyStrong">{t('ajo.dashboard.protected')}</Text>
             </View>
-            <DetailRow label="Retries" value="On the due date and when grace ends" />
-            <DetailRow label="Grace period" value={`${g.grace_period_hours} hours`} />
+            <DetailRow label={t('ajo.dashboard.retries')} value={t('ajo.dashboard.retriesValue')} />
+            <DetailRow
+              label={t('ajo.dashboard.grace')}
+              value={t('ajo.dashboard.graceValue', { hours: g.grace_period_hours })}
+            />
             <Text variant="caption" color="textMuted">
-              A member still unpaid after the grace period is flagged as a defaulter, and everyone
-              in the ajo sees it. Late money that arrives goes straight to that turn&apos;s payee.
+              {t('ajo.dashboard.defaulterRule')}
             </Text>
             <Text variant="caption" color="textMuted">
-              A defaulter who has already had their payout owes the ajo: they can&apos;t start or
-              join another ajo on Nem until they have paid what they missed.
+              {t('ajo.dashboard.owesRule')}
             </Text>
           </View>
         </Card>

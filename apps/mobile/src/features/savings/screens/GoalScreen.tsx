@@ -3,6 +3,7 @@ import { formatMoney, parseMajor } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { ArrowDownToLine, ArrowUpFromLine, Repeat, Target, XCircle } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -52,6 +53,7 @@ function AutoSaveSheet({
   onClose: () => void;
 }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [choice, setChoice] = useState(choiceOf(goal));
   const [error, setError] = useState<string>();
   const update = useRepoMutation('savings', 'updateGoal', { invalidates: [['savings']] });
@@ -70,11 +72,11 @@ function AutoSaveSheet({
             : null,
         },
       },
-      { onSuccess: onClose, onError: () => setError("We couldn't save it. Try again.") },
+      { onSuccess: onClose, onError: () => setError(t('savings.autoSave.saveFailed')) },
     );
   };
   return (
-    <BottomSheet open onClose={onClose} title="Auto-save">
+    <BottomSheet open onClose={onClose} title={t('savings.autoSave.title')}>
       <View style={{ gap: spacing[4] }}>
         <AutoSaveFields value={choice} onChange={setChoice} />
         {error && (
@@ -82,7 +84,7 @@ function AutoSaveSheet({
             {error}
           </Text>
         )}
-        <Button label="Save" loading={update.isPending} onPress={save} />
+        <Button label={t('common.save')} loading={update.isPending} onPress={save} />
       </View>
     </BottomSheet>
   );
@@ -95,6 +97,7 @@ function AutoSaveSheet({
 export function GoalScreen({ id }: { id: string }) {
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const goalQuery = useRepoQuery('savings', 'getGoal', { path: { goal_id: id } });
   const accounts = useRepoQuery('accounts', 'list');
@@ -113,15 +116,15 @@ export function GoalScreen({ id }: { id: string }) {
 
   return (
     <Screen
-      header={<SendHeader title={goal ? `${goal.emoji} ${goal.name}` : 'Goal'} />}
+      header={<SendHeader title={goal ? `${goal.emoji} ${goal.name}` : t('savings.goal.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void goalQuery.refetch()}
       refreshing={goalQuery.isRefetching}
     >
       {goalQuery.isError ? (
-        <ErrorState title="We couldn't load this goal" onRetry={() => goalQuery.refetch()} />
+        <ErrorState title={t('savings.goal.failed')} onRetry={() => goalQuery.refetch()} />
       ) : !goal || !balance ? (
-        <SkeletonGroup accessibilityLabel="Loading goal">
+        <SkeletonGroup accessibilityLabel={t('savings.goal.loading')}>
           <Skeleton height={160} radius={24} />
           <Skeleton height={120} />
         </SkeletonGroup>
@@ -137,14 +140,14 @@ export function GoalScreen({ id }: { id: string }) {
             }}
           >
             <Text variant="label" color="textMuted">
-              Saved
+              {t('savings.goal.saved')}
             </Text>
             <MoneyText
               value={balance}
               variant="amountLarge"
               masked={hidden}
               animate
-              label="Saved"
+              label={t('savings.goal.saved')}
             />
             <GoalProgress goal={goal} hidden={hidden} />
             <View style={styles.between}>
@@ -152,7 +155,9 @@ export function GoalScreen({ id }: { id: string }) {
                 {goalSubtitle(goal)}
               </Text>
               <Text variant="caption" color="textMuted">
-                {hidden ? 'Target hidden' : `of ${formatMoney(fromApiMoney(goal.target))}`}
+                {hidden
+                  ? t('savings.goal.targetHidden')
+                  : t('savings.goal.ofTarget', { amount: formatMoney(fromApiMoney(goal.target)) })}
               </Text>
             </View>
           </View>
@@ -160,22 +165,22 @@ export function GoalScreen({ id }: { id: string }) {
           {goal.status === 'completed' && (
             <EmptyState
               icon={Target}
-              title="You reached your target"
-              message="Well done. Keep it here to earn interest, or withdraw it when you're ready."
+              title={t('savings.goal.reachedTitle')}
+              message={t('savings.goal.reachedMessage')}
             />
           )}
 
           {isOpen && (
             <View style={[styles.actions, { gap: spacing[3] }]}>
               <Button
-                label="Add money"
+                label={t('common.addMoney')}
                 icon={ArrowDownToLine}
                 style={styles.flex}
                 disabled={!naira}
                 onPress={() => setMoving('deposit')}
               />
               <Button
-                label="Withdraw"
+                label={t('savings.move.withdraw')}
                 icon={ArrowUpFromLine}
                 variant="secondary"
                 style={styles.flex}
@@ -188,38 +193,45 @@ export function GoalScreen({ id }: { id: string }) {
           <Card>
             <View style={{ gap: spacing[3] }}>
               <DetailRow
-                label="Target"
-                value={hidden ? '••••' : formatMoney(fromApiMoney(goal.target))}
+                label={t('savings.goal.target')}
+                value={hidden ? t('common.masked') : formatMoney(fromApiMoney(goal.target))}
               />
               <DetailRow
-                label="Reach it by"
-                value={goal.target_date ? formatGoalDate(goal.target_date) : 'No date'}
+                label={t('savings.goal.reachBy')}
+                value={
+                  goal.target_date ? formatGoalDate(goal.target_date) : t('savings.goal.noDate')
+                }
               />
-              <DetailRow label="Interest" value={`${goal.interest_rate_bps / 100}% a year`} />
               <DetailRow
-                label="Interest earned"
-                value={hidden ? '••••' : formatMoney(fromApiMoney(goal.interest_earned))}
+                label={t('savings.goal.interest')}
+                value={t('savings.goal.rateYear', { rate: goal.interest_rate_bps / 100 })}
+              />
+              <DetailRow
+                label={t('savings.goal.interestEarned')}
+                value={
+                  hidden ? t('common.masked') : formatMoney(fromApiMoney(goal.interest_earned))
+                }
               />
               {isOpen && (
                 <>
                   <DetailRow
-                    label="Projected in 30 days"
+                    label={t('savings.goal.projected30')}
                     value={
                       hidden
-                        ? '••••'
+                        ? t('common.masked')
                         : `+${formatMoney(projectInterest(fromApiMoney(goal.balance), goal.interest_rate_bps, 30))}`
                     }
                   />
                   <DetailRow
-                    label="Projected in a year"
+                    label={t('savings.goal.projectedYear')}
                     value={
                       hidden
-                        ? '••••'
+                        ? t('common.masked')
                         : `+${formatMoney(projectInterest(fromApiMoney(goal.balance), goal.interest_rate_bps, 365))}`
                     }
                   />
                   <Text variant="caption" color="textMuted">
-                    At today&apos;s balance. Interest is added daily and paid into this goal.
+                    {t('savings.goal.projectedNote')}
                   </Text>
                 </>
               )}
@@ -230,17 +242,19 @@ export function GoalScreen({ id }: { id: string }) {
             <Card padded={false}>
               <ListItem
                 leading={Repeat}
-                title="Auto-save"
+                title={t('savings.autoSave.title')}
                 subtitle={
                   goal.auto_save
-                    ? `${describeAutoSave(
-                        formatMoney(fromApiMoney(goal.auto_save.amount), { trimZeroMinor: true }),
-                        goal.auto_save.frequency,
-                      )} from your naira account`
-                    : 'Off · save on a schedule without thinking about it'
+                    ? t('savings.autoSave.fromNaira', {
+                        rule: describeAutoSave(
+                          formatMoney(fromApiMoney(goal.auto_save.amount), { trimZeroMinor: true }),
+                          goal.auto_save.frequency,
+                        ),
+                      })
+                    : t('savings.autoSave.off')
                 }
                 onPress={() => setEditingAutoSave(true)}
-                accessibilityHint="Turn auto-save on or off, or change it"
+                accessibilityHint={t('savings.autoSave.hint')}
               />
             </Card>
           )}
@@ -252,7 +266,7 @@ export function GoalScreen({ id }: { id: string }) {
           )}
           {isOpen && (
             <Button
-              label="Close goal"
+              label={t('savings.goal.close')}
               icon={XCircle}
               variant="ghost"
               onPress={() => {
@@ -272,14 +286,14 @@ export function GoalScreen({ id }: { id: string }) {
       )}
       <Dialog
         open={closing}
-        title={`Close ${goal?.name ?? 'this goal'}?`}
+        title={t('savings.goal.closeTitle', { name: goal?.name ?? t('savings.goal.thisGoal') })}
         message={
           balance && balance.amount > 0n
-            ? `${formatMoney(balance)} goes back to your naira account and auto-save stops.`
-            : 'Auto-save stops and the goal moves to Closed.'
+            ? t('savings.goal.closeWithMoney', { amount: formatMoney(balance) })
+            : t('savings.goal.closeEmpty')
         }
-        confirmLabel="Close goal"
-        cancelLabel="Keep it"
+        confirmLabel={t('savings.goal.close')}
+        cancelLabel={t('common.keepIt')}
         destructive
         loading={close.isPending}
         onCancel={() => setClosing(false)}
@@ -294,7 +308,7 @@ export function GoalScreen({ id }: { id: string }) {
               },
               onError: () => {
                 setClosing(false);
-                setCloseError("We couldn't close it. Try again.");
+                setCloseError(t('savings.goal.closeFailed'));
               },
             },
           );

@@ -2,11 +2,13 @@ import { addDaysIso, lagosToday, parseDisplayDate, parseMajor } from '@nem/share
 import { useRouter } from 'expo-router';
 import { CalendarDays } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AmountInput, Button, PressableScale, Screen, Text, TextField } from '@/components';
 import { typedNaira } from '@/features/transfers/amount';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
+import i18n from '@/lib/i18n';
 import { toApiMoney } from '@/lib/money';
 import { useMoneyMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
@@ -22,9 +24,9 @@ export function targetDateError(typed: string, today: string): string | null {
   if (!typed) return null;
   if (typed.length < 10) return null;
   const iso = parseDisplayDate(typed);
-  if (!iso) return 'Use a real date in DD/MM/YYYY';
-  if (iso <= today) return 'Pick a day after today';
-  if (iso > addDaysIso(today, MAX_DAYS)) return 'Pick a day within ten years';
+  if (!iso) return i18n.t('savings.newGoal.dateInvalid');
+  if (iso <= today) return i18n.t('savings.newGoal.dateAfterToday');
+  if (iso > addDaysIso(today, MAX_DAYS)) return i18n.t('savings.newGoal.dateTooFar');
   return null;
 }
 
@@ -35,6 +37,7 @@ export function targetDateError(typed: string, today: string): string | null {
 export function NewGoalScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const accounts = useRepoQuery('accounts', 'list');
   const source = accounts.data?.data.find((a) => a.currency === 'NGN');
   const [name, setName] = useState('');
@@ -75,18 +78,18 @@ export function NewGoalScreen() {
       },
       {
         onSuccess: (goal) => router.replace({ pathname: '/goals/[id]', params: { id: goal.id } }),
-        onError: () => setError("We couldn't create the goal. Try again."),
+        onError: () => setError(t('savings.newGoal.failed')),
       },
     );
   };
 
   return (
     <Screen
-      header={<SendHeader title="New goal" />}
+      header={<SendHeader title={t('savings.newGoal.title')} />}
       edges={['top', 'bottom']}
       footer={
         <Button
-          label="Create goal"
+          label={t('savings.newGoal.create')}
           disabled={!ready}
           loading={create.isPending}
           onPress={onCreate}
@@ -94,8 +97,8 @@ export function NewGoalScreen() {
       }
     >
       <TextField
-        label="What are you saving for?"
-        placeholder="New laptop"
+        label={t('savings.newGoal.name')}
+        placeholder={t('savings.newGoal.namePlaceholder')}
         value={name}
         onChangeText={setName}
         maxLength={MAX_GOAL_NAME}
@@ -104,7 +107,7 @@ export function NewGoalScreen() {
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          Pick an emoji
+          {t('savings.newGoal.emoji')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
           {GOAL_EMOJIS.map((e) => {
@@ -133,15 +136,15 @@ export function NewGoalScreen() {
 
       <AmountInput
         currency="NGN"
-        label="Target"
+        label={t('savings.newGoal.target')}
         value={target}
         onChangeValue={setTarget}
         maxWholeDigits={9}
       />
 
       <TextField
-        label="Reach it by (optional)"
-        placeholder="DD/MM/YYYY"
+        label={t('savings.newGoal.date')}
+        placeholder={t('savings.newGoal.datePlaceholder')}
         leadingIcon={CalendarDays}
         keyboardType="numbers-and-punctuation"
         value={date}
@@ -158,7 +161,7 @@ export function NewGoalScreen() {
         </Text>
       )}
       <Text variant="caption" color="textMuted">
-        Goals earn 10% a year, worked out daily. Take your money out any time.
+        {t('savings.newGoal.note')}
       </Text>
     </Screen>
   );

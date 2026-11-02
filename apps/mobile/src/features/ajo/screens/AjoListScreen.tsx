@@ -2,6 +2,7 @@ import { normalizeNemtag } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Plus, Ticket, Users } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -36,30 +37,33 @@ export function inviteCodeOf(input: string): string | null {
 export function AjoListScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const groups = useRepoQuery('ajo', 'listGroups');
   const [invite, setInvite] = useState('');
   const code = inviteCodeOf(invite);
 
   return (
     <Screen
-      header={<SendHeader title="Ajo" first />}
+      header={<SendHeader title={t('ajo.title')} first />}
       edges={['top', 'bottom']}
-      footer={<Button label="Start an ajo" icon={Plus} onPress={() => router.push('/ajo/new')} />}
+      footer={
+        <Button label={t('ajo.list.start')} icon={Plus} onPress={() => router.push('/ajo/new')} />
+      }
       onRefresh={() => void groups.refetch()}
       refreshing={groups.isRefetching}
     >
       {groups.isError ? (
-        <ErrorState title="We couldn't load your ajo groups" onRetry={() => groups.refetch()} />
+        <ErrorState title={t('ajo.list.failed')} onRetry={() => groups.refetch()} />
       ) : !groups.data ? (
-        <SkeletonGroup accessibilityLabel="Loading ajo groups">
+        <SkeletonGroup accessibilityLabel={t('ajo.list.loading')}>
           <Skeleton height={72} />
           <Skeleton height={72} />
         </SkeletonGroup>
       ) : groups.data.data.length === 0 ? (
         <EmptyState
           icon={Users}
-          title="No ajo yet"
-          message="Save in turns with people you trust: everyone pays in each cycle and one person takes the whole pot."
+          title={t('ajo.list.emptyTitle')}
+          message={t('ajo.list.emptyMessage')}
         />
       ) : (
         <Card padded={false}>
@@ -73,28 +77,30 @@ export function AjoListScreen() {
                 <Badge label={AJO_STATUS[g.status].label} tone={AJO_STATUS[g.status].tone} />
               }
               onPress={() => router.push({ pathname: '/ajo/group/[id]', params: { id: g.id } })}
-              accessibilityLabel={`${g.name}. ${groupSubtitle(g)}. ${AJO_STATUS[g.status].label}`}
+              accessibilityLabel={t('ajo.list.rowLabel', {
+                name: g.name,
+                subtitle: groupSubtitle(g),
+                status: AJO_STATUS[g.status].label,
+              })}
             />
           ))}
         </Card>
       )}
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Got an invite?" />
+        <SectionHeader title={t('ajo.list.gotInvite')} />
         <TextField
-          label="Invite link or code"
-          placeholder="e.g. YABA04"
+          label={t('ajo.list.inviteField')}
+          placeholder={t('ajo.list.invitePlaceholder')}
           leadingIcon={Ticket}
           autoCapitalize="characters"
           autoCorrect={false}
           value={invite}
           onChangeText={setInvite}
-          error={
-            invite.trim() && !code ? 'Paste the whole link or the 6-character code' : undefined
-          }
+          error={invite.trim() && !code ? t('ajo.list.inviteInvalid') : undefined}
         />
         <Button
-          label="Open invite"
+          label={t('ajo.list.openInvite')}
           variant="secondary"
           disabled={!code}
           onPress={() => code && router.push({ pathname: '/ajo/[code]', params: { code } })}

@@ -1,6 +1,7 @@
 import { lagosToday } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Repeat } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -25,9 +26,6 @@ import { useTheme } from '@/theme';
 import { SubscriptionRow } from '../components/SubscriptionRow';
 import { paidWith } from '../subscriptions';
 
-const SIMPLE_DETECTION =
-  'Without AI we still list merchants that charged you a similar amount in three or more months.';
-
 /**
  * Detected subscriptions (INS-4): recurring charges, next one first, what they
  * cost a month in all, and a way into the controls of the card that pays each.
@@ -35,6 +33,7 @@ const SIMPLE_DETECTION =
 export function SubscriptionsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = useBalancesHidden();
   const aiOn = usePreferencesStore((s) => s.ai.smartCategories);
   const q = useRepoQuery('insights', 'listSubscriptions');
@@ -44,10 +43,10 @@ export function SubscriptionsScreen() {
 
   let body;
   if (q.isError && !list) {
-    body = <ErrorState title="We couldn't check your subscriptions" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('insights.subscriptions.failed')} onRetry={() => q.refetch()} />;
   } else if (!list) {
     body = (
-      <SkeletonGroup accessibilityLabel="Looking for subscriptions">
+      <SkeletonGroup accessibilityLabel={t('insights.subscriptions.loading')}>
         <Skeleton height={110} />
         <Skeleton height={260} />
       </SkeletonGroup>
@@ -56,8 +55,8 @@ export function SubscriptionsScreen() {
     body = (
       <EmptyState
         icon={Repeat}
-        title="No subscriptions found"
-        message="When a merchant charges you a similar amount three months running, it shows up here."
+        title={t('insights.subscriptions.emptyTitle')}
+        message={t('insights.subscriptions.emptyMessage')}
       />
     );
   } else {
@@ -69,33 +68,32 @@ export function SubscriptionsScreen() {
             {aiOn ? (
               <View style={styles.start}>
                 <AIBadge
-                  feature="Subscription detection"
+                  feature={t('insights.subscriptions.aiFeature')}
                   explanation={list.ai.explanation}
-                  fallback={SIMPLE_DETECTION}
+                  fallback={t('insights.subscriptions.simple')}
                 />
               </View>
             ) : (
               <Text variant="caption" color="textMuted">
-                Smart detection is off · simple repeat check
+                {t('insights.subscriptions.aiOff')}
               </Text>
             )}
             <Text variant="bodySmall" color="textMuted">
-              {list.data.length} {list.data.length === 1 ? 'subscription' : 'subscriptions'} cost
-              you
+              {t('insights.subscriptions.costYou', { count: list.data.length })}
             </Text>
             <MoneyText
               value={fromApiMoney(list.monthly_total)}
               variant="amountLarge"
               masked={hidden}
-              label="Subscriptions a month"
+              label={t('insights.subscriptions.perMonth')}
             />
             <Text variant="caption" color="textMuted">
-              a month, in naira
+              {t('insights.subscriptions.monthNaira')}
             </Text>
           </View>
         </Card>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Next charge first" />
+          <SectionHeader title={t('insights.subscriptions.nextFirst')} />
           <Card padded={false}>
             <View accessibilityRole="list">
               {list.data.map((s, i) => (
@@ -116,8 +114,7 @@ export function SubscriptionsScreen() {
           </Card>
         </View>
         <Text variant="caption" color="textMuted">
-          To stop one, cancel it with the merchant. Freezing or locking the card stops the charge
-          too, but you may still owe the merchant.
+          {t('insights.subscriptions.howToStop')}
         </Text>
       </>
     );
@@ -125,7 +122,7 @@ export function SubscriptionsScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Subscriptions" />}
+      header={<SendHeader title={t('insights.subscriptions.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void Promise.all([q.refetch(), cards.refetch()])}
       refreshing={q.isRefetching}

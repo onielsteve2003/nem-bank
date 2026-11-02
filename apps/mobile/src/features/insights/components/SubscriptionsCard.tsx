@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { ChevronRight, Repeat } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Icon, MoneyText, Text } from '@/components';
@@ -16,8 +17,9 @@ export type Props = {
 /** Subscriptions in one line on Insights; the list and card links are a tap away (INS-4). */
 export function SubscriptionsCard({ list, hidden, onOpen }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   if (list.data.length === 0) return null;
-  const count = `${list.data.length} ${list.data.length === 1 ? 'subscription' : 'subscriptions'}`;
+  const count = t('insights.subscriptionsCard.count', { count: list.data.length });
   const total = fromApiMoney(list.monthly_total);
   const next = list.data[0]!;
 
@@ -26,8 +28,12 @@ export function SubscriptionsCard({ list, hidden, onOpen }: Props) {
       variant="outline"
       onPress={onOpen}
       accessibilityRole="button"
-      accessibilityLabel={`${count}, ${hidden ? 'amount hidden' : formatMoney(total)} a month. Next: ${next.merchant}.`}
-      accessibilityHint="Opens your subscriptions"
+      accessibilityLabel={t('insights.subscriptionsCard.label', {
+        count,
+        amount: hidden ? t('common.amountHidden') : formatMoney(total),
+        merchant: next.merchant,
+      })}
+      accessibilityHint={t('insights.subscriptionsCard.hint')}
     >
       <View style={[styles.row, { gap: spacing[3] }]}>
         <View style={[styles.icon, { backgroundColor: colors.raised, borderRadius: radius.md }]}>
@@ -35,11 +41,11 @@ export function SubscriptionsCard({ list, hidden, onOpen }: Props) {
         </View>
         <View style={[styles.flex, { gap: spacing[1] }]}>
           <Text variant="label" color="textMuted">
-            {count} a month
+            {t('insights.subscriptionsCard.perMonth', { count })}
           </Text>
           <MoneyText value={total} variant="amount" masked={hidden} />
           <Text variant="caption" color="textMuted" numberOfLines={1}>
-            Next: {next.merchant} · card controls inside
+            {t('insights.subscriptionsCard.next', { merchant: next.merchant })}
           </Text>
         </View>
         <Icon icon={ChevronRight} size="sm" color="textMuted" />

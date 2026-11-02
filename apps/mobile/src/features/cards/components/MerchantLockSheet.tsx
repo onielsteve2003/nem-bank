@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { BottomSheet, Button, Chip, Text } from '@/components';
@@ -24,21 +25,22 @@ export type Props = {
  */
 export function MerchantLockSheet({ card, open, onClose, onSave, saving }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const mustLock = card.type === 'merchant_locked';
   const [lock, setLock] = useState<Lock | null>(card.controls.merchant_lock);
   const unchanged = lock?.merchant_id === card.controls.merchant_lock?.merchant_id;
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Merchant lock">
+    <BottomSheet open={open} onClose={onClose} title={t('cards.controls.lockTitle')}>
       <View style={{ gap: spacing[4] }}>
-        <Text color="textMuted">
-          {mustLock
-            ? 'This card only works at one merchant. Pick which.'
-            : 'Lock the card to one merchant and it is declined everywhere else.'}
-        </Text>
+        <Text color="textMuted">{mustLock ? t('cards.lock.must') : t('cards.lock.optional')}</Text>
         <View style={[styles.chips, { gap: spacing[2] }]}>
           {!mustLock && (
-            <Chip label="Any merchant" selected={lock === null} onPress={() => setLock(null)} />
+            <Chip
+              label={t('cards.controls.anyMerchant')}
+              selected={lock === null}
+              onPress={() => setLock(null)}
+            />
           )}
           {LOCKABLE_MERCHANTS.map((m) => (
             <Chip
@@ -50,7 +52,7 @@ export function MerchantLockSheet({ card, open, onClose, onSave, saving }: Props
           ))}
         </View>
         <Button
-          label="Save"
+          label={t('common.save')}
           fullWidth
           disabled={unchanged || (mustLock && !lock)}
           loading={saving}

@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import * as Clipboard from 'expo-clipboard';
 import { Copy, EyeOff } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, IconButton, Text, useToast } from '@/components';
@@ -23,19 +24,20 @@ export type Props = {
 export function CardDetailsPanel({ details, secondsLeft, onHide }: Props) {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   useSecureScreen();
 
   const expiry = `${String(details.expiry_month).padStart(2, '0')}/${String(details.expiry_year).slice(-2)}`;
   const rows = [
-    { label: 'Card number', value: groupPan(details.pan), copy: details.pan },
-    { label: 'Expiry', value: expiry, copy: expiry },
-    { label: 'CVV', value: details.cvv, copy: details.cvv },
+    { label: t('cards.details.number'), value: groupPan(details.pan), copy: details.pan },
+    { label: t('cards.details.expiry'), value: expiry, copy: expiry },
+    { label: t('cards.details.cvv'), value: details.cvv, copy: details.cvv },
   ];
 
   const copy = async (label: string, value: string) => {
     await Clipboard.setStringAsync(value);
     haptic('success');
-    toast.show({ message: `${label} copied`, tone: 'success' });
+    toast.show({ message: t('common.copied', { label }), tone: 'success' });
   };
 
   return (
@@ -60,7 +62,11 @@ export function CardDetailsPanel({ details, secondsLeft, onHide }: Props) {
               },
             ]}
           >
-            <View style={styles.flex} accessible accessibilityLabel={`${row.label}: ${row.value}`}>
+            <View
+              style={styles.flex}
+              accessible
+              accessibilityLabel={t('cards.details.row', { label: row.label, value: row.value })}
+            >
               <Text variant="caption" color="textMuted">
                 {row.label}
               </Text>
@@ -70,7 +76,7 @@ export function CardDetailsPanel({ details, secondsLeft, onHide }: Props) {
             </View>
             <IconButton
               icon={Copy}
-              accessibilityLabel={`Copy ${row.label.toLowerCase()}`}
+              accessibilityLabel={t('common.copyItem', { item: row.label.toLowerCase() })}
               variant="ghost"
               onPress={() => void copy(row.label, row.copy)}
             />
@@ -84,9 +90,15 @@ export function CardDetailsPanel({ details, secondsLeft, onHide }: Props) {
           style={styles.flex}
           accessibilityLiveRegion="polite"
         >
-          {`Hiding in ${secondsLeft} s. Only paste these into sites you trust.`}
+          {t('cards.details.hiding', { seconds: secondsLeft })}
         </Text>
-        <Button label="Hide" icon={EyeOff} variant="ghost" size="sm" onPress={onHide} />
+        <Button
+          label={t('cards.details.hide')}
+          icon={EyeOff}
+          variant="ghost"
+          size="sm"
+          onPress={onHide}
+        />
       </View>
     </View>
   );

@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { Wallet } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { Button, Card, Divider, SectionHeader, Text } from '@/components';
@@ -20,21 +21,27 @@ export type Props = {
 /** This month's budgets on Insights, the ones needing attention first (INS-2). */
 export function BudgetsSummary({ budgets, hidden, onManage }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const shown = sortBudgets(budgets).slice(0, SHOWN);
   return (
     <View style={{ gap: spacing[2] }}>
       <SectionHeader
-        title="Budgets"
-        actionLabel={budgets.length > 0 ? 'Manage' : undefined}
+        title={t('insights.budgets.title')}
+        actionLabel={budgets.length > 0 ? t('insights.budgets.manage') : undefined}
         onAction={onManage}
       />
       {shown.length === 0 ? (
         <Card>
           <View style={{ gap: spacing[3] }}>
             <Text variant="body" color="textMuted">
-              Set a monthly limit for a category and we’ll tell you at 80% and again at 100%.
+              {t('insights.budgets.intro')}
             </Text>
-            <Button label="Set a budget" icon={Wallet} variant="secondary" onPress={onManage} />
+            <Button
+              label={t('insights.budgets.set')}
+              icon={Wallet}
+              variant="secondary"
+              onPress={onManage}
+            />
           </View>
         </Card>
       ) : (

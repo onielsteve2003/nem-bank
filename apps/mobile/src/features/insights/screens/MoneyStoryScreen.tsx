@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { BookOpen, Pause, Play, Share2, X } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Pressable, Share, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -48,6 +49,7 @@ export function MoneyStoryScreen() {
   const toast = useToast();
   const insets = useSafeAreaInsets();
   const { colors, spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = useBalancesHidden();
   const screenReader = useScreenReader();
   const { month } = useLocalSearchParams<{ month?: string }>();
@@ -66,10 +68,11 @@ export function MoneyStoryScreen() {
     const summary = shareSummary(story);
     setSharing(true);
     try {
-      if (canShareImage) await shareViewAsImage(card, `My ${summary.month} with Nem`);
+      if (canShareImage)
+        await shareViewAsImage(card, t('insights.story.myWithNem', { month: summary.month }));
       else await Share.share({ message: shareText(summary) });
     } catch {
-      toast.show({ message: 'We couldn’t open sharing. Try again.', tone: 'error' });
+      toast.show({ message: t('insights.story.shareFailed'), tone: 'error' });
     } finally {
       setSharing(false);
     }
@@ -81,17 +84,17 @@ export function MoneyStoryScreen() {
       isApiError(q.error) && q.error.status === 404 ? (
         <EmptyState
           icon={BookOpen}
-          title="No story for this month"
-          message="A story is ready once a month with spending has ended."
-          actionLabel="Close"
+          title={t('insights.story.noneTitle')}
+          message={t('insights.story.noneMessage')}
+          actionLabel={t('common.close')}
           onAction={close}
         />
       ) : (
-        <ErrorState title="We couldn't load your story" onRetry={() => q.refetch()} />
+        <ErrorState title={t('insights.story.failed')} onRetry={() => q.refetch()} />
       );
   } else if (!story || !slide) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your Money Story">
+      <SkeletonGroup accessibilityLabel={t('insights.story.loading')}>
         <Skeleton height={72} width={72} radius={36} />
         <Skeleton height={40} width="70%" />
         <Skeleton height={48} />
@@ -111,7 +114,7 @@ export function MoneyStoryScreen() {
             onLongPress={() => player.setPaused(true)}
             onPressOut={() => player.paused && !screenReader && player.setPaused(false)}
             accessibilityRole="button"
-            accessibilityLabel="Previous slide"
+            accessibilityLabel={t('insights.story.previous')}
             disabled={player.index === 0}
           />
           <Pressable
@@ -120,7 +123,7 @@ export function MoneyStoryScreen() {
             onLongPress={() => player.setPaused(true)}
             onPressOut={() => player.paused && !screenReader && player.setPaused(false)}
             accessibilityRole="button"
-            accessibilityLabel="Next slide"
+            accessibilityLabel={t('insights.story.next')}
             disabled={isLast}
           />
         </View>
@@ -128,13 +131,13 @@ export function MoneyStoryScreen() {
           <View style={{ gap: spacing[3] }}>
             <StoryShareCard ref={card} summary={shareSummary(story)} />
             <Button
-              label="Share my story"
+              label={t('insights.story.share')}
               icon={Share2}
               loading={sharing}
               onPress={() => void share()}
-              accessibilityHint="Shares the card above. It has no amounts."
+              accessibilityHint={t('insights.story.shareHint')}
             />
-            <Button label="Done" variant="ghost" onPress={close} />
+            <Button label={t('common.done')} variant="ghost" onPress={close} />
           </View>
         )}
       </>
@@ -159,18 +162,25 @@ export function MoneyStoryScreen() {
       )}
       <View style={[styles.row, { gap: spacing[2] }]}>
         <Text variant="label" color="textMuted" style={styles.flex}>
-          Money Story{story ? ` · ${monthYearLabel(story.month)}` : ''}
+          {story
+            ? t('insights.story.titleMonth', { month: monthYearLabel(story.month) })
+            : t('insights.story.title')}
         </Text>
         {slides.length > 1 && !isLast && (
           <IconButton
             icon={player.paused || screenReader ? Play : Pause}
             variant="ghost"
-            accessibilityLabel={player.paused ? 'Play story' : 'Pause story'}
+            accessibilityLabel={t(player.paused ? 'insights.story.play' : 'insights.story.pause')}
             disabled={screenReader}
             onPress={() => player.setPaused(!player.paused)}
           />
         )}
-        <IconButton icon={X} variant="ghost" accessibilityLabel="Close story" onPress={close} />
+        <IconButton
+          icon={X}
+          variant="ghost"
+          accessibilityLabel={t('insights.story.close')}
+          onPress={close}
+        />
       </View>
       {body}
     </View>

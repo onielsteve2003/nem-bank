@@ -1,19 +1,21 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Text, type TextColor } from '@/components';
 import { formatGoalDate } from '@/features/savings/goals';
+import { withLabel } from '@/lib/i18n';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
 type Installment = Schema<'Installment'>;
 
 const STATUS: Record<Installment['status'], { label: string; color: TextColor }> = {
-  upcoming: { label: 'Upcoming', color: 'textMuted' },
-  due: { label: 'Due today', color: 'warning' },
-  paid: { label: 'Paid', color: 'success' },
-  overdue: { label: 'Overdue', color: 'danger' },
+  upcoming: withLabel('credit.installment.upcoming', { color: 'textMuted' }),
+  due: withLabel('credit.installment.due', { color: 'warning' }),
+  paid: withLabel('credit.installment.paid', { color: 'success' }),
+  overdue: withLabel('credit.installment.overdue', { color: 'danger' }),
 };
 
 type Props = {
@@ -25,21 +27,27 @@ type Props = {
 /** Repayment schedule: one row per instalment with its date, amount and state. */
 export function InstallmentList({ installments, showStatus = false }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={{ gap: spacing[3] }} accessibilityRole="list">
       {installments.map((i) => {
         const amount = formatMoney(fromApiMoney(i.amount));
         const status = STATUS[i.status];
         const paid = fromApiMoney(i.paid);
-        const part = i.status !== 'paid' && paid.amount > 0n ? ` · ${formatMoney(paid)} paid` : '';
+        const part =
+          i.status !== 'paid' && paid.amount > 0n
+            ? t('credit.installment.partPaid', { amount: formatMoney(paid) })
+            : '';
         return (
           <View
             key={i.number}
             style={[styles.row, { gap: spacing[3] }]}
             accessible
-            accessibilityLabel={`Payment ${i.number}, ${formatGoalDate(i.due_date)}, ${amount}${
-              showStatus ? `, ${status.label}${part}` : ''
-            }`}
+            accessibilityLabel={`${t('credit.installment.label', {
+              number: i.number,
+              date: formatGoalDate(i.due_date),
+              amount,
+            })}${showStatus ? `, ${status.label}${part}` : ''}`}
           >
             <View style={styles.flex}>
               <Text variant="bodyStrong">{formatGoalDate(i.due_date)}</Text>

@@ -2,16 +2,17 @@ import type { Schema } from '@nem/contracts';
 import { CircleAlert, CircleCheck, Info, type LucideIcon } from 'lucide-react-native';
 
 import type { Tone } from '@/components';
+import i18n, { withLabel } from '@/lib/i18n';
 
 type Eligibility = Schema<'CreditEligibility'>;
 type Reason = Schema<'ReasonCode'>;
 
 /** Score bands from worst to best, for the four-step meter. */
 export const SCORE_BANDS: { value: Eligibility['score_band']; label: string; tone: Tone }[] = [
-  { value: 'poor', label: 'Poor', tone: 'danger' },
-  { value: 'fair', label: 'Fair', tone: 'warning' },
-  { value: 'good', label: 'Good', tone: 'success' },
-  { value: 'excellent', label: 'Excellent', tone: 'success' },
+  withLabel('credit.bands.poor', { value: 'poor', tone: 'danger' }),
+  withLabel('credit.bands.fair', { value: 'fair', tone: 'warning' }),
+  withLabel('credit.bands.good', { value: 'good', tone: 'success' }),
+  withLabel('credit.bands.excellent', { value: 'excellent', tone: 'success' }),
 ];
 
 export const bandIndex = (band: Eligibility['score_band']) =>
@@ -21,9 +22,9 @@ export const IMPACT: Record<
   Reason['impact'],
   { icon: LucideIcon; color: 'success' | 'warning' | 'textMuted'; label: string }
 > = {
-  positive: { icon: CircleCheck, color: 'success', label: 'Helps' },
-  negative: { icon: CircleAlert, color: 'warning', label: 'Holds you back' },
-  neutral: { icon: Info, color: 'textMuted', label: 'Noted' },
+  positive: withLabel('credit.impact.positive', { icon: CircleCheck, color: 'success' }),
+  negative: withLabel('credit.impact.negative', { icon: CircleAlert, color: 'warning' }),
+  neutral: withLabel('credit.impact.neutral', { icon: Info, color: 'textMuted' }),
 };
 
 /** What helps first, then what holds the customer back, then the rest. */
@@ -53,10 +54,8 @@ export const TENORS = [30, 60, 90, 180] as const;
 export type Tenor = (typeof TENORS)[number];
 
 /** 30 → "1 month", 180 → "6 months": every instalment is 30 days apart. */
-export const tenorLabel = (days: number) => {
-  const months = Math.round(days / 30);
-  return `${months} ${months === 1 ? 'month' : 'months'}`;
-};
+export const tenorLabel = (days: number) =>
+  i18n.t('common.months', { count: Math.round(days / 30) });
 
 /** 2400 → "24%", 2650 → "26.5%". */
 export const aprLabel = (bps: number) => `${bps / 100}%`;
@@ -64,10 +63,10 @@ export const aprLabel = (bps: number) => `${bps / 100}%`;
 type Loan = Schema<'Loan'>;
 
 export const LOAN_STATUS: Record<Loan['status'], { label: string; tone: Tone }> = {
-  active: { label: 'On track', tone: 'success' },
-  overdue: { label: 'Overdue', tone: 'danger' },
-  repaid: { label: 'Repaid', tone: 'neutral' },
-  defaulted: { label: 'In default', tone: 'danger' },
+  active: withLabel('credit.loanStatus.active', { tone: 'success' }),
+  overdue: withLabel('credit.loanStatus.overdue', { tone: 'danger' }),
+  repaid: withLabel('credit.loanStatus.repaid', { tone: 'neutral' }),
+  defaulted: withLabel('credit.loanStatus.defaulted', { tone: 'danger' }),
 };
 
 /** Everything the customer repays: the sum of the schedule. */

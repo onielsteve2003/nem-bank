@@ -10,6 +10,7 @@ import {
   Users,
   type LucideIcon,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -53,6 +54,7 @@ interface Entry {
 export function GrowScreen() {
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const toggleBalances = usePrivacyStore((s) => s.toggleBalances);
 
@@ -68,40 +70,42 @@ export function GrowScreen() {
   const save: Entry[] = [
     {
       key: 'goals',
-      title: 'Savings goals',
-      subtitle: s ? `${s.goals_count} open · 10% a year` : 'Save towards something',
+      title: t('savings.goals.title'),
+      subtitle: s
+        ? t('savings.grow.goalsSubtitle', { count: s.goals_count })
+        : t('savings.grow.goalsIdle'),
       icon: Target,
       onPress: () => router.push('/goals'),
     },
     {
       key: 'roundups',
-      title: 'Round-ups',
+      title: t('savings.grow.roundUps'),
       subtitle: roundUps.data
         ? roundUps.data.enabled
-          ? 'On · spare change into a goal'
-          : 'Off · save the change from every spend'
-        : 'Save the change from every spend',
+          ? t('savings.grow.roundUpsOn')
+          : t('savings.grow.roundUpsOff')
+        : t('savings.grow.roundUpsIdle'),
       icon: Coins,
       onPress: () => router.push('/round-ups'),
     },
     {
       key: 'locks',
-      title: 'Locked savings',
+      title: t('savings.grow.locks'),
       subtitle: s
         ? s.locks_count > 0
-          ? `${s.locks_count} active · up to 18% a year`
-          : 'Up to 18% a year for 30 to 365 days'
-        : 'Up to 18% a year',
+          ? t('savings.grow.locksActive', { count: s.locks_count })
+          : t('savings.grow.locksNone')
+        : t('savings.grow.locksIdle'),
       icon: Lock,
       onPress: () => router.push('/locks'),
     },
     {
       key: 'ajo',
-      title: 'Ajo',
+      title: t('savings.grow.ajo'),
       subtitle:
         ajoCount !== undefined && ajoCount > 0
-          ? `${ajoCount} ${ajoCount === 1 ? 'group' : 'groups'}`
-          : 'Save in turns with people you trust',
+          ? t('savings.grow.ajoGroups', { count: ajoCount })
+          : t('savings.grow.ajoIdle'),
       icon: Users,
       onPress: () => router.push('/ajo'),
     },
@@ -109,15 +113,15 @@ export function GrowScreen() {
   const more: Entry[] = [
     {
       key: 'credit',
-      title: 'Credit',
-      subtitle: 'See what you could borrow',
+      title: t('savings.grow.credit'),
+      subtitle: t('savings.grow.creditSubtitle'),
       icon: HandCoins,
       onPress: () => router.push('/credit'),
     },
     {
       key: 'insights',
-      title: 'Insights and budgets',
-      subtitle: 'Where your money goes each month',
+      title: t('savings.grow.insights'),
+      subtitle: t('savings.grow.insightsSubtitle'),
       icon: ChartPie,
       onPress: () => router.push('/insights'),
     },
@@ -132,8 +136,11 @@ export function GrowScreen() {
           title={e.title}
           subtitle={e.subtitle}
           onPress={e.onPress}
-          trailing={e.onPress ? undefined : <Badge label="Soon" tone="neutral" />}
-          accessibilityLabel={`${e.title}. ${e.subtitle}${e.onPress ? '' : '. Coming soon'}`}
+          trailing={e.onPress ? undefined : <Badge label={t('savings.grow.soon')} tone="neutral" />}
+          accessibilityLabel={
+            t('savings.grow.entryLabel', { title: e.title, subtitle: e.subtitle }) +
+            (e.onPress ? '' : `. ${t('savings.grow.comingSoon')}`)
+          }
         />
       ))}
     </Card>
@@ -142,11 +149,11 @@ export function GrowScreen() {
   const header = (
     <View style={[styles.header, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <Text variant="title" accessibilityRole="header" style={styles.flex}>
-        Grow
+        {t('savings.grow.title')}
       </Text>
       <IconButton
         icon={hidden ? EyeOff : Eye}
-        accessibilityLabel={hidden ? 'Show balances' : 'Hide balances'}
+        accessibilityLabel={t(hidden ? 'home.showBalances' : 'home.hideBalances')}
         variant="ghost"
         onPress={toggleBalances}
       />
@@ -176,20 +183,20 @@ export function GrowScreen() {
         >
           <View style={{ gap: spacing[1] }}>
             <Text variant="label" color="textMuted">
-              Total saved
+              {t('savings.grow.totalSaved')}
             </Text>
             <MoneyText
               value={fromApiMoney(s.total_saved)}
               variant="amountLarge"
               masked={hidden}
               animate
-              label="Total saved"
+              label={t('savings.grow.totalSaved')}
             />
           </View>
           <View style={[styles.stats, { gap: spacing[4] }]}>
             <View style={[styles.flex, { gap: spacing[1] }]}>
               <Text variant="caption" color="textMuted">
-                Interest earned
+                {t('savings.grow.interestEarned')}
               </Text>
               <MoneyText
                 value={fromApiMoney(s.interest_earned)}
@@ -197,53 +204,53 @@ export function GrowScreen() {
                 color="success"
                 masked={hidden}
                 signPositive
-                label="Interest earned"
+                label={t('savings.grow.interestEarned')}
               />
             </View>
             <View style={[styles.flex, { gap: spacing[1] }]}>
               <Text variant="caption" color="textMuted">
-                Round-ups this month
+                {t('savings.grow.roundUpsMonth')}
               </Text>
               <MoneyText
                 value={fromApiMoney(s.round_ups_this_month)}
                 variant="bodyStrong"
                 masked={hidden}
-                label="Round-ups this month"
+                label={t('savings.grow.roundUpsMonth')}
               />
             </View>
           </View>
           <Text variant="caption" color="textMuted">
-            Goals and locked savings earn interest every day, paid into each one.
+            {t('savings.grow.interestNote')}
           </Text>
         </View>
       ) : summary.isError ? (
-        <ErrorState title="We couldn't load your savings" onRetry={() => summary.refetch()} />
+        <ErrorState title={t('savings.grow.failed')} onRetry={() => summary.refetch()} />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading your savings">
+        <SkeletonGroup accessibilityLabel={t('savings.grow.loading')}>
           <Skeleton height={168} radius={24} />
         </SkeletonGroup>
       )}
 
       <View style={{ gap: spacing[2] }}>
         <SectionHeader
-          title="Your goals"
-          actionLabel={goals.data && goals.data.data.length > 0 ? 'See all' : undefined}
+          title={t('savings.grow.yourGoals')}
+          actionLabel={goals.data && goals.data.data.length > 0 ? t('common.seeAll') : undefined}
           onAction={() => router.push('/goals')}
-          actionAccessibilityLabel="See all goals"
+          actionAccessibilityLabel={t('savings.grow.seeAllGoals')}
         />
         {goals.isError ? (
-          <ErrorState title="We couldn't load your goals" onRetry={() => goals.refetch()} />
+          <ErrorState title={t('savings.goals.failed')} onRetry={() => goals.refetch()} />
         ) : !goals.data ? (
-          <SkeletonGroup accessibilityLabel="Loading goals">
+          <SkeletonGroup accessibilityLabel={t('savings.goals.loading')}>
             <Skeleton height={88} />
             <Skeleton height={88} />
           </SkeletonGroup>
         ) : open.length === 0 ? (
           <EmptyState
             icon={Target}
-            title="No goals yet"
-            message="Name what you're saving for, set a target and watch it grow."
-            actionLabel="Start a goal"
+            title={t('savings.goals.emptyTitle')}
+            message={t('savings.grow.emptyMessage')}
+            actionLabel={t('savings.grow.startGoal')}
             onAction={() => router.push('/goals/new')}
           />
         ) : (
@@ -261,17 +268,17 @@ export function GrowScreen() {
       </View>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Ways to save" />
+        <SectionHeader title={t('savings.grow.waysToSave')} />
         {entryList(save)}
       </View>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Borrow and plan" />
+        <SectionHeader title={t('savings.grow.borrowPlan')} />
         {entryList(more)}
       </View>
 
       <Text variant="caption" color="textMuted">
-        Demo money: interest is simulated and paid by Nem&apos;s test ledger.
+        {t('savings.grow.demo')}
       </Text>
     </Screen>
   );

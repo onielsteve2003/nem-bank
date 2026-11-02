@@ -1,6 +1,7 @@
 import { formatMoney, money } from '@nem/shared';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -36,6 +37,7 @@ const naira = (kobo: bigint) => formatMoney(money(kobo, 'NGN'), { trimZeroMinor:
  */
 export function OfferScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const check = useRepoQuery('credit', 'getEligibility');
   const max = check.data?.eligible ? fromApiMoney(check.data.max_amount).amount : 0n;
   const steps = amountSteps(max);
@@ -64,20 +66,17 @@ export function OfferScreen() {
 
   let body;
   if (check.isError) {
-    body = <ErrorState title="We couldn't load your offer" onRetry={() => check.refetch()} />;
+    body = <ErrorState title={t('credit.offer.failed')} onRetry={() => check.refetch()} />;
   } else if (!check.data) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your offer">
+      <SkeletonGroup accessibilityLabel={t('credit.offer.loading')}>
         <Skeleton height={180} />
         <Skeleton height={220} />
       </SkeletonGroup>
     );
   } else if (steps === 0) {
     body = (
-      <ErrorState
-        title="You can't borrow right now"
-        message="Go back to Credit to see why and what to do next."
-      />
+      <ErrorState title={t('credit.offer.cannotTitle')} message={t('credit.offer.cannotMessage')} />
     );
   } else {
     body = (
@@ -86,17 +85,17 @@ export function OfferScreen() {
           <View style={{ gap: spacing[4] }}>
             <View style={{ gap: spacing[1] }}>
               <Text variant="bodySmall" color="textMuted">
-                Borrow
+                {t('credit.offer.borrow')}
               </Text>
               <MoneyText
                 value={money(amountAt(index), 'NGN')}
                 variant="amountLarge"
                 trimZeroMinor
-                label="Borrow"
+                label={t('credit.offer.borrow')}
               />
             </View>
             <Slider
-              label="Amount to borrow"
+              label={t('credit.offer.amountSlider')}
               value={index}
               steps={steps}
               onChange={setAmountIndex}
@@ -106,12 +105,12 @@ export function OfferScreen() {
             />
             <View style={{ gap: spacing[1] }}>
               <Text variant="bodySmall" color="textMuted">
-                Repay over
+                {t('credit.offer.repayOver')}
               </Text>
               <Text variant="h2">{tenorLabel(tenor)}</Text>
             </View>
             <Slider
-              label="Repay over"
+              label={t('credit.offer.repayOver')}
               value={tenorIndex}
               steps={TENORS.length}
               onChange={setTenorIndex}
@@ -123,29 +122,42 @@ export function OfferScreen() {
         </Card>
 
         {offer.isError ? (
-          <ErrorState title="We couldn't price this loan" onRetry={() => offer.refetch()} />
+          <ErrorState title={t('credit.offer.priceFailed')} onRetry={() => offer.refetch()} />
         ) : !o ? (
-          <SkeletonGroup accessibilityLabel="Pricing your loan">
+          <SkeletonGroup accessibilityLabel={t('credit.offer.pricing')}>
             <Skeleton height={220} />
           </SkeletonGroup>
         ) : (
           <View style={{ gap: spacing[4], opacity: pricing ? 0.5 : 1 }}>
             <Card>
               <View style={{ gap: spacing[3] }}>
-                <DetailRow label="APR" value={`${aprLabel(o.apr_bps)} a year`} />
-                <DetailRow label="Interest" value={formatMoney(fromApiMoney(o.interest))} />
-                <DetailRow label="Fee (1%, once)" value={formatMoney(fromApiMoney(o.fees))} />
                 <DetailRow
-                  label="Total to repay"
+                  label={t('credit.loan.apr')}
+                  value={t('credit.loan.aprYear', { apr: aprLabel(o.apr_bps) })}
+                />
+                <DetailRow
+                  label={t('credit.offer.interest')}
+                  value={formatMoney(fromApiMoney(o.interest))}
+                />
+                <DetailRow
+                  label={t('credit.offer.fee')}
+                  value={formatMoney(fromApiMoney(o.fees))}
+                />
+                <DetailRow
+                  label={t('credit.offer.total')}
                   value={formatMoney(fromApiMoney(o.total_repayment))}
                 />
                 <Text variant="bodySmall" color="textMuted">
-                  {`${o.schedule.length} ${o.schedule.length === 1 ? 'payment' : 'monthly payments'}. You pay ${formatMoney(fromApiMoney(o.total_repayment))} in all for ${formatMoney(fromApiMoney(o.principal))}. No other charges.`}
+                  {t('credit.offer.payments', {
+                    count: o.schedule.length,
+                    total: formatMoney(fromApiMoney(o.total_repayment)),
+                    principal: formatMoney(fromApiMoney(o.principal)),
+                  })}
                 </Text>
               </View>
             </Card>
             <View style={{ gap: spacing[2] }}>
-              <SectionHeader title="Repayment schedule" />
+              <SectionHeader title={t('credit.loan.schedule')} />
               <Card>
                 <InstallmentList installments={o.schedule} />
               </Card>
@@ -158,7 +170,7 @@ export function OfferScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Your offer" />}
+      header={<SendHeader title={t('credit.offer.title')} />}
       edges={['top', 'bottom']}
       footer={
         o && steps > 0 ? (

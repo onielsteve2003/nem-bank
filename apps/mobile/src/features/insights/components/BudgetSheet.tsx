@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AmountInput, BottomSheet, Button, Chip, Dialog, Text } from '@/components';
@@ -28,6 +29,7 @@ const MIN_LIMIT_KOBO = 100_000n;
  */
 export function BudgetSheet({ budget, categories, onClose }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [category, setCategory] = useState<Category | null>(budget?.category ?? null);
   const [typed, setTyped] = useState(
     budget ? typedFromKobo(BigInt(budget.limit.amount_minor)) : '',
@@ -45,8 +47,8 @@ export function BudgetSheet({ budget, categories, onClose }: Props) {
   const failed = (e: unknown) =>
     setError(
       isApiError(e) && e.code === 'budget_exists'
-        ? 'You already have a budget for this category.'
-        : "We couldn't save it. Try again.",
+        ? t('insights.budgetSheet.exists')
+        : t('insights.budgetSheet.saveFailed'),
     );
 
   const save = () => {
@@ -68,7 +70,13 @@ export function BudgetSheet({ budget, categories, onClose }: Props) {
       <BottomSheet
         open={!removing}
         onClose={onClose}
-        title={budget ? `${name} budget` : category ? 'Set a monthly limit' : 'Budget for what?'}
+        title={
+          budget
+            ? t('insights.budgetSheet.titleEdit', { name })
+            : category
+              ? t('insights.budgetSheet.titleLimit')
+              : t('insights.budgetSheet.titlePick')
+        }
       >
         <View style={{ gap: spacing[4] }}>
           {!category ? (
@@ -97,16 +105,18 @@ export function BudgetSheet({ budget, categories, onClose }: Props) {
               )}
               <AmountInput
                 currency="NGN"
-                label="Monthly limit"
+                label={t('insights.budgetSheet.limit')}
                 value={typed}
                 onChangeValue={setTyped}
                 maxWholeDigits={9}
                 help={
                   budget
-                    ? `${formatMoney(fromApiMoney(budget.spent))} spent this month`
-                    : 'We’ll tell you at 80% and again at 100%.'
+                    ? t('insights.budgetSheet.spent', {
+                        amount: formatMoney(fromApiMoney(budget.spent)),
+                      })
+                    : t('insights.budgetSheet.alerts')
                 }
-                error={tooSmall ? 'Set at least ₦1,000' : undefined}
+                error={tooSmall ? t('insights.budgetSheet.tooSmall') : undefined}
               />
               {error && (
                 <Text variant="bodySmall" color="danger" accessibilityRole="alert">
@@ -114,7 +124,11 @@ export function BudgetSheet({ budget, categories, onClose }: Props) {
                 </Text>
               )}
               <Button
-                label={budget ? 'Save budget' : `Add ${name?.toLowerCase()} budget`}
+                label={
+                  budget
+                    ? t('insights.budgetSheet.save')
+                    : t('insights.budgetSheet.add', { name: name?.toLowerCase() })
+                }
                 disabled={!amount || tooSmall}
                 loading={create.isPending || update.isPending}
                 onPress={save}
@@ -122,16 +136,20 @@ export function BudgetSheet({ budget, categories, onClose }: Props) {
             </>
           )}
           {budget && (
-            <Button label="Remove budget" variant="ghost" onPress={() => setRemoving(true)} />
+            <Button
+              label={t('insights.budgetSheet.remove')}
+              variant="ghost"
+              onPress={() => setRemoving(true)}
+            />
           )}
         </View>
       </BottomSheet>
       {budget && (
         <Dialog
           open={removing}
-          title={`Remove your ${name?.toLowerCase()} budget?`}
-          message="You’ll stop getting alerts for it. Your spending isn’t affected."
-          confirmLabel="Remove"
+          title={t('insights.budgetSheet.removeTitle', { name: name?.toLowerCase() })}
+          message={t('insights.budgetSheet.removeMessage')}
+          confirmLabel={t('insights.budgetSheet.removeConfirm')}
           destructive
           loading={remove.isPending}
           onCancel={() => setRemoving(false)}
