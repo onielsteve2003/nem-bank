@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CalendarClock, Inbox, ListChecks } from 'lucide-react-native';
+import { CalendarClock, Inbox, ListChecks, Smile } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -163,6 +163,15 @@ export function DependantScreen() {
         fullWidth
         onPress={() => router.push('/family/approvals')}
       />
+      {child.kid_mode && (
+        <Button
+          label={`See ${first}'s kid mode`}
+          icon={Smile}
+          variant="secondary"
+          fullWidth
+          onPress={() => router.push({ pathname: '/family/[id]/kid', params: { id } })}
+        />
+      )}
 
       <SectionHeader title="Limits" />
       <Card>

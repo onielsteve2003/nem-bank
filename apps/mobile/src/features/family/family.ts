@@ -95,3 +95,30 @@ export const APPROVAL_STATUS: Record<
   declined: { label: 'Declined', tone: 'danger' },
   expired: { label: 'Expired', tone: 'neutral' },
 };
+
+/** Goal targets a child picks from, in naira. */
+export const KID_GOAL_PRESETS = [2_000, 5_000, 10_000, 25_000].map(naira);
+export const KID_GOAL_EMOJIS = ['🎮', '⚽', '📚', '🚲', '🎧', '🧸', '🎨', '🎁'];
+
+const sameUtcDay = (a: Date, b: Date) =>
+  a.toISOString().slice(0, 10) === b.toISOString().slice(0, 10);
+
+/** What a child has left to spend today under their daily limit, never below zero. */
+export function spendLeftToday(
+  controls: Controls,
+  transactions: Schema<'Transaction'>[],
+  now: Date,
+): Money {
+  const limit = fromApiMoney(controls.daily_spend_limit).amount;
+  const spent = transactions
+    .filter((t) => t.direction === 'debit' && sameUtcDay(new Date(t.created_at), now))
+    .reduce((sum, t) => sum + fromApiMoney(t.amount).amount, 0n);
+  return money(limit > spent ? limit - spent : 0n, 'NGN');
+}
+
+/** How far a balance gets towards a goal, 0 to 100. */
+export function goalPercent(balanceMinor: bigint, targetMinor: bigint): number {
+  if (targetMinor <= 0n) return 100;
+  const pct = Number((balanceMinor * 100n) / targetMinor);
+  return Math.max(0, Math.min(100, pct));
+}

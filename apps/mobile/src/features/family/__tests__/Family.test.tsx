@@ -12,6 +12,8 @@ import { ThemeProvider } from '@/theme';
 import {
   ageOn,
   allowanceSummary,
+  goalPercent,
+  spendLeftToday,
   controlsSummary,
   DEFAULT_CONTROLS,
   dependantAgeProblem,
@@ -20,6 +22,7 @@ import {
 import { AddDependantScreen } from '../screens/AddDependantScreen';
 import { ApprovalsScreen } from '../screens/ApprovalsScreen';
 import { DependantScreen } from '../screens/DependantScreen';
+import { KidHomeScreen } from '../screens/KidHomeScreen';
 import { FamilyScreen } from '../screens/FamilyScreen';
 
 const mockPush = jest.fn();
@@ -283,5 +286,42 @@ describe('ApprovalsScreen', () => {
   it('shows an empty queue', async () => {
     await render(wrap(bank(), <ApprovalsScreen />));
     expect(await screen.findByText('Nothing to approve')).toBeOnTheScreen();
+  });
+});
+
+describe('kid mode', () => {
+  it('works out what is left to spend today and goal progress', () => {
+    const now = new Date('2026-11-02T12:00:00Z');
+    const txn = (direction: 'debit' | 'credit', minor: string, at: string) =>
+      ({ direction, amount: { amount_minor: minor, currency: 'NGN' }, created_at: at }) as never;
+    const left = spendLeftToday(
+      DEFAULT_CONTROLS,
+      [
+        txn('debit', '150000', '2026-11-02T09:00:00Z'),
+        txn('credit', '900000', '2026-11-02T08:00:00Z'),
+        txn('debit', '400000', '2026-11-01T09:00:00Z'),
+      ],
+      now,
+    );
+    expect(left.amount).toBe(350000n);
+    expect(
+      spendLeftToday(DEFAULT_CONTROLS, [txn('debit', '900000', now.toISOString())], now).amount,
+    ).toBe(0n);
+    expect(goalPercent(250000n, 1000000n)).toBe(25);
+    expect(goalPercent(2000000n, 1000000n)).toBe(100);
+  });
+
+  it('shows the child their balance and lets them add a goal', async () => {
+    const repos = bank();
+    const { dependant } = await addChild(repos);
+    mockParams.id = dependant.id;
+    await render(wrap(repos, <KidHomeScreen />));
+    expect(await screen.findByText('Hi Ada 👋')).toBeOnTheScreen();
+    expect(screen.getByText('₦5,000 left to spend today')).toBeOnTheScreen();
+    await fireEvent.press(screen.getByRole('button', { name: 'Add a goal' }));
+    await fireEvent.changeText(screen.getByLabelText('What are you saving for?'), 'New bike');
+    await fireEvent.press(screen.getByRole('button', { name: 'Save goal' }));
+    expect(await screen.findByText('New bike')).toBeOnTheScreen();
+    expect(screen.getByText('0% of ₦5,000')).toBeOnTheScreen();
   });
 });
