@@ -10,15 +10,17 @@ import { useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { FREQUENCIES, formatScheduleDay, isLive, lagosDayOf, STATUS_LABELS } from '../schedule';
+import { useTranslation } from 'react-i18next';
+import { localized } from '@/lib/i18n';
 
 type ScheduledTransfer = Schema<'ScheduledTransfer'>;
 
-const LAST_RUN_WORDS: Partial<Record<Schema<'TransferStatus'>, string>> = {
-  completed: 'sent',
-  processing: 'on its way',
-  failed: 'not sent',
-  reversed: 'returned',
-};
+const LAST_RUN_WORDS: Partial<Record<Schema<'TransferStatus'>, string>> = localized({
+  completed: 'transfers.scheduled.lastRun.completed',
+  processing: 'transfers.scheduled.lastRun.processing',
+  failed: 'transfers.scheduled.lastRun.failed',
+  reversed: 'transfers.scheduled.lastRun.reversed',
+});
 
 function Row({ label, value }: { label: string; value: string }) {
   return (
@@ -45,13 +47,17 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
   const [s, setS] = useState(schedule);
   const [confirmCancel, setConfirmCancel] = useState(false);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
   const update = useRepoMutation('transfers', 'updateScheduled', { invalidates: [['transfers']] });
   const cancel = useRepoMutation('transfers', 'cancelScheduled', { invalidates: [['transfers']] });
   const status = STATUS_LABELS[s.status];
   const firstName = s.recipient.name.split(' ')[0];
   const lastRun = s.last_run
-    ? `${formatScheduleDay(lagosDayOf(s.last_run.at))}, ${LAST_RUN_WORDS[s.last_run.status] ?? 'waiting'}`
-    : 'None yet';
+    ? t('transfers.scheduled.lastRunValue', {
+        day: formatScheduleDay(lagosDayOf(s.last_run.at)),
+        status: LAST_RUN_WORDS[s.last_run.status] ?? t('transfers.scheduled.lastRun.waiting'),
+      })
+    : t('transfers.scheduled.noneYet');
 
   const setStatus = (next: 'active' | 'paused') => {
     setError(undefined);
@@ -59,7 +65,7 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
       { path: { schedule_id: s.id }, body: { status: next } },
       {
         onSuccess: setS,
-        onError: () => setError("We couldn't change it. Try again."),
+        onError: () => setError(t('transfers.scheduled.changeFailed')),
       },
     );
   };
@@ -74,13 +80,13 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
         },
         onError: () => {
           setConfirmCancel(false);
-          setError("We couldn't cancel it. Try again.");
+          setError(t('transfers.scheduled.cancelFailed'));
         },
       },
     );
 
   return (
-    <BottomSheet open onClose={onClose} title="Scheduled payment">
+    <BottomSheet open onClose={onClose} title={t('transfers.scheduled.title')}>
       <View style={{ gap: spacing[4] }}>
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Avatar name={s.recipient.name} size="lg" ring={Boolean(s.recipient.nemtag)} />
@@ -88,7 +94,7 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
             <Text variant="bodyStrong">{s.recipient.name}</Text>
             <Text variant="bodySmall" color="textMuted">
               {s.recipient.nemtag
-                ? `@${s.recipient.nemtag} · Nem user`
+                ? t('transfers.scheduled.nemUser', { nemtag: s.recipient.nemtag })
                 : `${s.recipient.bank_name} · ${s.recipient.account_number_masked}`}
             </Text>
           </View>
@@ -97,21 +103,25 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
 
         <Card>
           <View style={{ gap: spacing[3] }}>
-            <Row label="Amount" value={formatMoney(fromApiMoney(s.amount))} />
-            <Row label="How often" value={FREQUENCIES[s.frequency]} />
+            <Row label={t('common.amount')} value={formatMoney(fromApiMoney(s.amount))} />
+            <Row label={t('transfers.scheduled.howOften')} value={FREQUENCIES[s.frequency]} />
             <Row
-              label="Next payment"
+              label={t('transfers.scheduled.next')}
               value={
                 s.status === 'paused'
-                  ? 'Paused'
+                  ? t('transfers.scheduled.paused')
                   : s.next_run_at
-                    ? `${formatScheduleDay(lagosDayOf(s.next_run_at))}, about 9 am`
-                    : 'None'
+                    ? t('transfers.scheduled.nextValue', {
+                        day: formatScheduleDay(lagosDayOf(s.next_run_at)),
+                      })
+                    : t('transfers.scheduled.none')
               }
             />
-            {s.ends_on && <Row label="Last day" value={formatScheduleDay(s.ends_on)} />}
-            <Row label="Last payment" value={lastRun} />
-            <Row label="Note" value={s.narration} />
+            {s.ends_on && (
+              <Row label={t('transfers.scheduled.lastDay')} value={formatScheduleDay(s.ends_on)} />
+            )}
+            <Row label={t('transfers.scheduled.lastPayment')} value={lastRun} />
+            <Row label={t('common.note')} value={s.narration} />
           </View>
         </Card>
 
@@ -119,7 +129,7 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
           <>
             {s.status === 'active' ? (
               <Button
-                label="Pause"
+                label={t('transfers.scheduled.pause')}
                 icon={Pause}
                 variant="secondary"
                 loading={update.isPending}
@@ -127,22 +137,22 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
               />
             ) : (
               <Button
-                label="Resume"
+                label={t('transfers.scheduled.resume')}
                 icon={Play}
                 loading={update.isPending}
                 onPress={() => setStatus('active')}
               />
             )}
             <Button
-              label="Cancel schedule"
+              label={t('transfers.scheduled.cancel')}
               icon={XCircle}
               variant="ghost"
               onPress={() => setConfirmCancel(true)}
             />
             <Text variant="caption" color="textMuted">
               {s.status === 'paused'
-                ? 'Paused payments are skipped, not saved up. Resuming starts again from the next due day.'
-                : `Each payment to ${firstName} is checked and priced when it goes. If there isn't enough money, that one is skipped and we tell you.`}
+                ? t('transfers.scheduled.pausedNote')
+                : t('transfers.scheduled.activeNote', { name: firstName })}
             </Text>
           </>
         )}
@@ -156,10 +166,10 @@ export function ScheduledSheet({ schedule, onClose }: Props) {
 
       <Dialog
         open={confirmCancel}
-        title="Cancel this schedule?"
-        message={`No more payments will go to ${firstName}. Payments already sent stay in your history.`}
-        confirmLabel="Cancel schedule"
-        cancelLabel="Keep it"
+        title={t('transfers.scheduled.cancelTitle')}
+        message={t('transfers.scheduled.cancelMessage', { name: firstName })}
+        confirmLabel={t('transfers.scheduled.cancel')}
+        cancelLabel={t('common.keepIt')}
         destructive
         loading={cancel.isPending}
         onConfirm={cancelIt}

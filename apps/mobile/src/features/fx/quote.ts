@@ -19,6 +19,7 @@ import {
 
 import { isApiError } from '@/data';
 import { fromApiMoney } from '@/lib/money';
+import i18n from '@/lib/i18n';
 
 type Account = Schema<'Account'>;
 type Quote = Schema<'FxQuote'>;
@@ -89,7 +90,7 @@ export const quoteDeadline = (receivedAt: number) =>
 /** Why this amount cannot be converted, or null if it can. */
 export function convertProblem(sell: Money, available: Money): string | null {
   return compare(sell, available) > 0
-    ? `More than your available ${formatMoney(available)}.`
+    ? i18n.t('fx.errors.tooMuch', { amount: formatMoney(available) })
     : null;
 }
 
@@ -101,32 +102,31 @@ export function convertProblem(sell: Money, available: Money): string | null {
 export function convertErrorMessage(error: Error): { message: string; requote: boolean } {
   if (!isApiError(error)) {
     return {
-      message: "We couldn't convert it. Nothing has left your wallet. Try again.",
+      message: i18n.t('fx.errors.nothingLeft'),
       requote: false,
     };
   }
   const { code, title, detail } = error.problem;
   switch (code) {
     case 'quote_expired':
-      return { message: 'That rate expired. Check the new rate and confirm again.', requote: true };
+      return { message: i18n.t('fx.errors.rateExpired'), requote: true };
     case 'insufficient_funds':
     case 'max_balance_exceeded':
     case 'validation_failed':
       return { message: detail ?? title, requote: true };
     case 'offline':
       return {
-        message: "You're offline. Reconnect and try again; it won't convert twice.",
+        message: i18n.t('fx.errors.offline'),
         requote: false,
       };
     case 'gateway_timeout':
     case 'service_unavailable':
     case 'network_error':
       return {
-        message:
-          "We didn't hear back. Try again: if it already went through, it won't convert twice.",
+        message: i18n.t('fx.errors.noReply'),
         requote: false,
       };
     default:
-      return { message: detail ?? "We couldn't convert it. Try again.", requote: false };
+      return { message: detail ?? i18n.t('fx.errors.failed'), requote: false };
   }
 }

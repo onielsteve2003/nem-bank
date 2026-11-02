@@ -41,5 +41,16 @@ export function localized<K extends string>(
   return table;
 }
 
+/** `{ ...rest, label }` for tables that carry more than words (a tone, an icon). */
+export function withLabel<const T extends object>(
+  key: TranslationKey,
+  rest: T,
+): T & { readonly label: string } {
+  return Object.defineProperty({ ...rest }, 'label', {
+    enumerable: true,
+    get: () => i18n.t(key),
+  }) as T & { readonly label: string };
+}
+
 export { deviceLanguage, languageFor };
 export default i18n;

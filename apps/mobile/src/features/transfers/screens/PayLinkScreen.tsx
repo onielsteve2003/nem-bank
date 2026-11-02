@@ -32,6 +32,7 @@ import { typedNaira } from '../amount';
 import { ConfirmSheet } from '../components/ConfirmSheet';
 import { sendErrorMessage } from '../confirm';
 import { linkClosedReason, PAY_NOTE_MAX_LENGTH } from '../paymentLinks';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The pay page behind a payment link (TRF-12). Anyone can open it, signed in or
@@ -41,6 +42,7 @@ import { linkClosedReason, PAY_NOTE_MAX_LENGTH } from '../paymentLinks';
 export function PayLinkScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const { slug = '' } = useLocalSearchParams<{ slug: string }>();
   const signedIn = useSessionStore((s) => s.status === 'signedIn');
 
@@ -98,9 +100,9 @@ export function PayLinkScreen() {
   const header = (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <Text variant="title" accessibilityRole="header" style={styles.flex}>
-        Pay link
+        {t('transfers.payLink.title')}
       </Text>
-      <IconButton icon={X} accessibilityLabel="Close" variant="ghost" onPress={close} />
+      <IconButton icon={X} accessibilityLabel={t('common.close')} variant="ghost" onPress={close} />
     </View>
   );
 
@@ -108,7 +110,7 @@ export function PayLinkScreen() {
   if (data && !closed && !isMine) {
     footer = signedIn ? (
       <Button
-        label={amount ? `Pay ${formatMoney(amount)}` : 'Pay'}
+        label={amount ? t('common.payAmount', { amount: formatMoney(amount) }) : t('common.pay')}
         icon={Send}
         disabled={!amount || !source || Boolean(short)}
         onPress={() => {
@@ -119,9 +121,13 @@ export function PayLinkScreen() {
       />
     ) : (
       <View style={{ gap: spacing[2] }}>
-        <Button label="Log in to pay" icon={LogIn} onPress={() => router.push('/login')} />
         <Button
-          label="New to Nem? Try the demo"
+          label={t('transfers.payLink.logIn')}
+          icon={LogIn}
+          onPress={() => router.push('/login')}
+        />
+        <Button
+          label={t('transfers.payLink.tryDemo')}
           variant="secondary"
           onPress={() => router.push('/welcome')}
         />
@@ -138,7 +144,7 @@ export function PayLinkScreen() {
               <View style={{ gap: spacing[3], alignItems: 'center' }}>
                 <Avatar name={data.payee_name} size="lg" ring />
                 <Text color="textMuted" align="center">
-                  {data.payee_name} is asking you to pay for
+                  {t('transfers.payLink.asking', { name: data.payee_name })}
                 </Text>
                 <Text variant="h2" align="center">
                   {data.title}
@@ -154,13 +160,13 @@ export function PayLinkScreen() {
             {data.demo && <DemoMoneyBadge />}
 
             {closed ? (
-              <EmptyState icon={Link2} title="Not taking payments" message={closed} />
+              <EmptyState icon={Link2} title={t('transfers.payLink.notTaking')} message={closed} />
             ) : isMine ? (
               <EmptyState
                 icon={Link2}
-                title="This is your link"
-                message="Share it with whoever is paying you. Payments land in your naira account."
-                actionLabel="Your payment links"
+                title={t('transfers.payLink.yours')}
+                message={t('transfers.payLink.yoursMessage')}
+                actionLabel={t('transfers.payLink.yourLinks')}
                 onAction={() => router.replace('/send/links')}
               />
             ) : (
@@ -169,29 +175,28 @@ export function PayLinkScreen() {
                   {!fixed && (
                     <AmountInput
                       currency="NGN"
-                      label={`How much for ${firstName}`}
+                      label={t('transfers.payLink.howMuch', { name: firstName })}
                       value={typed}
                       onChangeValue={setTyped}
-                      error={short ? 'More than your available balance' : undefined}
+                      error={short ? t('transfers.payLink.tooMuch') : undefined}
                     />
                   )}
                   {fixed && short && (
                     <Text color="danger" accessibilityLiveRegion="polite">
-                      You need {formatMoney(fixed)} available to pay this link.
+                      {t('transfers.payLink.needFixed', { amount: formatMoney(fixed) })}
                     </Text>
                   )}
                   <TextField
-                    label="Note"
+                    label={t('common.note')}
                     optional
-                    placeholder={`For ${firstName}`}
+                    placeholder={t('transfers.payLink.notePlaceholder', { name: firstName })}
                     value={note}
                     onChangeText={setNote}
                     maxLength={PAY_NOTE_MAX_LENGTH}
                   />
                   {available && (
                     <Text variant="bodySmall" color="textMuted">
-                      From your naira account · {formatMoney(available)} available · No fee, Nem to
-                      Nem
+                      {t('transfers.payLink.from', { amount: formatMoney(available) })}
                     </Text>
                   )}
                 </>
@@ -202,18 +207,18 @@ export function PayLinkScreen() {
           isApiError(link.error) && link.error.status === 404 ? (
             <EmptyState
               icon={Link2}
-              title="We can't find this link"
+              title={t('transfers.payLink.notFound')}
               message={
                 env.apiMode === 'mock'
-                  ? 'In this demo every phone and browser runs its own pretend bank, so a link only opens on the device that made it. Shared links work everywhere once the real backend is live.'
-                  : 'Check the link with the person who sent it. It may have been mistyped.'
+                  ? t('transfers.payLink.notFoundDemo')
+                  : t('transfers.payLink.notFoundReal')
               }
             />
           ) : (
-            <ErrorState title="We couldn't open this link" onRetry={() => link.refetch()} />
+            <ErrorState title={t('transfers.payLink.openFailed')} onRetry={() => link.refetch()} />
           )
         ) : (
-          <SkeletonGroup accessibilityLabel="Opening the pay link">
+          <SkeletonGroup accessibilityLabel={t('transfers.payLink.opening')}>
             <SkeletonListItem />
           </SkeletonGroup>
         )}
@@ -221,7 +226,11 @@ export function PayLinkScreen() {
         <ConfirmSheet
           open={confirming}
           onClose={() => setConfirming(false)}
-          subtitle={amount && firstName ? `Pay ${formatMoney(amount)} to ${firstName}` : ''}
+          subtitle={
+            amount && firstName
+              ? t('common.payAmountTo', { amount: formatMoney(amount), name: firstName })
+              : ''
+          }
           onApproved={onApproved}
           error={payError}
         />

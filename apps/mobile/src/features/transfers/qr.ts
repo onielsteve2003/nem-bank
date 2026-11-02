@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 
 import { resolveDeepLink } from '@/lib/deepLinks';
+import i18n from '@/lib/i18n';
 
 type InvalidReason = NonNullable<Schema<'DecodedQr'>['invalid_reason']>;
 
@@ -24,28 +25,24 @@ export function classifyScan(text: string): ScannedCode {
 }
 
 /** Why the bank refused a scanned code, and what to do about it. */
-export const QR_INVALID: Record<InvalidReason | 'other', { title: string; message: string }> = {
-  expired: {
-    title: 'This code has expired',
-    message: 'Codes with an amount last 15 minutes. Ask them to show a fresh one.',
+const invalid = (reason: InvalidReason) => ({
+  get title() {
+    return i18n.t(`transfers.qr.invalid.${reason}.title`);
   },
-  bad_signature: {
-    title: "This code isn't genuine",
-    message:
-      "It wasn't made by Nem, or it was changed. Don't pay it. Ask for their @nemtag instead.",
+  get message() {
+    return i18n.t(`transfers.qr.invalid.${reason}.message`);
   },
-  unknown_account: {
-    title: 'We don’t know this account',
-    message: 'The account on this code is closed or does not exist.',
-  },
-  not_nem_qr: {
-    title: "That isn't a Nem code",
-    message: 'Scan a Nem QR code or a Nem pay link.',
-  },
-  other: {
-    title: "That isn't a Nem code",
-    message: 'Scan a Nem QR code or a Nem pay link.',
-  },
+});
+
+export const QR_INVALID: Record<
+  InvalidReason | 'other',
+  { readonly title: string; readonly message: string }
+> = {
+  expired: invalid('expired'),
+  bad_signature: invalid('bad_signature'),
+  unknown_account: invalid('unknown_account'),
+  not_nem_qr: invalid('not_nem_qr'),
+  other: invalid('not_nem_qr'),
 };
 
 /** "14:59" until a code with an amount stops working. */

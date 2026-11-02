@@ -2,16 +2,17 @@ import type { Schema } from '@nem/contracts';
 import { addDaysIso, addMonthsIso } from '@nem/shared';
 
 import type { Tone } from '@/components';
+import i18n, { localized, withLabel } from '@/lib/i18n';
 
 type Frequency = Schema<'ScheduleFrequency'>;
 type ScheduledTransfer = Schema<'ScheduledTransfer'>;
 
-export const FREQUENCIES: Record<Frequency, string> = {
-  once: 'Once',
-  daily: 'Every day',
-  weekly: 'Every week',
-  monthly: 'Every month',
-};
+export const FREQUENCIES = localized<Frequency>({
+  once: 'transfers.schedule.frequencies.once',
+  daily: 'transfers.schedule.frequencies.daily',
+  weekly: 'transfers.schedule.frequencies.weekly',
+  monthly: 'transfers.schedule.frequencies.monthly',
+});
 
 /** Scheduled payments go out at 9 am Lagos time (UTC+1, no daylight saving). */
 const SEND_HOUR_UTC = 8;
@@ -33,18 +34,28 @@ export const startAtFor = (date: string) =>
 /** Quick picks for the first payment day. Today is never one: 9 am may have passed. */
 export function startPresets(today: string) {
   return [
-    { key: 'tomorrow', label: 'Tomorrow', date: addDaysIso(today, 1) },
-    { key: 'week', label: 'In a week', date: addDaysIso(today, 7) },
-    { key: 'month', label: '1st of next month', date: addMonthsIso(`${today.slice(0, 8)}01`, 1) },
+    {
+      key: 'tomorrow',
+      label: i18n.t('transfers.schedule.presets.tomorrow'),
+      date: addDaysIso(today, 1),
+    },
+    { key: 'week', label: i18n.t('transfers.schedule.presets.week'), date: addDaysIso(today, 7) },
+    {
+      key: 'month',
+      label: i18n.t('transfers.schedule.presets.month'),
+      date: addMonthsIso(`${today.slice(0, 8)}01`, 1),
+    },
   ] as const;
 }
 
 /** Why the schedule cannot be saved, or null when it can. */
 export function scheduleError(choice: ScheduleChoice, today: string): string | null {
-  if (choice.startDate <= today) return 'Pick a day from tomorrow on';
-  if (choice.startDate > addDaysIso(today, MAX_START_DAYS)) return 'Pick a day within a year';
+  if (choice.startDate <= today) return i18n.t('transfers.schedule.fromTomorrow');
+  if (choice.startDate > addDaysIso(today, MAX_START_DAYS)) {
+    return i18n.t('transfers.schedule.withinYear');
+  }
   if (choice.frequency !== 'once' && choice.endsOn && choice.endsOn < choice.startDate) {
-    return 'The last day must be on or after the first payment';
+    return i18n.t('transfers.schedule.endAfterStart');
   }
   return null;
 }
@@ -73,16 +84,25 @@ export const lagosDayOf = (at: string) =>
 /** "Every week from Thu, 22 Oct until 31 Dec 2026", or "Once on Thu, 22 Oct". */
 export function describeSchedule(choice: ScheduleChoice): string {
   const start = formatScheduleDay(choice.startDate);
-  if (choice.frequency === 'once') return `Once on ${start}`;
-  const until = choice.endsOn ? ` until ${formatEndDay(choice.endsOn)}` : '';
-  return `${FREQUENCIES[choice.frequency]} from ${start}${until}`;
+  if (choice.frequency === 'once') return i18n.t('transfers.schedule.onceOn', { day: start });
+  const every = FREQUENCIES[choice.frequency];
+  return choice.endsOn
+    ? i18n.t('transfers.schedule.repeatUntil', {
+        every,
+        day: start,
+        end: formatEndDay(choice.endsOn),
+      })
+    : i18n.t('transfers.schedule.repeat', { every, day: start });
 }
 
-export const STATUS_LABELS: Record<ScheduledTransfer['status'], { label: string; tone: Tone }> = {
-  active: { label: 'Active', tone: 'success' },
-  paused: { label: 'Paused', tone: 'warning' },
-  cancelled: { label: 'Cancelled', tone: 'neutral' },
-  completed: { label: 'Finished', tone: 'neutral' },
+export const STATUS_LABELS: Record<
+  ScheduledTransfer['status'],
+  { readonly label: string; tone: Tone }
+> = {
+  active: withLabel('transfers.schedule.status.active', { tone: 'success' }),
+  paused: withLabel('transfers.schedule.status.paused', { tone: 'warning' }),
+  cancelled: withLabel('transfers.schedule.status.cancelled', { tone: 'neutral' }),
+  completed: withLabel('transfers.schedule.status.completed', { tone: 'neutral' }),
 };
 
 export const isLive = (s: ScheduledTransfer) => s.status === 'active' || s.status === 'paused';
@@ -90,12 +110,19 @@ export const isLive = (s: ScheduledTransfer) => s.status === 'active' || s.statu
 /** One line under the recipient: what happens next, or how it ended. */
 export function scheduleSubtitle(s: ScheduledTransfer): string {
   const every = FREQUENCIES[s.frequency];
-  if (s.status === 'paused') return `${every} · paused`;
+  if (s.status === 'paused') return i18n.t('transfers.schedule.subtitlePaused', { every });
   if (s.status === 'active' && s.next_run_at) {
-    return `${every} · next ${formatScheduleDay(lagosDayOf(s.next_run_at))}`;
+    return i18n.t('transfers.schedule.subtitleNext', {
+      every,
+      day: formatScheduleDay(lagosDayOf(s.next_run_at)),
+    });
   }
-  const runs = s.run_count === 1 ? '1 payment' : `${s.run_count} payments`;
-  return `${every} · ${s.status === 'cancelled' ? 'cancelled' : 'finished'} after ${runs}`;
+  return i18n.t(
+    s.status === 'cancelled'
+      ? 'transfers.schedule.subtitleCancelled'
+      : 'transfers.schedule.subtitleFinished',
+    { every, count: s.run_count },
+  );
 }
 
 /** Live schedules first (soonest next), then ended ones newest first. */

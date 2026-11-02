@@ -29,6 +29,7 @@ import { ReceiveGuideCard } from '../components/ReceiveGuideCard';
 import { RecentInbound } from '../components/RecentInbound';
 import { SimulateInbound } from '../components/SimulateInbound';
 import { isForeignScheme, RECEIVE_GUIDES } from '../receive';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Receive money from abroad (FX-3): each foreign wallet's local details, how a
@@ -39,6 +40,7 @@ export function ReceiveScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ currency?: string; entry?: string }>();
   const accounts = useRepoQuery('accounts', 'list');
   const me = useRepoQuery('users', 'getMe');
@@ -46,14 +48,14 @@ export function ReceiveScreen() {
   const [adding, setAdding] = useState(false);
 
   // Opened from a wallet's details it is the first screen of the modal; from Convert, a step.
-  const header = <SendHeader title="Receive from abroad" first={params.entry === 'wallet'} />;
+  const header = <SendHeader title={t('fx.receive.title')} first={params.entry === 'wallet'} />;
   const foreign = (accounts.data?.data ?? []).filter((a) => a.currency !== 'NGN');
   const wallet = foreign.find((a) => a.currency === currency) ?? foreign[0];
 
   if (accounts.isError) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <ErrorState title="We couldn't load your wallets" onRetry={() => accounts.refetch()} />
+        <ErrorState title={t('common.walletsFailed')} onRetry={() => accounts.refetch()} />
       </Screen>
     );
   }
@@ -61,7 +63,7 @@ export function ReceiveScreen() {
   if (!accounts.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <SkeletonGroup accessibilityLabel="Loading your wallets">
+        <SkeletonGroup accessibilityLabel={t('common.loadingWallets')}>
           <Skeleton height={40} />
           <Skeleton height={180} />
           <Skeleton height={220} />
@@ -75,9 +77,9 @@ export function ReceiveScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={Globe}
-          title="Open a foreign wallet"
-          message="A USD, GBP or EUR wallet comes with its own local details, so people abroad can pay you like any local account."
-          actionLabel="Add a wallet"
+          title={t('fx.receive.openForeign')}
+          message={t('fx.receive.openForeignMessage')}
+          actionLabel={t('common.addWallet')}
           onAction={() => setAdding(true)}
         />
         {adding && (
@@ -107,7 +109,7 @@ export function ReceiveScreen() {
       await Share.share({ message: shareMessage(details, info.name) });
     } catch {
       toast.show({
-        message: "Sharing isn't available here. Copy the details instead.",
+        message: t('accounts.details.shareFailed'),
         tone: 'error',
       });
     }
@@ -130,27 +132,27 @@ export function ReceiveScreen() {
 
       <View style={[styles.row, { gap: spacing[2] }]}>
         <Text color="textMuted" style={styles.flex}>
-          Your {info.name} details. People pay them from their own bank, like any local account.
+          {t('fx.receive.intro', { name: info.name })}
         </Text>
-        {details.demo && <Badge label="Demo details" tone="warning" />}
+        {details.demo && <Badge label={t('accounts.details.demoBadge')} tone="warning" />}
       </View>
       <ReceivingDetailsCard details={details} />
-      <Button label="Share details" icon={Share2} onPress={() => void share()} />
+      <Button label={t('common.shareDetails')} icon={Share2} onPress={() => void share()} />
 
       {isForeignScheme(details.scheme) && (
         <>
-          <SectionHeader title="How it works" />
+          <SectionHeader title={t('fx.receive.how')} />
           <ReceiveGuideCard currency={wallet.currency} guide={RECEIVE_GUIDES[details.scheme]} />
         </>
       )}
 
-      <SectionHeader title="Money in" />
+      <SectionHeader title={t('fx.receive.moneyIn')} />
       <RecentInbound account={wallet} />
       {env.apiMode === 'mock' && <SimulateInbound account={wallet} />}
 
       {params.entry === 'wallet' && (
         <Button
-          label={`Convert ${wallet.currency} to naira`}
+          label={t('fx.convertToNaira', { currency: wallet.currency })}
           icon={ArrowLeftRight}
           variant="ghost"
           onPress={() =>

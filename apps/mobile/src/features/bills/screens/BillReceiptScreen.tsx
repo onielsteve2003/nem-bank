@@ -23,40 +23,47 @@ import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { categoryMeta, CUSTOMER_LABEL, shortDate } from '../bills';
+import { useTranslation } from 'react-i18next';
+import i18n, { localized } from '@/lib/i18n';
 
 type Status = Schema<'BillPayment'>['status'];
 
-const HEADLINE: Record<Status, string> = {
-  completed: 'Payment successful',
-  processing: 'Payment processing',
-  failed: 'Payment failed',
-  reversed: 'Payment reversed',
-};
+const HEADLINE = localized<Status>({
+  completed: 'bills.receipt.headline.completed',
+  processing: 'bills.receipt.headline.processing',
+  failed: 'bills.receipt.headline.failed',
+  reversed: 'bills.receipt.headline.reversed',
+});
 
 /** The text shared with whoever will load the meter. */
 export const tokenMessage = (p: Schema<'BillPayment'>) =>
-  `${p.biller_name} token for meter ${p.customer_id}: ${p.token}` +
-  (p.units ? ` (${p.units})` : '') +
-  `. Ref ${p.reference}`;
+  i18n.t('bills.receipt.tokenMessage', {
+    biller: p.biller_name,
+    meter: p.customer_id,
+    token: p.token,
+  }) +
+  (p.units ? i18n.t('bills.receipt.tokenUnits', { units: p.units }) : '') +
+  i18n.t('bills.receipt.tokenRef', { reference: p.reference });
 
 /** What a bill payment bought, for whom, and how it went (BILL-1, BILL-2). */
 export function BillReceiptScreen({ id }: { id: string }) {
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const payment = useRepoQuery('bills', 'getPayment', { path: { payment_id: id } });
   const p = payment.data;
 
   return (
     <Screen
-      header={<SendHeader title="Receipt" />}
+      header={<SendHeader title={t('receipt.title')} />}
       edges={['top', 'bottom']}
-      footer={<Button label="Done" onPress={() => router.dismissTo('/bills')} />}
+      footer={<Button label={t('common.done')} onPress={() => router.dismissTo('/bills')} />}
     >
       {payment.isError ? (
-        <ErrorState title="We couldn't load this payment" onRetry={() => payment.refetch()} />
+        <ErrorState title={t('bills.receipt.failed')} onRetry={() => payment.refetch()} />
       ) : !p ? (
-        <SkeletonGroup accessibilityLabel="Loading receipt">
+        <SkeletonGroup accessibilityLabel={t('receipt.loading')}>
           <Skeleton height={120} />
           <Skeleton height={180} />
         </SkeletonGroup>
@@ -92,28 +99,31 @@ export function BillReceiptScreen({ id }: { id: string }) {
               ]}
             >
               <Text variant="caption" color="textMuted">
-                Your token{p.units ? ` · ${p.units}` : ''}
+                {t('bills.receipt.token')}
+                {p.units ? ` · ${p.units}` : ''}
               </Text>
               <Text
                 variant="h2"
                 selectable
-                accessibilityLabel={`Token ${p.token.split('-').join(' ')}`}
+                accessibilityLabel={t('bills.receipt.tokenLabel', {
+                  token: p.token.split('-').join(' '),
+                })}
               >
                 {p.token}
               </Text>
               <View style={[styles.row, { gap: spacing[2] }]}>
                 <Button
-                  label="Copy"
+                  label={t('common.copy')}
                   variant="secondary"
                   size="sm"
                   icon={Copy}
                   onPress={async () => {
                     await Clipboard.setStringAsync(p.token!.replaceAll('-', ''));
-                    toast.show({ message: 'Token copied', tone: 'success' });
+                    toast.show({ message: t('bills.receipt.tokenCopied'), tone: 'success' });
                   }}
                 />
                 <Button
-                  label="Share"
+                  label={t('common.share')}
                   variant="secondary"
                   size="sm"
                   icon={Share2}
@@ -121,7 +131,7 @@ export function BillReceiptScreen({ id }: { id: string }) {
                 />
               </View>
               <Text variant="caption" color="textMuted">
-                Type the 20 digits into the meter keypad to load the units.
+                {t('bills.receipt.keypad')}
               </Text>
             </View>
           )}
@@ -132,8 +142,8 @@ export function BillReceiptScreen({ id }: { id: string }) {
               subtitle={p.product_name ?? categoryMeta(p.category).label}
             />
             <ListItem title={CUSTOMER_LABEL[p.category]} subtitle={p.customer_id} />
-            <ListItem title="Reference" subtitle={p.reference} />
-            <ListItem title="Date" subtitle={shortDate(p.created_at)} />
+            <ListItem title={t('common.reference')} subtitle={p.reference} />
+            <ListItem title={t('common.date')} subtitle={shortDate(p.created_at)} />
           </Card>
         </>
       )}

@@ -6,6 +6,7 @@ import { Avatar, Badge, Card, Checkbox, Icon, Text, TONE_PALETTE } from '@/compo
 import { useTheme } from '@/theme';
 
 import { copVerdict } from '../recipient';
+import { useTranslation } from 'react-i18next';
 
 type Payee = Schema<'ResolvedPayee'>;
 
@@ -25,10 +26,11 @@ export function PayeeCard({
   onAcknowledge: (checked: boolean) => void;
 }) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const verdict = payee.name_match ? copVerdict(payee.name_match, payee.name) : null;
   const where =
     payee.kind === 'nem' && payee.nemtag
-      ? `@${payee.nemtag} · Nem user`
+      ? t('transfers.payee.nemUser', { nemtag: payee.nemtag })
       : `${payee.bank_name} · ${payee.account_number}`;
 
   return (
@@ -37,18 +39,23 @@ export function PayeeCard({
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Avatar name={payee.name} size="lg" ring={payee.kind === 'nem'} />
           <View style={styles.flex}>
-            <Text variant="bodyStrong" accessibilityLabel={`Account name ${payee.name}`}>
+            <Text
+              variant="bodyStrong"
+              accessibilityLabel={t('transfers.payee.accountName', { name: payee.name })}
+            >
               {payee.name}
             </Text>
             <Text variant="bodySmall" color="textMuted">
               {where}
             </Text>
           </View>
-          {payee.is_saved_beneficiary && <Badge label="Saved" tone="primary" />}
+          {payee.is_saved_beneficiary && (
+            <Badge label={t('transfers.payee.saved')} tone="primary" />
+          )}
         </View>
         {payee.kind === 'nem' && (
           <Text variant="bodySmall" color="textMuted">
-            Arrives instantly. No fee between Nem users.
+            {t('transfers.payee.instant')}
           </Text>
         )}
         {verdict && (
@@ -80,7 +87,7 @@ export function PayeeCard({
         )}
         {verdict?.needsAcknowledgement && (
           <Checkbox
-            label={`I have checked, and I still want to pay ${payee.name}`}
+            label={t('transfers.payee.acknowledge', { name: payee.name })}
             checked={acknowledged}
             onChange={onAcknowledge}
           />

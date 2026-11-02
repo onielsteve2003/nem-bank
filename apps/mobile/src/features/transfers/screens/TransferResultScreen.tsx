@@ -43,6 +43,8 @@ import {
   sendErrorMessage,
   type Outcome,
 } from '../confirm';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 type Transfer = Schema<'Transfer'>;
 
@@ -51,61 +53,62 @@ const timeOf = (iso: string) =>
 
 const HEADLINE: Record<
   Outcome,
-  { icon: LucideIcon; color: TextColor; title: string; message: (t: Transfer) => string }
+  { icon: LucideIcon; color: TextColor; message: (t: Transfer) => string }
 > = {
   sent: {
     icon: CircleCheck,
     color: 'success',
-    title: 'Sent',
-    message: (t) => `${t.recipient.name} has it now.`,
+    message: (t) => i18n.t('transfers.result.sent.message', { name: t.recipient.name }),
   },
   processing: {
     icon: Send,
     color: 'info',
-    title: 'On its way',
-    message: (t) => `${t.recipient.bank_name} usually credits ${t.recipient.name} within minutes.`,
+    message: (t) =>
+      i18n.t('transfers.result.processing.message', {
+        bank: t.recipient.bank_name,
+        name: t.recipient.name,
+      }),
   },
   step_up: {
     icon: ShieldQuestion,
     color: 'warning',
-    title: 'Confirm it is you',
-    message: () => 'This payment waits until you pass one more check. Nothing has gone yet.',
+    message: () => i18n.t('transfers.result.step_up.message'),
   },
   delayed: {
     icon: Clock,
     color: 'warning',
-    title: 'Scheduled for safety',
     message: (t) =>
-      `First large payment to someone new, so it goes at ${
-        t.release_at ? timeOf(t.release_at) : 'the end of the wait'
-      }. Send it now with one more check, or cancel it before then.`,
+      i18n.t('transfers.result.delayed.message', {
+        time: t.release_at ? timeOf(t.release_at) : i18n.t('transfers.result.delayed.endOfWait'),
+      }),
   },
   held: {
     icon: ShieldAlert,
     color: 'warning',
-    title: 'Held for a quick review',
-    message: () =>
-      'A person at Nem checks it first. The money is put aside, not sent, and we tell you as soon as it is decided.',
+    message: () => i18n.t('transfers.result.held.message'),
   },
   reversed: {
     icon: Undo2,
     color: 'info',
-    title: 'Money returned',
-    message: (t) =>
-      `${t.recipient.bank_name} did not accept it, so we sent ${
-        t.recipient.name.split(' ')[0]
-      }'s payment back to your balance${
-        t.reversal ? ` at ${timeOf(t.reversal.reversed_at)}` : ''
-      }. You were not charged.`,
+    message: (t) => {
+      const values = { bank: t.recipient.bank_name, name: t.recipient.name.split(' ')[0] };
+      return t.reversal
+        ? i18n.t('transfers.result.reversed.messageAt', {
+            ...values,
+            time: timeOf(t.reversal.reversed_at),
+          })
+        : i18n.t('transfers.result.reversed.message', values);
+    },
   },
   stopped: {
     icon: CircleX,
     color: 'danger',
-    title: 'Not sent',
     message: (t) =>
-      t.status === 'cancelled'
-        ? 'You cancelled it. The money is back in your available balance.'
-        : 'This payment did not go through. Any money held for it is back in your balance.',
+      i18n.t(
+        t.status === 'cancelled'
+          ? 'transfers.result.stopped.cancelled'
+          : 'transfers.result.stopped.failed',
+      ),
   },
 };
 
@@ -117,8 +120,8 @@ const POLL_WAITING_MS = 15_000;
 function nextStep(t: Transfer): string | undefined {
   if (!isSettling(t.status)) return undefined;
   return t.rail === 'internal'
-    ? `Credited to ${t.recipient.name}`
-    : `Received by ${t.recipient.bank_name}`;
+    ? i18n.t('transfers.result.credited', { name: t.recipient.name })
+    : i18n.t('transfers.result.receivedBy', { bank: t.recipient.bank_name });
 }
 
 /**
@@ -133,6 +136,7 @@ export function TransferResultScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [checking, setChecking] = useState(false);
   const [cancelError, setCancelError] = useState<string>();
+  const { t: tr } = useTranslation();
   const transfer = useRepoQuery(
     'transfers',
     'get',
@@ -164,9 +168,9 @@ export function TransferResultScreen() {
     return (
       <Screen edges={['top', 'bottom']}>
         {transfer.isError ? (
-          <ErrorState title="We couldn't load this payment" onRetry={() => transfer.refetch()} />
+          <ErrorState title={tr('common.paymentFailed')} onRetry={() => transfer.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading the payment">
+          <SkeletonGroup accessibilityLabel={tr('transfers.result.loading')}>
             <Skeleton height={64} width={64} />
             <Skeleton height={28} width={200} />
             <Skeleton height={20} />
@@ -202,37 +206,45 @@ export function TransferResultScreen() {
           )}
           {waiting && (
             <Button
-              label={outcome === 'delayed' ? 'Send now' : 'Confirm it is me'}
+              label={
+                outcome === 'delayed'
+                  ? tr('transfers.holdScreen.sendNow')
+                  : tr('transfers.holdScreen.confirmMe')
+              }
               onPress={() => setChecking(true)}
             />
           )}
           {canCancel(t.status) && (
             <Button
-              label="Cancel payment"
+              label={tr('transfers.holdScreen.cancel')}
               variant="secondary"
               loading={cancel.isPending}
               onPress={cancelIt}
             />
           )}
-          <Button label="Done" variant={waiting ? 'ghost' : 'primary'} onPress={done} />
+          <Button
+            label={tr('common.done')}
+            variant={waiting ? 'ghost' : 'primary'}
+            onPress={done}
+          />
         </View>
       }
     >
       <View style={[styles.center, { gap: spacing[3], paddingTop: spacing[8] }]}>
         <Icon icon={head.icon} size="xl" color={head.color} />
         <Text variant="title" accessibilityRole="header" accessibilityLiveRegion="polite">
-          {head.title}
+          {tr(`transfers.result.${outcome}.title`)}
         </Text>
-        <MoneyText value={fromApiMoney(t.amount)} variant="display" label="Amount" />
+        <MoneyText value={fromApiMoney(t.amount)} variant="display" label={tr('common.amount')} />
         <Text color="textMuted" style={styles.text}>
-          to {t.recipient.name} · {t.recipient.bank_name}
+          {tr('transfers.result.to', { name: t.recipient.name, bank: t.recipient.bank_name })}
         </Text>
         <Text style={styles.text}>{head.message(t)}</Text>
       </View>
 
       <Card>
         <Text variant="label" color="textMuted" accessibilityRole="header">
-          Status
+          {tr('common.status')}
         </Text>
         <View style={{ marginTop: spacing[3] }}>
           <StatusTimeline steps={t.timeline} formatAt={formatDateTime} next={nextStep(t)} />
@@ -242,7 +254,11 @@ export function TransferResultScreen() {
       {reasons.length > 0 && outcome !== 'sent' && outcome !== 'processing' && (
         <RiskReasonList
           reasons={reasons}
-          title={outcome === 'held' ? 'Why we are checking' : 'Why we are asking'}
+          title={
+            outcome === 'held'
+              ? tr('transfers.result.whyChecking')
+              : tr('transfers.result.whyAsking')
+          }
         />
       )}
       {HOLD_TITLE[outcome] && (
@@ -255,7 +271,7 @@ export function TransferResultScreen() {
       )}
 
       <Text variant="caption" color="textMuted" style={styles.text}>
-        Reference {t.reference}
+        {tr('transfers.result.reference', { reference: t.reference })}
       </Text>
 
       <StepUpSheet

@@ -35,6 +35,7 @@ import {
   requestSubtitle,
   sortRequests,
 } from '../requests';
+import { useTranslation } from 'react-i18next';
 
 type MoneyRequest = Schema<'MoneyRequest'>;
 type Tab = 'incoming' | 'outgoing';
@@ -50,6 +51,7 @@ function RequestRow({
   const amount = formatMoney(fromApiMoney(request.amount));
   const subtitle = requestSubtitle(request);
   const status = REQUEST_STATUS[request.status];
+  const { t } = useTranslation();
   return (
     <ListItem
       leading={<Avatar name={other.name} size="md" ring />}
@@ -65,8 +67,8 @@ function RequestRow({
       accessibilityLabel={`${other.name}, ${amount}, ${subtitle}`}
       accessibilityHint={
         request.status === 'pending' && request.direction === 'incoming'
-          ? 'Pay or decline'
-          : 'Shows the request'
+          ? t('transfers.requestsScreen.payOrDecline')
+          : t('transfers.requestsScreen.show')
       }
     />
   );
@@ -85,6 +87,7 @@ export function RequestsScreen() {
   const [chosen, setChosen] = useState<MoneyRequest | null>(null);
   const [paying, setPaying] = useState<MoneyRequest | null>(null);
   const [payError, setPayError] = useState<string>();
+  const { t } = useTranslation();
 
   const incoming = useRepoQuery('moneyRequests', 'list', {
     query: { direction: 'incoming', limit: 50 },
@@ -124,11 +127,11 @@ export function RequestsScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Requests" />}
+      header={<SendHeader title={t('transfers.requestsScreen.title')} />}
       edges={['top', 'bottom']}
       footer={
         <Button
-          label="Request money"
+          label={t('transfers.requestMoney.title')}
           icon={HandCoins}
           variant="secondary"
           onPress={() => router.push('/send/request')}
@@ -137,13 +140,17 @@ export function RequestsScreen() {
     >
       <View accessibilityRole="tablist" style={[styles.row, { gap: spacing[2] }]}>
         <Chip
-          label={toPay > 0 ? `To pay (${toPay})` : 'To pay'}
+          label={
+            toPay > 0
+              ? t('transfers.requestsScreen.toPayCount', { count: toPay })
+              : t('transfers.requestsScreen.toPay')
+          }
           icon={Inbox}
           selected={tab === 'incoming'}
           onPress={() => setTab('incoming')}
         />
         <Chip
-          label="Sent"
+          label={t('transfers.requestsScreen.sent')}
           icon={Send}
           selected={tab === 'outgoing'}
           onPress={() => setTab('outgoing')}
@@ -155,8 +162,7 @@ export function RequestsScreen() {
           <View style={[styles.row, { gap: spacing[3] }]}>
             <Icon icon={CircleCheck} color="success" />
             <Text style={styles.flex} accessibilityLiveRegion="polite">
-              Request sent. {justSent.payer.name.split(' ')[0]} can pay or decline it from their
-              requests.
+              {t('transfers.requestsScreen.justSent', { name: justSent.payer.name.split(' ')[0] })}
             </Text>
           </View>
         </Card>
@@ -167,15 +173,15 @@ export function RequestsScreen() {
           tab === 'incoming' ? (
             <EmptyState
               icon={Inbox}
-              title="Nothing to pay"
-              message="When a Nem user asks you for money, it shows up here."
+              title={t('transfers.requestsScreen.nothing')}
+              message={t('transfers.requestsScreen.nothingMessage')}
             />
           ) : (
             <EmptyState
               icon={HandCoins}
-              title="No requests yet"
-              message="Ask a friend to pay you back for suya, fuel or rent."
-              actionLabel="Request money"
+              title={t('transfers.requestsScreen.none')}
+              message={t('transfers.requestsScreen.noneMessage')}
+              actionLabel={t('transfers.requestMoney.title')}
               onAction={() => router.push('/send/request')}
             />
           )
@@ -187,9 +193,12 @@ export function RequestsScreen() {
           </Card>
         )
       ) : current.isError ? (
-        <ErrorState title="We couldn't load your requests" onRetry={() => current.refetch()} />
+        <ErrorState
+          title={t('transfers.requestsScreen.failed')}
+          onRetry={() => current.refetch()}
+        />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading requests">
+        <SkeletonGroup accessibilityLabel={t('transfers.requestsScreen.loading')}>
           <View style={{ gap: spacing[2] }}>
             <SkeletonListItem />
             <SkeletonListItem />
@@ -215,7 +224,10 @@ export function RequestsScreen() {
         onClose={() => setPaying(null)}
         subtitle={
           paying
-            ? `Pay ${formatMoney(fromApiMoney(paying.amount))} to ${paying.requester.name.split(' ')[0]}`
+            ? t('common.payAmountTo', {
+                amount: formatMoney(fromApiMoney(paying.amount)),
+                name: paying.requester.name.split(' ')[0],
+              })
             : ''
         }
         onApproved={onApproved}

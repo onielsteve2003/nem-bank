@@ -24,7 +24,7 @@ import { useTheme } from '@/theme';
 import {
   abroadFee,
   accountLabel,
-  DELIVERY_ESTIMATE,
+  deliveryEstimate,
   DESTINATIONS,
   PURPOSES,
   receiveEstimate,
@@ -33,6 +33,7 @@ import {
 } from '../abroad';
 import { typedNaira } from '../amount';
 import { SendHeader } from '../components/SendHeader';
+import { useTranslation } from 'react-i18next';
 
 type Purpose = (typeof PURPOSES)[number]['value'];
 
@@ -61,6 +62,7 @@ export function SendAbroadScreen() {
   const [purpose, setPurpose] = useState<Purpose | null>(null);
   const [noticeOpen, setNoticeOpen] = useState(false);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
 
   const rates = useRepoQuery('fx', 'listRates', undefined, { staleTime: 60_000 });
   const accounts = useRepoQuery('accounts', 'list');
@@ -106,7 +108,13 @@ export function SendAbroadScreen() {
         onError: (e) => {
           send.resetIntent();
           if (isApiError(e) && e.code === 'paid_feature_required') setNoticeOpen(true);
-          else setError(isApiError(e) ? (e.problem.detail ?? e.problem.title) : 'Try again.');
+          else {
+            setError(
+              isApiError(e)
+                ? (e.problem.detail ?? e.problem.title)
+                : t('transfers.abroadScreen.tryAgain'),
+            );
+          }
         },
       },
     );
@@ -114,7 +122,7 @@ export function SendAbroadScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Send abroad" />}
+      header={<SendHeader title={t('transfers.abroadScreen.title')} />}
       edges={['top', 'bottom']}
       footer={
         <View style={{ gap: spacing[2] }}>
@@ -124,7 +132,11 @@ export function SendAbroadScreen() {
             </Text>
           )}
           <Button
-            label={amount ? `Send ${formatMoney(amount)}` : 'Continue'}
+            label={
+              amount
+                ? t('transfers.abroadScreen.sendAmount', { amount: formatMoney(amount) })
+                : t('common.continue')
+            }
             icon={Globe}
             disabled={!complete}
             loading={send.isPending}
@@ -137,16 +149,15 @@ export function SendAbroadScreen() {
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Icon icon={Info} color="warning" />
           <Text variant="bodySmall" style={styles.flex}>
-            Sending abroad needs a licensed remittance partner. Everything here works as it will
-            then; the last step shows what&apos;s needed.
+            {t('transfers.abroadScreen.partnerNote')}
           </Text>
-          <Badge label="Partner needed" tone="warning" />
+          <Badge label={t('transfers.abroadScreen.partnerNeeded')} tone="warning" />
         </View>
       </Card>
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          Sending to
+          {t('transfers.abroadScreen.sendingTo')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
           {DESTINATIONS.map((d) => (
@@ -164,28 +175,43 @@ export function SendAbroadScreen() {
         </View>
       </View>
 
-      <AmountInput currency="NGN" label="You send" value={typed} onChangeValue={setTyped} />
+      <AmountInput
+        currency="NGN"
+        label={t('transfers.abroadScreen.youSend')}
+        value={typed}
+        onChangeValue={setTyped}
+      />
 
       <Card>
         <View style={{ gap: spacing[2] }}>
           <Row
-            label="Rate"
-            value={perUnit ? `${currency.symbol}1 = ${formatMoney(perUnit)}` : 'Loading…'}
+            label={t('transfers.abroadScreen.rate')}
+            value={
+              perUnit
+                ? t('transfers.abroadScreen.rateValue', {
+                    symbol: currency.symbol,
+                    amount: formatMoney(perUnit),
+                  })
+                : t('common.loadingDots')
+            }
           />
-          <Row label="Partner fee (estimate)" value={fee ? formatMoney(fee) : '1%, min ₦2,000'} />
+          <Row
+            label={t('transfers.abroadScreen.fee')}
+            value={fee ? formatMoney(fee) : t('transfers.abroadScreen.feeHint')}
+          />
           {amount && fee && (
-            <Row label="Total from your account" value={formatMoney(add(amount, fee))} />
+            <Row label={t('transfers.abroadScreen.total')} value={formatMoney(add(amount, fee))} />
           )}
           <Divider />
           <Row
-            label="They get about"
+            label={t('transfers.abroadScreen.theyGet')}
             value={gets ? formatMoney(gets) : `${currency.symbol}0.00`}
             strong
           />
-          <Row label="Arrives in" value={DELIVERY_ESTIMATE} />
+          <Row label={t('transfers.abroadScreen.arrives')} value={deliveryEstimate()} />
           {rates.data?.indicative && (
             <Text variant="bodySmall" color="textMuted">
-              Indicative rate. The partner fixes the exact rate when you send.
+              {t('transfers.abroadScreen.indicative')}
             </Text>
           )}
         </View>
@@ -193,10 +219,10 @@ export function SendAbroadScreen() {
 
       <View style={{ gap: spacing[3] }}>
         <Text variant="label" color="textMuted">
-          Who&apos;s receiving it
+          {t('transfers.abroadScreen.receiving')}
         </Text>
         <TextField
-          label="Full name"
+          label={t('transfers.abroadScreen.fullName')}
           placeholder="Chiamaka Okafor"
           value={name}
           onChangeText={setName}
@@ -213,7 +239,7 @@ export function SendAbroadScreen() {
           error={problems.account}
         />
         <TextField
-          label="SWIFT / BIC"
+          label={t('transfers.abroadScreen.bic')}
           optional={!destination.needsBic}
           placeholder="CHASUS33"
           value={bic}
@@ -221,13 +247,13 @@ export function SendAbroadScreen() {
           autoCapitalize="characters"
           autoCorrect={false}
           error={problems.bic}
-          help={destination.needsBic ? 'US banks need one for international transfers.' : undefined}
+          help={destination.needsBic ? t('transfers.abroadScreen.bicHelp') : undefined}
         />
       </View>
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          What&apos;s it for?
+          {t('transfers.abroadScreen.whatFor')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
           {PURPOSES.map((p) => (
@@ -240,7 +266,7 @@ export function SendAbroadScreen() {
           ))}
         </View>
         <Text variant="bodySmall" color="textMuted">
-          Nigerian rules ask for a reason on every transfer abroad.
+          {t('transfers.abroadScreen.reasonRule')}
         </Text>
       </View>
 

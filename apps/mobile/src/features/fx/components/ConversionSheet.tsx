@@ -10,6 +10,7 @@ import { useTheme } from '@/theme';
 
 import { conversionTitle } from '../history';
 import { rateLine } from '../quote';
+import { useTranslation } from 'react-i18next';
 
 const fullDate = new Intl.DateTimeFormat('en-NG', {
   day: 'numeric',
@@ -26,6 +27,7 @@ export type Props = { conversion: Schema<'FxConversion'> | null; onClose: () => 
 export function ConversionSheet({ conversion: c, onClose }: Props) {
   const router = useRouter();
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   const open = (id: string) => {
     onClose();
     router.push(`/transactions/${id}`);
@@ -43,48 +45,56 @@ export function ConversionSheet({ conversion: c, onClose }: Props) {
               gap: spacing[3],
             }}
           >
-            <Row label="Converted">
-              <MoneyText value={fromApiMoney(c.sell)} variant="bodyStrong" label="Converted" />
+            <Row label={t('fx.converted')}>
+              <MoneyText
+                value={fromApiMoney(c.sell)}
+                variant="bodyStrong"
+                label={t('fx.converted')}
+              />
             </Row>
-            <Row label="Received">
+            <Row label={t('fx.received')}>
               <MoneyText
                 value={fromApiMoney(c.buy)}
                 variant="bodyStrong"
                 color="success"
-                label="Received"
+                label={t('fx.received')}
               />
             </Row>
-            <Row label="Rate">
+            <Row label={t('fx.rate')}>
               <Text variant="bodyStrong">{rateLine(c.rate, c.sell.currency, c.buy.currency)}</Text>
             </Row>
-            <Row label="Fee">
+            <Row label={t('common.fee')}>
               {isZero(fromApiMoney(c.fee)) ? (
-                <Text variant="bodyStrong">Free</Text>
+                <Text variant="bodyStrong">{t('common.free')}</Text>
               ) : (
-                <MoneyText value={fromApiMoney(c.fee)} variant="bodyStrong" label="Fee" />
+                <MoneyText
+                  value={fromApiMoney(c.fee)}
+                  variant="bodyStrong"
+                  label={t('common.fee')}
+                />
               )}
             </Row>
-            <Row label="Status">
+            <Row label={t('common.status')}>
               <Text variant="bodyStrong" color={c.status === 'failed' ? 'danger' : 'text'}>
-                {c.status === 'failed' ? 'Failed' : 'Completed'}
+                {c.status === 'failed' ? t('common.failed') : t('common.completed')}
               </Text>
             </Row>
-            <Row label="When">
+            <Row label={t('fx.when')}>
               <Text variant="bodyStrong">{fullDate.format(new Date(c.created_at))}</Text>
             </Row>
           </View>
           <Text variant="caption" color="textMuted">
-            The spread is built into the rate; it was shown before you confirmed.
+            {t('fx.spreadNote')}
           </Text>
           <View style={{ gap: spacing[2] }}>
             <Button
-              label={`${c.sell.currency} wallet entry`}
+              label={t('fx.walletEntry', { currency: c.sell.currency })}
               icon={ArrowUpRight}
               variant="secondary"
               onPress={() => open(c.debit_transaction_id)}
             />
             <Button
-              label={`${c.buy.currency} wallet entry`}
+              label={t('fx.walletEntry', { currency: c.buy.currency })}
               icon={ArrowDownLeft}
               variant="secondary"
               onPress={() => open(c.credit_transaction_id)}

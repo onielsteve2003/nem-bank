@@ -10,6 +10,7 @@ import { authenticateWithBiometrics, getBiometrics, NO_BIOMETRICS } from '@/lib/
 import { getDeviceKeyInfo } from '@/lib/deviceKey';
 import { useRepoMutation } from '@/lib/query';
 import { useSessionStore } from '@/stores';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   open: boolean;
@@ -50,13 +51,16 @@ export function ConfirmSheet({
   const [biometrics, setBiometrics] = useState(NO_BIOMETRICS);
   const [pinError, setPinError] = useState<string>();
   const prompted = useRef(false);
+  const { t } = useTranslation();
 
   const tryBiometrics = useCallback(
     async (label: string) => {
       if (approveWithBiometrics) await approveWithBiometrics(label);
-      else if (await authenticateWithBiometrics(`Approve with ${label}`)) await onApproved();
+      else if (await authenticateWithBiometrics(t('transfers.confirm.biometrics', { label }))) {
+        await onApproved();
+      }
     },
-    [onApproved, approveWithBiometrics],
+    [onApproved, approveWithBiometrics, t],
   );
 
   useEffect(() => {
@@ -91,9 +95,7 @@ export function ConfirmSheet({
       }
     } catch (e) {
       setPinError(
-        isApiError(e) && e.problem.code === 'offline'
-          ? "You're offline, so your PIN can't be checked. Reconnect and try again."
-          : "We couldn't check your PIN. Try again.",
+        isApiError(e) && e.problem.code === 'offline' ? t('lock.offline') : t('lock.checkFailed'),
       );
       return false;
     }
@@ -102,18 +104,18 @@ export function ConfirmSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Confirm it's you">
+    <BottomSheet open={open} onClose={onClose} title={t('transfers.confirm.title')}>
       <View style={styles.pad}>
         <PinPad
-          title="Enter your PIN"
-          subtitle={isDemo ? `${subtitle}. Demo PIN is ${DEMO_PIN}` : subtitle}
+          title={t('transfers.confirm.pin')}
+          subtitle={isDemo ? t('transfers.confirm.demo', { subtitle, pin: DEMO_PIN }) : subtitle}
           error={pinError ?? error}
           onComplete={onComplete}
           accessory={
             biometrics.available
               ? {
                   icon: biometrics.label === 'Face ID' ? ScanFace : Fingerprint,
-                  accessibilityLabel: `Use ${biometrics.label}`,
+                  accessibilityLabel: t('lock.useBiometrics', { label: biometrics.label }),
                   onPress: () => void tryBiometrics(biometrics.label),
                 }
               : undefined

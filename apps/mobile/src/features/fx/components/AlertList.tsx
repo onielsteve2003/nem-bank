@@ -19,6 +19,7 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { alertTitle } from '../rates';
+import { useTranslation } from 'react-i18next';
 
 type Alert = Schema<'FxAlert'>;
 
@@ -30,16 +31,17 @@ export type Props = {
 export function AlertList({ onCreate }: Props) {
   const { spacing } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const alerts = useRepoQuery('fx', 'listAlerts');
   const remove = useRepoMutation('fx', 'deleteAlert', { invalidates: [['fx', 'listAlerts']] });
   const [deleting, setDeleting] = useState<Alert | null>(null);
 
   if (alerts.isError) {
-    return <ErrorState title="We couldn't load your alerts" onRetry={() => alerts.refetch()} />;
+    return <ErrorState title={t('fx.alerts.failed')} onRetry={() => alerts.refetch()} />;
   }
   if (!alerts.data) {
     return (
-      <SkeletonGroup accessibilityLabel="Loading your alerts">
+      <SkeletonGroup accessibilityLabel={t('fx.alerts.loading')}>
         <Skeleton height={56} />
         <Skeleton height={56} />
       </SkeletonGroup>
@@ -49,9 +51,9 @@ export function AlertList({ onCreate }: Props) {
     return (
       <EmptyState
         icon={BellRing}
-        title="No rate alerts yet"
-        message="Get a notification when a rate goes above or below a number you pick."
-        actionLabel="Create an alert"
+        title={t('fx.alerts.none')}
+        message={t('fx.alerts.noneMessage')}
+        actionLabel={t('fx.alerts.create')}
         onAction={onCreate}
       />
     );
@@ -65,9 +67,9 @@ export function AlertList({ onCreate }: Props) {
     if (!deleting) return;
     try {
       await remove.mutateAsync({ path: { alert_id: deleting.id } });
-      toast.show({ message: 'Alert deleted', tone: 'success' });
+      toast.show({ message: t('fx.alerts.deleted'), tone: 'success' });
     } catch {
-      toast.show({ message: "We couldn't delete it. Try again.", tone: 'error' });
+      toast.show({ message: t('common.deleteFailed'), tone: 'error' });
     }
     setDeleting(null);
   };
@@ -81,20 +83,20 @@ export function AlertList({ onCreate }: Props) {
           title={alertTitle(alert)}
           subtitle={
             alert.status === 'triggered' && alert.triggered_at
-              ? `Reached ${formatDateTime(alert.triggered_at)}`
-              : `Set ${formatDateTime(alert.created_at)}`
+              ? t('fx.alerts.reached', { time: formatDateTime(alert.triggered_at) })
+              : t('fx.alerts.set', { time: formatDateTime(alert.created_at) })
           }
           trailing={
             <View style={{ flexDirection: 'row', alignItems: 'center', gap: spacing[1] }}>
               {alert.status === 'active' ? (
-                <Badge label="Watching" tone="info" />
+                <Badge label={t('fx.alerts.watching')} tone="info" />
               ) : (
-                <Badge label="Reached" tone="success" />
+                <Badge label={t('fx.alerts.reachedBadge')} tone="success" />
               )}
               <IconButton
                 icon={Trash2}
                 variant="ghost"
-                accessibilityLabel={`Delete alert: ${alertTitle(alert)}`}
+                accessibilityLabel={t('fx.alerts.deleteLabel', { alert: alertTitle(alert) })}
                 onPress={() => setDeleting(alert)}
               />
             </View>
@@ -103,9 +105,9 @@ export function AlertList({ onCreate }: Props) {
       ))}
       <Dialog
         open={deleting !== null}
-        title="Delete this alert?"
+        title={t('fx.alerts.deleteTitle')}
         message={deleting ? alertTitle(deleting) : undefined}
-        confirmLabel="Delete"
+        confirmLabel={t('common.delete')}
         destructive
         loading={remove.isPending}
         onConfirm={confirmDelete}

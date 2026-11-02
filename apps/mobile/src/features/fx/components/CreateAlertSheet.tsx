@@ -8,6 +8,7 @@ import { useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { alertTargetProblem, nairaRate, pairLabel } from '../rates';
+import { useTranslation } from 'react-i18next';
 
 type Direction = Schema<'FxAlert'>['direction'];
 
@@ -23,6 +24,7 @@ export type Props = {
 /** "Tell me when USD/NGN goes above ₦1,650" (FX-2). */
 export function CreateAlertSheet({ open, pair, midRate, onClose, onCreated }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [direction, setDirection] = useState<Direction>('above');
   const [typed, setTyped] = useState('');
   const [touched, setTouched] = useState(false);
@@ -45,27 +47,29 @@ export function CreateAlertSheet({ open, pair, midRate, onClose, onCreated }: Pr
   };
 
   return (
-    <BottomSheet open={open} onClose={onClose} title={`Alert me about ${pairLabel(pair)}`}>
+    <BottomSheet
+      open={open}
+      onClose={onClose}
+      title={t('fx.alerts.sheetTitle', { pair: pairLabel(pair) })}
+    >
       <View style={{ gap: spacing[4] }}>
         {midRate && (
-          <Text color="textMuted">
-            It is {nairaRate(pair, midRate)} now. We notify you once when it crosses your rate.
-          </Text>
+          <Text color="textMuted">{t('fx.alerts.now', { rate: nairaRate(pair, midRate) })}</Text>
         )}
         <View style={[styles.row, { gap: spacing[2] }]} accessibilityRole="radiogroup">
           <Chip
-            label="Goes above"
+            label={t('fx.alerts.above')}
             selected={direction === 'above'}
             onPress={() => setDirection('above')}
           />
           <Chip
-            label="Goes below"
+            label={t('fx.alerts.below')}
             selected={direction === 'below'}
             onPress={() => setDirection('below')}
           />
         </View>
         <TextField
-          label="Rate in naira"
+          label={t('fx.alerts.rateLabel')}
           placeholder="1650"
           keyboardType="decimal-pad"
           value={typed}
@@ -79,7 +83,7 @@ export function CreateAlertSheet({ open, pair, midRate, onClose, onCreated }: Pr
           </Text>
         )}
         <Button
-          label="Create alert"
+          label={t('fx.alerts.createButton')}
           icon={BellPlus}
           loading={create.isPending}
           disabled={typed === '' || (touched && problem !== null)}

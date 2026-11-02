@@ -28,6 +28,7 @@ import { useTheme } from '@/theme';
 import { LinkSheet } from '../components/LinkSheet';
 import { SendHeader } from '../components/SendHeader';
 import { LINK_STATUS, linkSubtitle } from '../paymentLinks';
+import { useTranslation } from 'react-i18next';
 
 type PaymentLink = Schema<'PaymentLink'>;
 
@@ -37,6 +38,7 @@ const DEMO_FRIEND_LINK = 'https://nem-bank-fodx.vercel.app/pay/emeka-birthday';
 function LinkRow({ link, onPress }: { link: PaymentLink; onPress: (l: PaymentLink) => void }) {
   const subtitle = linkSubtitle(link);
   const status = LINK_STATUS[link.status];
+  const { t } = useTranslation();
   return (
     <ListItem
       leading={<Icon icon={Link2} color={link.status === 'active' ? 'primary' : 'textMuted'} />}
@@ -47,7 +49,7 @@ function LinkRow({ link, onPress }: { link: PaymentLink; onPress: (l: PaymentLin
       }
       onPress={() => onPress(link)}
       accessibilityLabel={`${link.title}, ${subtitle}, ${status.label}`}
-      accessibilityHint="Shows the link to copy or share"
+      accessibilityHint={t('transfers.linksScreen.showHint')}
     />
   );
 }
@@ -67,6 +69,7 @@ export function PaymentLinksScreen() {
   const [chosen, setChosen] = useState<PaymentLink | null>(null);
   const [pasted, setPasted] = useState('');
   const [pasteError, setPasteError] = useState<string>();
+  const { t } = useTranslation();
 
   // A link just made opens straight away, ready to share; once, not on every refetch.
   const shownCreated = useRef(false);
@@ -83,7 +86,7 @@ export function PaymentLinksScreen() {
     const { href } = resolveDeepLink(value);
     const isPayLink = typeof href === 'object' && href.pathname === '/pay/[slug]';
     if (!isPayLink) {
-      setPasteError("That isn't a Nem pay link.");
+      setPasteError(t('transfers.linksScreen.notPayLink'));
       return;
     }
     setPasteError(undefined);
@@ -95,18 +98,22 @@ export function PaymentLinksScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Payment links" />}
+      header={<SendHeader title={t('transfers.linksScreen.title')} />}
       edges={['top', 'bottom']}
       footer={
-        <Button label="Create a link" icon={Plus} onPress={() => router.push('/send/links/new')} />
+        <Button
+          label={t('transfers.linksScreen.create')}
+          icon={Plus}
+          onPress={() => router.push('/send/links/new')}
+        />
       }
     >
       {list ? (
         list.length === 0 ? (
           <EmptyState
             icon={Link2}
-            title="No links yet"
-            message="Make a link for a party contribution, a sale or rent. Anyone with it can pay you."
+            title={t('transfers.linksScreen.none')}
+            message={t('transfers.linksScreen.noneMessage')}
           />
         ) : (
           <Card padded={false}>
@@ -116,9 +123,9 @@ export function PaymentLinksScreen() {
           </Card>
         )
       ) : links.isError ? (
-        <ErrorState title="We couldn't load your links" onRetry={() => links.refetch()} />
+        <ErrorState title={t('transfers.linksScreen.failed')} onRetry={() => links.refetch()} />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading payment links">
+        <SkeletonGroup accessibilityLabel={t('transfers.linksScreen.loading')}>
           <View style={{ gap: spacing[2] }}>
             <SkeletonListItem />
             <SkeletonListItem />
@@ -128,11 +135,11 @@ export function PaymentLinksScreen() {
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          Got a link from someone?
+          {t('transfers.linksScreen.gotOne')}
         </Text>
         <TextField
-          label="Pay link"
-          placeholder="Paste a Nem pay link"
+          label={t('transfers.linksScreen.payLink')}
+          placeholder={t('transfers.linksScreen.pastePlaceholder')}
           value={pasted}
           onChangeText={(v) => {
             setPasted(v);
@@ -144,7 +151,7 @@ export function PaymentLinksScreen() {
           onSubmitEditing={() => pasted.trim() && open(pasted)}
         />
         <Button
-          label="Open link"
+          label={t('transfers.linksScreen.open')}
           variant="secondary"
           disabled={!pasted.trim()}
           onPress={() => open(pasted)}
@@ -152,9 +159,13 @@ export function PaymentLinksScreen() {
         {isDemo && (
           <View style={[styles.row, { gap: spacing[2] }]}>
             <Text variant="bodySmall" color="textMuted" style={styles.flex}>
-              Demo: try a friend&apos;s link.
+              {t('transfers.linksScreen.demo')}
             </Text>
-            <Chip label="Emeka's birthday" icon={Link2} onPress={() => open(DEMO_FRIEND_LINK)} />
+            <Chip
+              label={t('transfers.linksScreen.emeka')}
+              icon={Link2}
+              onPress={() => open(DEMO_FRIEND_LINK)}
+            />
           </View>
         )}
       </View>

@@ -18,6 +18,7 @@ import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { chartData, nairaRate, pairLabel, RANGES, rateChange } from '../rates';
+import { useTranslation } from 'react-i18next';
 
 type Range = Schema<'FxRateHistory'>['range'];
 
@@ -28,9 +29,9 @@ export type Props = {
 };
 
 const TREND = {
-  up: { icon: TrendingUp, color: 'success', word: 'up' },
-  down: { icon: TrendingDown, color: 'danger', word: 'down' },
-  flat: { icon: Minus, color: 'textMuted', word: 'flat' },
+  up: { icon: TrendingUp, color: 'success' },
+  down: { icon: TrendingDown, color: 'danger' },
+  flat: { icon: Minus, color: 'textMuted' },
 } as const;
 
 /**
@@ -41,6 +42,7 @@ const TREND = {
 export function RateChartCard({ pair, rate }: Props) {
   const { spacing } = useTheme();
   const [range, setRange] = useState<Range>('1W');
+  const { t } = useTranslation();
   const history = useRepoQuery(
     'fx',
     'getRateHistory',
@@ -48,7 +50,7 @@ export function RateChartCard({ pair, rate }: Props) {
     { placeholderData: keepPreviousData },
   );
   const change = history.data ? rateChange(history.data.points) : null;
-  const spoken = RANGES.find((r) => r.range === range)!.spoken;
+  const spoken = t(`fx.rates.spoken.${range}`);
   const trend = change ? TREND[change.direction] : null;
 
   return (
@@ -56,12 +58,15 @@ export function RateChartCard({ pair, rate }: Props) {
       <View style={{ gap: spacing[3] }}>
         <View style={{ gap: spacing[1] }}>
           <Text variant="caption" color="textMuted">
-            {pairLabel(pair)} · mid-market
+            {t('fx.rates.midMarket', { pair: pairLabel(pair) })}
           </Text>
           {rate ? (
             <Text
               variant="display"
-              accessibilityLabel={`${pairLabel(pair)} is ${nairaRate(pair, rate.mid_rate)}`}
+              accessibilityLabel={t('fx.rates.isAt', {
+                pair: pairLabel(pair),
+                rate: nairaRate(pair, rate.mid_rate),
+              })}
             >
               {nairaRate(pair, rate.mid_rate)}
             </Text>
@@ -72,7 +77,10 @@ export function RateChartCard({ pair, rate }: Props) {
             <View
               style={[styles.row, { gap: spacing[1] }]}
               accessible
-              accessibilityLabel={`${trend.word} ${change.label} over the ${spoken}`}
+              accessibilityLabel={t(`fx.rates.trend.${change.direction}`, {
+                change: change.label,
+                period: spoken,
+              })}
             >
               <Icon icon={trend.icon} size="sm" color={trend.color} />
               <Text variant="bodySmall" color={trend.color}>
@@ -88,15 +96,15 @@ export function RateChartCard({ pair, rate }: Props) {
         {history.data ? (
           <View style={{ opacity: history.isPlaceholderData ? 0.5 : 1 }}>
             <LineChart
-              title={`${pairLabel(pair)}, ${spoken}`}
+              title={t('fx.rates.chartTitle', { pair: pairLabel(pair), period: spoken })}
               data={chartData(history.data)}
               formatValue={(v) => `₦${v.toFixed(2)}`}
             />
           </View>
         ) : history.isError ? (
-          <ErrorState title="We couldn't load the chart" onRetry={() => history.refetch()} />
+          <ErrorState title={t('fx.rates.chartFailed')} onRetry={() => history.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading the chart">
+          <SkeletonGroup accessibilityLabel={t('fx.rates.chartLoading')}>
             <Skeleton height={160} />
           </SkeletonGroup>
         )}

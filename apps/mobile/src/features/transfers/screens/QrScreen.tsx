@@ -28,6 +28,7 @@ import { MyQr } from '../components/MyQr';
 import { QrScanner } from '../components/QrScanner';
 import { classifyScan, QR_INVALID } from '../qr';
 import { recipientFromPayee, useSendDraft } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 type Mode = 'scan' | 'mine';
 type Problem = keyof typeof QR_INVALID | 'own';
@@ -42,6 +43,7 @@ export function QrScreen() {
   const router = useRouter();
   const openLink = useOpenLink();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ payload?: string; mode?: string }>();
   const [mode, setMode] = useState<Mode>(params.mode === 'mine' ? 'mine' : 'scan');
   const [decoded, setDecoded] = useState<Schema<'DecodedQr'> | null>(null);
@@ -108,9 +110,9 @@ export function QrScreen() {
   const header = (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <Text variant="title" accessibilityRole="header" style={styles.flex}>
-        {mode === 'scan' ? 'Scan to pay' : 'My QR'}
+        {mode === 'scan' ? t('transfers.qrScreen.scanTitle') : t('transfers.qrScreen.mineTitle')}
       </Text>
-      <IconButton icon={X} accessibilityLabel="Close" variant="ghost" onPress={close} />
+      <IconButton icon={X} accessibilityLabel={t('common.close')} variant="ghost" onPress={close} />
     </View>
   );
 
@@ -121,21 +123,21 @@ export function QrScreen() {
   let scanBody;
   if (busy) {
     scanBody = (
-      <SkeletonGroup accessibilityLabel="Checking the code with Nem">
+      <SkeletonGroup accessibilityLabel={t('transfers.qrScreen.checking')}>
         <SkeletonListItem />
       </SkeletonGroup>
     );
   } else if (problem) {
     const copy =
       problem === 'own'
-        ? { title: 'This is your own code', message: 'Show it to whoever is paying you.' }
+        ? { title: t('transfers.qrScreen.own'), message: t('transfers.qrScreen.ownMessage') }
         : QR_INVALID[problem];
     scanBody = (
       <EmptyState
         icon={problem === 'bad_signature' ? ShieldAlert : QrIcon}
         title={copy.title}
         message={copy.message}
-        actionLabel="Scan again"
+        actionLabel={t('transfers.qrScreen.scanAgain')}
         onAction={reset}
       />
     );
@@ -157,14 +159,18 @@ export function QrScreen() {
         </Card>
         <Text color="textMuted" accessibilityLiveRegion="polite">
           {amount
-            ? `Checked by Nem. ${firstName} is asking for ${formatMoney(amount)}.`
-            : `Checked by Nem. You choose how much to send ${firstName}.`}
+            ? t('transfers.qrScreen.askingFor', { name: firstName, amount: formatMoney(amount) })
+            : t('transfers.qrScreen.youChoose', { name: firstName })}
         </Text>
         <Button
-          label={amount ? `Pay ${formatMoney(amount)}` : `Pay ${firstName}`}
+          label={
+            amount
+              ? t('common.payAmount', { amount: formatMoney(amount) })
+              : t('common.payName', { name: firstName })
+          }
           onPress={() => pay(decoded)}
         />
-        <Button label="Scan again" variant="ghost" onPress={reset} />
+        <Button label={t('transfers.qrScreen.scanAgain')} variant="ghost" onPress={reset} />
       </View>
     );
   } else {
@@ -176,13 +182,13 @@ export function QrScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <View accessibilityRole="tablist" style={[styles.row, { gap: spacing[2] }]}>
           <Chip
-            label="Scan"
+            label={t('transfers.qrScreen.scan')}
             icon={ScanLine}
             selected={mode === 'scan'}
             onPress={() => setMode('scan')}
           />
           <Chip
-            label="My QR"
+            label={t('transfers.qrScreen.mineTitle')}
             icon={QrIcon}
             selected={mode === 'mine'}
             onPress={() => setMode('mine')}

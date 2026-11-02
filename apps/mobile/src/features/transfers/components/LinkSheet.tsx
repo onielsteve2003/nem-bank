@@ -11,6 +11,7 @@ import { useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { LINK_STATUS, linkAmountLabel, linkErrorMessage, linkShareMessage } from '../paymentLinks';
+import { useTranslation } from 'react-i18next';
 
 type PaymentLink = Schema<'PaymentLink'>;
 
@@ -21,6 +22,7 @@ type PaymentLink = Schema<'PaymentLink'>;
 export function LinkSheet({ link, onClose }: { link: PaymentLink; onClose: () => void }) {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const update = useRepoMutation('paymentLinks', 'update', { invalidates: [['paymentLinks']] });
   const [status, setStatus] = useState(link.status);
   const meta = LINK_STATUS[status];
@@ -28,7 +30,7 @@ export function LinkSheet({ link, onClose }: { link: PaymentLink; onClose: () =>
   const copy = async () => {
     await Clipboard.setStringAsync(link.url);
     haptic('success');
-    toast.show({ message: 'Link copied', tone: 'success' });
+    toast.show({ message: t('transfers.links.copied'), tone: 'success' });
   };
 
   const share = async () => {
@@ -36,7 +38,7 @@ export function LinkSheet({ link, onClose }: { link: PaymentLink; onClose: () =>
       await Share.share({ message: linkShareMessage(link), url: link.url });
     } catch {
       toast.show({
-        message: "Sharing isn't available here. Copy the link instead.",
+        message: t('transfers.links.shareFailed'),
         tone: 'error',
       });
     }
@@ -50,7 +52,10 @@ export function LinkSheet({ link, onClose }: { link: PaymentLink; onClose: () =>
         onSuccess: (saved) => {
           setStatus(saved.status);
           toast.show({
-            message: saved.status === 'active' ? 'Link is taking payments' : 'Link paused',
+            message:
+              saved.status === 'active'
+                ? t('transfers.links.nowActive')
+                : t('transfers.links.nowPaused'),
             tone: 'success',
           });
         },
@@ -78,7 +83,7 @@ export function LinkSheet({ link, onClose }: { link: PaymentLink; onClose: () =>
               <QrCode
                 value={link.url}
                 size={176}
-                accessibilityLabel={`QR code for the ${link.title} pay link`}
+                accessibilityLabel={t('transfers.links.qrLabel', { title: link.title })}
               />
             </View>
           </View>
@@ -98,15 +103,20 @@ export function LinkSheet({ link, onClose }: { link: PaymentLink; onClose: () =>
 
         <View style={[styles.row, { gap: spacing[2] }]}>
           <View style={styles.flex}>
-            <Button label="Copy" icon={Copy} variant="secondary" onPress={copy} />
+            <Button label={t('common.copy')} icon={Copy} variant="secondary" onPress={copy} />
           </View>
           <View style={styles.flex}>
-            <Button label="Share" icon={Share2} disabled={status !== 'active'} onPress={share} />
+            <Button
+              label={t('common.share')}
+              icon={Share2}
+              disabled={status !== 'active'}
+              onPress={share}
+            />
           </View>
         </View>
         {status !== 'expired' && (
           <Button
-            label={status === 'active' ? 'Pause link' : 'Take payments again'}
+            label={status === 'active' ? t('transfers.links.pause') : t('transfers.links.resume')}
             icon={status === 'active' ? Pause : Play}
             variant="ghost"
             loading={update.isPending}

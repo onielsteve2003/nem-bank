@@ -5,17 +5,19 @@ import { Card, Text } from '@/components';
 import { useTheme } from '@/theme';
 
 import { receiveSteps, type ReceiveGuide } from '../receive';
+import { useTranslation } from 'react-i18next';
 
 export type Props = { currency: CurrencyCode; guide: ReceiveGuide };
 
 /** How a payment from abroad gets here (FX-3): numbered steps, then the facts that matter. */
 export function ReceiveGuideCard({ currency, guide }: Props) {
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   const facts = [
-    { label: 'Sent by', value: guide.rail },
-    { label: 'Usually takes', value: guide.speed },
-    { label: 'Who pays this way', value: guide.payers },
-    { label: 'Fees', value: 'Free to receive. Their bank may charge to send.' },
+    { label: t('fx.receive.sentBy'), value: guide.rail },
+    { label: t('fx.receive.takes'), value: guide.speed },
+    { label: t('fx.receive.payers'), value: guide.payers },
+    { label: t('fx.receive.fees'), value: t('fx.receive.feesValue') },
   ];
 
   return (
@@ -26,7 +28,7 @@ export function ReceiveGuideCard({ currency, guide }: Props) {
             key={step}
             style={[styles.row, { gap: spacing[3] }]}
             accessible
-            accessibilityLabel={`Step ${i + 1}: ${step}`}
+            accessibilityLabel={t('fx.receive.step', { n: i + 1, step })}
           >
             <View
               style={[styles.badge, { borderRadius: radius.pill, backgroundColor: colors.raised }]}

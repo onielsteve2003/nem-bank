@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { IconButton, Text } from '@/components';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The send flow's header: a close button on the first screen (it is a modal),
@@ -12,12 +13,13 @@ import { useTheme } from '@/theme';
 export function SendHeader({ title, first = false }: { title: string; first?: boolean }) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       {!first && (
         <IconButton
           icon={ArrowLeft}
-          accessibilityLabel="Back"
+          accessibilityLabel={t('common.back')}
           variant="ghost"
           onPress={() => router.back()}
         />
@@ -28,7 +30,7 @@ export function SendHeader({ title, first = false }: { title: string; first?: bo
       {first && (
         <IconButton
           icon={X}
-          accessibilityLabel="Close"
+          accessibilityLabel={t('common.close')}
           variant="ghost"
           onPress={() => router.back()}
         />

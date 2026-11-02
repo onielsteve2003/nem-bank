@@ -28,6 +28,7 @@ import { QuoteSummary } from '../components/QuoteSummary';
 import { ScamHint } from '../components/ScamHint';
 import { SendHeader } from '../components/SendHeader';
 import { destinationOf, useSendDraft } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 const QUOTE_DELAY_MS = 300;
 
@@ -39,6 +40,7 @@ const QUOTE_DELAY_MS = 300;
 export function AmountScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const recipient = useSendDraft((s) => s.recipient);
   const saveAmount = useSendDraft((s) => s.setAmount);
   const [typed, setTyped] = useState(() => useSendDraft.getState().amount);
@@ -70,11 +72,14 @@ export function AmountScreen() {
 
   if (!recipient) {
     return (
-      <Screen header={<SendHeader title="Amount" />} edges={['top', 'bottom']}>
+      <Screen
+        header={<SendHeader title={t('transfers.amountScreen.title')} />}
+        edges={['top', 'bottom']}
+      >
         <EmptyState
           icon={UserSearch}
-          title="Choose who to pay first"
-          actionLabel="Choose someone"
+          title={t('transfers.amountScreen.chooseFirst')}
+          actionLabel={t('transfers.amountScreen.choose')}
           onAction={() => router.replace('/send')}
         />
       </Screen>
@@ -105,8 +110,14 @@ export function AmountScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Amount" />}
-      footer={<Button label="Review" disabled={!current || problem !== null} onPress={goOn} />}
+      header={<SendHeader title={t('transfers.amountScreen.title')} />}
+      footer={
+        <Button
+          label={t('transfers.amountScreen.review')}
+          disabled={!current || problem !== null}
+          onPress={goOn}
+        />
+      }
       edges={['top', 'bottom']}
     >
       <View style={[styles.row, { gap: spacing[3] }]}>
@@ -116,7 +127,9 @@ export function AmountScreen() {
             {recipient.name}
           </Text>
           <Text variant="bodySmall" color="textMuted" numberOfLines={1}>
-            {recipient.nemtag ? `@${recipient.nemtag} · Nem` : recipient.bankName}
+            {recipient.nemtag
+              ? t('transfers.amountScreen.nem', { nemtag: recipient.nemtag })
+              : recipient.bankName}
           </Text>
         </View>
       </View>
@@ -131,14 +144,19 @@ export function AmountScreen() {
       {available ? (
         <View style={[styles.row, styles.center, { gap: spacing[1] }]}>
           <Text variant="bodySmall" color="textMuted">
-            Available
+            {t('common.available')}
           </Text>
-          <MoneyText value={available} variant="bodySmall" color="textMuted" label="Available" />
+          <MoneyText
+            value={available}
+            variant="bodySmall"
+            color="textMuted"
+            label={t('common.available')}
+          />
         </View>
       ) : accounts.isError ? (
-        <ErrorState title="We couldn't load your balance" onRetry={() => accounts.refetch()} />
+        <ErrorState title={t('common.balanceFailed')} onRetry={() => accounts.refetch()} />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading your balance">
+        <SkeletonGroup accessibilityLabel={t('common.loadingBalance')}>
           <Skeleton height={20} width={160} />
         </SkeletonGroup>
       )}
@@ -146,18 +164,21 @@ export function AmountScreen() {
       {quote.data && amount ? (
         <QuoteSummary quote={quote.data} updating={!current} />
       ) : quote.isError && amount ? (
-        <ErrorState title="We couldn't price this transfer" onRetry={() => quote.refetch()} />
+        <ErrorState
+          title={t('transfers.amountScreen.priceFailed')}
+          onRetry={() => quote.refetch()}
+        />
       ) : null}
 
       <TextField
-        label="What's it for?"
+        label={t('transfers.amountScreen.whatFor')}
         optional
-        placeholder="Rent, school fees, owambe…"
+        placeholder={t('transfers.amountScreen.whatForPlaceholder')}
         leadingIcon={MessageSquareText}
         value={narration}
         onChangeText={setNarration}
         maxLength={NARRATION_MAX_LENGTH}
-        help={`${recipient.name.split(' ')[0]} sees this on their statement.`}
+        help={t('transfers.amountScreen.seesThis', { name: recipient.name.split(' ')[0] })}
       />
       {narrationHint && <ScamHint reason={narrationHint} />}
     </Screen>

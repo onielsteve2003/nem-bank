@@ -21,6 +21,7 @@ import {
   requestErrorMessage,
 } from '../requests';
 import { LOOKUP_DELAY_MS } from './RecipientScreen';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Ask a Nem user for money (TRF-10): find them by @nemtag, phone or account
@@ -35,6 +36,7 @@ export function RequestMoneyScreen() {
   const [note, setNote] = useState('');
   const [days, setDays] = useState<number>(DEFAULT_EXPIRY_DAYS);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
 
   const query = nemLookupQuery(useDebounced(who, LOOKUP_DELAY_MS));
   const lookup = useRepoQuery(
@@ -47,8 +49,8 @@ export function RequestMoneyScreen() {
   const lookupError =
     query && isApiError(lookup.error)
       ? lookup.error.status < 500
-        ? (lookup.error.problem.detail ?? 'No Nem user matches that. Check the @nemtag or number.')
-        : "We couldn't look them up. Try again."
+        ? (lookup.error.problem.detail ?? t('transfers.recipient.noNemUser'))
+        : t('transfers.requestMoney.lookupFailed')
       : undefined;
 
   const amount = typedNaira(typed);
@@ -80,7 +82,7 @@ export function RequestMoneyScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Request money" />}
+      header={<SendHeader title={t('transfers.requestMoney.title')} />}
       edges={['top', 'bottom']}
       footer={
         <View style={{ gap: spacing[2] }}>
@@ -91,7 +93,12 @@ export function RequestMoneyScreen() {
           )}
           <Button
             label={
-              payer && amount ? `Request ${formatMoney(amount)} from ${firstName}` : 'Request money'
+              payer && amount
+                ? t('transfers.requestMoney.requestFrom', {
+                    amount: formatMoney(amount),
+                    name: firstName,
+                  })
+                : t('transfers.requestMoney.title')
             }
             icon={HandCoins}
             disabled={!payer?.nemtag || !amount}
@@ -102,8 +109,8 @@ export function RequestMoneyScreen() {
       }
     >
       <TextField
-        label="From"
-        placeholder="@nemtag, phone or account number"
+        label={t('transfers.requestMoney.from')}
+        placeholder={t('transfers.requestMoney.fromPlaceholder')}
         leadingIcon={AtSign}
         value={who}
         onChangeText={setWho}
@@ -111,10 +118,13 @@ export function RequestMoneyScreen() {
         autoCorrect={false}
         autoFocus
         error={lookupError}
-        help={lookupError ? undefined : 'Requests go to Nem users only.'}
+        help={lookupError ? undefined : t('transfers.requestMoney.nemOnly')}
         trailing={
           query && lookup.isFetching ? (
-            <ActivityIndicator color={colors.textMuted} accessibilityLabel="Looking them up" />
+            <ActivityIndicator
+              color={colors.textMuted}
+              accessibilityLabel={t('common.lookingUpLabel')}
+            />
           ) : undefined
         }
       />
@@ -125,7 +135,9 @@ export function RequestMoneyScreen() {
             <View style={styles.flex}>
               <Text variant="bodyStrong">{payer.name}</Text>
               <Text variant="bodySmall" color="textMuted">
-                {payer.nemtag ? `@${payer.nemtag} · Nem user` : 'Nem user'}
+                {payer.nemtag
+                  ? t('transfers.requestMoney.nemUser', { nemtag: payer.nemtag })
+                  : t('common.nemUser')}
               </Text>
             </View>
           </View>
@@ -135,9 +147,9 @@ export function RequestMoneyScreen() {
       <AmountInput currency="NGN" value={typed} onChangeValue={setTyped} />
 
       <TextField
-        label="What's it for?"
+        label={t('transfers.requestMoney.whatFor')}
         optional
-        placeholder="Suya on Friday"
+        placeholder={t('transfers.requestMoney.whatForPlaceholder')}
         value={note}
         onChangeText={setNote}
         maxLength={REQUEST_NOTE_MAX_LENGTH}
@@ -145,7 +157,7 @@ export function RequestMoneyScreen() {
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          They have
+          {t('transfers.requestMoney.theyHave')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
           {EXPIRY_CHOICES.map((c) => (

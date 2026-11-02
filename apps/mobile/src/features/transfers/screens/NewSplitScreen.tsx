@@ -31,6 +31,7 @@ import { nemLookupQuery } from '../recipient';
 import { requestErrorMessage } from '../requests';
 import { parseNairaText, SPLIT_TITLE_MAX_LENGTH } from '../splits';
 import { LOOKUP_DELAY_MS } from './RecipientScreen';
+import { useTranslation } from 'react-i18next';
 
 interface Person {
   nemtag: string;
@@ -56,6 +57,7 @@ export function NewSplitScreen() {
   const [custom, setCustom] = useState<Record<string, string>>({});
   const [who, setWho] = useState('');
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
 
   const beneficiaries = useRepoQuery('beneficiaries', 'list', { query: { limit: 100 } });
   const suggestions = (beneficiaries.data?.data ?? [])
@@ -73,9 +75,9 @@ export function NewSplitScreen() {
   const already = found?.nemtag ? people.some((p) => p.nemtag === found.nemtag) : false;
   const lookupError =
     query && isApiError(lookup.error)
-      ? (lookup.error.problem.detail ?? 'No Nem user matches that.')
+      ? (lookup.error.problem.detail ?? t('transfers.newSplit.noUser'))
       : already
-        ? `${found?.name} is already in this split.`
+        ? t('transfers.newSplit.already', { name: found?.name })
         : undefined;
 
   const create = useRepoMutation('moneyRequests', 'createSplitBill');
@@ -141,7 +143,7 @@ export function NewSplitScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Split a bill" />}
+      header={<SendHeader title={t('transfers.newSplit.title')} />}
       edges={['top', 'bottom']}
       footer={
         <View style={{ gap: spacing[2] }}>
@@ -153,8 +155,8 @@ export function NewSplitScreen() {
           <Button
             label={
               people.length > 0
-                ? `Send ${people.length} ${people.length === 1 ? 'request' : 'requests'}`
-                : 'Split it'
+                ? t('transfers.newSplit.send', { count: people.length })
+                : t('transfers.newSplit.splitIt')
             }
             icon={Receipt}
             disabled={!ready}
@@ -165,41 +167,43 @@ export function NewSplitScreen() {
       }
     >
       <TextField
-        label="What's it for?"
-        placeholder="Dinner at Yellow Chilli"
+        label={t('transfers.newSplit.whatFor')}
+        placeholder={t('transfers.newSplit.whatForPlaceholder')}
         value={title}
         onChangeText={setTitle}
         maxLength={SPLIT_TITLE_MAX_LENGTH}
       />
       <TextField
-        label="Total"
+        label={t('transfers.newSplit.total')}
         placeholder="0.00"
         keyboardType="decimal-pad"
         value={totalText}
         onChangeText={setTotalText}
         trailing={<Text color="textMuted">NGN</Text>}
-        error={totalText.trim() && !total ? 'Enter an amount like 12500 or 12,500.50' : undefined}
+        error={totalText.trim() && !total ? t('transfers.newSplit.badTotal') : undefined}
       />
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          Split
+          {t('transfers.newSplit.split')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
-          <Chip label="Equally" selected={mode === 'equal'} onPress={() => setMode('equal')} />
           <Chip
-            label="Custom amounts"
+            label={t('transfers.newSplit.equally')}
+            selected={mode === 'equal'}
+            onPress={() => setMode('equal')}
+          />
+          <Chip
+            label={t('transfers.newSplit.custom')}
             selected={mode === 'custom'}
             onPress={() => setMode('custom')}
           />
         </View>
       </View>
       <Switch
-        label="Include my share"
+        label={t('transfers.newSplit.includeMe')}
         description={
-          includeSelf
-            ? 'You paid the bill, so your share counts as paid.'
-            : 'Only the people you add pay; their shares make up the total.'
+          includeSelf ? t('transfers.newSplit.includeHint') : t('transfers.newSplit.excludeHint')
         }
         value={includeSelf}
         onValueChange={setIncludeSelf}
@@ -207,13 +211,13 @@ export function NewSplitScreen() {
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          {`Who's in (${people.length}/${MAX_SPLIT_PARTICIPANTS})`}
+          {t('transfers.newSplit.whoIn', { count: people.length, max: MAX_SPLIT_PARTICIPANTS })}
         </Text>
         {people.length < MAX_SPLIT_PARTICIPANTS && (
           <>
             <TextField
-              label="Add a Nem user"
-              placeholder="@nemtag, phone or account number"
+              label={t('transfers.newSplit.addUser')}
+              placeholder={t('transfers.requestMoney.fromPlaceholder')}
               leadingIcon={AtSign}
               value={who}
               onChangeText={setWho}
@@ -224,14 +228,14 @@ export function NewSplitScreen() {
                 query && lookup.isFetching ? (
                   <ActivityIndicator
                     color={colors.textMuted}
-                    accessibilityLabel="Looking them up"
+                    accessibilityLabel={t('common.lookingUpLabel')}
                   />
                 ) : undefined
               }
             />
             {found?.nemtag && !already && (
               <Button
-                label={`Add ${found.name}`}
+                label={t('transfers.newSplit.addName', { name: found.name })}
                 icon={Plus}
                 size="sm"
                 variant="secondary"
@@ -259,8 +263,8 @@ export function NewSplitScreen() {
           <View style={{ gap: spacing[3] }}>
             {includeSelf && (
               <View style={[styles.row, { gap: spacing[3] }]}>
-                <Avatar name="You" size="sm" />
-                <Text style={styles.flex}>You</Text>
+                <Avatar name={t('common.you')} size="sm" />
+                <Text style={styles.flex}>{t('common.you')}</Text>
                 <Text variant="bodyStrong" color="textMuted">
                   {myShare !== null ? naira(myShare) : '—'}
                 </Text>
@@ -277,7 +281,7 @@ export function NewSplitScreen() {
                 </View>
                 {mode === 'custom' ? (
                   <TextField
-                    label={`${p.name.split(' ')[0]}'s share`}
+                    label={t('transfers.newSplit.share', { name: p.name.split(' ')[0] })}
                     placeholder="0.00"
                     keyboardType="decimal-pad"
                     value={custom[p.nemtag] ?? ''}
@@ -291,7 +295,7 @@ export function NewSplitScreen() {
                   icon={X}
                   size="sm"
                   variant="ghost"
-                  accessibilityLabel={`Remove ${p.name}`}
+                  accessibilityLabel={t('common.removeName', { name: p.name })}
                   onPress={() => remove(p.nemtag)}
                 />
               </View>
@@ -305,7 +309,7 @@ export function NewSplitScreen() {
         </Card>
       )}
       <Text variant="caption" color="textMuted">
-        Everyone gets a request they can pay from their Nem app within 7 days.
+        {t('transfers.newSplit.note')}
       </Text>
     </Screen>
   );

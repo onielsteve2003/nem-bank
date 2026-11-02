@@ -34,6 +34,7 @@ import { riskReasonsOf, sendErrorMessage } from '../confirm';
 import { copVerdict } from '../recipient';
 import { describeSchedule, scheduleBody, type ScheduleChoice } from '../schedule';
 import { destinationOf, useSendDraft } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 type Transfer = Schema<'Transfer'>;
 
@@ -68,6 +69,7 @@ export function ReviewScreen() {
   const [stepUp, setStepUp] = useState<Transfer | null>(null);
   const [schedule, setSchedule] = useState<ScheduleChoice | null>(null);
   const [choosingWhen, setChoosingWhen] = useState(false);
+  const { t } = useTranslation();
 
   const accounts = useRepoQuery('accounts', 'list');
   const source = accounts.data?.data.find((a) => a.currency === 'NGN');
@@ -163,12 +165,12 @@ export function ReviewScreen() {
 
   if (!recipient || !amount) {
     return (
-      <Screen header={<SendHeader title="Review" />} edges={['top', 'bottom']}>
+      <Screen header={<SendHeader title={t('transfers.review.title')} />} edges={['top', 'bottom']}>
         <EmptyState
           icon={UserSearch}
-          title="Nothing to review yet"
-          message="Choose who to pay and how much first."
-          actionLabel="Start again"
+          title={t('transfers.review.nothing')}
+          message={t('transfers.review.nothingMessage')}
+          actionLabel={t('transfers.review.startAgain')}
           onAction={() => router.replace('/send')}
         />
       </Screen>
@@ -181,12 +183,11 @@ export function ReviewScreen() {
     ? formatMoney(fromApiMoney(quote.data.total_debit))
     : formatMoney(amount);
   const stepUpReason =
-    (stepUp && riskReasonsOf(stepUp)[0]?.label) ??
-    'This payment needs one more check before it goes.';
+    (stepUp && riskReasonsOf(stepUp)[0]?.label) ?? t('transfers.holdScreen.oneMore');
 
   return (
     <Screen
-      header={<SendHeader title="Review" />}
+      header={<SendHeader title={t('transfers.review.title')} />}
       edges={['top', 'bottom']}
       footer={
         <View style={{ gap: spacing[2] }}>
@@ -196,7 +197,9 @@ export function ReviewScreen() {
             </Text>
           )}
           <Button
-            label={`${schedule ? 'Schedule' : 'Send'} ${formatMoney(amount)}`}
+            label={t(schedule ? 'transfers.review.scheduleAmount' : 'transfers.review.sendAmount', {
+              amount: formatMoney(amount),
+            })}
             icon={Lock}
             disabled={!quote.data || !source}
             loading={send.isPending || createSchedule.isPending}
@@ -215,7 +218,7 @@ export function ReviewScreen() {
               </Text>
               <Text variant="bodySmall" color="textMuted" numberOfLines={1}>
                 {recipient.nemtag
-                  ? `@${recipient.nemtag} · Nem user`
+                  ? t('transfers.review.nemUser', { nemtag: recipient.nemtag })
                   : `${recipient.bankName} · ${recipient.accountNumber}`}
               </Text>
             </View>
@@ -225,18 +228,24 @@ export function ReviewScreen() {
               <Badge label={verdict.title} tone={verdict.tone} />
             </View>
           )}
-          <Row label="Amount" value={formatMoney(amount)} />
-          <Row label="Note" value={narration || `Transfer to ${recipient.name}`} />
-          <Row label="From" value="Naira wallet" />
+          <Row label={t('common.amount')} value={formatMoney(amount)} />
+          <Row
+            label={t('common.note')}
+            value={narration || t('transfers.review.transferTo', { name: recipient.name })}
+          />
+          <Row label={t('common.from')} value={t('transfers.review.nairaWallet')} />
         </View>
       </Card>
 
       {quote.data ? (
         <QuoteSummary quote={quote.data} updating={quote.isFetching} />
       ) : quote.isError ? (
-        <ErrorState title="We couldn't price this transfer" onRetry={() => quote.refetch()} />
+        <ErrorState
+          title={t('transfers.amountScreen.priceFailed')}
+          onRetry={() => quote.refetch()}
+        />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading the fee">
+        <SkeletonGroup accessibilityLabel={t('transfers.review.loadingFee')}>
           <Skeleton height={96} />
         </SkeletonGroup>
       )}
@@ -244,18 +253,20 @@ export function ReviewScreen() {
       <Card padded={false}>
         <ListItem
           leading={CalendarClock}
-          title={schedule ? describeSchedule(schedule) : 'Send now'}
-          subtitle={schedule ? 'Tap to change or send now instead' : 'Or schedule it, or repeat it'}
+          title={schedule ? describeSchedule(schedule) : t('transfers.review.sendNow')}
+          subtitle={schedule ? t('transfers.review.changeHint') : t('transfers.review.laterHint')}
           onPress={() => setChoosingWhen(true)}
-          accessibilityLabel={`When: ${schedule ? describeSchedule(schedule) : 'now'}`}
-          accessibilityHint="Choose a later day or a repeat"
+          accessibilityLabel={t('bills.options.when', {
+            when: schedule ? describeSchedule(schedule) : t('bills.options.now'),
+          })}
+          accessibilityHint={t('bills.options.whenHint')}
         />
       </Card>
 
       {!recipient.beneficiaryId && !schedule && (
         <Switch
-          label={`Save ${firstName} for next time`}
-          description="Saved people are quicker to pay and easier to check."
+          label={t('transfers.review.saveName', { name: firstName })}
+          description={t('transfers.review.saveHint')}
           value={save}
           onValueChange={setSave}
         />
@@ -264,7 +275,7 @@ export function ReviewScreen() {
       <View style={[styles.row, { gap: spacing[2] }]}>
         <Icon icon={Lock} size="sm" color="textMuted" />
         <Text variant="caption" color="textMuted" style={styles.flex}>
-          Signed by this phone and sent once, even if you tap twice.
+          {t('transfers.review.signed')}
         </Text>
       </View>
 
@@ -273,8 +284,11 @@ export function ReviewScreen() {
         onClose={() => setConfirming(false)}
         subtitle={
           schedule
-            ? `Schedule ${formatMoney(amount)} to ${firstName}`
-            : `Send ${total} to ${firstName}`
+            ? t('transfers.review.confirmSchedule', {
+                amount: formatMoney(amount),
+                name: firstName,
+              })
+            : t('transfers.review.confirmSend', { amount: total, name: firstName })
         }
         onApproved={onApproved}
         error={sendError}

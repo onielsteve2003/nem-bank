@@ -11,6 +11,7 @@ import { useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { counterpartOf, expiresIn, REQUEST_STATUS, requestErrorMessage } from '../requests';
+import { useTranslation } from 'react-i18next';
 
 type MoneyRequest = Schema<'MoneyRequest'>;
 
@@ -41,6 +42,7 @@ export function RequestSheet({ request, onClose, onPay }: Props) {
   const { spacing } = useTheme();
   const [confirm, setConfirm] = useState(false);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
   const incoming = request.direction === 'incoming';
   const decline = useRepoMutation('moneyRequests', 'decline');
   const cancel = useRepoMutation('moneyRequests', 'cancel');
@@ -67,7 +69,15 @@ export function RequestSheet({ request, onClose, onPay }: Props) {
     );
 
   return (
-    <BottomSheet open onClose={onClose} title={incoming ? `${firstName} asked you` : 'You asked'}>
+    <BottomSheet
+      open
+      onClose={onClose}
+      title={
+        incoming
+          ? t('transfers.requestSheet.askedYou', { name: firstName })
+          : t('transfers.requestSheet.youAsked')
+      }
+    >
       <View style={{ gap: spacing[4] }}>
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Avatar name={other.name} size="lg" ring />
@@ -84,38 +94,60 @@ export function RequestSheet({ request, onClose, onPay }: Props) {
 
         <Card>
           <View style={{ gap: spacing[3] }}>
-            <Row label="Amount" value={amount} />
-            <Row label="For" value={request.note || 'No note'} />
-            <Row label="Asked" value={formatDateTime(request.created_at)} />
+            <Row label={t('common.amount')} value={amount} />
+            <Row
+              label={t('transfers.requestSheet.for')}
+              value={request.note || t('transfers.requests.noNote')}
+            />
+            <Row
+              label={t('transfers.requestSheet.asked')}
+              value={formatDateTime(request.created_at)}
+            />
             {open ? (
-              <Row label="Expires" value={expiresIn(request.expires_at)} />
+              <Row
+                label={t('transfers.requestSheet.expires')}
+                value={expiresIn(request.expires_at)}
+              />
             ) : request.responded_at ? (
               <Row label={status.label} value={formatDateTime(request.responded_at)} />
             ) : null}
-            {request.split_bill_id && <Row label="Part of" value="A split bill" />}
+            {request.split_bill_id && (
+              <Row
+                label={t('transfers.requestSheet.partOf')}
+                value={t('transfers.requestSheet.splitBill')}
+              />
+            )}
           </View>
         </Card>
 
         {open && incoming && (
           <>
-            <Button label={`Pay ${amount}`} icon={Send} onPress={() => onPay(request)} />
-            <Button label="Decline" icon={Ban} variant="ghost" onPress={() => setConfirm(true)} />
+            <Button
+              label={t('transfers.requestSheet.pay', { amount })}
+              icon={Send}
+              onPress={() => onPay(request)}
+            />
+            <Button
+              label={t('transfers.requestSheet.decline')}
+              icon={Ban}
+              variant="ghost"
+              onPress={() => setConfirm(true)}
+            />
             <Text variant="caption" color="textMuted">
-              Only pay people you know. Nem will never ask you to pay a request to unlock or verify
-              your account.
+              {t('transfers.requestSheet.safety')}
             </Text>
           </>
         )}
         {open && !incoming && (
           <>
             <Button
-              label="Cancel request"
+              label={t('transfers.requestSheet.cancel')}
               icon={XCircle}
               variant="ghost"
               onPress={() => setConfirm(true)}
             />
             <Text variant="caption" color="textMuted">
-              {firstName} sees it in their requests and can pay or decline.
+              {t('transfers.requestSheet.theySee', { name: firstName })}
             </Text>
           </>
         )}
@@ -129,14 +161,20 @@ export function RequestSheet({ request, onClose, onPay }: Props) {
 
       <Dialog
         open={confirm}
-        title={incoming ? `Decline ${firstName}'s request?` : 'Cancel this request?'}
+        title={
+          incoming
+            ? t('transfers.requestSheet.declineTitle', { name: firstName })
+            : t('transfers.requestSheet.cancelTitle')
+        }
         message={
           incoming
-            ? `${firstName} will see that you declined. Nothing is paid.`
-            : `${firstName} won't be able to pay it any more.`
+            ? t('transfers.requestSheet.declineMessage', { name: firstName })
+            : t('transfers.requestSheet.cancelMessage', { name: firstName })
         }
-        confirmLabel={incoming ? 'Decline' : 'Cancel request'}
-        cancelLabel="Keep it"
+        confirmLabel={
+          incoming ? t('transfers.requestSheet.decline') : t('transfers.requestSheet.cancel')
+        }
+        cancelLabel={t('common.keepIt')}
         destructive
         loading={close.isPending}
         onConfirm={closeIt}

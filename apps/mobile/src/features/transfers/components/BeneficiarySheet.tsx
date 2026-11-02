@@ -26,6 +26,7 @@ import {
   NICKNAME_MAX_LENGTH,
 } from '../beneficiaries';
 import { beneficiarySubtitle } from './BeneficiaryRow';
+import { useTranslation } from 'react-i18next';
 
 type Beneficiary = Schema<'Beneficiary'>;
 
@@ -46,6 +47,7 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
   const [nickname, setNickname] = useState(beneficiary.nickname ?? '');
   const [confirmDelete, setConfirmDelete] = useState(false);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
   const update = useRepoMutation('beneficiaries', 'update');
   const remove = useRepoMutation('beneficiaries', 'remove');
   const until = coolingOffUntil(b);
@@ -59,7 +61,7 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
           setB(next);
           after?.();
         },
-        onError: () => setError("We couldn't save that. Try again."),
+        onError: () => setError(t('common.saveFailedGeneric')),
       },
     );
   };
@@ -74,7 +76,7 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
         },
         onError: () => {
           setConfirmDelete(false);
-          setError(`We couldn't delete ${b.name}. Try again.`);
+          setError(t('transfers.beneficiaries.deleteFailed', { name: b.name }));
         },
       },
     );
@@ -102,15 +104,15 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
         )}
 
         <Button
-          label={`Pay ${b.nickname ?? b.name.split(' ')[0]}`}
+          label={t('transfers.beneficiaries.payName', { name: b.nickname ?? b.name.split(' ')[0] })}
           icon={Send}
           onPress={() => onPay(b)}
         />
 
         <Card padded={false}>
           <Switch
-            label="Favourite"
-            description="Favourites come first when you send money."
+            label={t('transfers.beneficiaries.favouriteLabel')}
+            description={t('transfers.beneficiaries.favouriteHint')}
             value={b.favourite}
             disabled={update.isPending}
             onValueChange={(favourite) => save({ favourite })}
@@ -118,17 +120,17 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
           {renaming ? (
             <View style={{ gap: spacing[2], padding: spacing[4] }}>
               <TextField
-                label="Nickname"
+                label={t('transfers.beneficiaries.nickname')}
                 optional
-                placeholder="Mummy, landlord, Chidi (work)…"
+                placeholder={t('transfers.beneficiaries.nicknamePlaceholder')}
                 value={nickname}
                 onChangeText={setNickname}
                 maxLength={NICKNAME_MAX_LENGTH}
-                help="Only you see it. The bank still checks the account name."
+                help={t('transfers.beneficiaries.nicknameHelp')}
                 autoFocus
               />
               <Button
-                label="Save nickname"
+                label={t('transfers.beneficiaries.saveNickname')}
                 size="sm"
                 loading={update.isPending}
                 onPress={() =>
@@ -139,15 +141,19 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
           ) : (
             <ListItem
               leading={Pencil}
-              title={b.nickname ? 'Change nickname' : 'Add a nickname'}
+              title={
+                b.nickname
+                  ? t('transfers.beneficiaries.changeNickname')
+                  : t('transfers.beneficiaries.addNickname')
+              }
               subtitle={b.nickname ?? undefined}
               onPress={() => setRenaming(true)}
             />
           )}
           <ListItem
             leading={Trash2}
-            title={`Delete ${b.name.split(' ')[0]}`}
-            subtitle="Past payments stay in your history."
+            title={t('transfers.beneficiaries.deleteName', { name: b.name.split(' ')[0] })}
+            subtitle={t('transfers.beneficiaries.historyStays')}
             onPress={() => setConfirmDelete(true)}
           />
         </Card>
@@ -161,9 +167,9 @@ export function BeneficiarySheet({ beneficiary, onClose, onPay }: Props) {
 
       <Dialog
         open={confirmDelete}
-        title={`Delete ${b.name}?`}
-        message="Saving them again later starts a new safety wait for large payments."
-        confirmLabel="Delete"
+        title={t('transfers.beneficiaries.deleteTitle', { name: b.name })}
+        message={t('transfers.beneficiaries.deleteMessage')}
+        confirmLabel={t('common.delete')}
         destructive
         loading={remove.isPending}
         onConfirm={deleteIt}

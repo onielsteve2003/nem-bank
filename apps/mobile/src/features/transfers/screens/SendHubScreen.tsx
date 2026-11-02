@@ -35,6 +35,7 @@ import { BeneficiaryRow } from '../components/BeneficiaryRow';
 import { openCount } from '../requests';
 import { SendHeader } from '../components/SendHeader';
 import { recipientFromBeneficiary, useSendDraft, type SendMode } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 const SEARCH_DELAY_MS = 300;
 
@@ -47,6 +48,7 @@ export function SendHubScreen() {
   const { spacing } = useTheme();
   const setRecipient = useSendDraft((s) => s.setRecipient);
   const [search, setSearch] = useState('');
+  const { t } = useTranslation();
   const q = useDebounced(search.trim(), SEARCH_DELAY_MS);
 
   const beneficiaries = useRepoQuery(
@@ -77,27 +79,30 @@ export function SendHubScreen() {
   const searching = q !== '';
 
   return (
-    <Screen header={<SendHeader title="Send money" first />} edges={['top', 'bottom']}>
+    <Screen
+      header={<SendHeader title={t('transfers.hub.title')} first />}
+      edges={['top', 'bottom']}
+    >
       <Card padded={false}>
         <ListItem
           leading={AtSign}
-          title="To a Nem user"
-          subtitle="By @nemtag, phone or account number. Instant and free."
+          title={t('transfers.hub.nem')}
+          subtitle={t('transfers.hub.nemHint')}
           showChevron
           onPress={() => startNew('nem')}
         />
         <ListItem
           leading={Landmark}
-          title="To another bank"
-          subtitle="Any Nigerian bank. ₦10 to ₦50 fee."
+          title={t('transfers.hub.bank')}
+          subtitle={t('transfers.hub.bankHint')}
           showChevron
           onPress={() => startNew('bank')}
         />
         <ListItem
           leading={Globe}
-          title="Send abroad"
-          subtitle="International transfer"
-          trailing={<Badge label="Partner needed" tone="warning" />}
+          title={t('transfers.hub.abroad')}
+          subtitle={t('transfers.hub.abroadHint')}
+          trailing={<Badge label={t('transfers.abroadScreen.partnerNeeded')} tone="warning" />}
           showChevron
           onPress={() => router.push('/send/abroad')}
         />
@@ -106,15 +111,19 @@ export function SendHubScreen() {
       <Card padded={false}>
         <ListItem
           leading={HandCoins}
-          title="Requests"
+          title={t('transfers.hub.requests')}
           subtitle={
             toPay > 0
-              ? `${toPay} waiting for you to pay`
-              : 'Ask a Nem user for money, or pay what you owe.'
+              ? t('transfers.hub.waiting', { count: toPay })
+              : t('transfers.hub.requestsHint')
           }
           trailing={
             toPay > 0 ? (
-              <Badge count={toPay} tone="primary" accessibilityLabel={`${toPay} to pay`} />
+              <Badge
+                count={toPay}
+                tone="primary"
+                accessibilityLabel={t('transfers.hub.toPay', { count: toPay })}
+              />
             ) : undefined
           }
           showChevron
@@ -122,36 +131,36 @@ export function SendHubScreen() {
         />
         <ListItem
           leading={Receipt}
-          title="Split a bill"
-          subtitle="Share a cost with Nem users and see who has paid."
+          title={t('transfers.hub.split')}
+          subtitle={t('transfers.hub.splitHint')}
           showChevron
           onPress={() => router.push('/send/splits')}
         />
         <ListItem
           leading={Link2}
-          title="Payment links"
-          subtitle="A link or QR anyone can use to pay you."
+          title={t('transfers.hub.links')}
+          subtitle={t('transfers.hub.linksHint')}
           showChevron
           onPress={() => router.push('/send/links')}
         />
         <ListItem
           leading={CalendarClock}
-          title="Scheduled payments"
-          subtitle="Pay later, or every day, week or month."
+          title={t('transfers.hub.scheduled')}
+          subtitle={t('transfers.hub.scheduledHint')}
           showChevron
           onPress={() => router.push('/send/scheduled')}
         />
       </Card>
 
       <SectionHeader
-        title="Beneficiaries"
-        actionLabel="Manage"
+        title={t('transfers.hub.beneficiaries')}
+        actionLabel={t('transfers.hub.manage')}
         onAction={() => router.push('/send/beneficiaries')}
       />
       {(list?.length ?? 0) > 0 || searching ? (
         <TextField
-          label="Search beneficiaries"
-          placeholder="Name, @nemtag, bank or account"
+          label={t('transfers.beneficiariesScreen.search')}
+          placeholder={t('transfers.hub.searchPlaceholder')}
           leadingIcon={Search}
           value={search}
           onChangeText={setSearch}
@@ -163,11 +172,15 @@ export function SendHubScreen() {
         list.length === 0 ? (
           <EmptyState
             icon={Users}
-            title={searching ? 'No one matches that' : 'No beneficiaries yet'}
+            title={
+              searching
+                ? t('transfers.beneficiariesScreen.noMatch')
+                : t('transfers.beneficiariesScreen.none')
+            }
             message={
               searching
-                ? 'Try part of a name, a bank or the last digits of an account.'
-                : 'People you save after paying them appear here, ready for next time.'
+                ? t('transfers.beneficiariesScreen.noMatchMessage')
+                : t('transfers.hub.noneMessage')
             }
           />
         ) : (
@@ -179,11 +192,11 @@ export function SendHubScreen() {
         )
       ) : beneficiaries.isError ? (
         <ErrorState
-          title="We couldn't load your beneficiaries"
+          title={t('transfers.beneficiariesScreen.failed')}
           onRetry={() => beneficiaries.refetch()}
         />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading beneficiaries">
+        <SkeletonGroup accessibilityLabel={t('transfers.beneficiariesScreen.loading')}>
           <View style={{ gap: spacing[2] }}>
             <SkeletonListItem />
             <SkeletonListItem />

@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney, parseRate, type CurrencyCode } from '@nem/shared';
 
 import { nairaPerUnit } from './quote';
+import i18n from '@/lib/i18n';
 
 type Range = Schema<'FxRateHistory'>['range'];
 type Alert = Schema<'FxAlert'>;
@@ -15,11 +16,12 @@ export const PAIRS: readonly { pair: string; currency: ForeignCurrency }[] = [
   { pair: 'EUR-NGN', currency: 'EUR' },
 ];
 
-export const RANGES: readonly { range: Range; label: string; spoken: string }[] = [
-  { range: '1D', label: '1D', spoken: 'last day' },
-  { range: '1W', label: '1W', spoken: 'last week' },
-  { range: '1M', label: '1M', spoken: 'last month' },
-  { range: '1Y', label: '1Y', spoken: 'last year' },
+/** Spoken names live in fx.rates.spoken.<range>. */
+export const RANGES: readonly { range: Range; label: string }[] = [
+  { range: '1D', label: '1D' },
+  { range: '1W', label: '1W' },
+  { range: '1M', label: '1M' },
+  { range: '1Y', label: '1Y' },
 ];
 
 /** "USD-NGN" → "USD/NGN" */
@@ -98,19 +100,25 @@ export function alertTargetProblem(
 ): string | null {
   const target = typed.trim();
   if (!TARGET_PATTERN.test(target) || Number(target) <= 0) {
-    return 'Enter a rate in naira, like 1650 or 1650.50.';
+    return i18n.t('fx.alerts.badRate');
   }
   if (!midRate) return null;
   const vs = compareRates(target, midRate);
   if (direction === 'above' && vs <= 0) {
-    return `${pairLabel(pair)} is already at ${nairaRate(pair, midRate)}. Pick a higher rate.`;
+    return i18n.t('fx.alerts.pickHigher', {
+      pair: pairLabel(pair),
+      rate: nairaRate(pair, midRate),
+    });
   }
   if (direction === 'below' && vs >= 0) {
-    return `${pairLabel(pair)} is already at ${nairaRate(pair, midRate)}. Pick a lower rate.`;
+    return i18n.t('fx.alerts.pickLower', { pair: pairLabel(pair), rate: nairaRate(pair, midRate) });
   }
   return null;
 }
 
 /** "USD/NGN above ₦1,650.00" */
 export const alertTitle = (alert: Pick<Alert, 'pair' | 'direction' | 'target_rate'>) =>
-  `${pairLabel(alert.pair)} ${alert.direction} ${nairaRate(alert.pair, alert.target_rate)}`;
+  i18n.t(`fx.alerts.title.${alert.direction}`, {
+    pair: pairLabel(alert.pair),
+    rate: nairaRate(alert.pair, alert.target_rate),
+  });

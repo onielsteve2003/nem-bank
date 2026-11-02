@@ -27,6 +27,7 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { BILL_CATEGORIES, categoryMeta, CUSTOMER_LABEL, shortDate } from '../bills';
+import { useTranslation } from 'react-i18next';
 
 const RECENT = 5;
 
@@ -44,10 +45,11 @@ export function BillsHubScreen() {
   const upcoming = schedules.data?.data.filter((s) => s.status === 'active').length ?? 0;
   const [removing, setRemoving] = useState<Schema<'SavedBiller'> | null>(null);
   const remove = useRepoMutation('bills', 'removeSaved', { invalidates: [['bills']] });
+  const { t } = useTranslation();
 
   return (
     <Screen
-      header={<SendHeader title="Pay bills" first />}
+      header={<SendHeader title={t('bills.hub.title')} first />}
       edges={['top', 'bottom']}
       onRefresh={() => void Promise.all([saved.refetch(), payments.refetch()])}
       refreshing={saved.isRefetching || payments.isRefetching}
@@ -79,14 +81,14 @@ export function BillsHubScreen() {
 
       {saved.data && saved.data.data.length > 0 && (
         <View>
-          <SectionHeader title="Saved billers" />
+          <SectionHeader title={t('bills.hub.saved')} />
           {saved.data.data.map((s) => (
             <ListItem
               key={s.id}
               leading={categoryMeta(s.category).icon}
               title={s.nickname}
               subtitle={`${s.biller_name} · ${s.customer_id}`}
-              accessibilityHint="Pay this bill with the details filled in"
+              accessibilityHint={t('bills.hub.savedHint')}
               onPress={() =>
                 router.push({
                   pathname: '/bills/[category]',
@@ -97,7 +99,7 @@ export function BillsHubScreen() {
                 <IconButton
                   icon={Trash2}
                   variant="ghost"
-                  accessibilityLabel={`Remove ${s.nickname}`}
+                  accessibilityLabel={t('bills.hub.removeLabel', { name: s.nickname })}
                   onPress={() => setRemoving(s)}
                 />
               }
@@ -109,28 +111,30 @@ export function BillsHubScreen() {
       <Card padded={false}>
         <ListItem
           leading={CalendarClock}
-          title="Scheduled bills"
+          title={t('bills.hub.scheduled')}
           subtitle={
-            upcoming > 0 ? `${upcoming} coming up` : 'Pay a bill later, or every day, week or month'
+            upcoming > 0
+              ? t('bills.hub.comingUp', { count: upcoming })
+              : t('bills.hub.scheduleHint')
           }
           onPress={() => router.push('/bills/scheduled')}
         />
       </Card>
 
       <View>
-        <SectionHeader title="Recent bills" />
+        <SectionHeader title={t('bills.hub.recent')} />
         {payments.isError ? (
-          <ErrorState title="We couldn't load your bills" onRetry={() => payments.refetch()} />
+          <ErrorState title={t('bills.hub.failed')} onRetry={() => payments.refetch()} />
         ) : !payments.data ? (
-          <SkeletonGroup accessibilityLabel="Loading bills">
+          <SkeletonGroup accessibilityLabel={t('bills.hub.loading')}>
             <Skeleton height={56} />
             <Skeleton height={56} />
           </SkeletonGroup>
         ) : recent.length === 0 ? (
           <EmptyState
             icon={Receipt}
-            title="No bills yet"
-            message="Airtime, data, power and TV you pay for show up here."
+            title={t('bills.hub.none')}
+            message={t('bills.hub.noneMessage')}
           />
         ) : (
           recent.map((p) => (
@@ -152,9 +156,11 @@ export function BillsHubScreen() {
 
       <Dialog
         open={removing !== null}
-        title={`Remove ${removing?.nickname ?? 'this biller'}?`}
-        message="You can save it again the next time you pay it."
-        confirmLabel="Remove"
+        title={t('bills.hub.removeTitle', {
+          name: removing?.nickname ?? t('bills.hub.thisBiller'),
+        })}
+        message={t('bills.hub.removeMessage')}
+        confirmLabel={t('common.remove')}
         destructive
         loading={remove.isPending}
         onCancel={() => setRemoving(null)}

@@ -26,6 +26,7 @@ import { ScamHint } from '../components/ScamHint';
 import { SendHeader } from '../components/SendHeader';
 import { isNuban, nemLookupQuery } from '../recipient';
 import { recipientFromPayee, useSendDraft, type SendMode } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 type Bank = Schema<'Bank'>;
 
@@ -52,6 +53,7 @@ export function RecipientScreen() {
   const [accountNumber, setAccountNumber] = useState('');
   const [expectedName, setExpectedName] = useState('');
   const [acknowledged, setAcknowledged] = useState(false);
+  const { t } = useTranslation();
 
   const nemQuery = nemLookupQuery(useDebounced(nemInput, LOOKUP_DELAY_MS));
   const settledName = useDebounced(expectedName.trim(), LOOKUP_DELAY_MS);
@@ -91,8 +93,10 @@ export function RecipientScreen() {
     ? (apiError.problem.detail ??
       (apiError.code === 'account_not_found'
         ? mode === 'nem'
-          ? 'No Nem user matches that. Check the @nemtag or number.'
-          : `We could not find that account at ${bank?.short_name ?? 'that bank'}.`
+          ? t('transfers.recipient.noNemUser')
+          : t('transfers.recipient.notAtBank', {
+              bank: bank?.short_name ?? t('transfers.recipient.thatBank'),
+            })
         : apiError.problem.title))
     : undefined;
 
@@ -104,22 +108,28 @@ export function RecipientScreen() {
 
   const footer = (
     <Button
-      label="Continue"
+      label={t('common.continue')}
       disabled={!payee || verdictBlocks}
       onPress={goOn}
-      accessibilityHint={verdictBlocks ? 'Tick the box to confirm you checked the name' : undefined}
+      accessibilityHint={verdictBlocks ? t('transfers.recipient.tickHint') : undefined}
     />
   );
 
   return (
     <Screen
-      header={<SendHeader title={mode === 'nem' ? 'Pay a Nem user' : 'Pay another bank'} />}
+      header={
+        <SendHeader
+          title={
+            mode === 'nem' ? t('transfers.recipient.nemTitle') : t('transfers.recipient.bankTitle')
+          }
+        />
+      }
       footer={footer}
       edges={['top', 'bottom']}
     >
       {mode === 'nem' ? (
         <TextField
-          label="@nemtag, phone or account number"
+          label={t('transfers.recipient.nemLabel')}
           placeholder="@amaka_o"
           leadingIcon={AtSign}
           value={nemInput}
@@ -128,15 +138,17 @@ export function RecipientScreen() {
           autoCorrect={false}
           autoFocus
           error={lookupError}
-          help={lookupError ? undefined : 'We look them up as you type.'}
+          help={lookupError ? undefined : t('transfers.recipient.asYouType')}
         />
       ) : (
         <>
-          <FormField label="Bank">
+          <FormField label={t('transfers.recipient.bank')}>
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={`Bank, ${bank?.name ?? 'not selected'}`}
-              accessibilityHint="Opens the list of banks"
+              accessibilityLabel={t('transfers.recipient.bankLabel', {
+                bank: bank?.name ?? t('transfers.recipient.notSelected'),
+              })}
+              accessibilityHint={t('transfers.recipient.bankHint')}
               onPress={() => setPickerOpen(true)}
               style={[
                 styles.picker,
@@ -151,36 +163,36 @@ export function RecipientScreen() {
             >
               <Icon icon={Landmark} color="textMuted" />
               <Text color={bank ? 'text' : 'textMuted'} style={styles.flex} numberOfLines={1}>
-                {bank?.name ?? 'Choose a bank'}
+                {bank?.name ?? t('transfers.recipient.chooseBank')}
               </Text>
               <Icon icon={ChevronDown} color="textMuted" />
             </Pressable>
           </FormField>
           <TextField
-            label="Account number"
-            placeholder="10 digits"
+            label={t('transfers.recipient.accountNumber')}
+            placeholder={t('transfers.recipient.tenDigits')}
             leadingIcon={Hash}
             keyboardType="number-pad"
             maxLength={10}
             value={accountNumber}
-            onChangeText={(t) => {
-              setAccountNumber(t.replace(/\D/g, ''));
+            onChangeText={(text) => {
+              setAccountNumber(text.replace(/\D/g, ''));
               setAcknowledged(false);
             }}
             error={lookupError}
           />
           <TextField
-            label="Name on the account"
-            placeholder="Who you expect to pay"
+            label={t('transfers.recipient.name')}
+            placeholder={t('transfers.recipient.namePlaceholder')}
             leadingIcon={UserRound}
             autoCapitalize="words"
             autoCorrect={false}
             value={expectedName}
-            onChangeText={(t) => {
-              setExpectedName(t);
+            onChangeText={(text) => {
+              setExpectedName(text);
               setAcknowledged(false);
             }}
-            help="We check it against the bank's records before you pay."
+            help={t('transfers.recipient.nameHelp')}
           />
         </>
       )}
@@ -188,14 +200,14 @@ export function RecipientScreen() {
       {body && lookup.isFetching && !payee && (
         <View style={[styles.row, { gap: spacing[2] }]} accessibilityLiveRegion="polite">
           <ActivityIndicator color={colors.textMuted} />
-          <Text color="textMuted">Looking them up…</Text>
+          <Text color="textMuted">{t('common.lookingUp')}</Text>
         </View>
       )}
       {body && lookup.isError && !notFound && (
-        <ErrorState title="We couldn't check that right now" onRetry={() => lookup.refetch()} />
+        <ErrorState title={t('transfers.recipient.checkFailed')} onRetry={() => lookup.refetch()} />
       )}
       {mode === 'bank' && !bank && !payee && (
-        <FieldMessage help="Bank transfers cost ₦10 to ₦50, shown before you confirm." />
+        <FieldMessage help={t('transfers.recipient.bankFee')} />
       )}
       {payee && (
         <PayeeCard payee={payee} acknowledged={acknowledged} onAcknowledge={setAcknowledged} />

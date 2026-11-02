@@ -32,16 +32,19 @@ import { beneficiaryTitle } from '../beneficiaries';
 import { counterpartOf, requestSubtitle, sortRequests } from '../requests';
 import { isLive, scheduleSubtitle, sortSchedules } from '../schedule';
 import { recipientFromBeneficiary, useSendDraft } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 type Beneficiary = Schema<'Beneficiary'>;
 
-const ACTIONS: readonly { label: string; icon: LucideIcon; href: Href }[] = [
-  { label: 'Send', icon: ArrowUpRight, href: '/send' },
-  { label: 'Scan QR', icon: ScanLine, href: '/qr' },
-  { label: 'Request', icon: HandCoins, href: '/send/request' },
-  { label: 'Split', icon: Split, href: '/send/splits' },
-  { label: 'Links', icon: Link2, href: '/send/links' },
-  { label: 'Scheduled', icon: CalendarClock, href: '/send/scheduled' },
+type Action = 'send' | 'scan' | 'request' | 'split' | 'links' | 'scheduled';
+
+const ACTIONS: readonly { key: Action; icon: LucideIcon; href: Href }[] = [
+  { key: 'send', icon: ArrowUpRight, href: '/send' },
+  { key: 'scan', icon: ScanLine, href: '/qr' },
+  { key: 'request', icon: HandCoins, href: '/send/request' },
+  { key: 'split', icon: Split, href: '/send/splits' },
+  { key: 'links', icon: Link2, href: '/send/links' },
+  { key: 'scheduled', icon: CalendarClock, href: '/send/scheduled' },
 ];
 
 const RECENT_PEOPLE = 8;
@@ -61,6 +64,7 @@ export function PayScreen() {
   const router = useRouter();
   const { colors, spacing } = useTheme();
   const setRecipient = useSendDraft((s) => s.setRecipient);
+  const { t } = useTranslation();
 
   const beneficiaries = useRepoQuery('beneficiaries', 'list', { query: { limit: 50 } });
   const incoming = useRepoQuery('moneyRequests', 'list', {
@@ -80,7 +84,7 @@ export function PayScreen() {
   const header = (
     <View style={{ paddingHorizontal: spacing[4] }}>
       <Text variant="title" accessibilityRole="header">
-        Pay
+        {t('tabs.pay')}
       </Text>
     </View>
   );
@@ -97,9 +101,9 @@ export function PayScreen() {
       <View accessibilityRole="list" style={[styles.grid, { rowGap: spacing[4] }]}>
         {ACTIONS.map((a, i) => (
           <PressableScale
-            key={a.label}
+            key={a.key}
             accessibilityRole="button"
-            accessibilityLabel={a.label}
+            accessibilityLabel={t(`transfers.pay.actions.${a.key}`)}
             onPress={() => {
               haptic('tap');
               router.push(a.href);
@@ -119,7 +123,7 @@ export function PayScreen() {
               <Icon icon={a.icon} size="md" color={i === 0 ? 'onPrimary' : 'text'} />
             </View>
             <Text variant="caption" color="textMuted" numberOfLines={1}>
-              {a.label}
+              {t(`transfers.pay.actions.${a.key}`)}
             </Text>
           </PressableScale>
         ))}
@@ -128,8 +132,8 @@ export function PayScreen() {
       <Card padded={false}>
         <ListItem
           leading={Receipt}
-          title="Pay bills"
-          subtitle="Airtime, data, electricity and cable TV"
+          title={t('transfers.pay.bills')}
+          subtitle={t('transfers.pay.billsHint')}
           showChevron
           onPress={() => router.push('/bills')}
         />
@@ -138,8 +142,8 @@ export function PayScreen() {
       {people.length > 0 && (
         <View>
           <SectionHeader
-            title="Recent"
-            actionLabel="All"
+            title={t('transfers.pay.recent')}
+            actionLabel={t('common.all')}
             onAction={() => router.push('/send/beneficiaries')}
           />
           <ScrollView
@@ -153,7 +157,7 @@ export function PayScreen() {
                 <PressableScale
                   key={b.id}
                   accessibilityRole="button"
-                  accessibilityLabel={`Pay ${name}`}
+                  accessibilityLabel={t('common.payName', { name })}
                   onPress={() => pay(b)}
                   style={[styles.person, { gap: spacing[1] }]}
                 >
@@ -171,8 +175,12 @@ export function PayScreen() {
       {requests.length > 0 && (
         <View>
           <SectionHeader
-            title="Waiting for you"
-            actionLabel={requests.length > PREVIEW ? `All ${requests.length}` : undefined}
+            title={t('transfers.pay.waiting')}
+            actionLabel={
+              requests.length > PREVIEW
+                ? t('common.allCount', { count: requests.length })
+                : undefined
+            }
             onAction={() => router.push('/send/requests')}
           />
           <Card padded={false}>
@@ -196,8 +204,8 @@ export function PayScreen() {
       {upcoming.length > 0 && (
         <View>
           <SectionHeader
-            title="Coming up"
-            actionLabel="All"
+            title={t('transfers.pay.comingUp')}
+            actionLabel={t('common.all')}
             onAction={() => router.push('/send/scheduled')}
           />
           <Card padded={false}>

@@ -13,6 +13,7 @@ import { useTheme } from '@/theme';
 import { ConversionRow } from '../components/ConversionRow';
 import { ConversionSheet } from '../components/ConversionSheet';
 import { useConversionPages } from '../hooks/useConversionPages';
+import { useTranslation } from 'react-i18next';
 
 type Conversion = Schema<'FxConversion'>;
 
@@ -24,6 +25,7 @@ export function ConversionHistoryScreen() {
   const router = useRouter();
   const { colors, spacing } = useTheme();
   const list = useConversionPages();
+  const { t } = useTranslation();
   const [open, setOpen] = useState<Conversion | null>(null);
 
   const renderItem = useCallback(
@@ -39,9 +41,9 @@ export function ConversionHistoryScreen() {
     list.data.length === 0 ? (
       <EmptyState
         icon={ArrowLeftRight}
-        title="No conversions yet"
-        message="When you convert between naira and a foreign wallet, it shows up here."
-        actionLabel="Convert now"
+        title={t('fx.history.none')}
+        message={t('fx.history.noneMessage')}
+        actionLabel={t('fx.history.convertNow')}
         onAction={() => router.back()}
       />
     ) : (
@@ -64,12 +66,15 @@ export function ConversionHistoryScreen() {
         ListFooterComponent={
           list.isFetchingNextPage ? (
             <ActivityIndicator
-              accessibilityLabel="Loading more"
+              accessibilityLabel={t('common.loadingMore')}
               color={colors.primaryText}
               style={{ padding: spacing[4] }}
             />
           ) : list.isFetchNextPageError ? (
-            <ErrorState title="We couldn't load more" onRetry={() => void list.fetchNextPage()} />
+            <ErrorState
+              title={t('common.loadMoreFailed')}
+              onRetry={() => void list.fetchNextPage()}
+            />
           ) : (
             <View style={{ height: spacing[8] }} />
           )
@@ -79,11 +84,11 @@ export function ConversionHistoryScreen() {
   ) : list.isError ? (
     <ErrorState
       kind={isApiError(list.error) && list.error.problem.code === 'offline' ? 'offline' : 'error'}
-      title="We couldn't load your conversions"
+      title={t('fx.history.failed')}
       onRetry={() => void list.refetch()}
     />
   ) : (
-    <SkeletonGroup accessibilityLabel="Loading conversions">
+    <SkeletonGroup accessibilityLabel={t('fx.history.loading')}>
       {Array.from({ length: 5 }, (_, i) => (
         <SkeletonListItem key={i} />
       ))}
@@ -92,7 +97,7 @@ export function ConversionHistoryScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Conversion history" />}
+      header={<SendHeader title={t('fx.screen.history')} />}
       scroll={false}
       padded={false}
       edges={['top']}

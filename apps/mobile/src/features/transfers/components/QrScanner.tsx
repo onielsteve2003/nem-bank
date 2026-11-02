@@ -6,6 +6,7 @@ import { Linking, StyleSheet, View } from 'react-native';
 import { Button, EmptyState, Text, TextField } from '@/components';
 import { getCameraSupport, type CameraSupport } from '@/lib/camera';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   /** Called once per code; the scanner stays quiet until `paused` goes false again. */
@@ -22,6 +23,7 @@ export function QrScanner({ onScan, paused }: Props) {
   const [permission, requestPermission] = useCameraPermissions();
   const [support, setSupport] = useState<CameraSupport | null>(null);
   const [pasted, setPasted] = useState('');
+  const { t } = useTranslation();
   // A code in view fires many times a second; only the first one counts.
   const handled = useRef(false);
 
@@ -43,8 +45,8 @@ export function QrScanner({ onScan, paused }: Props) {
     camera = (
       <EmptyState
         icon={CameraOff}
-        title="No camera here"
-        message="Paste the code or pay link below instead."
+        title={t('transfers.scanner.noCamera')}
+        message={t('transfers.scanner.noCameraMessage')}
       />
     );
   } else if (!permission || support === null) {
@@ -60,20 +62,20 @@ export function QrScanner({ onScan, paused }: Props) {
     camera = permission.canAskAgain ? (
       <EmptyState
         icon={Camera}
-        title="Scan to pay"
-        message="Nem needs your camera to read QR codes. Nothing is recorded."
-        actionLabel="Allow camera"
+        title={t('transfers.scanner.scanToPay')}
+        message={t('transfers.scanner.needCamera')}
+        actionLabel={t('transfers.scanner.allowCamera')}
         onAction={() => void requestPermission()}
       />
     ) : (
       <View style={{ gap: spacing[3] }}>
         <EmptyState
           icon={CameraOff}
-          title="Camera is off for Nem"
-          message="Turn it on in Settings to scan, or paste the code below."
+          title={t('transfers.scanner.cameraOff')}
+          message={t('transfers.scanner.cameraOffMessage')}
         />
         <Button
-          label="Open Settings"
+          label={t('transfers.scanner.openSettings')}
           icon={Settings}
           variant="secondary"
           onPress={() => void Linking.openSettings()}
@@ -84,7 +86,7 @@ export function QrScanner({ onScan, paused }: Props) {
     camera = (
       <View
         style={[styles.frame, { borderRadius: radius.xl, borderColor: colors.primary }]}
-        accessibilityLabel="Camera. Point it at a Nem QR code."
+        accessibilityLabel={t('transfers.scanner.cameraLabel')}
       >
         <CameraView
           style={StyleSheet.absoluteFill}
@@ -101,20 +103,20 @@ export function QrScanner({ onScan, paused }: Props) {
       {camera}
       {permission?.granted && support !== 'none' && (
         <Text color="textMuted" align="center">
-          Point your camera at a Nem QR code.
+          {t('transfers.scanner.point')}
         </Text>
       )}
       <View style={{ gap: spacing[2] }}>
         <TextField
-          label="Or paste a code"
-          placeholder="Nem QR code or pay link"
+          label={t('transfers.scanner.paste')}
+          placeholder={t('transfers.scanner.pastePlaceholder')}
           value={pasted}
           onChangeText={setPasted}
           autoCapitalize="none"
           autoCorrect={false}
         />
         <Button
-          label="Check code"
+          label={t('transfers.scanner.check')}
           variant="secondary"
           disabled={!pasted.trim() || paused}
           onPress={() => {

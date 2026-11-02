@@ -36,16 +36,13 @@ import {
   scoreOutOf100,
   type RiskBand,
 } from '../hold';
+import { useTranslation } from 'react-i18next';
 
 const BAND_COLOR: Record<RiskBand['level'], TextColor> = {
   low: 'success',
   medium: 'warning',
   high: 'danger',
 };
-
-const EXPLANATION =
-  'Every payment is scored by rules (amount, device, who you pay, how often) and a fraud model. Risky ones wait for a check, and you always see why.';
-const FALLBACK = 'Rules only. Fraud protection cannot be turned off, because it guards your money.';
 
 function Reason({ reason }: { reason: RiskReason }) {
   const { spacing } = useTheme();
@@ -84,17 +81,18 @@ export function HoldExplanationScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const [checking, setChecking] = useState(false);
   const [error, setError] = useState<string>();
+  const { t: tr } = useTranslation();
   const transfer = useRepoQuery('transfers', 'get', { path: { transfer_id: id } });
   const cancel = useMoneyMutation('transfers', 'cancel');
 
-  const header = <SendHeader title="Payment checks" />;
+  const header = <SendHeader title={tr('transfers.holdScreen.title')} />;
   if (!transfer.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {transfer.isError ? (
-          <ErrorState title="We couldn't load this payment" onRetry={() => transfer.refetch()} />
+          <ErrorState title={tr('common.paymentFailed')} onRetry={() => transfer.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading the payment checks">
+          <SkeletonGroup accessibilityLabel={tr('transfers.holdScreen.loading')}>
             <Skeleton height={28} width={220} />
             <Skeleton height={96} />
             <Skeleton height={140} />
@@ -114,11 +112,11 @@ export function HoldExplanationScreen() {
         <View style={[styles.row, { gap: spacing[2] }]}>
           <Icon icon={ShieldCheck} color="success" />
           <Text variant="h3" style={styles.flex}>
-            Nothing is holding this payment
+            {tr('transfers.holdScreen.nothing')}
           </Text>
         </View>
-        <Text color="textMuted">It passed our checks. See where it is now.</Text>
-        <Button label="See the payment" onPress={toResult} />
+        <Text color="textMuted">{tr('transfers.holdScreen.passed')}</Text>
+        <Button label={tr('transfers.holdScreen.see')} onPress={toResult} />
       </Screen>
     );
   }
@@ -130,7 +128,7 @@ export function HoldExplanationScreen() {
   if (outcome === 'delayed' && reasons.length === 0) {
     reasons.push({
       code: 'new_beneficiary',
-      label: 'This is your first large payment to someone new.',
+      label: tr('transfers.holdScreen.firstLarge'),
       severity: 'medium',
     });
   }
@@ -145,14 +143,14 @@ export function HoldExplanationScreen() {
 
   const ways: { title: string; subtitle: string; icon: LucideIcon; go: () => void }[] = [
     {
-      title: "I didn't make this payment",
-      subtitle: 'Freeze everything now with the panic button',
+      title: tr('transfers.holdScreen.notMe'),
+      subtitle: tr('transfers.holdScreen.notMeHint'),
       icon: ShieldOff,
       go: () => router.push('/security/panic'),
     },
     {
-      title: 'Talk to us',
-      subtitle: 'Chat with Nem support about this payment',
+      title: tr('transfers.holdScreen.talk'),
+      subtitle: tr('transfers.holdScreen.talkHint'),
       icon: LifeBuoy,
       go: () => router.push('/support'),
     },
@@ -171,13 +169,17 @@ export function HoldExplanationScreen() {
           )}
           {(outcome === 'step_up' || outcome === 'delayed') && (
             <Button
-              label={outcome === 'delayed' ? 'Send now' : 'Confirm it is me'}
+              label={
+                outcome === 'delayed'
+                  ? tr('transfers.holdScreen.sendNow')
+                  : tr('transfers.holdScreen.confirmMe')
+              }
               onPress={() => setChecking(true)}
             />
           )}
           {canCancel(t.status) && (
             <Button
-              label="Cancel payment"
+              label={tr('transfers.holdScreen.cancel')}
               variant="secondary"
               loading={cancel.isPending}
               onPress={cancelIt}
@@ -191,8 +193,12 @@ export function HoldExplanationScreen() {
           {HOLD_TITLE[outcome]}
         </Text>
         <View style={[styles.row, styles.wrap, { gap: spacing[1] }]}>
-          <MoneyText value={fromApiMoney(t.amount)} variant="bodyStrong" label="Amount" />
-          <Text color="textMuted">to {t.recipient.name}</Text>
+          <MoneyText
+            value={fromApiMoney(t.amount)}
+            variant="bodyStrong"
+            label={tr('common.amount')}
+          />
+          <Text color="textMuted">{tr('transfers.holdScreen.to', { name: t.recipient.name })}</Text>
         </View>
       </View>
 
@@ -201,7 +207,10 @@ export function HoldExplanationScreen() {
           <View style={{ gap: spacing[2] }}>
             <View
               accessible
-              accessibilityLabel={`${band.label}, ${scoreOutOf100(risk.score)} out of 100`}
+              accessibilityLabel={tr('transfers.holdScreen.score', {
+                band: band.label,
+                score: scoreOutOf100(risk.score),
+              })}
               style={[styles.row, { gap: spacing[2] }]}
             >
               <Icon icon={Gauge} color={BAND_COLOR[band.level]} />
@@ -209,14 +218,17 @@ export function HoldExplanationScreen() {
                 {band.label}
               </Text>
               <Text variant="bodySmall" color="textMuted">
-                {scoreOutOf100(risk.score)} / 100
+                {tr('transfers.holdScreen.scoreShort', { score: scoreOutOf100(risk.score) })}
               </Text>
             </View>
             <View style={styles.start}>
               <AIBadge
-                feature="Fraud protection"
-                explanation={`${EXPLANATION} Checked by ${risk.model_version}.`}
-                fallback={FALLBACK}
+                feature={tr('transfers.holdScreen.feature')}
+                explanation={tr('transfers.holdScreen.checkedBy', {
+                  explanation: tr('transfers.holdScreen.explanation'),
+                  model: risk.model_version,
+                })}
+                fallback={tr('transfers.holdScreen.fallback')}
                 onManage={() =>
                   router.push({ pathname: '/ai/[feature]', params: { feature: 'fraud' } })
                 }
@@ -226,7 +238,7 @@ export function HoldExplanationScreen() {
         </Card>
       )}
 
-      <SectionHeader title="What we noticed" />
+      <SectionHeader title={tr('transfers.holdScreen.noticed')} />
       <Card>
         <View style={{ gap: spacing[4] }}>
           {reasons.map((r) => (
@@ -235,7 +247,7 @@ export function HoldExplanationScreen() {
         </View>
       </Card>
 
-      <SectionHeader title="What happens next" />
+      <SectionHeader title={tr('transfers.holdScreen.next')} />
       <Card>
         <View style={{ gap: spacing[3] }}>
           {nextSteps(outcome).map((s, i) => (
@@ -245,8 +257,7 @@ export function HoldExplanationScreen() {
       </Card>
 
       <Text variant="bodySmall" color="textMuted">
-        Did someone call or message you to make this payment? Stop and cancel it. Nem will never ask
-        you to move money to keep it safe.
+        {tr('transfers.holdScreen.pressure')}
       </Text>
 
       <Card padded={false}>
@@ -267,7 +278,7 @@ export function HoldExplanationScreen() {
       <StepUpSheet
         key={checking ? t.id : 'none'}
         transferId={checking ? t.id : null}
-        reason={reasons[0]?.label ?? 'This payment needs one more check before it goes.'}
+        reason={reasons[0]?.label ?? tr('transfers.holdScreen.oneMore')}
         onClose={() => setChecking(false)}
         onReleased={() => {
           setChecking(false);

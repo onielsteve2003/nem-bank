@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { compare, formatMoney, isPositive, parseMajor, type Money } from '@nem/shared';
 
 import { fromApiMoney } from '@/lib/money';
+import i18n from '@/lib/i18n';
 
 type Quote = Schema<'TransferQuote'>;
 
@@ -45,21 +46,27 @@ export function amountProblem({
   quote,
 }: AmountChecks): string | null {
   if (singleLimit && compare(amount, singleLimit) > 0) {
-    return `Above your own limit of ${formatMoney(singleLimit)} per transfer.`;
+    return i18n.t('transfers.amount.aboveLimit', { amount: formatMoney(singleLimit) });
   }
   if (compare(amount, available) > 0) {
-    return `More than your available ${formatMoney(available)}.`;
+    return i18n.t('transfers.amount.tooMuch', { amount: formatMoney(available) });
   }
   if (!quote) return null;
   const remaining = fromApiMoney(quote.limits.remaining_today);
   if (compare(amount, remaining) > 0) {
     return isPositive(remaining)
-      ? `You can send ${formatMoney(remaining)} more today on Tier ${quote.limits.kyc_tier}.`
-      : `You have reached today's limit on Tier ${quote.limits.kyc_tier}.`;
+      ? i18n.t('transfers.amount.remaining', {
+          amount: formatMoney(remaining),
+          tier: quote.limits.kyc_tier,
+        })
+      : i18n.t('transfers.amount.reached', { tier: quote.limits.kyc_tier });
   }
   const total = fromApiMoney(quote.total_debit);
   if (compare(total, available) > 0) {
-    return `You need ${formatMoney(total)} including the ${formatMoney(fromApiMoney(quote.fee))} fee.`;
+    return i18n.t('transfers.amount.needTotal', {
+      total: formatMoney(total),
+      fee: formatMoney(fromApiMoney(quote.fee)),
+    });
   }
   return null;
 }
@@ -69,9 +76,10 @@ export function coolingOffNotice(quote: Quote): string | null {
   const c = quote.cooling_off;
   if (!c) return null;
   if (c.reason === 'new_device') {
-    return "You signed in on this phone recently, so we'll ask you to confirm it's you.";
+    return i18n.t('transfers.amount.newDevice');
   }
-  return `First large payment to a new beneficiary: it goes out in ${c.delay_minutes} minutes${
-    c.step_up_skips_delay ? ', or straight away if you confirm it is you' : ''
-  }.`;
+  return i18n.t(
+    c.step_up_skips_delay ? 'transfers.amount.coolingOffSkip' : 'transfers.amount.coolingOff',
+    { minutes: c.delay_minutes },
+  );
 }

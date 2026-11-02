@@ -23,6 +23,7 @@ import { BeneficiaryRow } from '../components/BeneficiaryRow';
 import { BeneficiarySheet } from '../components/BeneficiarySheet';
 import { SendHeader } from '../components/SendHeader';
 import { recipientFromBeneficiary, useSendDraft } from '../sendDraft';
+import { useTranslation } from 'react-i18next';
 
 type Beneficiary = Schema<'Beneficiary'>;
 
@@ -36,6 +37,7 @@ const SEARCH_DELAY_MS = 300;
 export function BeneficiariesScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const setRecipient = useSendDraft((s) => s.setRecipient);
   const [search, setSearch] = useState('');
   const [chosen, setChosen] = useState<Beneficiary | null>(null);
@@ -61,11 +63,14 @@ export function BeneficiariesScreen() {
   const searching = q !== '';
 
   return (
-    <Screen header={<SendHeader title="Beneficiaries" />} edges={['top', 'bottom']}>
+    <Screen
+      header={<SendHeader title={t('transfers.beneficiariesScreen.title')} />}
+      edges={['top', 'bottom']}
+    >
       {(list?.length ?? 0) > 0 || searching ? (
         <TextField
-          label="Search beneficiaries"
-          placeholder="Name, nickname, bank or account"
+          label={t('transfers.beneficiariesScreen.search')}
+          placeholder={t('transfers.beneficiariesScreen.searchPlaceholder')}
           leadingIcon={Search}
           value={search}
           onChangeText={setSearch}
@@ -77,33 +82,36 @@ export function BeneficiariesScreen() {
         list.length === 0 ? (
           <EmptyState
             icon={Users}
-            title={searching ? 'No one matches that' : 'No beneficiaries yet'}
+            title={
+              searching
+                ? t('transfers.beneficiariesScreen.noMatch')
+                : t('transfers.beneficiariesScreen.none')
+            }
             message={
               searching
-                ? 'Try part of a name, a bank or the last digits of an account.'
-                : 'Turn on "Save for next time" when you review a payment.'
+                ? t('transfers.beneficiariesScreen.noMatchMessage')
+                : t('transfers.beneficiariesScreen.noneMessage')
             }
           />
         ) : (
           <>
             <Card padded={false}>
               {list.map((b) => (
-                <BeneficiaryRow key={b.id} beneficiary={b} onPress={setChosen} verb="Manage" />
+                <BeneficiaryRow key={b.id} beneficiary={b} onPress={setChosen} verb="manage" />
               ))}
             </Card>
             <Text variant="caption" color="textMuted">
-              Someone new gets a short safety wait: large first payments to them need an extra
-              check.
+              {t('transfers.beneficiariesScreen.safetyNote')}
             </Text>
           </>
         )
       ) : beneficiaries.isError ? (
         <ErrorState
-          title="We couldn't load your beneficiaries"
+          title={t('transfers.beneficiariesScreen.failed')}
           onRetry={() => beneficiaries.refetch()}
         />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading beneficiaries">
+        <SkeletonGroup accessibilityLabel={t('transfers.beneficiariesScreen.loading')}>
           <View style={{ gap: spacing[2] }}>
             <SkeletonListItem />
             <SkeletonListItem />

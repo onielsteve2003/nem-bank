@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { SPLIT_REMIND_HOURS } from '@nem/shared';
+import i18n from '@/lib/i18n';
 
 type SplitBill = Schema<'SplitBill'>;
 type SplitShare = Schema<'SplitShare'>;
@@ -50,9 +51,9 @@ export const remindable = (split: SplitBill, now: number = Date.now()) =>
 /** "Reminded 5 min ago", "Reminded 3 h ago", for a share still to pay. */
 export function remindedAgo(at: string, now: number = Date.now()): string {
   const minutes = Math.max(0, Math.round((now - Date.parse(at)) / 60_000));
-  if (minutes < 1) return 'Reminded just now';
-  if (minutes < 60) return `Reminded ${minutes} min ago`;
-  return `Reminded ${Math.round(minutes / 60)} h ago`;
+  if (minutes < 1) return i18n.t('transfers.splits.remindedNow');
+  if (minutes < 60) return i18n.t('transfers.splits.remindedMin', { count: minutes });
+  return i18n.t('transfers.splits.remindedHours', { count: Math.round(minutes / 60) });
 }
 
 export const isSettled = (split: SplitBill) =>

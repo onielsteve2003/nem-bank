@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 
 import type { RiskReason } from '@/components';
 import { isApiError, type ApiError } from '@/data';
+import i18n from '@/lib/i18n';
 
 type Transfer = Schema<'Transfer'>;
 
@@ -69,7 +70,7 @@ export interface SendError {
 export function sendErrorMessage(error: ApiError | Error): SendError {
   if (!isApiError(error)) {
     return {
-      message: "We couldn't send it. Nothing has left your account. Try again.",
+      message: i18n.t('transfers.errors.nothingLeft'),
       requote: false,
     };
   }
@@ -77,7 +78,7 @@ export function sendErrorMessage(error: ApiError | Error): SendError {
   switch (code) {
     case 'quote_expired':
       return {
-        message: 'The fee or limit changed. Check the new total and confirm again.',
+        message: i18n.t('transfers.errors.changed'),
         requote: true,
       };
     case 'insufficient_funds':
@@ -86,17 +87,17 @@ export function sendErrorMessage(error: ApiError | Error): SendError {
       return { message: detail ?? title, requote: true };
     case 'offline':
       return {
-        message: "You're offline. Reconnect and try again; it won't send twice.",
+        message: i18n.t('transfers.errors.offline'),
         requote: false,
       };
     case 'gateway_timeout':
     case 'service_unavailable':
     case 'network_error':
       return {
-        message: "We didn't hear back. Try again: if it already went through, it won't send twice.",
+        message: i18n.t('transfers.errors.noReply'),
         requote: false,
       };
     default:
-      return { message: detail ?? "We couldn't send it. Try again.", requote: false };
+      return { message: detail ?? i18n.t('transfers.errors.failed'), requote: false };
   }
 }

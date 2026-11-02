@@ -17,6 +17,7 @@ import { haptic } from '@/lib/haptics';
 import { useRepoQuery } from '@/lib/query';
 
 import { searchBanks } from '../recipient';
+import { useTranslation } from 'react-i18next';
 
 type Bank = Schema<'Bank'>;
 
@@ -33,6 +34,7 @@ export function BankPickerSheet({
   onSelect: (bank: Bank) => void;
 }) {
   const [search, setSearch] = useState('');
+  const { t } = useTranslation();
   // The list hardly ever changes, so one fetch serves the whole session.
   const banks = useRepoQuery('payees', 'listBanks', undefined, { staleTime: Infinity });
   const shown = banks.data ? searchBanks(banks.data.data, search) : [];
@@ -43,10 +45,15 @@ export function BankPickerSheet({
   };
 
   return (
-    <BottomSheet open={open} onClose={close} title="Choose a bank" snapPoints={['90%']}>
+    <BottomSheet
+      open={open}
+      onClose={close}
+      title={t('transfers.banks.title')}
+      snapPoints={['90%']}
+    >
       <TextField
-        label="Search banks"
-        placeholder="Name or bank code"
+        label={t('transfers.banks.search')}
+        placeholder={t('transfers.banks.searchPlaceholder')}
         leadingIcon={Search}
         value={search}
         onChangeText={setSearch}
@@ -54,7 +61,11 @@ export function BankPickerSheet({
       />
       {banks.data ? (
         shown.length === 0 ? (
-          <EmptyState icon={Landmark} title="No bank matches that" message="Try its short name." />
+          <EmptyState
+            icon={Landmark}
+            title={t('transfers.banks.none')}
+            message={t('transfers.banks.noneMessage')}
+          />
         ) : (
           <Card padded={false}>
             {shown.map((b) => (
@@ -67,7 +78,7 @@ export function BankPickerSheet({
                   b.code === selected ? <Icon icon={Check} color="primaryText" /> : undefined
                 }
                 showChevron={false}
-                accessibilityLabel={`${b.name}${b.code === selected ? ', selected' : ''}`}
+                accessibilityLabel={`${b.name}${b.code === selected ? t('common.selected') : ''}`}
                 onPress={() => {
                   haptic('selection');
                   setSearch('');
@@ -78,9 +89,9 @@ export function BankPickerSheet({
           </Card>
         )
       ) : banks.isError ? (
-        <ErrorState title="We couldn't load the bank list" onRetry={() => banks.refetch()} />
+        <ErrorState title={t('transfers.banks.failed')} onRetry={() => banks.refetch()} />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading banks">
+        <SkeletonGroup accessibilityLabel={t('transfers.banks.loading')}>
           <SkeletonListItem />
           <SkeletonListItem />
           <SkeletonListItem />

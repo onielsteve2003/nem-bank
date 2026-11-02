@@ -1,4 +1,5 @@
 import type { Schema } from '@nem/contracts';
+import i18n from '@/lib/i18n';
 
 type Beneficiary = Schema<'Beneficiary'>;
 
@@ -23,7 +24,7 @@ export function formatUntil(until: Date, now: number = Date.now()): string {
 }
 
 export function coolingOffMessage(until: Date, now: number = Date.now()): string {
-  return `New: large payments need an extra check until ${formatUntil(until, now)}.`;
+  return i18n.t('transfers.beneficiaries.coolingOff', { until: formatUntil(until, now) });
 }
 
 /** "Mummy (Ngozi Adebayo)" when nicknamed, else the account name. */

@@ -11,6 +11,7 @@ import { useMoneyMutation, useRepoMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { sendErrorMessage } from '../confirm';
+import { useTranslation } from 'react-i18next';
 
 type Transfer = Schema<'Transfer'>;
 type Challenge = Schema<'StepUpChallenge'>;
@@ -36,6 +37,7 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
   const [code, setCode] = useState('');
   const [error, setError] = useState<string>();
   const [attemptsLeft, setAttemptsLeft] = useState(0);
+  const { t } = useTranslation();
   const resendIn = useSecondsUntil(challenge?.otp?.resend_available_at ?? '');
 
   const start = useRepoMutation('auth', 'startStepUp', { invalidates: [] });
@@ -56,8 +58,8 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
         onError: (e) =>
           setError(
             isApiError(e) && e.problem.code === 'offline'
-              ? "You're offline. Reconnect and try again."
-              : "We couldn't send a code. Try again.",
+              ? t('common.offline')
+              : t('common.sendCodeFailed'),
           ),
       },
     );
@@ -106,7 +108,7 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
           setError(undefined);
           setCode('');
         },
-        onError: () => setError("We couldn't send a new code. Try again."),
+        onError: () => setError(t('common.resendFailed')),
       },
     );
   };
@@ -114,13 +116,13 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
   const busy = verify.isPending || release.isPending;
 
   return (
-    <BottomSheet open={transferId !== null} onClose={onClose} title="One more check">
+    <BottomSheet open={transferId !== null} onClose={onClose} title={t('transfers.stepUp.title')}>
       <View style={{ gap: spacing[4] }}>
         <Text color="textMuted">{reason}</Text>
         {challenge?.otp ? (
           <>
             <Text>
-              Enter the 6-digit code we sent to{' '}
+              {t('transfers.stepUp.codeSent')}
               <Text variant="bodyStrong">{challenge.otp.destination_masked}</Text>.
             </Text>
             <OtpInput
@@ -128,24 +130,22 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
               onChangeText={setCode}
               onComplete={(entered) => void check(entered)}
               error={error}
-              help={
-                env.apiMode === 'mock' ? `Demo bank: the code is always ${DEMO_OTP}.` : undefined
-              }
+              help={env.apiMode === 'mock' ? t('common.demoOtp', { code: DEMO_OTP }) : undefined}
               autoFocus
             />
             {busy ? (
               <View style={[styles.row, { gap: spacing[2] }]}>
                 <ActivityIndicator size="small" />
                 <Text variant="bodySmall" color="textMuted">
-                  Checking and sending…
+                  {t('transfers.stepUp.checking')}
                 </Text>
               </View>
             ) : (
               <Button
                 label={
                   resendIn > 0
-                    ? `Send a new code in ${formatCountdown(resendIn)}`
-                    : 'Send a new code'
+                    ? t('transfers.stepUp.newCodeIn', { time: formatCountdown(resendIn) })
+                    : t('transfers.stepUp.newCode')
                 }
                 variant="ghost"
                 size="sm"
@@ -158,7 +158,7 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
           <>
             <Text color="danger">{error}</Text>
             <Button
-              label="Try again"
+              label={t('common.tryAgain')}
               onPress={() => {
                 if (!transferId) return;
                 setError(undefined);
@@ -170,7 +170,7 @@ export function StepUpSheet({ transferId, onClose, onReleased, reason }: Props) 
         ) : (
           <View style={[styles.row, { gap: spacing[2] }]}>
             <ActivityIndicator size="small" />
-            <Text color="textMuted">Sending you a code…</Text>
+            <Text color="textMuted">{t('transfers.stepUp.sending')}</Text>
           </View>
         )}
       </View>

@@ -6,6 +6,8 @@ import { StyleSheet, View } from 'react-native';
 import { Button, IconButton, SelectSheet } from '@/components';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 type Account = Schema<'Account'>;
 
@@ -24,8 +26,10 @@ export type Props = {
 
 const walletOption = (a: Account) => ({
   value: a.id,
-  label: `${CURRENCIES[a.currency].flag} ${a.nickname ?? `${a.currency} wallet`}`,
-  description: `${formatMoney(fromApiMoney(a.available_balance))} available`,
+  label: `${CURRENCIES[a.currency].flag} ${a.nickname ?? i18n.t('fx.pair.walletName', { currency: a.currency })}`,
+  description: i18n.t('fx.pair.availableAmount', {
+    amount: formatMoney(fromApiMoney(a.available_balance)),
+  }),
 });
 
 /** Which wallet to convert from and into, with a swap between them. */
@@ -40,11 +44,12 @@ export function PairPicker({
   onAddWallet,
 }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={{ gap: spacing[1] }}>
       <SelectSheet
-        label="From"
-        title="Convert from"
+        label={t('common.from')}
+        title={t('fx.pair.from')}
         options={wallets.map(walletOption)}
         value={from.id}
         onChange={onFrom}
@@ -52,21 +57,21 @@ export function PairPicker({
       <View style={styles.center}>
         <IconButton
           icon={ArrowDownUp}
-          accessibilityLabel={`Swap: convert ${to.currency} to ${from.currency} instead`}
+          accessibilityLabel={t('fx.pair.swap', { to: to.currency, from: from.currency })}
           variant="ghost"
           onPress={onSwap}
         />
       </View>
       <SelectSheet
-        label="To"
-        title="Convert to"
+        label={t('common.to')}
+        title={t('fx.pair.to')}
         options={partners.map(walletOption)}
         value={to.id}
         onChange={onTo}
-        help={from.currency === 'NGN' ? undefined : 'Foreign wallets convert back to naira.'}
+        help={from.currency === 'NGN' ? undefined : t('fx.pair.backToNaira')}
       />
       {onAddWallet && (
-        <Button label="Add another wallet" variant="ghost" size="sm" onPress={onAddWallet} />
+        <Button label={t('fx.pair.addAnother')} variant="ghost" size="sm" onPress={onAddWallet} />
       )}
     </View>
   );

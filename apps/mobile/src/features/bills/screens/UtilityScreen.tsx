@@ -29,6 +29,7 @@ import { useTheme } from '@/theme';
 import { categoryMeta, CUSTOMER_LABEL, type BillPrefill } from '../bills';
 import { useBillCheckout } from '../checkout';
 import { BillOptions } from '../components/BillOptions';
+import { useTranslation } from 'react-i18next';
 
 type Category = 'electricity' | 'cable_tv';
 
@@ -47,6 +48,7 @@ export function UtilityScreen({
   prefill?: BillPrefill;
 }) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const meta = categoryMeta(category);
   const isPower = category === 'electricity';
   const accounts = useRepoQuery('accounts', 'list');
@@ -98,7 +100,7 @@ export function UtilityScreen({
   const alreadySaved = saved.data?.data.some(
     (b) => b.biller_id === billerId && b.customer_id === digits,
   );
-  const verb = schedule ? 'Schedule' : 'Pay';
+  const action = schedule ? 'schedule' : 'pay';
 
   const onApproved = async () => {
     if (!customer || !price || !source) return false;
@@ -122,7 +124,13 @@ export function UtilityScreen({
       edges={['top', 'bottom']}
       footer={
         <Button
-          label={price && ready ? `${verb} ${formatMoney(price, { trimZeroMinor: true })}` : verb}
+          label={
+            price && ready
+              ? t(`bills.action.${action}Amount`, {
+                  amount: formatMoney(price, { trimZeroMinor: true }),
+                })
+              : t(`bills.action.${action}`)
+          }
           disabled={!ready}
           onPress={() => {
             checkout.reset();
@@ -132,11 +140,14 @@ export function UtilityScreen({
       }
     >
       <View>
-        <SectionHeader title="Provider" />
+        <SectionHeader title={t('bills.utility.provider')} />
         {billers.isError ? (
-          <ErrorState title="We couldn't load the providers" onRetry={() => billers.refetch()} />
+          <ErrorState
+            title={t('bills.utility.providersFailed')}
+            onRetry={() => billers.refetch()}
+          />
         ) : !billers.data ? (
-          <SkeletonGroup accessibilityLabel="Loading providers">
+          <SkeletonGroup accessibilityLabel={t('bills.utility.loadingProviders')}>
             <Skeleton height={36} />
           </SkeletonGroup>
         ) : (
@@ -165,20 +176,28 @@ export function UtilityScreen({
         maxLength={ID_LENGTH[category]}
         help={
           !billerId
-            ? 'Pick a provider first'
-            : `${ID_LENGTH[category]} digits${isPower ? ', on the meter or your last token receipt' : ', under the decoder'}`
+            ? t('bills.utility.pickProvider')
+            : t(isPower ? 'bills.utility.meterHelp' : 'bills.utility.cardHelp', {
+                count: ID_LENGTH[category],
+              })
         }
         error={
           notFound
-            ? `We couldn't find that ${isPower ? 'meter' : 'smartcard'} with ${biller?.name}`
+            ? t(isPower ? 'bills.utility.meterNotFound' : 'bills.utility.cardNotFound', {
+                biller: biller?.name,
+              })
             : validation.isError
-              ? "We couldn't check that number. Try again."
+              ? t('bills.utility.checkFailed')
               : undefined
         }
       />
 
       {complete && billerId && validation.isFetching && !customer && (
-        <SkeletonGroup accessibilityLabel={`Checking the ${isPower ? 'meter' : 'smartcard'}`}>
+        <SkeletonGroup
+          accessibilityLabel={t(
+            isPower ? 'bills.utility.checkingMeter' : 'bills.utility.checkingCard',
+          )}
+        >
           <Skeleton height={64} />
         </SkeletonGroup>
       )}
@@ -205,7 +224,7 @@ export function UtilityScreen({
             )}
             {customer.current_plan && (
               <Text variant="caption" color="textMuted">
-                Current plan: {customer.current_plan}
+                {t('bills.utility.currentPlan', { plan: customer.current_plan })}
               </Text>
             )}
           </View>
@@ -216,24 +235,30 @@ export function UtilityScreen({
         (isPower ? (
           <AmountInput
             currency="NGN"
-            label="Amount"
+            label={t('common.amount')}
             value={amount}
             onChangeValue={setAmount}
             maxWholeDigits={7}
-            help={min ? `At least ${formatMoney(min, { trimZeroMinor: true })}` : undefined}
+            help={
+              min
+                ? t('bills.utility.atLeast', { amount: formatMoney(min, { trimZeroMinor: true }) })
+                : undefined
+            }
             error={
               tooSmall && min
-                ? `The least you can buy is ${formatMoney(min, { trimZeroMinor: true })}`
+                ? t('bills.utility.minimum', {
+                    amount: formatMoney(min, { trimZeroMinor: true }),
+                  })
                 : undefined
             }
           />
         ) : (
           <View>
-            <SectionHeader title="Plans" />
+            <SectionHeader title={t('bills.utility.plans')} />
             {plans.isError ? (
-              <ErrorState title="We couldn't load the plans" onRetry={() => plans.refetch()} />
+              <ErrorState title={t('bills.utility.plansFailed')} onRetry={() => plans.refetch()} />
             ) : !plans.data ? (
-              <SkeletonGroup accessibilityLabel="Loading plans">
+              <SkeletonGroup accessibilityLabel={t('bills.utility.loadingPlans')}>
                 <Skeleton height={56} />
                 <Skeleton height={56} />
               </SkeletonGroup>
@@ -245,9 +270,9 @@ export function UtilityScreen({
                     title={p.name}
                     subtitle={
                       p.name === customer.current_plan
-                        ? 'Current plan · Renew'
+                        ? t('bills.utility.renew')
                         : p.validity_days
-                          ? `${p.validity_days} days`
+                          ? t('bills.utility.days', { count: p.validity_days })
                           : undefined
                     }
                     trailing={
@@ -258,7 +283,7 @@ export function UtilityScreen({
                         {formatMoney(fromApiMoney(p.amount), { trimZeroMinor: true })}
                       </Text>
                     }
-                    accessibilityLabel={`${p.name}, ${formatMoney(fromApiMoney(p.amount))}${p.id === productId ? ', selected' : ''}`}
+                    accessibilityLabel={`${p.name}, ${formatMoney(fromApiMoney(p.amount))}${p.id === productId ? t('common.selected') : ''}`}
                     onPress={() => setProductId(p.id)}
                   />
                 ))}
@@ -274,12 +299,12 @@ export function UtilityScreen({
           nickname={nickname}
           onNicknameChange={setNickname}
           canSave={saved.data !== undefined && !alreadySaved}
-          suggestedName={`${biller?.name.replace(' (prepaid)', '') ?? ''} ${isPower ? 'meter' : 'decoder'}`.trim()}
+          suggestedName={`${biller?.name.replace(' (prepaid)', '') ?? ''} ${isPower ? t('bills.utility.meter') : t('bills.utility.decoder')}`.trim()}
         />
       )}
 
       <Text variant="caption" color="textMuted">
-        Billers are simulated: payments complete instantly and no real provider is charged.
+        {t('bills.utility.simulated')}
       </Text>
 
       <ConfirmSheet
@@ -287,7 +312,12 @@ export function UtilityScreen({
         onClose={() => setConfirming(false)}
         subtitle={
           price && customer
-            ? `${verb} ${formatMoney(price)} to ${biller?.name}${plan ? ` for ${plan.name}` : ''}, ${customer.customer_name}`
+            ? t(`bills.utility.confirm.${action}${plan ? 'Plan' : ''}`, {
+                amount: formatMoney(price),
+                biller: biller?.name,
+                plan: plan?.name,
+                customer: customer.customer_name,
+              })
             : ''
         }
         onApproved={onApproved}

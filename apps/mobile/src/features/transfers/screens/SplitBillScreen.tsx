@@ -25,6 +25,7 @@ import { SendHeader } from '../components/SendHeader';
 import { SplitProgress } from '../components/SplitProgress';
 import { REQUEST_STATUS, requestErrorMessage } from '../requests';
 import { isSettled, remindable, remindedAgo } from '../splits';
+import { useTranslation } from 'react-i18next';
 
 /** Friends pay back on their own time; look again every few seconds while anyone owes. */
 const POLL_MS = 5_000;
@@ -38,6 +39,7 @@ export function SplitBillScreen() {
   const { id = '' } = useLocalSearchParams<{ id: string }>();
   const { spacing } = useTheme();
   const [message, setMessage] = useState<{ text: string; ok: boolean }>();
+  const { t } = useTranslation();
   const split = useRepoQuery(
     'moneyRequests',
     'getSplitBill',
@@ -56,13 +58,13 @@ export function SplitBillScreen() {
       {
         onSuccess: () =>
           setMessage({
-            text: `Reminder sent to ${count} ${count === 1 ? 'person' : 'people'}.`,
+            text: t('transfers.splitBill.reminded', { count }),
             ok: true,
           }),
         onError: (e) =>
           setMessage({
             text: isApiError(e, 'rate_limited')
-              ? 'Everyone still to pay was reminded in the last day.'
+              ? t('transfers.splitBill.allReminded')
               : requestErrorMessage(e),
             ok: false,
           }),
@@ -72,21 +74,24 @@ export function SplitBillScreen() {
 
   if (!s) {
     return (
-      <Screen header={<SendHeader title="Split bill" />} edges={['top', 'bottom']}>
+      <Screen
+        header={<SendHeader title={t('transfers.splitBill.title')} />}
+        edges={['top', 'bottom']}
+      >
         {split.isError ? (
           isApiError(split.error, 'not_found') ? (
             <EmptyState
               icon={Receipt}
-              title="Split bill not found"
-              message="It may have been made on another device."
-              actionLabel="See your split bills"
+              title={t('transfers.splitBill.notFound')}
+              message={t('transfers.splitBill.notFoundMessage')}
+              actionLabel={t('transfers.splitBill.seeAll')}
               onAction={() => router.replace('/send/splits')}
             />
           ) : (
-            <ErrorState title="We couldn't load this split" onRetry={() => split.refetch()} />
+            <ErrorState title={t('transfers.splitBill.failed')} onRetry={() => split.refetch()} />
           )
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading the split bill">
+          <SkeletonGroup accessibilityLabel={t('transfers.splitBill.loading')}>
             <Skeleton height={120} />
             <Skeleton height={200} />
           </SkeletonGroup>
@@ -100,11 +105,11 @@ export function SplitBillScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Split bill" />}
+      header={<SendHeader title={t('transfers.splitBill.title')} />}
       edges={['top', 'bottom']}
       footer={
         settled ? (
-          <Button label="Done" onPress={() => router.dismissTo('/')} />
+          <Button label={t('common.done')} onPress={() => router.dismissTo('/')} />
         ) : (
           <View style={{ gap: spacing[2] }}>
             {message && (
@@ -117,15 +122,13 @@ export function SplitBillScreen() {
               </Text>
             )}
             <Button
-              label="Remind those who haven't paid"
+              label={t('transfers.splitBill.remind')}
               icon={BellRing}
               variant="secondary"
               disabled={!canRemindNow}
               loading={remind.isPending}
               onPress={remindAll}
-              accessibilityHint={
-                canRemindNow ? undefined : 'Everyone still to pay was reminded in the last day'
-              }
+              accessibilityHint={canRemindNow ? undefined : t('transfers.splitBill.allReminded')}
             />
           </View>
         )
@@ -137,11 +140,15 @@ export function SplitBillScreen() {
             <View style={styles.flex}>
               <Text variant="title">{s.title}</Text>
               <Text color="textMuted">
-                {formatMoney(fromApiMoney(s.total))} · {s.split === 'equal' ? 'equal' : 'custom'}{' '}
-                shares
+                {t(
+                  s.split === 'equal' ? 'transfers.splitBill.equal' : 'transfers.splitBill.custom',
+                  {
+                    amount: formatMoney(fromApiMoney(s.total)),
+                  },
+                )}
               </Text>
             </View>
-            {settled && <Badge label="Settled" tone="success" />}
+            {settled && <Badge label={t('transfers.splitBill.settled')} tone="success" />}
           </View>
           <SplitProgress split={s} />
         </View>
@@ -154,7 +161,7 @@ export function SplitBillScreen() {
             const status = REQUEST_STATUS[share.status];
             const amount = formatMoney(fromApiMoney(share.amount));
             const note = self
-              ? 'Your share'
+              ? t('transfers.splitBill.yourShare')
               : share.status === 'pending' && share.last_reminded_at
                 ? remindedAgo(share.last_reminded_at)
                 : share.participant.nemtag
@@ -164,12 +171,16 @@ export function SplitBillScreen() {
               <View
                 key={share.money_request_id ?? 'self'}
                 accessible
-                accessibilityLabel={`${self ? 'You' : share.participant.name}, ${amount}, ${self ? 'paid' : status.label}`}
+                accessibilityLabel={t('transfers.splitBill.spoken', {
+                  name: self ? t('common.you') : share.participant.name,
+                  amount,
+                  status: self ? t('transfers.splitBill.paid') : status.label,
+                })}
                 style={[styles.row, { gap: spacing[3] }]}
               >
                 <Avatar name={share.participant.name} size="sm" ring={!self} />
                 <View style={styles.flex}>
-                  <Text numberOfLines={1}>{self ? 'You' : share.participant.name}</Text>
+                  <Text numberOfLines={1}>{self ? t('common.you') : share.participant.name}</Text>
                   <Text variant="caption" color="textMuted">
                     {note}
                   </Text>
@@ -184,7 +195,7 @@ export function SplitBillScreen() {
         </View>
       </Card>
       <Text variant="caption" color="textMuted">
-        Each person got a money request for their share. It shows as paid the moment they pay.
+        {t('transfers.splitBill.note')}
       </Text>
     </Screen>
   );

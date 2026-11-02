@@ -5,6 +5,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, Text } from '@/components';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 type Props = { reason: ScamReason };
 
@@ -15,6 +16,7 @@ type Props = { reason: ScamReason };
 export function ScamHint({ reason }: Props) {
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const color = reason.severity === 'high' ? 'danger' : 'warning';
 
   return (
@@ -34,12 +36,12 @@ export function ScamHint({ reason }: Props) {
       <View style={[styles.row, { gap: spacing[2] }]}>
         <Icon icon={ShieldAlert} color={color} size="sm" />
         <Text variant="bodyStrong" style={styles.flex}>
-          {reason.severity === 'high' ? 'This could be a scam' : 'Take a moment'}
+          {reason.severity === 'high' ? t('transfers.scam.high') : t('transfers.scam.medium')}
         </Text>
       </View>
       <Text variant="bodySmall">{reason.message}</Text>
       <Button
-        label="Check with the scam checker"
+        label={t('transfers.scam.check')}
         variant="ghost"
         size="sm"
         style={styles.start}

@@ -7,12 +7,15 @@ import { Avatar, Icon, ListItem } from '@/components';
 import { useTheme } from '@/theme';
 
 import { beneficiaryTitle, coolingOffUntil, formatUntil } from '../beneficiaries';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 type Beneficiary = Schema<'Beneficiary'>;
 
 /** "@amaka_o · Nem" or "GTBank · ••6789": enough to tell two Chidis apart. */
 export function beneficiarySubtitle(b: Beneficiary): string {
-  if (b.kind === 'nem' && b.nemtag) return `@${b.nemtag} · Nem`;
+  if (b.kind === 'nem' && b.nemtag)
+    return i18n.t('transfers.beneficiaries.subtitleNem', { nemtag: b.nemtag });
   return `${b.bank_name} · ••${b.account_number.slice(-4)}`;
 }
 
@@ -23,20 +26,24 @@ export function beneficiarySubtitle(b: Beneficiary): string {
 export const BeneficiaryRow = memo(function BeneficiaryRow({
   beneficiary: b,
   onPress,
-  verb = 'Pay',
+  verb = 'pay',
 }: {
   beneficiary: Beneficiary;
   onPress: (b: Beneficiary) => void;
-  verb?: string;
+  /** What a tap does, as the screen reader says it. */
+  verb?: 'pay' | 'manage';
 }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const title = beneficiaryTitle(b);
   const until = coolingOffUntil(b);
-  const subtitle = until ? `New · ${beneficiarySubtitle(b)}` : beneficiarySubtitle(b);
+  const subtitle = until
+    ? t('transfers.beneficiaries.new', { subtitle: beneficiarySubtitle(b) })
+    : beneficiarySubtitle(b);
   const spoken = [
-    `${verb} ${title}, ${beneficiarySubtitle(b)}`,
-    b.favourite ? 'favourite' : null,
-    until ? `new, large payments need an extra check until ${formatUntil(until)}` : null,
+    t(`transfers.beneficiaries.spoken.${verb}`, { title, subtitle: beneficiarySubtitle(b) }),
+    b.favourite ? t('transfers.beneficiaries.favourite') : null,
+    until ? t('transfers.beneficiaries.spokenNew', { until: formatUntil(until) }) : null,
   ]
     .filter(Boolean)
     .join(', ');

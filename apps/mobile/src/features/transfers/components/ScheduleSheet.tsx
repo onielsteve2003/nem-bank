@@ -14,6 +14,7 @@ import {
   startPresets,
   type ScheduleChoice,
 } from '../schedule';
+import { useTranslation } from 'react-i18next';
 
 type Frequency = Schema<'ScheduleFrequency'>;
 
@@ -42,10 +43,11 @@ export function ScheduleSheet({
   onClose,
   onApply,
   allowEnd = true,
-  nowLabel = 'Send now instead',
-  footnote = 'The fee applies to each payment.',
+  nowLabel,
+  footnote,
 }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const today = lagosToday();
   const presets = startPresets(today);
   const [frequency, setFrequency] = useState<Frequency>(value?.frequency ?? 'once');
@@ -67,18 +69,18 @@ export function ScheduleSheet({
     (preset === 'custom' && customStart.length === 10 && !startDate) ||
     (frequency !== 'once' && hasEnd && customEnd.length === 10 && !endsOn);
   const error = typedBadly
-    ? 'Use real dates in DD/MM/YYYY'
+    ? t('transfers.scheduleSheet.badDates')
     : choice
       ? scheduleError(choice, today)
       : null;
   const ready = choice && !error && !(frequency !== 'once' && hasEnd && !endsOn);
 
   return (
-    <BottomSheet open onClose={onClose} title="When should it go?">
+    <BottomSheet open onClose={onClose} title={t('transfers.scheduleSheet.title')}>
       <View style={{ gap: spacing[4] }}>
         <View style={{ gap: spacing[2] }}>
           <Text variant="label" color="textMuted">
-            How often
+            {t('transfers.scheduleSheet.howOften')}
           </Text>
           <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
             {(Object.keys(FREQUENCIES) as Frequency[]).map((f) => (
@@ -94,7 +96,9 @@ export function ScheduleSheet({
 
         <View style={{ gap: spacing[2] }}>
           <Text variant="label" color="textMuted">
-            {frequency === 'once' ? 'On' : 'First payment'}
+            {frequency === 'once'
+              ? t('transfers.scheduleSheet.on')
+              : t('transfers.scheduleSheet.first')}
           </Text>
           <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
             {presets.map((p) => (
@@ -106,14 +110,14 @@ export function ScheduleSheet({
               />
             ))}
             <Chip
-              label="Pick a day"
+              label={t('transfers.scheduleSheet.pickDay')}
               selected={preset === 'custom'}
               onPress={() => setPreset('custom')}
             />
           </View>
           {preset === 'custom' && (
             <TextField
-              label="Day"
+              label={t('transfers.scheduleSheet.day')}
               placeholder="DD/MM/YYYY"
               keyboardType="numbers-and-punctuation"
               value={customStart}
@@ -126,15 +130,23 @@ export function ScheduleSheet({
         {frequency !== 'once' && allowEnd && (
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
-              Ends
+              {t('transfers.scheduleSheet.ends')}
             </Text>
             <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
-              <Chip label="When I cancel" selected={!hasEnd} onPress={() => setHasEnd(false)} />
-              <Chip label="On a day" selected={hasEnd} onPress={() => setHasEnd(true)} />
+              <Chip
+                label={t('transfers.scheduleSheet.whenCancel')}
+                selected={!hasEnd}
+                onPress={() => setHasEnd(false)}
+              />
+              <Chip
+                label={t('transfers.scheduleSheet.onDay')}
+                selected={hasEnd}
+                onPress={() => setHasEnd(true)}
+              />
             </View>
             {hasEnd && (
               <TextField
-                label="Last day"
+                label={t('transfers.scheduleSheet.lastDay')}
                 placeholder="DD/MM/YYYY"
                 keyboardType="numbers-and-punctuation"
                 value={customEnd}
@@ -151,17 +163,26 @@ export function ScheduleSheet({
           </Text>
         ) : choice ? (
           <Text variant="bodySmall" color="textMuted" accessibilityLiveRegion="polite">
-            {describeSchedule(choice)}, at about 9 am. {footnote}
+            {t('transfers.scheduleSheet.summary', {
+              schedule: describeSchedule(choice),
+              footnote: footnote ?? t('transfers.scheduleSheet.feeEach'),
+            })}
           </Text>
         ) : null}
 
         <Button
-          label="Use this schedule"
+          label={t('transfers.scheduleSheet.use')}
           icon={CalendarClock}
           disabled={!ready}
           onPress={() => choice && onApply(choice)}
         />
-        {value && <Button label={nowLabel} variant="ghost" onPress={() => onApply(null)} />}
+        {value && (
+          <Button
+            label={nowLabel ?? t('transfers.scheduleSheet.sendNowInstead')}
+            variant="ghost"
+            onPress={() => onApply(null)}
+          />
+        )}
       </View>
     </BottomSheet>
   );

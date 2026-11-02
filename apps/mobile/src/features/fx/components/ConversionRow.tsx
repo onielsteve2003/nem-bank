@@ -10,6 +10,7 @@ import { usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { conversionTitle, foreignSide } from '../history';
+import { useTranslation } from 'react-i18next';
 
 export type Props = { conversion: Schema<'FxConversion'>; onPress: () => void };
 
@@ -17,6 +18,7 @@ export type Props = { conversion: Schema<'FxConversion'>; onPress: () => void };
 export const ConversionRow = memo(function ConversionRow({ conversion: c, onPress }: Props) {
   const { colors, radius } = useTheme();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
+  const { t } = useTranslation();
   const sell = fromApiMoney(c.sell);
   const buy = fromApiMoney(c.buy);
 
@@ -39,7 +41,7 @@ export const ConversionRow = memo(function ConversionRow({ conversion: c, onPres
             signPositive
             masked={hidden}
             align="right"
-            label="Received"
+            label={t('fx.received')}
           />
           <MoneyText
             value={negate(sell)}
@@ -47,7 +49,7 @@ export const ConversionRow = memo(function ConversionRow({ conversion: c, onPres
             color="textMuted"
             masked={hidden}
             align="right"
-            label="Converted"
+            label={t('fx.converted')}
           />
           {c.status === 'failed' && <StatusPill status="failed" />}
         </View>

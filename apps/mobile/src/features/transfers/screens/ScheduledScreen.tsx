@@ -32,6 +32,7 @@ import {
   scheduleSubtitle,
   sortSchedules,
 } from '../schedule';
+import { useTranslation } from 'react-i18next';
 
 type ScheduledTransfer = Schema<'ScheduledTransfer'>;
 
@@ -44,6 +45,7 @@ function ScheduleRow({
 }) {
   const amount = formatMoney(fromApiMoney(schedule.amount));
   const subtitle = scheduleSubtitle(schedule);
+  const { t } = useTranslation();
   return (
     <ListItem
       leading={
@@ -62,7 +64,7 @@ function ScheduleRow({
       }
       onPress={() => onPress(schedule)}
       accessibilityLabel={`${schedule.recipient.name}, ${amount}, ${subtitle}`}
-      accessibilityHint="Pause, resume or cancel"
+      accessibilityHint={t('transfers.scheduledScreen.hint')}
     />
   );
 }
@@ -77,6 +79,7 @@ export function ScheduledScreen() {
   const { created } = useLocalSearchParams<{ created?: string }>();
   const { spacing } = useTheme();
   const [chosen, setChosen] = useState<ScheduledTransfer | null>(null);
+  const { t } = useTranslation();
   const schedules = useRepoQuery('transfers', 'listScheduled', { query: { limit: 100 } });
 
   const list = schedules.data ? sortSchedules(schedules.data.data) : undefined;
@@ -86,11 +89,13 @@ export function ScheduledScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Scheduled payments" />}
+      header={<SendHeader title={t('transfers.scheduledScreen.title')} />}
       edges={['top', 'bottom']}
       footer={
         // Straight after scheduling, Back would land on the old amount screen.
-        created ? <Button label="Done" onPress={() => router.dismissTo('/')} /> : undefined
+        created ? (
+          <Button label={t('common.done')} onPress={() => router.dismissTo('/')} />
+        ) : undefined
       }
     >
       {justMade?.next_run_at && (
@@ -98,8 +103,10 @@ export function ScheduledScreen() {
           <View style={[styles.row, { gap: spacing[3] }]}>
             <Icon icon={CircleCheck} color="success" />
             <Text style={styles.flex} accessibilityLiveRegion="polite">
-              Scheduled. The first payment to {justMade.recipient.name.split(' ')[0]} goes on{' '}
-              {formatScheduleDay(lagosDayOf(justMade.next_run_at))} at about 9 am.
+              {t('transfers.scheduledScreen.made', {
+                name: justMade.recipient.name.split(' ')[0],
+                day: formatScheduleDay(lagosDayOf(justMade.next_run_at)),
+              })}
             </Text>
           </View>
         </Card>
@@ -109,9 +116,9 @@ export function ScheduledScreen() {
         list.length === 0 ? (
           <EmptyState
             icon={CalendarClock}
-            title="Nothing scheduled"
-            message="Set a payment to go on a later day, or every day, week or month. Tap “Send now” on the review screen to choose."
-            actionLabel="Schedule a payment"
+            title={t('transfers.scheduledScreen.none')}
+            message={t('transfers.scheduledScreen.noneMessage')}
+            actionLabel={t('transfers.scheduledScreen.schedule')}
             onAction={() => router.replace('/send')}
           />
         ) : (
@@ -125,7 +132,7 @@ export function ScheduledScreen() {
             )}
             {ended.length > 0 && (
               <>
-                <SectionHeader title="Ended" />
+                <SectionHeader title={t('transfers.scheduledScreen.ended')} />
                 <Card padded={false}>
                   {ended.map((s) => (
                     <ScheduleRow key={s.id} schedule={s} onPress={setChosen} />
@@ -134,17 +141,17 @@ export function ScheduledScreen() {
               </>
             )}
             <Text variant="caption" color="textMuted">
-              Payments go at about 9 am Lagos time. Each one is checked and priced when it goes.
+              {t('transfers.scheduledScreen.note')}
             </Text>
           </>
         )
       ) : schedules.isError ? (
         <ErrorState
-          title="We couldn't load your scheduled payments"
+          title={t('transfers.scheduledScreen.failed')}
           onRetry={() => schedules.refetch()}
         />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading scheduled payments">
+        <SkeletonGroup accessibilityLabel={t('transfers.scheduledScreen.loading')}>
           <View style={{ gap: spacing[2] }}>
             <SkeletonListItem />
             <SkeletonListItem />

@@ -29,6 +29,7 @@ import { useFxQuote } from '../hooks/useFxQuote';
 import { FxQuoteCard } from '../components/FxQuoteCard';
 import { PairPicker } from '../components/PairPicker';
 import { convertErrorMessage, convertibleInto, convertProblem } from '../quote';
+import { useTranslation } from 'react-i18next';
 
 type Conversion = Schema<'FxConversion'>;
 
@@ -41,6 +42,7 @@ type Conversion = Schema<'FxConversion'>;
 export function ConvertScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ from?: string }>();
   const accounts = useRepoQuery('accounts', 'list');
   const me = useRepoQuery('users', 'getMe');
@@ -107,7 +109,7 @@ export function ConvertScreen() {
     }
   }, [current, convert, quote]);
 
-  const header = <SendHeader title="Convert" first />;
+  const header = <SendHeader title={t('fx.convert')} first />;
 
   if (done) {
     return (
@@ -126,7 +128,7 @@ export function ConvertScreen() {
   if (accounts.isError) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <ErrorState title="We couldn't load your wallets" onRetry={() => accounts.refetch()} />
+        <ErrorState title={t('common.walletsFailed')} onRetry={() => accounts.refetch()} />
       </Screen>
     );
   }
@@ -134,7 +136,7 @@ export function ConvertScreen() {
   if (!accounts.data || !from) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <SkeletonGroup accessibilityLabel="Loading your wallets">
+        <SkeletonGroup accessibilityLabel={t('common.loadingWallets')}>
           <Skeleton height={56} />
           <Skeleton height={56} />
           <Skeleton height={72} />
@@ -165,9 +167,9 @@ export function ConvertScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={Wallet}
-          title="Add a foreign wallet first"
-          message="Open a USD, GBP or EUR wallet, then convert naira into it and back."
-          actionLabel="Add a wallet"
+          title={t('fx.screen.noForeign')}
+          message={t('fx.screen.noForeignMessage')}
+          actionLabel={t('common.addWallet')}
           onAction={() => setAdding(true)}
         />
         {addWallet}
@@ -187,7 +189,7 @@ export function ConvertScreen() {
             </Text>
           )}
           <Button
-            label={sell ? `Convert ${formatMoney(sell)}` : 'Convert'}
+            label={sell ? t('fx.convertAmount', { amount: formatMoney(sell) }) : t('fx.convert')}
             icon={Lock}
             disabled={!live || problem !== null}
             onPress={() => {
@@ -227,9 +229,14 @@ export function ConvertScreen() {
       {available && (
         <View style={[styles.row, styles.center, { gap: spacing[1] }]}>
           <Text variant="bodySmall" color="textMuted">
-            Available
+            {t('common.available')}
           </Text>
-          <MoneyText value={available} variant="bodySmall" color="textMuted" label="Available" />
+          <MoneyText
+            value={available}
+            variant="bodySmall"
+            color="textMuted"
+            label={t('common.available')}
+          />
         </View>
       )}
 
@@ -243,18 +250,18 @@ export function ConvertScreen() {
         />
       ) : quote.isError && sell ? (
         <ErrorState
-          title="We couldn't get a rate"
+          title={t('fx.screen.rateFailed')}
           message={quote.error.problem.detail ?? quote.error.problem.title}
           onRetry={requote}
         />
       ) : (
         <Text variant="bodySmall" color="textMuted" style={styles.hint}>
-          Rates are indicative and held for 60 seconds once quoted.
+          {t('fx.screen.indicative')}
         </Text>
       )}
 
       <Button
-        label="Rate charts and alerts"
+        label={t('fx.screen.charts')}
         icon={ChartLine}
         variant="ghost"
         onPress={() =>
@@ -266,13 +273,13 @@ export function ConvertScreen() {
       />
 
       <Button
-        label="Conversion history"
+        label={t('fx.screen.history')}
         icon={History}
         variant="ghost"
         onPress={() => router.push('/convert/history')}
       />
       <Button
-        label="Receive from abroad"
+        label={t('fx.screen.receive')}
         icon={ArrowDownLeft}
         variant="ghost"
         onPress={() =>
@@ -288,8 +295,11 @@ export function ConvertScreen() {
         onClose={() => setConfirming(false)}
         subtitle={
           current
-            ? `Convert ${formatMoney(fromApiMoney(current.sell))} to ${formatMoney(fromApiMoney(current.buy))}`
-            : 'Convert'
+            ? t('fx.convertPair', {
+                sell: formatMoney(fromApiMoney(current.sell)),
+                buy: formatMoney(fromApiMoney(current.buy)),
+              })
+            : t('fx.convert')
         }
         onApproved={onApproved}
         error={error}

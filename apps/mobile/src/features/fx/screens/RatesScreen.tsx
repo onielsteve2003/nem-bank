@@ -12,6 +12,7 @@ import { AlertList } from '../components/AlertList';
 import { CreateAlertSheet } from '../components/CreateAlertSheet';
 import { RateChartCard } from '../components/RateChartCard';
 import { alertTitle, PAIRS, pairLabel } from '../rates';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Rates and rate alerts (FX-2): each pair's mid-market chart over 1D to 1Y and
@@ -21,6 +22,7 @@ export function RatesScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const params = useLocalSearchParams<{ pair?: string }>();
   const [pair, setPair] = useState(
     () => PAIRS.find((p) => p.pair === params.pair)?.pair ?? PAIRS[0]!.pair,
@@ -30,7 +32,7 @@ export function RatesScreen() {
   const rate = rates.data?.data.find((r) => r.pair === pair);
 
   return (
-    <Screen header={<SendHeader title="Rates and alerts" />} edges={['top', 'bottom']}>
+    <Screen header={<SendHeader title={t('fx.rates.title')} />} edges={['top', 'bottom']}>
       <View style={[styles.row, { gap: spacing[2] }]} accessibilityRole="tablist">
         {PAIRS.map((p) => (
           <Chip
@@ -43,24 +45,24 @@ export function RatesScreen() {
       </View>
 
       {rates.isError ? (
-        <ErrorState title="We couldn't load rates" onRetry={() => rates.refetch()} />
+        <ErrorState title={t('fx.rates.failed')} onRetry={() => rates.refetch()} />
       ) : (
         <RateChartCard pair={pair} rate={rate} />
       )}
       <Text variant="caption" color="textMuted" style={styles.center}>
-        Indicative mid-market rates. Your rate includes a spread, shown before you convert.
+        {t('fx.rates.indicative')}
       </Text>
       <Button
-        label={`Convert ${pair.split('-')[0]}`}
+        label={t('fx.convertCurrency', { currency: pair.split('-')[0] })}
         icon={ArrowLeftRight}
         variant="secondary"
         onPress={() => router.dismissTo('/convert')}
       />
 
-      <SectionHeader title="Rate alerts" />
+      <SectionHeader title={t('fx.rates.alerts')} />
       <AlertList onCreate={() => setCreating(true)} />
       <Button
-        label={`New alert for ${pairLabel(pair)}`}
+        label={t('fx.rates.newAlert', { pair: pairLabel(pair) })}
         icon={BellPlus}
         variant="ghost"
         onPress={() => setCreating(true)}
@@ -73,7 +75,10 @@ export function RatesScreen() {
         onClose={() => setCreating(false)}
         onCreated={(alert) => {
           setCreating(false);
-          toast.show({ message: `We'll tell you when ${alertTitle(alert)}`, tone: 'success' });
+          toast.show({
+            message: t('fx.rates.willTell', { alert: alertTitle(alert) }),
+            tone: 'success',
+          });
         }}
       />
     </Screen>

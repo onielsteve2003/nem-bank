@@ -32,6 +32,8 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { isLiveSchedule, sortBillSchedules } from '../bills';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 type BillSchedule = Schema<'BillSchedule'>;
 
@@ -39,9 +41,17 @@ type BillSchedule = Schema<'BillSchedule'>;
 function subtitleOf(s: BillSchedule) {
   const every = FREQUENCIES[s.frequency];
   if (s.status === 'active' && s.next_run_at) {
-    return `${s.customer_id} · ${every} · next ${formatScheduleDay(lagosDayOf(s.next_run_at))}`;
+    return i18n.t('bills.schedules.next', {
+      customer: s.customer_id,
+      every,
+      day: formatScheduleDay(lagosDayOf(s.next_run_at)),
+    });
   }
-  return `${s.customer_id} · ${every} · ${STATUS_LABELS[s.status].label.toLowerCase()}`;
+  return i18n.t('bills.schedules.ended', {
+    customer: s.customer_id,
+    every,
+    status: STATUS_LABELS[s.status].label.toLowerCase(),
+  });
 }
 
 /**
@@ -54,6 +64,7 @@ export function BillSchedulesScreen() {
   const { spacing } = useTheme();
   const [cancelling, setCancelling] = useState<BillSchedule | null>(null);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
   const schedules = useRepoQuery('bills', 'listSchedules');
   const cancel = useRepoMutation('bills', 'cancelSchedule', { invalidates: [['bills']] });
 
@@ -84,18 +95,20 @@ export function BillSchedulesScreen() {
         }
         onPress={canCancel ? () => setCancelling(s) : undefined}
         accessibilityLabel={`${s.biller_name}, ${amount}, ${subtitle}`}
-        accessibilityHint={canCancel ? 'Cancel this schedule' : undefined}
+        accessibilityHint={canCancel ? t('bills.schedules.cancelHint') : undefined}
       />
     );
   };
 
   return (
     <Screen
-      header={<SendHeader title="Scheduled bills" />}
+      header={<SendHeader title={t('bills.hub.scheduled')} />}
       edges={['top', 'bottom']}
       footer={
         // Straight after scheduling, Back would land on the old purchase screen.
-        created ? <Button label="Done" onPress={() => router.dismissTo('/bills')} /> : undefined
+        created ? (
+          <Button label={t('common.done')} onPress={() => router.dismissTo('/bills')} />
+        ) : undefined
       }
       onRefresh={() => void schedules.refetch()}
       refreshing={schedules.isRefetching}
@@ -105,8 +118,10 @@ export function BillSchedulesScreen() {
           <View style={[styles.row, { gap: spacing[3] }]}>
             <Icon icon={CircleCheck} color="success" />
             <Text style={styles.flex} accessibilityLiveRegion="polite">
-              Scheduled. {justMade.biller_name} is paid on{' '}
-              {formatScheduleDay(lagosDayOf(justMade.next_run_at))} at about 9 am.
+              {t('bills.schedules.made', {
+                biller: justMade.biller_name,
+                day: formatScheduleDay(lagosDayOf(justMade.next_run_at)),
+              })}
             </Text>
           </View>
         </Card>
@@ -121,9 +136,9 @@ export function BillSchedulesScreen() {
         list.length === 0 ? (
           <EmptyState
             icon={CalendarClock}
-            title="No scheduled bills"
-            message="Pay a bill on a later day, or every day, week or month. Tap “Pay now” before paying to choose."
-            actionLabel="Pay a bill"
+            title={t('bills.schedules.none')}
+            message={t('bills.schedules.noneMessage')}
+            actionLabel={t('bills.schedules.payBill')}
             onAction={() => router.dismissTo('/bills')}
           />
         ) : (
@@ -131,23 +146,19 @@ export function BillSchedulesScreen() {
             {live.length > 0 && <Card padded={false}>{live.map(row)}</Card>}
             {ended.length > 0 && (
               <>
-                <SectionHeader title="Ended" />
+                <SectionHeader title={t('bills.schedules.endedTitle')} />
                 <Card padded={false}>{ended.map(row)}</Card>
               </>
             )}
             <Text variant="caption" color="textMuted">
-              Bills are paid at about 9 am Lagos time from your naira account. If it is short that
-              day, the payment is skipped and we tell you.
+              {t('bills.schedules.note')}
             </Text>
           </>
         )
       ) : schedules.isError ? (
-        <ErrorState
-          title="We couldn't load your scheduled bills"
-          onRetry={() => schedules.refetch()}
-        />
+        <ErrorState title={t('bills.schedules.failed')} onRetry={() => schedules.refetch()} />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading scheduled bills">
+        <SkeletonGroup accessibilityLabel={t('bills.schedules.loading')}>
           <View style={{ gap: spacing[2] }}>
             <SkeletonListItem />
             <SkeletonListItem />
@@ -157,14 +168,17 @@ export function BillSchedulesScreen() {
 
       <Dialog
         open={cancelling !== null}
-        title="Cancel this schedule?"
+        title={t('bills.schedules.cancelTitle')}
         message={
           cancelling
-            ? `${cancelling.biller_name} for ${cancelling.customer_id} won't be paid again. Payments already made stay as they are.`
+            ? t('bills.schedules.cancelMessage', {
+                biller: cancelling.biller_name,
+                customer: cancelling.customer_id,
+              })
             : undefined
         }
-        confirmLabel="Cancel schedule"
-        cancelLabel="Keep it"
+        confirmLabel={t('bills.schedules.cancel')}
+        cancelLabel={t('bills.schedules.keep')}
         destructive
         loading={cancel.isPending}
         onCancel={() => setCancelling(null)}
@@ -175,7 +189,7 @@ export function BillSchedulesScreen() {
             { path: { schedule_id: cancelling.id } },
             {
               onSettled: () => setCancelling(null),
-              onError: () => setError("We couldn't cancel it. Try again."),
+              onError: () => setError(t('bills.schedules.cancelFailed')),
             },
           );
         }}

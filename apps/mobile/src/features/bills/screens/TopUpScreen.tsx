@@ -36,6 +36,7 @@ import {
 } from '../bills';
 import { useBillCheckout } from '../checkout';
 import { BillOptions } from '../components/BillOptions';
+import { useTranslation } from 'react-i18next';
 
 /**
  * Airtime and data (BILL-1): the network is read from the number's prefix and
@@ -49,6 +50,7 @@ export function TopUpScreen({
   prefill?: BillPrefill;
 }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const me = useRepoQuery('users', 'getMe');
   const accounts = useRepoQuery('accounts', 'list');
   const source = accounts.data?.data.find((a) => a.currency === 'NGN');
@@ -126,16 +128,24 @@ export function TopUpScreen({
     );
   };
 
-  const what = isData ? (product?.name ?? 'data') : 'airtime';
-  const verb = schedule ? 'Schedule' : 'Buy';
+  const what = isData ? (product?.name ?? t('bills.topUp.data')) : t('bills.topUp.airtime');
+  const action = schedule ? 'schedule' : 'buy';
 
   return (
     <Screen
-      header={<SendHeader title={isData ? 'Buy data' : 'Buy airtime'} />}
+      header={
+        <SendHeader title={isData ? t('bills.topUp.buyData') : t('bills.topUp.buyAirtime')} />
+      }
       edges={['top', 'bottom']}
       footer={
         <Button
-          label={price && ready ? `${verb} ${formatMoney(price, { trimZeroMinor: true })}` : verb}
+          label={
+            price && ready
+              ? t(`bills.action.${action}Amount`, {
+                  amount: formatMoney(price, { trimZeroMinor: true }),
+                })
+              : t(`bills.action.${action}`)
+          }
           disabled={!ready}
           onPress={() => {
             checkout.reset();
@@ -145,7 +155,7 @@ export function TopUpScreen({
       }
     >
       <TextField
-        label="Phone number"
+        label={t('bills.topUp.phone')}
         leadingIcon={Phone}
         keyboardType="phone-pad"
         autoComplete="tel"
@@ -156,16 +166,16 @@ export function TopUpScreen({
           setProductId(null);
         }}
         maxLength={14}
-        error={local.length >= 11 && !complete ? 'Enter an 11-digit Nigerian number' : undefined}
+        error={local.length >= 11 && !complete ? t('bills.topUp.badPhone') : undefined}
         help={
           complete && detected.data && !detected.data.network
-            ? "We couldn't tell the network. Pick it below."
+            ? t('bills.topUp.unknownNetwork')
             : undefined
         }
       />
 
       <View>
-        <SectionHeader title="Network" />
+        <SectionHeader title={t('bills.topUp.network')} />
         <View accessibilityRole="radiogroup" style={[styles.chips, { gap: spacing[2] }]}>
           {NETWORKS.map((n) => (
             <Chip
@@ -181,20 +191,20 @@ export function TopUpScreen({
         </View>
         {complete && network && detected.data?.network === network && (
           <Text variant="caption" color="textMuted" style={{ marginTop: spacing[2] }}>
-            Detected from the number. Ported it? Pick the right one.
+            {t('bills.topUp.detected')}
           </Text>
         )}
       </View>
 
       {isData ? (
         <View>
-          <SectionHeader title="Bundles" />
+          <SectionHeader title={t('bills.topUp.bundles')} />
           {!billerId ? (
-            <Text color="textMuted">Enter a number or pick a network to see bundles.</Text>
+            <Text color="textMuted">{t('bills.topUp.pickFirst')}</Text>
           ) : products.isError ? (
-            <ErrorState title="We couldn't load bundles" onRetry={() => products.refetch()} />
+            <ErrorState title={t('bills.topUp.bundlesFailed')} onRetry={() => products.refetch()} />
           ) : !products.data ? (
-            <SkeletonGroup accessibilityLabel="Loading bundles">
+            <SkeletonGroup accessibilityLabel={t('bills.topUp.loadingBundles')}>
               <Skeleton height={56} />
               <Skeleton height={56} />
             </SkeletonGroup>
@@ -204,13 +214,15 @@ export function TopUpScreen({
                 <ListItem
                   key={p.id}
                   title={p.name}
-                  subtitle={p.validity_days ? `Lasts ${p.validity_days} days` : undefined}
+                  subtitle={
+                    p.validity_days ? t('bills.topUp.lasts', { count: p.validity_days }) : undefined
+                  }
                   trailing={
                     <Text variant="bodyStrong" color={p.id === productId ? 'primaryText' : 'text'}>
                       {formatMoney(fromApiMoney(p.amount), { trimZeroMinor: true })}
                     </Text>
                   }
-                  accessibilityLabel={`${p.name}, ${formatMoney(fromApiMoney(p.amount))}${p.id === productId ? ', selected' : ''}`}
+                  accessibilityLabel={`${p.name}, ${formatMoney(fromApiMoney(p.amount))}${p.id === productId ? t('common.selected') : ''}`}
                   onPress={() => setProductId(p.id)}
                 />
               ))}
@@ -221,11 +233,11 @@ export function TopUpScreen({
         <View style={{ gap: spacing[3] }}>
           <AmountInput
             currency="NGN"
-            label="Amount"
+            label={t('common.amount')}
             value={amount}
             onChangeValue={setAmount}
             maxWholeDigits={6}
-            error={tooSmall ? 'The least you can buy is ₦50' : undefined}
+            error={tooSmall ? t('bills.topUp.minimum') : undefined}
           />
           <View style={[styles.chips, { gap: spacing[2] }]}>
             {AIRTIME_PRESETS.map((n) => (
@@ -252,7 +264,16 @@ export function TopUpScreen({
       <ConfirmSheet
         open={confirming}
         onClose={() => setConfirming(false)}
-        subtitle={price ? `${verb} ${formatMoney(price)} ${networkName} ${what} for ${local}` : ''}
+        subtitle={
+          price
+            ? t(`bills.topUp.confirm.${action}`, {
+                amount: formatMoney(price),
+                network: networkName,
+                what,
+                phone: local,
+              })
+            : ''
+        }
         onApproved={onApproved}
         error={checkout.error}
       />

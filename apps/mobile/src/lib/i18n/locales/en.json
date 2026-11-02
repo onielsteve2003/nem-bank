@@ -29,7 +29,53 @@
     "demoDocument": "Demo bank. Simulated money, not a real bank document.",
     "noTransactions": "No transactions yet",
     "noTransactionsMessage": "Money you send, receive or spend shows up here.",
-    "walletName": "{{name}} wallet"
+    "walletName": "{{name}} wallet",
+    "done": "Done",
+    "free": "Free",
+    "fee": "Fee",
+    "status": "Status",
+    "from": "From",
+    "to": "To",
+    "available": "Available",
+    "delete": "Delete",
+    "deleteFailed": "We couldn't delete it. Try again.",
+    "loadingMore": "Loading more",
+    "loadMoreFailed": "We couldn't load more",
+    "walletsFailed": "We couldn't load your wallets",
+    "loadingWallets": "Loading your wallets",
+    "addWallet": "Add a wallet",
+    "shareDetails": "Share details",
+    "failed": "Failed",
+    "completed": "Completed",
+    "amount": "Amount",
+    "reference": "Reference",
+    "date": "Date",
+    "copy": "Copy",
+    "share": "Share",
+    "remove": "Remove",
+    "selected": ", selected",
+    "tryAgainGeneric": "We couldn't do that. Try again.",
+    "saveFailedGeneric": "We couldn't save that. Try again.",
+    "shareImageFailed": "We couldn't share the code. Try again.",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "keepIt": "Keep it",
+    "note": "Note",
+    "all": "All",
+    "allCount": "All {{count}}",
+    "pay": "Pay",
+    "payAmount": "Pay {{amount}}",
+    "payName": "Pay {{name}}",
+    "payAmountTo": "Pay {{amount}} to {{name}}",
+    "balanceFailed": "We couldn't load your balance",
+    "loadingBalance": "Loading your balance",
+    "paymentFailed": "We couldn't load this payment",
+    "lookingUp": "Looking them up…",
+    "lookingUpLabel": "Looking them up",
+    "nemUser": "Nem user",
+    "you": "You",
+    "removeName": "Remove {{name}}",
+    "loadingDots": "Loading…"
   },
   "tabs": {
     "home": "Home",
@@ -768,6 +814,1002 @@
         "title": "Alerts are on while Nem is running",
         "detail": "Expo Go on Android can't receive alerts from a server, so Nem shows them itself while it is open or in the background."
       }
+    }
+  },
+  "fx": {
+    "convert": "Convert",
+    "convertAmount": "Convert {{amount}}",
+    "convertPair": "Convert {{sell}} to {{buy}}",
+    "convertCurrency": "Convert {{currency}}",
+    "convertToNaira": "Convert {{currency}} to naira",
+    "received": "Received",
+    "converted": "Converted",
+    "rate": "Rate",
+    "when": "When",
+    "youGet": "You get",
+    "yourRate": "Your rate",
+    "midRate": "Mid-market rate",
+    "spread": "Spread ({{percent}})",
+    "spreadCost": "Spread cost",
+    "requoting": "Getting a rate for the new amount…",
+    "expired": "This rate has expired. Rates move, so get a new one before converting.",
+    "newRate": "Get a new rate",
+    "heldFor": "Rate held for {{seconds}} seconds",
+    "heldForShort": "Rate held for {{time}}",
+    "walletEntry": "{{currency}} wallet entry",
+    "spreadNote": "The spread is built into the rate; it was shown before you confirmed.",
+    "again": "Convert again",
+    "doneAt": "At {{rate}}. Now in your wallet.",
+    "conversionTitle": "{{sell}} to {{buy}}",
+    "pair": {
+      "from": "Convert from",
+      "to": "Convert to",
+      "walletName": "{{currency}} wallet",
+      "availableAmount": "{{amount}} available",
+      "swap": "Swap: convert {{to}} to {{from}} instead",
+      "backToNaira": "Foreign wallets convert back to naira.",
+      "addAnother": "Add another wallet"
+    },
+    "errors": {
+      "tooMuch": "More than your available {{amount}}.",
+      "nothingLeft": "We couldn't convert it. Nothing has left your wallet. Try again.",
+      "rateExpired": "That rate expired. Check the new rate and confirm again.",
+      "offline": "You're offline. Reconnect and try again; it won't convert twice.",
+      "noReply": "We didn't hear back. Try again: if it already went through, it won't convert twice.",
+      "failed": "We couldn't convert it. Try again."
+    },
+    "screen": {
+      "noForeign": "Add a foreign wallet first",
+      "noForeignMessage": "Open a USD, GBP or EUR wallet, then convert naira into it and back.",
+      "rateFailed": "We couldn't get a rate",
+      "indicative": "Rates are indicative and held for 60 seconds once quoted.",
+      "charts": "Rate charts and alerts",
+      "history": "Conversion history",
+      "receive": "Receive from abroad"
+    },
+    "history": {
+      "none": "No conversions yet",
+      "noneMessage": "When you convert between naira and a foreign wallet, it shows up here.",
+      "convertNow": "Convert now",
+      "failed": "We couldn't load your conversions",
+      "loading": "Loading conversions"
+    },
+    "rates": {
+      "title": "Rates and alerts",
+      "failed": "We couldn't load rates",
+      "indicative": "Indicative mid-market rates. Your rate includes a spread, shown before you convert.",
+      "alerts": "Rate alerts",
+      "newAlert": "New alert for {{pair}}",
+      "willTell": "We'll tell you when {{alert}}",
+      "midMarket": "{{pair}} · mid-market",
+      "isAt": "{{pair}} is {{rate}}",
+      "trend": {
+        "up": "up {{change}} over the {{period}}",
+        "down": "down {{change}} over the {{period}}",
+        "flat": "flat {{change}} over the {{period}}"
+      },
+      "chartTitle": "{{pair}}, {{period}}",
+      "chartFailed": "We couldn't load the chart",
+      "chartLoading": "Loading the chart",
+      "spoken": {
+        "1D": "last day",
+        "1W": "last week",
+        "1M": "last month",
+        "1Y": "last year"
+      }
+    },
+    "alerts": {
+      "failed": "We couldn't load your alerts",
+      "loading": "Loading your alerts",
+      "none": "No rate alerts yet",
+      "noneMessage": "Get a notification when a rate goes above or below a number you pick.",
+      "create": "Create an alert",
+      "deleted": "Alert deleted",
+      "reached": "Reached {{time}}",
+      "set": "Set {{time}}",
+      "watching": "Watching",
+      "reachedBadge": "Reached",
+      "deleteLabel": "Delete alert: {{alert}}",
+      "deleteTitle": "Delete this alert?",
+      "title": {
+        "above": "{{pair}} above {{rate}}",
+        "below": "{{pair}} below {{rate}}"
+      },
+      "sheetTitle": "Alert me about {{pair}}",
+      "now": "It is {{rate}} now. We notify you once when it crosses your rate.",
+      "above": "Goes above",
+      "below": "Goes below",
+      "rateLabel": "Rate in naira",
+      "createButton": "Create alert",
+      "badRate": "Enter a rate in naira, like 1650 or 1650.50.",
+      "pickHigher": "{{pair}} is already at {{rate}}. Pick a higher rate.",
+      "pickLower": "{{pair}} is already at {{rate}}. Pick a lower rate."
+    },
+    "receive": {
+      "title": "Receive from abroad",
+      "openForeign": "Open a foreign wallet",
+      "openForeignMessage": "A USD, GBP or EUR wallet comes with its own local details, so people abroad can pay you like any local account.",
+      "intro": "Your {{name}} details. People pay them from their own bank, like any local account.",
+      "how": "How it works",
+      "moneyIn": "Money in",
+      "paymentsFailed": "We couldn't load payments",
+      "loadingPayments": "Loading payments",
+      "nothingYet": "Nothing yet. Payments into your {{currency}} wallet show up here.",
+      "sentBy": "Sent by",
+      "takes": "Usually takes",
+      "payers": "Who pays this way",
+      "fees": "Fees",
+      "feesValue": "Free to receive. Their bank may charge to send.",
+      "step": "Step {{n}}: {{step}}",
+      "steps": {
+        "share": "Share these details with whoever is paying you.",
+        "pay": "They pay from their own bank by {{rail}}, like paying any local account.",
+        "lands": "It lands in your {{currency}} wallet as {{name}}, and we tell you the moment it does.",
+        "keep": "Keep it, or convert it to naira at a live rate whenever you choose."
+      },
+      "guides": {
+        "us_ach": {
+          "rail": "ACH or domestic wire in the US",
+          "speed": "1 to 3 business days by ACH, same day by wire",
+          "payers": "US clients, Upwork, Deel, Payoneer and payroll"
+        },
+        "uk_fps": {
+          "rail": "Faster Payments in the UK",
+          "speed": "Usually within minutes, any day of the week",
+          "payers": "UK employers, family and friends, Wise and Revolut"
+        },
+        "iban": {
+          "rail": "SEPA transfer in the euro area",
+          "speed": "Next business day, or seconds with SEPA Instant",
+          "payers": "European clients, marketplaces and family in the EU"
+        }
+      },
+      "demo": "Demo: see a payment land without waiting for a real one.",
+      "getFrom": "Get {{amount}} from {{name}}",
+      "sentYou": "{{name}} sent you {{amount}}",
+      "moreDemo": "More in Demo Controls"
+    }
+  },
+  "bills": {
+    "categories": {
+      "airtime": {
+        "label": "Airtime",
+        "description": "Top up any network"
+      },
+      "data": {
+        "label": "Data",
+        "description": "Bundles for every network"
+      },
+      "electricity": {
+        "label": "Electricity",
+        "description": "Prepaid meter tokens"
+      },
+      "cable_tv": {
+        "label": "Cable TV",
+        "description": "DStv, GOtv, StarTimes"
+      }
+    },
+    "customer": {
+      "airtime": "Phone number",
+      "data": "Phone number",
+      "electricity": "Meter number",
+      "cable_tv": "Smartcard number"
+    },
+    "action": {
+      "buy": "Buy",
+      "buyAmount": "Buy {{amount}}",
+      "pay": "Pay",
+      "payAmount": "Pay {{amount}}",
+      "schedule": "Schedule",
+      "scheduleAmount": "Schedule {{amount}}"
+    },
+    "options": {
+      "payNow": "Pay now",
+      "changeHint": "Tap to change or pay now instead",
+      "laterHint": "Or schedule it, or repeat it",
+      "when": "When: {{when}}",
+      "now": "now",
+      "whenHint": "Choose a later day or a repeat",
+      "save": "Save for next time",
+      "saveHint": "Saved billers fill in the provider and number for you.",
+      "saveAs": "Save as",
+      "nameIt": "Give it a name",
+      "payNowInstead": "Pay now instead",
+      "footnote": "Each payment needs enough in your naira account. Cancel any time."
+    },
+    "hub": {
+      "title": "Pay bills",
+      "saved": "Saved billers",
+      "savedHint": "Pay this bill with the details filled in",
+      "removeLabel": "Remove {{name}}",
+      "scheduled": "Scheduled bills",
+      "comingUp": "{{count}} coming up",
+      "scheduleHint": "Pay a bill later, or every day, week or month",
+      "recent": "Recent bills",
+      "failed": "We couldn't load your bills",
+      "loading": "Loading bills",
+      "none": "No bills yet",
+      "noneMessage": "Airtime, data, power and TV you pay for show up here.",
+      "removeTitle": "Remove {{name}}?",
+      "thisBiller": "this biller",
+      "removeMessage": "You can save it again the next time you pay it."
+    },
+    "schedules": {
+      "next": "{{customer}} · {{every}} · next {{day}}",
+      "ended": "{{customer}} · {{every}} · {{status}}",
+      "cancelHint": "Cancel this schedule",
+      "made": "Scheduled. {{biller}} is paid on {{day}} at about 9 am.",
+      "none": "No scheduled bills",
+      "noneMessage": "Pay a bill on a later day, or every day, week or month. Tap “Pay now” before paying to choose.",
+      "payBill": "Pay a bill",
+      "endedTitle": "Ended",
+      "note": "Bills are paid at about 9 am Lagos time from your naira account. If it is short that day, the payment is skipped and we tell you.",
+      "failed": "We couldn't load your scheduled bills",
+      "loading": "Loading scheduled bills",
+      "cancelTitle": "Cancel this schedule?",
+      "cancelMessage": "{{biller}} for {{customer}} won't be paid again. Payments already made stay as they are.",
+      "cancel": "Cancel schedule",
+      "keep": "Keep it",
+      "cancelFailed": "We couldn't cancel it. Try again."
+    },
+    "receipt": {
+      "headline": {
+        "completed": "Payment successful",
+        "processing": "Payment processing",
+        "failed": "Payment failed",
+        "reversed": "Payment reversed"
+      },
+      "tokenMessage": "{{biller}} token for meter {{meter}}: {{token}}",
+      "tokenUnits": " ({{units}})",
+      "tokenRef": ". Ref {{reference}}",
+      "failed": "We couldn't load this payment",
+      "token": "Your token",
+      "tokenLabel": "Token {{token}}",
+      "tokenCopied": "Token copied",
+      "keypad": "Type the 20 digits into the meter keypad to load the units."
+    },
+    "topUp": {
+      "buyData": "Buy data",
+      "buyAirtime": "Buy airtime",
+      "phone": "Phone number",
+      "badPhone": "Enter an 11-digit Nigerian number",
+      "unknownNetwork": "We couldn't tell the network. Pick it below.",
+      "network": "Network",
+      "detected": "Detected from the number. Ported it? Pick the right one.",
+      "bundles": "Bundles",
+      "pickFirst": "Enter a number or pick a network to see bundles.",
+      "bundlesFailed": "We couldn't load bundles",
+      "loadingBundles": "Loading bundles",
+      "lasts": "Lasts {{count}} days",
+      "minimum": "The least you can buy is ₦50",
+      "data": "data",
+      "airtime": "airtime",
+      "confirm": {
+        "buy": "Buy {{amount}} {{network}} {{what}} for {{phone}}",
+        "schedule": "Schedule {{amount}} {{network}} {{what}} for {{phone}}"
+      }
+    },
+    "utility": {
+      "provider": "Provider",
+      "providersFailed": "We couldn't load the providers",
+      "loadingProviders": "Loading providers",
+      "pickProvider": "Pick a provider first",
+      "meterHelp": "{{count}} digits, on the meter or your last token receipt",
+      "cardHelp": "{{count}} digits, under the decoder",
+      "meterNotFound": "We couldn't find that meter with {{biller}}",
+      "cardNotFound": "We couldn't find that smartcard with {{biller}}",
+      "checkFailed": "We couldn't check that number. Try again.",
+      "checkingMeter": "Checking the meter",
+      "checkingCard": "Checking the smartcard",
+      "currentPlan": "Current plan: {{plan}}",
+      "atLeast": "At least {{amount}}",
+      "minimum": "The least you can buy is {{amount}}",
+      "plans": "Plans",
+      "plansFailed": "We couldn't load the plans",
+      "loadingPlans": "Loading plans",
+      "renew": "Current plan · Renew",
+      "days": "{{count}} days",
+      "meter": "meter",
+      "decoder": "decoder",
+      "simulated": "Billers are simulated: payments complete instantly and no real provider is charged.",
+      "confirm": {
+        "pay": "Pay {{amount}} to {{biller}}, {{customer}}",
+        "payPlan": "Pay {{amount}} to {{biller}} for {{plan}}, {{customer}}",
+        "schedule": "Schedule {{amount}} to {{biller}}, {{customer}}",
+        "schedulePlan": "Schedule {{amount}} to {{biller}} for {{plan}}, {{customer}}"
+      }
+    }
+  },
+  "transfers": {
+    "abroad": {
+      "purposes": {
+        "family_support": "Family support",
+        "education": "School fees",
+        "medical": "Medical",
+        "business": "Business",
+        "other": "Something else"
+      },
+      "delivery": "1 to 2 working days",
+      "fullName": "Use their full name, as their bank has it",
+      "badBic": "A SWIFT/BIC code has 8 or 11 letters and numbers",
+      "accountNumber": "Account number",
+      "accountOrIban": "Account number or IBAN",
+      "iban": "IBAN",
+      "usHelp": "A US account number has 4 to 17 digits",
+      "gbHelp": "Use the 8-digit account number or a GB IBAN",
+      "ibanHelp": "An IBAN from {{country}} starts with {{code}}"
+    },
+    "amount": {
+      "aboveLimit": "Above your own limit of {{amount}} per transfer.",
+      "tooMuch": "More than your available {{amount}}.",
+      "remaining": "You can send {{amount}} more today on Tier {{tier}}.",
+      "reached": "You have reached today's limit on Tier {{tier}}.",
+      "needTotal": "You need {{total}} including the {{fee}} fee.",
+      "newDevice": "You signed in on this phone recently, so we'll ask you to confirm it's you.",
+      "coolingOff": "First large payment to a new beneficiary: it goes out in {{minutes}} minutes.",
+      "coolingOffSkip": "First large payment to a new beneficiary: it goes out in {{minutes}} minutes, or straight away if you confirm it is you."
+    },
+    "beneficiaries": {
+      "coolingOff": "New: large payments need an extra check until {{until}}.",
+      "subtitleNem": "@{{nemtag}} · Nem",
+      "new": "New · {{subtitle}}",
+      "spoken": {
+        "pay": "Pay {{title}}, {{subtitle}}",
+        "manage": "Manage {{title}}, {{subtitle}}"
+      },
+      "favourite": "favourite",
+      "spokenNew": "new, large payments need an extra check until {{until}}",
+      "deleteFailed": "We couldn't delete {{name}}. Try again.",
+      "payName": "Pay {{name}}",
+      "favouriteLabel": "Favourite",
+      "favouriteHint": "Favourites come first when you send money.",
+      "nickname": "Nickname",
+      "nicknamePlaceholder": "Mummy, landlord, Chidi (work)…",
+      "nicknameHelp": "Only you see it. The bank still checks the account name.",
+      "saveNickname": "Save nickname",
+      "changeNickname": "Change nickname",
+      "addNickname": "Add a nickname",
+      "deleteName": "Delete {{name}}",
+      "historyStays": "Past payments stay in your history.",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteMessage": "Saving them again later starts a new safety wait for large payments."
+    },
+    "errors": {
+      "nothingLeft": "We couldn't send it. Nothing has left your account. Try again.",
+      "changed": "The fee or limit changed. Check the new total and confirm again.",
+      "offline": "You're offline. Reconnect and try again; it won't send twice.",
+      "noReply": "We didn't hear back. Try again: if it already went through, it won't send twice.",
+      "failed": "We couldn't send it. Try again."
+    },
+    "hold": {
+      "risk": {
+        "high": "High risk",
+        "medium": "Medium risk",
+        "low": "Low risk"
+      },
+      "reasons": {
+        "large_amount": "Big payments are what fraudsters go after, so the first one this size gets a second pair of eyes.",
+        "unusual_amount": "Someone who took over an account usually sends much more than its owner does. A quick check rules that out.",
+        "new_device": "Most account takeovers start on a new phone. For the first day, bigger payments need one more check.",
+        "new_beneficiary": "Scammers push people to pay someone new, fast. A short wait gives you time to be sure.",
+        "velocity": "Many payments in a short time can mean someone else is emptying the account.",
+        "reported_account": "Other customers told us this account was used in a scam.",
+        "unknown": "Our checks noticed something unusual about this payment."
+      },
+      "steps": {
+        "held": [
+          "The money is put aside in your account. It has not left.",
+          "Someone at Nem looks at the payment, usually within minutes.",
+          "We tell you straight away: it goes, or the money comes back to your balance."
+        ],
+        "step_up": [
+          "Nothing has left your account.",
+          "Enter the code we email you to show it is really you.",
+          "The payment then goes at once. You can cancel it instead."
+        ],
+        "delayed": [
+          "The money is put aside in your account. It has not left.",
+          "The payment goes by itself when the wait ends.",
+          "Changed your mind, or someone is rushing you? Cancel it before then."
+        ]
+      },
+      "titles": {
+        "held": "Why was this held?",
+        "step_up": "Why do I need to confirm?",
+        "delayed": "Why is this waiting?"
+      }
+    },
+    "links": {
+      "expiry": {
+        "none": "No end date"
+      },
+      "status": {
+        "active": "Taking payments",
+        "inactive": "Paused",
+        "expired": "Expired"
+      },
+      "anyAmount": "Any amount",
+      "noPayments": "{{amount}} · no payments yet",
+      "payments_one": "{{amount}} · {{count}} payment · {{total}} in",
+      "payments_other": "{{amount}} · {{count}} payments · {{total}} in",
+      "shareMessage": "Pay me for {{title}}{{amount}} with Nem: {{url}}",
+      "paused": "This link is paused. Ask the person who sent it.",
+      "expired": "This link has expired. Ask for a new one.",
+      "expiredMakeNew": "This link has expired. Make a new one.",
+      "copied": "Link copied",
+      "shareFailed": "Sharing isn't available here. Copy the link instead.",
+      "nowActive": "Link is taking payments",
+      "nowPaused": "Link paused",
+      "qrLabel": "QR code for the {{title}} pay link",
+      "pause": "Pause link",
+      "resume": "Take payments again"
+    },
+    "qr": {
+      "invalid": {
+        "expired": {
+          "title": "This code has expired",
+          "message": "Codes with an amount last 15 minutes. Ask them to show a fresh one."
+        },
+        "bad_signature": {
+          "title": "This code isn't genuine",
+          "message": "It wasn't made by Nem, or it was changed. Don't pay it. Ask for their @nemtag instead."
+        },
+        "unknown_account": {
+          "title": "We don’t know this account",
+          "message": "The account on this code is closed or does not exist."
+        },
+        "not_nem_qr": {
+          "title": "That isn't a Nem code",
+          "message": "Scan a Nem QR code or a Nem pay link."
+        }
+      },
+      "fileTitle": "My Nem QR",
+      "makeFailed": "We couldn't make your code",
+      "askingFor": "Your QR code asking for {{amount}}",
+      "toReceive": "Your QR code to receive money",
+      "refreshes": "Code refreshes every 15 minutes",
+      "newCodeIn": "New code in {{time}}",
+      "removeAmount": "Remove amount",
+      "askAmount": "Ask for an amount",
+      "showCodeFor": "Show code for {{amount}}",
+      "showCode": "Show code"
+    },
+    "cop": {
+      "typedFallback": "the name you typed",
+      "match": {
+        "title": "Name matches",
+        "message": "The bank confirms this account belongs to {{name}}."
+      },
+      "close": {
+        "title": "Close match",
+        "message": "The account is in the name {{name}}, not quite {{typed}}. Check it is the person you mean to pay."
+      },
+      "none": {
+        "title": "Name does not match",
+        "message": "This account belongs to {{name}}, not {{typed}}. Scammers often give one name and an account in another. Money sent to the wrong person is hard to get back."
+      }
+    },
+    "requests": {
+      "status": {
+        "pending": "Waiting",
+        "paid": "Paid",
+        "declined": "Declined",
+        "cancelled": "Cancelled",
+        "expired": "Expired"
+      },
+      "expires": {
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "inDays": "in {{count}} days"
+      },
+      "noNote": "No note",
+      "subtitleClosed": "{{note}} · {{status}}",
+      "subtitleOpen": "{{note}} · expires {{when}}",
+      "notOpen": "This request is no longer open."
+    },
+    "schedule": {
+      "frequencies": {
+        "once": "Once",
+        "daily": "Every day",
+        "weekly": "Every week",
+        "monthly": "Every month"
+      },
+      "presets": {
+        "tomorrow": "Tomorrow",
+        "week": "In a week",
+        "month": "1st of next month"
+      },
+      "fromTomorrow": "Pick a day from tomorrow on",
+      "withinYear": "Pick a day within a year",
+      "endAfterStart": "The last day must be on or after the first payment",
+      "onceOn": "Once on {{day}}",
+      "repeat": "{{every}} from {{day}}",
+      "repeatUntil": "{{every}} from {{day}} until {{end}}",
+      "status": {
+        "active": "Active",
+        "paused": "Paused",
+        "cancelled": "Cancelled",
+        "completed": "Finished"
+      },
+      "subtitlePaused": "{{every}} · paused",
+      "subtitleNext": "{{every}} · next {{day}}",
+      "subtitleCancelled_one": "{{every}} · cancelled after {{count}} payment",
+      "subtitleCancelled_other": "{{every}} · cancelled after {{count}} payments",
+      "subtitleFinished_one": "{{every}} · finished after {{count}} payment",
+      "subtitleFinished_other": "{{every}} · finished after {{count}} payments"
+    },
+    "splits": {
+      "remindedNow": "Reminded just now",
+      "remindedMin": "Reminded {{count}} min ago",
+      "remindedHours": "Reminded {{count}} h ago"
+    },
+    "banks": {
+      "title": "Choose a bank",
+      "search": "Search banks",
+      "searchPlaceholder": "Name or bank code",
+      "none": "No bank matches that",
+      "noneMessage": "Try its short name.",
+      "failed": "We couldn't load the bank list",
+      "loading": "Loading banks"
+    },
+    "confirm": {
+      "biometrics": "Approve with {{label}}",
+      "title": "Confirm it's you",
+      "pin": "Enter your PIN",
+      "demo": "{{subtitle}}. Demo PIN is {{pin}}"
+    },
+    "payee": {
+      "nemUser": "@{{nemtag}} · Nem user",
+      "accountName": "Account name {{name}}",
+      "saved": "Saved",
+      "instant": "Arrives instantly. No fee between Nem users.",
+      "acknowledge": "I have checked, and I still want to pay {{name}}"
+    },
+    "scanner": {
+      "noCamera": "No camera here",
+      "noCameraMessage": "Paste the code or pay link below instead.",
+      "scanToPay": "Scan to pay",
+      "needCamera": "Nem needs your camera to read QR codes. Nothing is recorded.",
+      "allowCamera": "Allow camera",
+      "cameraOff": "Camera is off for Nem",
+      "cameraOffMessage": "Turn it on in Settings to scan, or paste the code below.",
+      "openSettings": "Open Settings",
+      "cameraLabel": "Camera. Point it at a Nem QR code.",
+      "point": "Point your camera at a Nem QR code.",
+      "paste": "Or paste a code",
+      "pastePlaceholder": "Nem QR code or pay link",
+      "check": "Check code"
+    },
+    "quote": {
+      "total": "Total from your account",
+      "totalLabel": "Total",
+      "leftToday": "Left to send today (Tier {{tier}})",
+      "leftTodayLabel": "Left to send today",
+      "updating": "Updating for the new amount…"
+    },
+    "requestSheet": {
+      "askedYou": "{{name}} asked you",
+      "youAsked": "You asked",
+      "for": "For",
+      "asked": "Asked",
+      "expires": "Expires",
+      "partOf": "Part of",
+      "splitBill": "A split bill",
+      "pay": "Pay {{amount}}",
+      "decline": "Decline",
+      "safety": "Only pay people you know. Nem will never ask you to pay a request to unlock or verify your account.",
+      "cancel": "Cancel request",
+      "theySee": "{{name}} sees it in their requests and can pay or decline.",
+      "declineTitle": "Decline {{name}}'s request?",
+      "cancelTitle": "Cancel this request?",
+      "declineMessage": "{{name}} will see that you declined. Nothing is paid.",
+      "cancelMessage": "{{name}} won't be able to pay it any more."
+    },
+    "scam": {
+      "high": "This could be a scam",
+      "medium": "Take a moment",
+      "check": "Check with the scam checker"
+    },
+    "scheduleSheet": {
+      "sendNowInstead": "Send now instead",
+      "feeEach": "The fee applies to each payment.",
+      "badDates": "Use real dates in DD/MM/YYYY",
+      "title": "When should it go?",
+      "howOften": "How often",
+      "on": "On",
+      "first": "First payment",
+      "pickDay": "Pick a day",
+      "day": "Day",
+      "ends": "Ends",
+      "whenCancel": "When I cancel",
+      "onDay": "On a day",
+      "lastDay": "Last day",
+      "summary": "{{schedule}}, at about 9 am. {{footnote}}",
+      "use": "Use this schedule"
+    },
+    "scheduled": {
+      "lastRun": {
+        "completed": "sent",
+        "processing": "on its way",
+        "failed": "not sent",
+        "reversed": "returned",
+        "waiting": "waiting"
+      },
+      "lastRunValue": "{{day}}, {{status}}",
+      "noneYet": "None yet",
+      "changeFailed": "We couldn't change it. Try again.",
+      "cancelFailed": "We couldn't cancel it. Try again.",
+      "title": "Scheduled payment",
+      "nemUser": "@{{nemtag}} · Nem user",
+      "howOften": "How often",
+      "next": "Next payment",
+      "paused": "Paused",
+      "nextValue": "{{day}}, about 9 am",
+      "none": "None",
+      "lastDay": "Last day",
+      "lastPayment": "Last payment",
+      "pause": "Pause",
+      "resume": "Resume",
+      "cancel": "Cancel schedule",
+      "pausedNote": "Paused payments are skipped, not saved up. Resuming starts again from the next due day.",
+      "activeNote": "Each payment to {{name}} is checked and priced when it goes. If there isn't enough money, that one is skipped and we tell you.",
+      "cancelTitle": "Cancel this schedule?",
+      "cancelMessage": "No more payments will go to {{name}}. Payments already sent stay in your history."
+    },
+    "split": {
+      "paidOf": "{{paid}} of {{total}} paid",
+      "amountOf": "{{paid}} of {{total}}",
+      "countOf": "{{paid}} of {{of}} paid"
+    },
+    "stepUp": {
+      "title": "One more check",
+      "codeSent": "Enter the 6-digit code we sent to ",
+      "checking": "Checking and sending…",
+      "newCodeIn": "Send a new code in {{time}}",
+      "newCode": "Send a new code",
+      "sending": "Sending you a code…"
+    },
+    "amountScreen": {
+      "title": "Amount",
+      "chooseFirst": "Choose who to pay first",
+      "choose": "Choose someone",
+      "review": "Review",
+      "nem": "@{{nemtag}} · Nem",
+      "priceFailed": "We couldn't price this transfer",
+      "whatFor": "What's it for?",
+      "whatForPlaceholder": "Rent, school fees, owambe…",
+      "seesThis": "{{name}} sees this on their statement."
+    },
+    "beneficiariesScreen": {
+      "title": "Beneficiaries",
+      "search": "Search beneficiaries",
+      "searchPlaceholder": "Name, nickname, bank or account",
+      "noMatch": "No one matches that",
+      "none": "No beneficiaries yet",
+      "noMatchMessage": "Try part of a name, a bank or the last digits of an account.",
+      "noneMessage": "Turn on \"Save for next time\" when you review a payment.",
+      "safetyNote": "Someone new gets a short safety wait: large first payments to them need an extra check.",
+      "failed": "We couldn't load your beneficiaries",
+      "loading": "Loading beneficiaries"
+    },
+    "holdScreen": {
+      "explanation": "Every payment is scored by rules (amount, device, who you pay, how often) and a fraud model. Risky ones wait for a check, and you always see why.",
+      "checkedBy": "{{explanation}} Checked by {{model}}.",
+      "fallback": "Rules only. Fraud protection cannot be turned off, because it guards your money.",
+      "title": "Payment checks",
+      "loading": "Loading the payment checks",
+      "nothing": "Nothing is holding this payment",
+      "passed": "It passed our checks. See where it is now.",
+      "see": "See the payment",
+      "firstLarge": "This is your first large payment to someone new.",
+      "notMe": "I didn't make this payment",
+      "notMeHint": "Freeze everything now with the panic button",
+      "talk": "Talk to us",
+      "talkHint": "Chat with Nem support about this payment",
+      "sendNow": "Send now",
+      "confirmMe": "Confirm it is me",
+      "cancel": "Cancel payment",
+      "to": "to {{name}}",
+      "score": "{{band}}, {{score}} out of 100",
+      "scoreShort": "{{score}} / 100",
+      "feature": "Fraud protection",
+      "noticed": "What we noticed",
+      "next": "What happens next",
+      "pressure": "Did someone call or message you to make this payment? Stop and cancel it. Nem will never ask you to move money to keep it safe.",
+      "oneMore": "This payment needs one more check before it goes."
+    },
+    "newLink": {
+      "title": "New payment link",
+      "create": "Create link",
+      "whatFor": "What's it for?",
+      "whatForPlaceholder": "Ankara fabric, 6 yards",
+      "whatForHelp": "Payers see this on the pay page.",
+      "amount": "Amount",
+      "fixed": "Set amount",
+      "open": "They choose",
+      "openHint": "Good for contributions and tips: each payer types what they want to give.",
+      "notePlaceholder": "Delivery in Lekki on Saturday",
+      "takesFor": "Takes payments for"
+    },
+    "payLink": {
+      "title": "Pay link",
+      "logIn": "Log in to pay",
+      "tryDemo": "New to Nem? Try the demo",
+      "asking": "{{name}} is asking you to pay for",
+      "notTaking": "Not taking payments",
+      "yours": "This is your link",
+      "yoursMessage": "Share it with whoever is paying you. Payments land in your naira account.",
+      "yourLinks": "Your payment links",
+      "howMuch": "How much for {{name}}",
+      "tooMuch": "More than your available balance",
+      "needFixed": "You need {{amount}} available to pay this link.",
+      "notePlaceholder": "For {{name}}",
+      "from": "From your naira account · {{amount}} available · No fee, Nem to Nem",
+      "notFound": "We can't find this link",
+      "notFoundDemo": "In this demo every phone and browser runs its own pretend bank, so a link only opens on the device that made it. Shared links work everywhere once the real backend is live.",
+      "notFoundReal": "Check the link with the person who sent it. It may have been mistyped.",
+      "openFailed": "We couldn't open this link",
+      "opening": "Opening the pay link"
+    },
+    "pay": {
+      "actions": {
+        "send": "Send",
+        "scan": "Scan QR",
+        "request": "Request",
+        "split": "Split",
+        "links": "Links",
+        "scheduled": "Scheduled"
+      },
+      "bills": "Pay bills",
+      "billsHint": "Airtime, data, electricity and cable TV",
+      "recent": "Recent",
+      "waiting": "Waiting for you",
+      "comingUp": "Coming up"
+    },
+    "linksScreen": {
+      "showHint": "Shows the link to copy or share",
+      "notPayLink": "That isn't a Nem pay link.",
+      "title": "Payment links",
+      "create": "Create a link",
+      "none": "No links yet",
+      "noneMessage": "Make a link for a party contribution, a sale or rent. Anyone with it can pay you.",
+      "failed": "We couldn't load your links",
+      "loading": "Loading payment links",
+      "gotOne": "Got a link from someone?",
+      "payLink": "Pay link",
+      "pastePlaceholder": "Paste a Nem pay link",
+      "open": "Open link",
+      "demo": "Demo: try a friend's link.",
+      "emeka": "Emeka's birthday"
+    },
+    "qrScreen": {
+      "scanTitle": "Scan to pay",
+      "mineTitle": "My QR",
+      "checking": "Checking the code with Nem",
+      "own": "This is your own code",
+      "ownMessage": "Show it to whoever is paying you.",
+      "scanAgain": "Scan again",
+      "askingFor": "Checked by Nem. {{name}} is asking for {{amount}}.",
+      "youChoose": "Checked by Nem. You choose how much to send {{name}}.",
+      "scan": "Scan"
+    },
+    "recipient": {
+      "noNemUser": "No Nem user matches that. Check the @nemtag or number.",
+      "notAtBank": "We could not find that account at {{bank}}.",
+      "thatBank": "that bank",
+      "tickHint": "Tick the box to confirm you checked the name",
+      "nemTitle": "Pay a Nem user",
+      "bankTitle": "Pay another bank",
+      "nemLabel": "@nemtag, phone or account number",
+      "asYouType": "We look them up as you type.",
+      "bank": "Bank",
+      "bankLabel": "Bank, {{bank}}",
+      "notSelected": "not selected",
+      "bankHint": "Opens the list of banks",
+      "chooseBank": "Choose a bank",
+      "accountNumber": "Account number",
+      "tenDigits": "10 digits",
+      "name": "Name on the account",
+      "namePlaceholder": "Who you expect to pay",
+      "nameHelp": "We check it against the bank's records before you pay.",
+      "checkFailed": "We couldn't check that right now",
+      "bankFee": "Bank transfers cost ₦10 to ₦50, shown before you confirm."
+    },
+    "requestMoney": {
+      "lookupFailed": "We couldn't look them up. Try again.",
+      "title": "Request money",
+      "requestFrom": "Request {{amount}} from {{name}}",
+      "from": "From",
+      "fromPlaceholder": "@nemtag, phone or account number",
+      "nemOnly": "Requests go to Nem users only.",
+      "nemUser": "@{{nemtag}} · Nem user",
+      "whatFor": "What's it for?",
+      "whatForPlaceholder": "Suya on Friday",
+      "theyHave": "They have"
+    },
+    "requestsScreen": {
+      "payOrDecline": "Pay or decline",
+      "show": "Shows the request",
+      "title": "Requests",
+      "toPay": "To pay",
+      "toPayCount": "To pay ({{count}})",
+      "sent": "Sent",
+      "justSent": "Request sent. {{name}} can pay or decline it from their requests.",
+      "nothing": "Nothing to pay",
+      "nothingMessage": "When a Nem user asks you for money, it shows up here.",
+      "none": "No requests yet",
+      "noneMessage": "Ask a friend to pay you back for suya, fuel or rent.",
+      "failed": "We couldn't load your requests",
+      "loading": "Loading requests"
+    },
+    "review": {
+      "title": "Review",
+      "nothing": "Nothing to review yet",
+      "nothingMessage": "Choose who to pay and how much first.",
+      "startAgain": "Start again",
+      "sendAmount": "Send {{amount}}",
+      "scheduleAmount": "Schedule {{amount}}",
+      "nemUser": "@{{nemtag}} · Nem user",
+      "transferTo": "Transfer to {{name}}",
+      "nairaWallet": "Naira wallet",
+      "loadingFee": "Loading the fee",
+      "sendNow": "Send now",
+      "changeHint": "Tap to change or send now instead",
+      "laterHint": "Or schedule it, or repeat it",
+      "saveName": "Save {{name}} for next time",
+      "saveHint": "Saved people are quicker to pay and easier to check.",
+      "signed": "Signed by this phone and sent once, even if you tap twice.",
+      "confirmSchedule": "Schedule {{amount}} to {{name}}",
+      "confirmSend": "Send {{amount}} to {{name}}"
+    },
+    "scheduledScreen": {
+      "hint": "Pause, resume or cancel",
+      "title": "Scheduled payments",
+      "made": "Scheduled. The first payment to {{name}} goes on {{day}} at about 9 am.",
+      "none": "Nothing scheduled",
+      "noneMessage": "Set a payment to go on a later day, or every day, week or month. Tap “Send now” on the review screen to choose.",
+      "schedule": "Schedule a payment",
+      "ended": "Ended",
+      "note": "Payments go at about 9 am Lagos time. Each one is checked and priced when it goes.",
+      "failed": "We couldn't load your scheduled payments",
+      "loading": "Loading scheduled payments"
+    },
+    "abroadScreen": {
+      "title": "Send abroad",
+      "sendAmount": "Send {{amount}}",
+      "partnerNote": "Sending abroad needs a licensed remittance partner. Everything here works as it will then; the last step shows what's needed.",
+      "partnerNeeded": "Partner needed",
+      "sendingTo": "Sending to",
+      "youSend": "You send",
+      "rate": "Rate",
+      "rateValue": "{{symbol}}1 = {{amount}}",
+      "fee": "Partner fee (estimate)",
+      "feeHint": "1%, min ₦2,000",
+      "total": "Total from your account",
+      "theyGet": "They get about",
+      "arrives": "Arrives in",
+      "indicative": "Indicative rate. The partner fixes the exact rate when you send.",
+      "receiving": "Who's receiving it",
+      "fullName": "Full name",
+      "bic": "SWIFT / BIC",
+      "bicHelp": "US banks need one for international transfers.",
+      "whatFor": "What's it for?",
+      "reasonRule": "Nigerian rules ask for a reason on every transfer abroad.",
+      "tryAgain": "Try again."
+    },
+    "hub": {
+      "title": "Send money",
+      "nem": "To a Nem user",
+      "nemHint": "By @nemtag, phone or account number. Instant and free.",
+      "bank": "To another bank",
+      "bankHint": "Any Nigerian bank. ₦10 to ₦50 fee.",
+      "abroad": "Send abroad",
+      "abroadHint": "International transfer",
+      "requests": "Requests",
+      "waiting": "{{count}} waiting for you to pay",
+      "requestsHint": "Ask a Nem user for money, or pay what you owe.",
+      "toPay": "{{count}} to pay",
+      "split": "Split a bill",
+      "splitHint": "Share a cost with Nem users and see who has paid.",
+      "links": "Payment links",
+      "linksHint": "A link or QR anyone can use to pay you.",
+      "scheduled": "Scheduled payments",
+      "scheduledHint": "Pay later, or every day, week or month.",
+      "beneficiaries": "Beneficiaries",
+      "manage": "Manage",
+      "searchPlaceholder": "Name, @nemtag, bank or account",
+      "noneMessage": "People you save after paying them appear here, ready for next time."
+    },
+    "splitBill": {
+      "reminded_one": "Reminder sent to {{count}} person.",
+      "reminded_other": "Reminder sent to {{count}} people.",
+      "allReminded": "Everyone still to pay was reminded in the last day.",
+      "title": "Split bill",
+      "notFound": "Split bill not found",
+      "notFoundMessage": "It may have been made on another device.",
+      "seeAll": "See your split bills",
+      "failed": "We couldn't load this split",
+      "loading": "Loading the split bill",
+      "remind": "Remind those who haven't paid",
+      "equal": "{{amount}} · equal shares",
+      "custom": "{{amount}} · custom shares",
+      "settled": "Settled",
+      "yourShare": "Your share",
+      "paid": "paid",
+      "spoken": "{{name}}, {{amount}}, {{status}}",
+      "note": "Each person got a money request for their share. It shows as paid the moment they pay."
+    },
+    "splitBills": {
+      "title": "Split bills",
+      "split": "Split a bill",
+      "none": "No split bills yet",
+      "noneMessage": "Paid for dinner, fuel or a trip? Split it and everyone gets a request for their share.",
+      "spoken": "{{title}}, {{paid}} of {{of}} paid",
+      "failed": "We couldn't load your split bills",
+      "loading": "Loading split bills"
+    },
+    "newSplit": {
+      "noUser": "No Nem user matches that.",
+      "already": "{{name}} is already in this split.",
+      "title": "Split a bill",
+      "send_one": "Send {{count}} request",
+      "send_other": "Send {{count}} requests",
+      "splitIt": "Split it",
+      "whatFor": "What's it for?",
+      "whatForPlaceholder": "Dinner at Yellow Chilli",
+      "total": "Total",
+      "badTotal": "Enter an amount like 12500 or 12,500.50",
+      "split": "Split",
+      "equally": "Equally",
+      "custom": "Custom amounts",
+      "includeMe": "Include my share",
+      "includeHint": "You paid the bill, so your share counts as paid.",
+      "excludeHint": "Only the people you add pay; their shares make up the total.",
+      "whoIn": "Who's in ({{count}}/{{max}})",
+      "addUser": "Add a Nem user",
+      "addName": "Add {{name}}",
+      "share": "{{name}}'s share",
+      "note": "Everyone gets a request they can pay from their Nem app within 7 days."
+    },
+    "result": {
+      "sent": {
+        "title": "Sent",
+        "message": "{{name}} has it now."
+      },
+      "processing": {
+        "title": "On its way",
+        "message": "{{bank}} usually credits {{name}} within minutes."
+      },
+      "step_up": {
+        "title": "Confirm it is you",
+        "message": "This payment waits until you pass one more check. Nothing has gone yet."
+      },
+      "delayed": {
+        "title": "Scheduled for safety",
+        "message": "First large payment to someone new, so it goes at {{time}}. Send it now with one more check, or cancel it before then.",
+        "endOfWait": "the end of the wait"
+      },
+      "held": {
+        "title": "Held for a quick review",
+        "message": "A person at Nem checks it first. The money is put aside, not sent, and we tell you as soon as it is decided."
+      },
+      "reversed": {
+        "title": "Money returned",
+        "message": "{{bank}} did not accept it, so we sent {{name}}'s payment back to your balance. You were not charged.",
+        "messageAt": "{{bank}} did not accept it, so we sent {{name}}'s payment back to your balance at {{time}}. You were not charged."
+      },
+      "stopped": {
+        "title": "Not sent",
+        "cancelled": "You cancelled it. The money is back in your available balance.",
+        "failed": "This payment did not go through. Any money held for it is back in your balance."
+      },
+      "credited": "Credited to {{name}}",
+      "receivedBy": "Received by {{bank}}",
+      "loading": "Loading the payment",
+      "to": "to {{name}} · {{bank}}",
+      "whyChecking": "Why we are checking",
+      "whyAsking": "Why we are asking",
+      "reference": "Reference {{reference}}"
     }
   }
 }

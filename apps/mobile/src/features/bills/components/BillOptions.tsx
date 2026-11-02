@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Card, ListItem, Switch, TextField } from '@/components';
 import { ScheduleSheet } from '@/features/transfers/components/ScheduleSheet';
 import { describeSchedule, type ScheduleChoice } from '@/features/transfers/schedule';
+import { useTranslation } from 'react-i18next';
 
 interface Props {
   schedule: ScheduleChoice | null;
@@ -26,7 +27,8 @@ export function BillOptions({
   suggestedName,
 }: Props) {
   const [choosing, setChoosing] = useState(false);
-  const when = schedule ? describeSchedule(schedule) : 'Pay now';
+  const { t } = useTranslation();
+  const when = schedule ? describeSchedule(schedule) : t('bills.options.payNow');
 
   return (
     <>
@@ -34,28 +36,30 @@ export function BillOptions({
         <ListItem
           leading={CalendarClock}
           title={when}
-          subtitle={schedule ? 'Tap to change or pay now instead' : 'Or schedule it, or repeat it'}
+          subtitle={schedule ? t('bills.options.changeHint') : t('bills.options.laterHint')}
           onPress={() => setChoosing(true)}
-          accessibilityLabel={`When: ${schedule ? when : 'now'}`}
-          accessibilityHint="Choose a later day or a repeat"
+          accessibilityLabel={t('bills.options.when', {
+            when: schedule ? when : t('bills.options.now'),
+          })}
+          accessibilityHint={t('bills.options.whenHint')}
         />
       </Card>
 
       {canSave && !schedule && (
         <Switch
-          label="Save for next time"
-          description="Saved billers fill in the provider and number for you."
+          label={t('bills.options.save')}
+          description={t('bills.options.saveHint')}
           value={nickname !== null}
           onValueChange={(on) => onNicknameChange(on ? suggestedName : null)}
         />
       )}
       {canSave && !schedule && nickname !== null && (
         <TextField
-          label="Save as"
+          label={t('bills.options.saveAs')}
           value={nickname}
           onChangeText={onNicknameChange}
           maxLength={40}
-          error={nickname.trim() ? undefined : 'Give it a name'}
+          error={nickname.trim() ? undefined : t('bills.options.nameIt')}
         />
       )}
 
@@ -63,8 +67,8 @@ export function BillOptions({
         <ScheduleSheet
           value={schedule}
           allowEnd={false}
-          nowLabel="Pay now instead"
-          footnote="Each payment needs enough in your naira account. Cancel any time."
+          nowLabel={t('bills.options.payNowInstead')}
+          footnote={t('bills.options.footnote')}
           onClose={() => setChoosing(false)}
           onApply={(next) => {
             onScheduleChange(next);

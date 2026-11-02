@@ -20,6 +20,7 @@ import { useTheme } from '@/theme';
 
 import { typedNaira } from '../amount';
 import { countdown } from '../qr';
+import { useTranslation } from 'react-i18next';
 
 /**
  * "My QR" (TRF-13): a code the bank signs, for anyone on Nem to scan and pay
@@ -29,6 +30,7 @@ import { countdown } from '../qr';
 export function MyQr() {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const card = useRef<ComponentRef<typeof View>>(null);
   const [typed, setTyped] = useState('');
   const [asked, setAsked] = useState<bigint | null>(null);
@@ -65,9 +67,9 @@ export function MyQr() {
 
   const share = async () => {
     try {
-      await shareViewAsImage(card, 'My Nem QR');
+      await shareViewAsImage(card, t('transfers.qr.fileTitle'));
     } catch {
-      toast.show({ message: "We couldn't share the code. Try again.", tone: 'error' });
+      toast.show({ message: t('common.shareImageFailed'), tone: 'error' });
     }
   };
 
@@ -77,7 +79,7 @@ export function MyQr() {
   if (accounts.isError || qr.isError) {
     return (
       <ErrorState
-        title="We couldn't make your code"
+        title={t('transfers.qr.makeFailed')}
         onRetry={() => void (accounts.isError ? accounts.refetch() : qr.refetch())}
       />
     );
@@ -105,8 +107,8 @@ export function MyQr() {
               size={220}
               accessibilityLabel={
                 amount
-                  ? `Your QR code asking for ${formatMoney(amount)}`
-                  : 'Your QR code to receive money'
+                  ? t('transfers.qr.askingFor', { amount: formatMoney(amount) })
+                  : t('transfers.qr.toReceive')
               }
             />
           ) : (
@@ -133,9 +135,9 @@ export function MyQr() {
                 variant="bodySmall"
                 color="textMuted"
                 align="center"
-                accessibilityLabel="Code refreshes every 15 minutes"
+                accessibilityLabel={t('transfers.qr.refreshes')}
               >
-                New code in {countdown(expiresAt, now)}
+                {t('transfers.qr.newCodeIn', { time: countdown(expiresAt, now) })}
               </Text>
             )}
           </View>
@@ -146,7 +148,7 @@ export function MyQr() {
         <View style={styles.flex}>
           {amount ? (
             <Button
-              label="Remove amount"
+              label={t('transfers.qr.removeAmount')}
               icon={X}
               variant="secondary"
               onPress={() => {
@@ -156,7 +158,7 @@ export function MyQr() {
             />
           ) : (
             <Button
-              label="Ask for an amount"
+              label={t('transfers.qr.askAmount')}
               variant="secondary"
               onPress={() => setEditing(true)}
             />
@@ -164,16 +166,24 @@ export function MyQr() {
         </View>
         {canShareImage && (
           <View style={styles.flex}>
-            <Button label="Share" icon={Share2} disabled={!qr.data} onPress={share} />
+            <Button label={t('common.share')} icon={Share2} disabled={!qr.data} onPress={share} />
           </View>
         )}
       </View>
 
-      <BottomSheet open={editing} onClose={() => setEditing(false)} title="Ask for an amount">
+      <BottomSheet
+        open={editing}
+        onClose={() => setEditing(false)}
+        title={t('transfers.qr.askAmount')}
+      >
         <View style={{ gap: spacing[4] }}>
           <AmountInput currency="NGN" value={typed} onChangeValue={setTyped} />
           <Button
-            label={typedAmount ? `Show code for ${formatMoney(typedAmount)}` : 'Show code'}
+            label={
+              typedAmount
+                ? t('transfers.qr.showCodeFor', { amount: formatMoney(typedAmount) })
+                : t('transfers.qr.showCode')
+            }
             disabled={!typedAmount}
             onPress={() => {
               if (!typedAmount) return;

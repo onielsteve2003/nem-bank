@@ -9,6 +9,7 @@ import { amountsFor, SENDERS } from '@/features/demo/presets';
 import { toApiMoney } from '@/lib/money';
 import { useMoneyMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 export type Props = { account: Schema<'Account'> };
 
@@ -21,6 +22,7 @@ export function SimulateInbound({ account }: Props) {
   const { spacing } = useTheme();
   const router = useRouter();
   const toast = useToast();
+  const { t } = useTranslation();
   const inbound = useMoneyMutation('demo', 'inboundTransfer', {
     onError: (error) => toast.show({ message: error.problem.title, tone: 'error' }),
   });
@@ -30,11 +32,14 @@ export function SimulateInbound({ account }: Props) {
   return (
     <Card variant="outline" style={{ gap: spacing[3] }}>
       <Text variant="bodySmall" color="textMuted">
-        Demo: see a payment land without waiting for a real one.
+        {t('fx.receive.demo')}
       </Text>
       <View style={{ gap: spacing[2] }}>
         <Button
-          label={`Get ${formatMoney(amount, { trimZeroMinor: true })} from ${sender.name}`}
+          label={t('fx.receive.getFrom', {
+            amount: formatMoney(amount, { trimZeroMinor: true }),
+            name: sender.name,
+          })}
           icon={ArrowDownLeft}
           variant="secondary"
           loading={inbound.isPending}
@@ -52,7 +57,10 @@ export function SimulateInbound({ account }: Props) {
               {
                 onSuccess: () =>
                   toast.show({
-                    message: `${sender.name} sent you ${formatMoney(amount)}`,
+                    message: t('fx.receive.sentYou', {
+                      name: sender.name,
+                      amount: formatMoney(amount),
+                    }),
                     tone: 'success',
                   }),
               },
@@ -60,7 +68,7 @@ export function SimulateInbound({ account }: Props) {
           }
         />
         <Button
-          label="More in Demo Controls"
+          label={t('fx.receive.moreDemo')}
           variant="ghost"
           onPress={() => router.push('/demo-controls')}
         />

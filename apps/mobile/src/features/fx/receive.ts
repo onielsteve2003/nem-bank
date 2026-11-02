@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES, type CurrencyCode } from '@nem/shared';
+import i18n from '@/lib/i18n';
 
 // How money from abroad reaches a foreign wallet (FX-3). Each wallet has local
 // details in its own country, so a sender pays it like any domestic account:
@@ -17,22 +18,22 @@ export interface ReceiveGuide {
   payers: string;
 }
 
+const guide = (scheme: ForeignScheme): ReceiveGuide => ({
+  get rail() {
+    return i18n.t(`fx.receive.guides.${scheme}.rail`);
+  },
+  get speed() {
+    return i18n.t(`fx.receive.guides.${scheme}.speed`);
+  },
+  get payers() {
+    return i18n.t(`fx.receive.guides.${scheme}.payers`);
+  },
+});
+
 export const RECEIVE_GUIDES: Record<ForeignScheme, ReceiveGuide> = {
-  us_ach: {
-    rail: 'ACH or domestic wire in the US',
-    speed: '1 to 3 business days by ACH, same day by wire',
-    payers: 'US clients, Upwork, Deel, Payoneer and payroll',
-  },
-  uk_fps: {
-    rail: 'Faster Payments in the UK',
-    speed: 'Usually within minutes, any day of the week',
-    payers: 'UK employers, family and friends, Wise and Revolut',
-  },
-  iban: {
-    rail: 'SEPA transfer in the euro area',
-    speed: 'Next business day, or seconds with SEPA Instant',
-    payers: 'European clients, marketplaces and family in the EU',
-  },
+  us_ach: guide('us_ach'),
+  uk_fps: guide('uk_fps'),
+  iban: guide('iban'),
 };
 
 export const isForeignScheme = (scheme: Scheme): scheme is ForeignScheme => scheme !== 'nuban';
@@ -41,9 +42,9 @@ export const isForeignScheme = (scheme: Scheme): scheme is ForeignScheme => sche
 export function receiveSteps(currency: CurrencyCode, guide: ReceiveGuide): string[] {
   const name = CURRENCIES[currency].name;
   return [
-    'Share these details with whoever is paying you.',
-    `They pay from their own bank by ${guide.rail}, like paying any local account.`,
-    `It lands in your ${currency} wallet as ${name}, and we tell you the moment it does.`,
-    'Keep it, or convert it to naira at a live rate whenever you choose.',
+    i18n.t('fx.receive.steps.share'),
+    i18n.t('fx.receive.steps.pay', { rail: guide.rail }),
+    i18n.t('fx.receive.steps.lands', { currency, name }),
+    i18n.t('fx.receive.steps.keep'),
   ];
 }

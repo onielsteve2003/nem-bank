@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 
 import type { Tone } from '@/components';
+import i18n from '@/lib/i18n';
 
 type Bank = Schema<'Bank'>;
 type NameMatch = Schema<'NameMatch'>;
@@ -56,27 +57,27 @@ export interface CopVerdict {
  * name and an account in another.
  */
 export function copVerdict(match: NameMatch, accountName: string): CopVerdict {
-  const typed = match.expected_name?.trim() || 'the name you typed';
+  const typed = match.expected_name?.trim() || i18n.t('transfers.cop.typedFallback');
   switch (match.result) {
     case 'match':
       return {
         tone: 'success',
-        title: 'Name matches',
-        message: `The bank confirms this account belongs to ${accountName}.`,
+        title: i18n.t('transfers.cop.match.title'),
+        message: i18n.t('transfers.cop.match.message', { name: accountName }),
         needsAcknowledgement: false,
       };
     case 'close_match':
       return {
         tone: 'warning',
-        title: 'Close match',
-        message: `The account is in the name ${accountName}, not quite ${typed}. Check it is the person you mean to pay.`,
+        title: i18n.t('transfers.cop.close.title'),
+        message: i18n.t('transfers.cop.close.message', { name: accountName, typed }),
         needsAcknowledgement: false,
       };
     case 'no_match':
       return {
         tone: 'danger',
-        title: 'Name does not match',
-        message: `This account belongs to ${accountName}, not ${typed}. Scammers often give one name and an account in another. Money sent to the wrong person is hard to get back.`,
+        title: i18n.t('transfers.cop.none.title'),
+        message: i18n.t('transfers.cop.none.message', { name: accountName, typed }),
         needsAcknowledgement: true,
       };
   }

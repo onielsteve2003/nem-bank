@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { money, parseRate, type CurrencyCode, type Money } from '@nem/shared';
+import i18n, { withLabel } from '@/lib/i18n';
 
 type Purpose = Schema<'InternationalTransferRequest'>['purpose'];
 const naira = (major: number): Money => money(BigInt(major) * 100n, 'NGN');
@@ -21,16 +22,12 @@ export const DESTINATIONS = [
 }[];
 export type Destination = (typeof DESTINATIONS)[number];
 
-export const PURPOSES: { value: Purpose; label: string }[] = [
-  { value: 'family_support', label: 'Family support' },
-  { value: 'education', label: 'School fees' },
-  { value: 'medical', label: 'Medical' },
-  { value: 'business', label: 'Business' },
-  { value: 'other', label: 'Something else' },
-];
+export const PURPOSES: { value: Purpose; readonly label: string }[] = (
+  ['family_support', 'education', 'medical', 'business', 'other'] as const
+).map((value) => withLabel(`transfers.abroad.purposes.${value}`, { value }));
 
 /** How long a partner usually takes to deliver, shown before anyone commits. */
-export const DELIVERY_ESTIMATE = '1 to 2 working days';
+export const deliveryEstimate = () => i18n.t('transfers.abroad.delivery');
 
 /**
  * The partner's fee as the product would show it: 1% of the amount, at least
@@ -63,7 +60,7 @@ export function recipientProblems(
   const problems: { name?: string; account?: string; bic?: string } = {};
   const name = input.name.trim();
   if (name.length > 0 && !/^[\p{L}][\p{L} .'-]+\s+[\p{L}][\p{L} .'-]*$/u.test(name)) {
-    problems.name = 'Use their full name, as their bank has it';
+    problems.name = i18n.t('transfers.abroad.fullName');
   }
   const account = input.account.replace(/\s+/g, '').toUpperCase();
   if (account.length > 0) {
@@ -77,19 +74,22 @@ export function recipientProblems(
   }
   const bic = input.bic.replace(/\s+/g, '').toUpperCase();
   if (bic.length > 0 && !/^[A-Z]{6}[A-Z0-9]{2}([A-Z0-9]{3})?$/.test(bic)) {
-    problems.bic = 'A SWIFT/BIC code has 8 or 11 letters and numbers';
+    problems.bic = i18n.t('transfers.abroad.badBic');
   }
   return problems;
 }
 
 export function accountLabel(destination: Destination): string {
-  if (destination.country === 'US') return 'Account number';
-  if (destination.country === 'GB') return 'Account number or IBAN';
-  return 'IBAN';
+  if (destination.country === 'US') return i18n.t('transfers.abroad.accountNumber');
+  if (destination.country === 'GB') return i18n.t('transfers.abroad.accountOrIban');
+  return i18n.t('transfers.abroad.iban');
 }
 
 function accountHelp(destination: Destination): string {
-  if (destination.country === 'US') return 'A US account number has 4 to 17 digits';
-  if (destination.country === 'GB') return 'Use the 8-digit account number or a GB IBAN';
-  return `An IBAN from ${destination.name} starts with ${destination.country}`;
+  if (destination.country === 'US') return i18n.t('transfers.abroad.usHelp');
+  if (destination.country === 'GB') return i18n.t('transfers.abroad.gbHelp');
+  return i18n.t('transfers.abroad.ibanHelp', {
+    country: destination.name,
+    code: destination.country,
+  });
 }

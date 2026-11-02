@@ -7,10 +7,12 @@ import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
 
 import { paidCount, paidFraction } from '../splits';
+import { useTranslation } from 'react-i18next';
 
 /** How much of a split bill is paid: a bar, the amounts and how many friends have paid. */
 export function SplitProgress({ split }: { split: Schema<'SplitBill'> }) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const fraction = paidFraction(split);
   const { paid, of } = paidCount(split);
   const paidText = formatMoney(fromApiMoney(split.paid_total));
@@ -20,7 +22,7 @@ export function SplitProgress({ split }: { split: Schema<'SplitBill'> }) {
       <View
         accessible
         accessibilityRole="progressbar"
-        accessibilityLabel={`${paidText} of ${totalText} paid`}
+        accessibilityLabel={t('transfers.split.paidOf', { paid: paidText, total: totalText })}
         accessibilityValue={{ min: 0, max: 100, now: Math.round(fraction * 100) }}
         style={[styles.track, { backgroundColor: colors.border, borderRadius: radius.pill }]}
       >
@@ -37,10 +39,10 @@ export function SplitProgress({ split }: { split: Schema<'SplitBill'> }) {
       </View>
       <View style={styles.between}>
         <Text variant="caption" color="textMuted">
-          {paidText} of {totalText}
+          {t('transfers.split.amountOf', { paid: paidText, total: totalText })}
         </Text>
         <Text variant="caption" color="textMuted">
-          {paid} of {of} paid
+          {t('transfers.split.countOf', { paid, of })}
         </Text>
       </View>
     </View>

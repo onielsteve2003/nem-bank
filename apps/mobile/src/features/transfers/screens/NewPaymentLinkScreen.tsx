@@ -18,6 +18,7 @@ import {
   linkExpiresAt,
   type LinkExpiryDays,
 } from '../paymentLinks';
+import { useTranslation } from 'react-i18next';
 
 type Mode = 'fixed' | 'open';
 
@@ -34,6 +35,7 @@ export function NewPaymentLinkScreen() {
   const [typed, setTyped] = useState('');
   const [days, setDays] = useState<LinkExpiryDays>(null);
   const [error, setError] = useState<string>();
+  const { t } = useTranslation();
 
   const accounts = useRepoQuery('accounts', 'list');
   const ngn = accounts.data?.data.find((a) => a.currency === 'NGN');
@@ -67,7 +69,7 @@ export function NewPaymentLinkScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="New payment link" />}
+      header={<SendHeader title={t('transfers.newLink.title')} />}
       edges={['top', 'bottom']}
       footer={
         <View style={{ gap: spacing[2] }}>
@@ -77,7 +79,7 @@ export function NewPaymentLinkScreen() {
             </Text>
           )}
           <Button
-            label="Create link"
+            label={t('transfers.newLink.create')}
             icon={Link2}
             disabled={!ready}
             loading={create.isPending}
@@ -87,36 +89,42 @@ export function NewPaymentLinkScreen() {
       }
     >
       <TextField
-        label="What's it for?"
-        placeholder="Ankara fabric, 6 yards"
+        label={t('transfers.newLink.whatFor')}
+        placeholder={t('transfers.newLink.whatForPlaceholder')}
         value={title}
         onChangeText={setTitle}
         maxLength={LINK_TITLE_MAX_LENGTH}
         autoFocus
-        help="Payers see this on the pay page."
+        help={t('transfers.newLink.whatForHelp')}
       />
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          Amount
+          {t('transfers.newLink.amount')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
-          <Chip label="Set amount" selected={mode === 'fixed'} onPress={() => setMode('fixed')} />
-          <Chip label="They choose" selected={mode === 'open'} onPress={() => setMode('open')} />
+          <Chip
+            label={t('transfers.newLink.fixed')}
+            selected={mode === 'fixed'}
+            onPress={() => setMode('fixed')}
+          />
+          <Chip
+            label={t('transfers.newLink.open')}
+            selected={mode === 'open'}
+            onPress={() => setMode('open')}
+          />
         </View>
       </View>
       {mode === 'fixed' ? (
         <AmountInput currency="NGN" value={typed} onChangeValue={setTyped} />
       ) : (
-        <Text color="textMuted">
-          Good for contributions and tips: each payer types what they want to give.
-        </Text>
+        <Text color="textMuted">{t('transfers.newLink.openHint')}</Text>
       )}
 
       <TextField
-        label="Note"
+        label={t('common.note')}
         optional
-        placeholder="Delivery in Lekki on Saturday"
+        placeholder={t('transfers.newLink.notePlaceholder')}
         value={note}
         onChangeText={setNote}
         maxLength={LINK_NOTE_MAX_LENGTH}
@@ -124,12 +132,12 @@ export function NewPaymentLinkScreen() {
 
       <View style={{ gap: spacing[2] }}>
         <Text variant="label" color="textMuted">
-          Takes payments for
+          {t('transfers.newLink.takesFor')}
         </Text>
         <View accessibilityRole="radiogroup" style={[styles.wrap, { gap: spacing[2] }]}>
           {LINK_EXPIRY_CHOICES.map((c) => (
             <Chip
-              key={c.label}
+              key={String(c.days)}
               label={c.label}
               selected={days === c.days}
               onPress={() => setDays(c.days)}
