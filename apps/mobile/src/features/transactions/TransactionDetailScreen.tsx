@@ -9,6 +9,7 @@ import {
   MessageCircle,
   ReceiptText,
   Repeat,
+  ShieldQuestion,
   Tag,
 } from 'lucide-react-native';
 import { useState } from 'react';
@@ -262,6 +263,16 @@ export function TransactionDetailScreen() {
           variant="secondary"
           onPress={() => setReceipt(true)}
         />
+        {t.status === 'pending' && t.transfer_id && (
+          <Button
+            label="Why is this pending?"
+            icon={ShieldQuestion}
+            variant="secondary"
+            onPress={() =>
+              router.push({ pathname: '/send/held/[id]', params: { id: t.transfer_id! } })
+            }
+          />
+        )}
         {t.can_repeat && (
           <Button
             label="Send again"

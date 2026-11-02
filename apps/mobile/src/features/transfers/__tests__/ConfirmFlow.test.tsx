@@ -12,6 +12,8 @@ import { toApiMoney } from '@/lib/money';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
+import { nextSteps, riskBand, scoreOutOf100 } from '../hold';
+import { HoldExplanationScreen } from '../screens/HoldExplanationScreen';
 import { ReviewScreen } from '../screens/ReviewScreen';
 import { TransferResultScreen } from '../screens/TransferResultScreen';
 import { recipientFromBeneficiary, useSendDraft } from '../sendDraft';
@@ -247,5 +249,88 @@ describe('result', () => {
     expect(await screen.findByRole('header', { name: 'Money returned' })).toBeTruthy();
     expect(screen.getByText(/You were not charged/)).toBeTruthy();
     expect(screen.getByText('Money returned to your account')).toBeTruthy();
+  });
+});
+
+/** Pays a saved beneficiary straight through the bank, skipping the screens. */
+async function payDirect(repos: Repositories, major: number, name = 'Amaka Obi') {
+  const { data: accounts } = await repos.accounts.list();
+  const { data: beneficiaries } = await repos.beneficiaries.list();
+  return repos.transfers.create({
+    idempotencyKey: `direct-${Math.random()}`,
+    body: {
+      source_account_id: accounts.find((a) => a.currency === 'NGN')!.id,
+      destination: {
+        kind: 'beneficiary',
+        beneficiary_id: beneficiaries.find((b) => b.name === name)!.id,
+      },
+      amount: toApiMoney(parseMajor(String(major), 'NGN')),
+      save_beneficiary: false,
+    },
+  });
+}
+
+describe('payment checks', () => {
+  it('says the risk in words and what happens next', () => {
+    expect(riskBand(0.86)).toEqual({ label: 'High risk', level: 'high' });
+    expect(riskBand(0.48).level).toBe('medium');
+    expect(riskBand(0.04).label).toBe('Low risk');
+    expect(scoreOutOf100(0.857)).toBe(86);
+    expect(nextSteps('held')[0]).toMatch(/has not left/);
+    expect(nextSteps('sent')).toEqual([]);
+  });
+
+  it('explains a held payment and lets the customer cancel it', async () => {
+    const repos = bank();
+    await fund(repos, 3_000_000);
+    const held = await payDirect(repos, 2_500_000);
+    expect(held.status).toBe('held_for_review');
+    mockParams = { id: held.id };
+    await render(wrap(repos, <HoldExplanationScreen />));
+
+    expect(await screen.findByRole('header', { name: 'Why was this held?' })).toBeTruthy();
+    expect(screen.getByLabelText('High risk, 86 out of 100')).toBeTruthy();
+    expect(screen.getByText(/second pair of eyes/)).toBeTruthy();
+    expect(screen.getByText(/Someone at Nem looks at the payment/)).toBeTruthy();
+    expect(screen.getByText("I didn't make this payment")).toBeTruthy();
+    // A person decides a hold; the customer cannot release it themselves.
+    expect(screen.queryByRole('button', { name: 'Confirm it is me' })).toBeNull();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancel payment' }));
+    await waitFor(() =>
+      expect(mockReplace).toHaveBeenCalledWith({
+        pathname: '/send/result/[id]',
+        params: { id: held.id },
+      }),
+    );
+    expect((await repos.transfers.get({ path: { transfer_id: held.id } })).status).toBe(
+      'cancelled',
+    );
+  });
+
+  it('finishes the step-up from the explanation', async () => {
+    const repos = bank();
+    await fund(repos, 1_000_000);
+    const waiting = await payDirect(repos, 900_000);
+    expect(waiting.status).toBe('pending_step_up');
+    mockParams = { id: waiting.id };
+    await render(wrap(repos, <HoldExplanationScreen />));
+
+    expect(await screen.findByRole('header', { name: 'Why do I need to confirm?' })).toBeTruthy();
+    expect(screen.getByText(/much more than its owner does/)).toBeTruthy();
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirm it is me' }));
+    await fireEvent.changeText(await screen.findByLabelText(/^Verification code/), DEMO_OTP);
+    await waitFor(() => expect(mockReplace).toHaveBeenCalled(), { timeout: 4000 });
+    expect((await repos.transfers.get({ path: { transfer_id: waiting.id } })).status).toBe(
+      'completed',
+    );
+  });
+
+  it('says nothing is holding a payment that already went', async () => {
+    const repos = bank();
+    const sent = await payDirect(repos, 5_000);
+    mockParams = { id: sent.id };
+    await render(wrap(repos, <HoldExplanationScreen />));
+    expect(await screen.findByText('Nothing is holding this payment')).toBeTruthy();
   });
 });

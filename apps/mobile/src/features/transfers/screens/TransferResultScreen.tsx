@@ -34,6 +34,7 @@ import { useMoneyMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { StepUpSheet } from '../components/StepUpSheet';
+import { HOLD_TITLE } from '../hold';
 import {
   canCancel,
   isSettling,
@@ -242,6 +243,14 @@ export function TransferResultScreen() {
         <RiskReasonList
           reasons={reasons}
           title={outcome === 'held' ? 'Why we are checking' : 'Why we are asking'}
+        />
+      )}
+      {HOLD_TITLE[outcome] && (
+        <Button
+          label={HOLD_TITLE[outcome]}
+          icon={ShieldQuestion}
+          variant="secondary"
+          onPress={() => router.push({ pathname: '/send/held/[id]', params: { id: t.id } })}
         />
       )}
 
