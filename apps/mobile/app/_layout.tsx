@@ -14,6 +14,7 @@ import { OfflineBanner } from '@/features/shell/OfflineBanner';
 import { PhoneFrame } from '@/features/shell/PhoneFrame';
 import { RootNavigator } from '@/features/shell/RootNavigator';
 import { useSessionWatcher } from '@/features/shell/useSessionWatcher';
+import i18n from '@/lib/i18n';
 import { QueryProvider } from '@/lib/query';
 import { bindSimulation, usePreferencesStore, useStoresHydrated } from '@/stores';
 import { FONTS, ThemeProvider } from '@/theme';
@@ -42,6 +43,7 @@ export default function RootLayout() {
     <GestureHandlerRootView style={styles.root}>
       <RepositoryProvider>
         <DemoSimulationSync />
+        <LanguageSync />
         <QueryProvider>
           <StoredThemeProvider>
             <PhoneFrame>
@@ -86,6 +88,15 @@ function StoredThemeProvider({ children }: { children: ReactNode }) {
       {children}
     </ThemeProvider>
   );
+}
+
+/** Shows the app in the saved language (SET-2); strings re-render when it changes. */
+function LanguageSync() {
+  const language = usePreferencesStore((s) => s.language);
+  useEffect(() => {
+    if (i18n.language !== language) void i18n.changeLanguage(language);
+  }, [language]);
+  return null;
 }
 
 /** Applies the saved Demo Controls network settings to the mock bank. */

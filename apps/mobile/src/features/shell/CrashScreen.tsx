@@ -1,5 +1,6 @@
 import { House, RotateCw, TriangleAlert } from 'lucide-react-native';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, EmptyState, Screen, Text } from '@/components';
@@ -24,18 +25,19 @@ export function reportCrash(error: Error, info?: ErrorInfo): void {
  */
 export function CrashScreen({ error, retry, onHome }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <Screen>
       <EmptyState
         icon={TriangleAlert}
         tone="danger"
-        title="This screen hit a problem"
-        message="Your money is safe. Nothing was sent from this screen. Try again, or go back to Home."
+        title={t('errors.crashTitle')}
+        message={t('errors.crashMessage')}
       >
         <View style={[styles.actions, { gap: spacing[3], marginTop: spacing[2] }]}>
-          <Button label="Try again" icon={RotateCw} onPress={() => void retry()} />
+          <Button label={t('common.tryAgain')} icon={RotateCw} onPress={() => void retry()} />
           {onHome && (
-            <Button label="Go to Home" icon={House} variant="secondary" onPress={onHome} />
+            <Button label={t('common.goHome')} icon={House} variant="secondary" onPress={onHome} />
           )}
         </View>
         {__DEV__ && (

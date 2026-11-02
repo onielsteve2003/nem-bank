@@ -1,5 +1,7 @@
 import { useRouter } from 'expo-router';
 import { Bell, Bot, Monitor, Moon, ShieldAlert, Sun, type LucideIcon } from 'lucide-react-native';
+import type { ParseKeys } from 'i18next';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Chip, Divider, ListItem, Screen, SectionHeader, Switch, Text } from '@/components';
@@ -15,22 +17,17 @@ import { useTheme } from '@/theme';
 
 import { useSavePreferences } from '../useSavePreferences';
 
-const APPEARANCES: { value: Appearance; label: string; icon: LucideIcon }[] = [
-  { value: 'system', label: 'Match phone', icon: Monitor },
-  { value: 'dark', label: 'Dark', icon: Moon },
-  { value: 'light', label: 'Light', icon: Sun },
+const APPEARANCES: { value: Appearance; label: ParseKeys; icon: LucideIcon }[] = [
+  { value: 'system', label: 'common.matchPhone', icon: Monitor },
+  { value: 'dark', label: 'settings.dark', icon: Moon },
+  { value: 'light', label: 'settings.light', icon: Sun },
 ];
 
-const AUTO_LOCK: { value: AutoLockSeconds; label: string }[] = [
-  { value: 30, label: '30 sec' },
-  { value: 60, label: '1 min' },
-  { value: 120, label: '2 min' },
-  { value: 300, label: '5 min' },
-];
+const AUTO_LOCK: readonly AutoLockSeconds[] = [30, 60, 120, 300];
 
-const MOTION: { value: ReduceMotion; label: string }[] = [
-  { value: 'system', label: 'Match phone' },
-  { value: 'always', label: 'Always reduce' },
+const MOTION: { value: ReduceMotion; label: ParseKeys }[] = [
+  { value: 'system', label: 'common.matchPhone' },
+  { value: 'always', label: 'settings.alwaysReduce' },
 ];
 
 function ChipRow({ children }: { children: React.ReactNode }) {
@@ -79,16 +76,21 @@ export function SettingsScreen() {
   const reduceMotion = usePreferencesStore((s) => s.reduceMotion);
   const setReduceMotion = usePreferencesStore((s) => s.setReduceMotion);
   const hidden = usePrivacyStore((s) => s.balancesHidden);
+  const { t } = useTranslation();
+  const lockLabel = (seconds: AutoLockSeconds) =>
+    seconds < 60
+      ? t('settings.seconds', { count: seconds })
+      : t('settings.minutes', { count: seconds / 60 });
 
   return (
-    <Screen header={<SendHeader title="Settings" first />} edges={['top', 'bottom']}>
-      <Group title="Appearance">
-        <Text variant="bodyStrong">Theme</Text>
+    <Screen header={<SendHeader title={t('settings.title')} first />} edges={['top', 'bottom']}>
+      <Group title={t('settings.appearance')}>
+        <Text variant="bodyStrong">{t('settings.theme')}</Text>
         <ChipRow>
           {APPEARANCES.map((a) => (
             <Chip
               key={a.value}
-              label={a.label}
+              label={t(a.label)}
               icon={a.icon}
               selected={appearance === a.value}
               onPress={() => save({ appearance: a.value })}
@@ -97,52 +99,46 @@ export function SettingsScreen() {
         </ChipRow>
       </Group>
 
-      <Group
-        title="Privacy"
-        hint="You can also tap the eye on Home to show or hide amounts at any time."
-      >
+      <Group title={t('settings.privacy')} hint={t('settings.privacyHint')}>
         <Switch
-          label="Privacy mode"
-          description="Hides balances and amounts everywhere, for using Nem in public"
+          label={t('settings.privacyMode')}
+          description={t('settings.privacyModeHint')}
           value={hidden}
           onValueChange={(on) => save({ hideBalances: on })}
         />
         <Divider />
-        <Text variant="bodyStrong">{"Lock Nem after it's been in the background for"}</Text>
+        <Text variant="bodyStrong">{t('settings.autoLock')}</Text>
         <ChipRow>
-          {AUTO_LOCK.map((o) => (
+          {AUTO_LOCK.map((seconds) => (
             <Chip
-              key={o.value}
-              label={o.label}
-              selected={autoLock === o.value}
-              onPress={() => save({ autoLockSeconds: o.value })}
+              key={seconds}
+              label={lockLabel(seconds)}
+              selected={autoLock === seconds}
+              onPress={() => save({ autoLockSeconds: seconds })}
             />
           ))}
         </ChipRow>
       </Group>
 
-      <Group title="Data">
+      <Group title={t('settings.data')}>
         <Switch
-          label="Low-data mode"
-          description="Photos and charts load only when you tap them, and lists fetch less at a time"
+          label={t('settings.lowData')}
+          description={t('settings.lowDataHint')}
           value={lowData}
           onValueChange={(on) => save({ lowDataMode: on })}
         />
       </Group>
 
-      <Group
-        title="Accessibility"
-        hint="Text size and the screen reader follow your phone's settings. Nem supports both."
-      >
-        <Text variant="bodyStrong">Reduce motion</Text>
+      <Group title={t('settings.accessibility')} hint={t('settings.accessibilityHint')}>
+        <Text variant="bodyStrong">{t('settings.reduceMotion')}</Text>
         <Text variant="bodySmall" color="textMuted">
-          Fewer animations: no card tilt, count-ups or springy buttons.
+          {t('settings.reduceMotionHint')}
         </Text>
         <ChipRow>
           {MOTION.map((m) => (
             <Chip
               key={m.value}
-              label={m.label}
+              label={t(m.label)}
               selected={reduceMotion === m.value}
               onPress={() => setReduceMotion(m.value)}
             />
@@ -151,25 +147,25 @@ export function SettingsScreen() {
       </Group>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Alerts" />
+        <SectionHeader title={t('settings.alerts')} />
         <Card padded={false}>
           <ListItem
-            title="Notifications"
-            subtitle="What we tell you about, and where"
+            title={t('settings.notifications')}
+            subtitle={t('settings.notificationsHint')}
             leading={Bell}
             onPress={() => router.push('/notifications/preferences')}
           />
           <Divider />
           <ListItem
-            title="Security alerts"
-            subtitle="Sign-ins, new devices and large payments"
+            title={t('settings.securityAlerts')}
+            subtitle={t('settings.securityAlertsHint')}
             leading={ShieldAlert}
             onPress={() => router.push('/security/alerts')}
           />
           <Divider />
           <ListItem
-            title="AI features"
-            subtitle="Switch each AI feature on or off"
+            title={t('settings.aiFeatures')}
+            subtitle={t('settings.aiFeaturesHint')}
             leading={Bot}
             onPress={() => router.push('/ai')}
           />

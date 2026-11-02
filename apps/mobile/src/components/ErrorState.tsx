@@ -1,5 +1,6 @@
 import { CloudOff, RotateCw, TriangleAlert } from 'lucide-react-native';
 import { useEffect, useRef, useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';
 
 import { Button } from './Button';
@@ -16,26 +17,13 @@ export type Props = {
 };
 
 const COPY = {
-  error: {
-    icon: TriangleAlert,
-    title: 'Something went wrong',
-    message: 'We couldn’t load this. Your money is safe.',
-  },
-  offline: {
-    icon: CloudOff,
-    title: 'You’re offline',
-    message: 'Check your connection and try again.',
-  },
+  error: { icon: TriangleAlert, title: 'errors.title', message: 'errors.message' },
+  offline: { icon: CloudOff, title: 'errors.offlineTitle', message: 'errors.offlineMessage' },
 } as const;
 
 /** The error half of every data screen's loading/empty/error/success set. */
-export function ErrorState({
-  title,
-  message,
-  kind = 'error',
-  onRetry,
-  retryLabel = 'Try again',
-}: Props) {
+export function ErrorState({ title, message, kind = 'error', onRetry, retryLabel }: Props) {
+  const { t } = useTranslation();
   const copy = COPY[kind];
   const [retrying, setRetrying] = useState(false);
   const mounted = useRef(true);
@@ -63,12 +51,12 @@ export function ErrorState({
     <EmptyState
       icon={copy.icon}
       tone="danger"
-      title={title ?? copy.title}
-      message={message ?? copy.message}
+      title={title ?? t(copy.title)}
+      message={message ?? t(copy.message)}
     >
       {onRetry && (
         <Button
-          label={retryLabel}
+          label={retryLabel ?? t('common.tryAgain')}
           icon={RotateCw}
           variant="secondary"
           loading={retrying}

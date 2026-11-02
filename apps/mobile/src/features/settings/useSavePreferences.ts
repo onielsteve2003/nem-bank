@@ -1,3 +1,5 @@
+import { useTranslation } from 'react-i18next';
+
 import { useToast } from '@/components';
 import { useRepoMutation } from '@/lib/query';
 import { toApiPreferences, usePreferencesStore, usePrivacyStore, type Preferences } from '@/stores';
@@ -11,6 +13,7 @@ type Change = Partial<Omit<Preferences, 'ai'>> & { hideBalances?: boolean };
  */
 export function useSavePreferences() {
   const toast = useToast();
+  const { t } = useTranslation();
   const save = useRepoMutation('users', 'setPreferences', { invalidates: [] });
 
   return ({ hideBalances, ...change }: Change) => {
@@ -32,7 +35,7 @@ export function useSavePreferences() {
         onError: () => {
           usePreferencesStore.setState(previous);
           usePrivacyStore.getState().setBalancesHidden(hiddenBefore);
-          toast.show({ message: "That didn't save. Try again.", tone: 'error' });
+          toast.show({ message: t('common.saveFailed'), tone: 'error' });
         },
       },
     );

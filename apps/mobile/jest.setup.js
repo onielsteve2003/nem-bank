@@ -40,3 +40,5 @@ jest.mock('expo-notifications', () => ({
   getLastNotificationResponse: jest.fn(() => null),
   clearLastNotificationResponse: jest.fn(),
 }));
+// Strings come from the English catalogue (SET-2), so tests read what users read.
+require('./src/lib/i18n');

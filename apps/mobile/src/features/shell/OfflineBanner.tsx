@@ -1,4 +1,5 @@
 import { CloudOff } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';
 
@@ -14,13 +15,14 @@ const timeFormat = new Intl.DateTimeFormat('en-NG', { hour: 'numeric', minute: '
  */
 export function OfflineBanner() {
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   const online = useNetworkStore(isOnline);
   const simulated = useNetworkStore((s) => s.deviceOnline && s.simulatedOffline);
   const since = useNetworkStore((s) => s.lastOnlineAt);
   if (online) return null;
 
-  const title = simulated ? 'Demo Controls has the bank offline' : 'You’re offline';
-  const detail = `Showing what was saved at ${timeFormat.format(since)}. Payments need a connection.`;
+  const title = simulated ? t('offline.simulated') : t('offline.title');
+  const detail = t('offline.detail', { time: timeFormat.format(since) });
 
   return (
     <Animated.View

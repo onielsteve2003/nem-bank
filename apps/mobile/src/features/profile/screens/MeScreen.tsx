@@ -17,6 +17,7 @@ import {
   UserRound,
   Users,
 } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -40,6 +41,7 @@ import { useTheme } from '@/theme';
 export function MeScreen() {
   const router = useRouter();
   const signOut = useSignOut();
+  const { t } = useTranslation();
   const { spacing } = useTheme();
   const me = useRepoQuery('users', 'getMe');
   const checkup = useRepoQuery('security', 'getCheckup');
@@ -50,7 +52,7 @@ export function MeScreen() {
   const header = (
     <View style={[styles.header, { paddingHorizontal: spacing[4] }]}>
       <Text variant="title" accessibilityRole="header">
-        Me
+        {t('me.title')}
       </Text>
     </View>
   );
@@ -74,50 +76,48 @@ export function MeScreen() {
                 </Text>
               )}
               <View style={styles.start}>
-                <Badge label={`KYC Tier ${user.kyc_tier}`} tone="primary" />
+                <Badge label={t('me.kycTier', { tier: user.kyc_tier })} tone="primary" />
               </View>
             </View>
           </View>
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading your profile">
+          <SkeletonGroup accessibilityLabel={t('me.loading')}>
             <Skeleton height={72} />
           </SkeletonGroup>
         )}
       </Card>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Security" />
+        <SectionHeader title={t('me.security')} />
         <Card padded={false}>
           <ListItem
-            title="Security center"
+            title={t('me.securityCenter')}
             subtitle={
               checkup.data
-                ? `Checkup score ${checkup.data.score} of 100`
-                : 'Checkup, devices, limits and panic button'
+                ? t('me.checkupScore', { score: checkup.data.score })
+                : t('me.securityCenterHint')
             }
             leading={ShieldCheck}
             onPress={() => router.push('/security')}
           />
           <Divider />
           <ListItem
-            title="Panic button"
-            subtitle={
-              panic.data?.active ? 'On: cards frozen, nothing can go out' : 'Freeze everything'
-            }
+            title={t('me.panic')}
+            subtitle={panic.data?.active ? t('me.panicOn') : t('me.panicOff')}
             leading={OctagonX}
             onPress={() => router.push('/security/panic')}
           />
           <Divider />
           <ListItem
-            title="Devices and sessions"
-            subtitle="Where you’re signed in"
+            title={t('me.devices')}
+            subtitle={t('me.devicesHint')}
             leading={MonitorSmartphone}
             onPress={() => router.push('/security/devices')}
           />
           <Divider />
           <ListItem
-            title="Your limits"
-            subtitle="Daily and single-transfer limits"
+            title={t('me.limits')}
+            subtitle={t('me.limitsHint')}
             leading={Gauge}
             onPress={() => router.push('/security/limits')}
           />
@@ -125,53 +125,53 @@ export function MeScreen() {
       </View>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Account" />
+        <SectionHeader title={t('me.account')} />
         <Card padded={false}>
           <ListItem
-            title="Profile"
-            subtitle="Photo, name and @nemtag"
+            title={t('me.profile')}
+            subtitle={t('me.profileHint')}
             leading={UserRound}
             onPress={() => router.push('/profile')}
           />
           <Divider />
           <ListItem
-            title="Verify your identity"
-            subtitle="Raise your limits"
+            title={t('me.kyc')}
+            subtitle={t('me.kycHint')}
             leading={BadgeCheck}
             onPress={() => router.push('/kyc')}
           />
           <Divider />
           <ListItem
-            title="Family"
-            subtitle="Your children’s accounts and limits"
+            title={t('me.family')}
+            subtitle={t('me.familyHint')}
             leading={Users}
             onPress={() => router.push('/family')}
           />
           <Divider />
           <ListItem
-            title="Disputes"
-            subtitle="Problems you've reported and where they are"
+            title={t('me.disputes')}
+            subtitle={t('me.disputesHint')}
             leading={Flag}
             onPress={() => router.push('/disputes')}
           />
           <Divider />
           <ListItem
-            title="Notifications"
-            subtitle="Your inbox and what we tell you about"
+            title={t('me.notifications')}
+            subtitle={t('me.notificationsHint')}
             leading={Bell}
             onPress={() => router.push('/notifications')}
           />
           <Divider />
           <ListItem
-            title="Statements"
-            subtitle="Official PDFs with a verification code"
+            title={t('me.statements')}
+            subtitle={t('me.statementsHint')}
             leading={FileText}
             onPress={() => router.push('/statements')}
           />
           <Divider />
           <ListItem
-            title="AI and your data"
-            subtitle="What each AI feature uses, with switches"
+            title={t('me.ai')}
+            subtitle={t('me.aiHint')}
             leading={Bot}
             onPress={() => router.push('/ai')}
           />
@@ -180,19 +180,19 @@ export function MeScreen() {
 
       <Card padded={false}>
         <ListItem
-          title="Settings"
-          subtitle="Theme, privacy mode, low data, motion and alerts"
+          title={t('me.settings')}
+          subtitle={t('me.settingsHint')}
           leading={Settings}
           onPress={() => router.push('/settings')}
         />
       </Card>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Help" />
+        <SectionHeader title={t('me.help')} />
         <Card padded={false}>
           <ListItem
-            title="Help and support"
-            subtitle="Answers, or chat with our team"
+            title={t('me.support')}
+            subtitle={t('me.supportHint')}
             leading={LifeBuoy}
             onPress={() => router.push('/support')}
           />
@@ -200,11 +200,11 @@ export function MeScreen() {
       </View>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Demo" />
+        <SectionHeader title={t('me.demo')} />
         <Card padded={false}>
           <ListItem
-            title="Demo Controls"
-            subtitle="Fund the wallet, simulate transfers, reset"
+            title={t('me.demoControls')}
+            subtitle={t('me.demoControlsHint')}
             leading={SlidersHorizontal}
             onPress={() => router.push('/demo-controls')}
           />
@@ -212,8 +212,8 @@ export function MeScreen() {
             <>
               <Divider />
               <ListItem
-                title="Design system"
-                subtitle="Every Volt Noir component"
+                title={t('me.designSystem')}
+                subtitle={t('me.designSystemHint')}
                 leading={LayoutGrid}
                 onPress={() => router.push('/kit')}
               />
@@ -224,8 +224,8 @@ export function MeScreen() {
 
       <Card padded={false}>
         <ListItem
-          title="Sign out"
-          subtitle="Back to the welcome screen"
+          title={t('me.signOut')}
+          subtitle={t('me.signOutHint')}
           leading={LogOut}
           onPress={() => void signOut()}
         />
