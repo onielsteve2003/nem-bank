@@ -86,3 +86,46 @@ export function revealed(text: string, elapsedMs: number, msPerWord = 45): strin
   const end = shown * 2 - 1;
   return end >= words.length ? text : words.slice(0, end).join('');
 }
+
+export type PreparedAction = Schema<'PreparedAction'>;
+export type ActionStatus = PreparedAction['status'];
+
+/** A prepared action past its time is expired, even before the bank says so. */
+export const actionStatus = (a: PreparedAction, now: Date = new Date()): ActionStatus =>
+  a.status === 'prepared' && new Date(a.expires_at) <= now ? 'expired' : a.status;
+
+/** "Expires in 4 min" while it can still be confirmed. */
+export function expiresIn(a: PreparedAction, now: Date = new Date()): string {
+  const minutes = Math.ceil((new Date(a.expires_at).getTime() - now.getTime()) / 60_000);
+  return minutes <= 1 ? 'Expires in under a minute' : `Expires in ${minutes} min`;
+}
+
+/** What the card says once the action is no longer waiting. */
+export const STATUS_LINE: Record<Exclude<ActionStatus, 'prepared'>, string> = {
+  confirmed: 'Done',
+  discarded: 'Cancelled. Nothing was sent.',
+  expired: 'This expired, so nothing was sent. Ask again to start over.',
+  failed: "This didn't go through. Nothing was sent.",
+};
+
+/** Where to see what a confirmed action made. */
+export function resultRoute(result: NonNullable<PreparedAction['result']>) {
+  switch (result.resource) {
+    case 'transfer':
+      return { pathname: '/send/result/[id]', params: { id: result.id } } as const;
+    case 'bill_payment':
+      return { pathname: '/bills/receipt/[id]', params: { id: result.id } } as const;
+    case 'savings_goal':
+      return { pathname: '/goals/[id]', params: { id: result.id } } as const;
+    case 'card':
+      return { pathname: '/cards', params: { card: result.id } } as const;
+    case 'fx_conversion':
+      return { pathname: '/convert/history' } as const;
+  }
+}
+
+/**
+ * Why confirming failed. A 409 means the action is no longer waiting (it
+ * expired or was used elsewhere); anything else reads like a normal send error.
+ */
+export const isStaleAction = (e: unknown) => isApiError(e) && e.problem.status === 409;

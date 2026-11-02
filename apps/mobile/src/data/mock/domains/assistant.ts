@@ -204,7 +204,13 @@ export function assistantRepo(bank: MockBank, repos: () => Repositories): Assist
       conversation(path.conversation_id);
       const messages = bank.world.assistant.messages
         .filter((m) => m.conversationId === path.conversation_id)
-        .map(({ conversationId: _c, ...m }) => m);
+        .map(({ conversationId: _c, ...m }) => ({
+          ...m,
+          // A saved message holds the action as it was prepared; show it as it is now.
+          blocks: m.blocks.map((b) =>
+            b.type === 'prepared_action' ? { ...b, action: action(b.action.id) } : b,
+          ),
+        }));
       // Oldest first, as the contract says. Kept in the order they were said: a
       // question and its reply share a timestamp, so sorting could swap them.
       return paginate(messages, query);

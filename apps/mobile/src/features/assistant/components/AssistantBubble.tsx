@@ -5,21 +5,20 @@ import { formatDateTime } from '@/features/transactions/format';
 import { useTheme } from '@/theme';
 
 import type { AssistantBlock, AssistantMessage } from '../assistant';
+import { ActionCard } from './ActionCard';
+import { ChartBlock } from './ChartBlock';
 import { StreamingText } from './StreamingText';
+import { TransactionsBlock } from './TransactionsBlock';
 
-/** A one-line stand-in for a block that is not text (charts, lists, prepared payments). */
-export function blockLine(b: AssistantBlock): string | null {
-  switch (b.type) {
-    case 'text':
-      return null;
+/** A tool result inside a reply: a chart, a list, or a payment waiting for you. */
+function ToolBlock({ block }: { block: Exclude<AssistantBlock, { type: 'text' }> }) {
+  switch (block.type) {
     case 'chart':
-      return b.title;
+      return <ChartBlock block={block} />;
     case 'transactions':
-      return b.transactions.length === 1
-        ? '1 transaction'
-        : `${b.transactions.length} transactions`;
+      return <TransactionsBlock block={block} />;
     case 'prepared_action':
-      return b.action.summary;
+      return <ActionCard action={block.action} />;
   }
 }
 
@@ -40,6 +39,7 @@ export function AssistantBubble({ message, stream = false }: Props) {
       <View
         style={[
           styles.bubble,
+          message.blocks.some((b) => b.type !== 'text') && styles.wide,
           {
             backgroundColor: mine ? colors.primary : colors.raised,
             borderRadius: radius.lg,
@@ -63,17 +63,7 @@ export function AssistantBubble({ message, stream = false }: Props) {
               </Text>
             );
           }
-          return (
-            <View
-              key={i}
-              style={[
-                styles.block,
-                { borderColor: colors.border, borderRadius: radius.md, padding: spacing[2] },
-              ]}
-            >
-              <Text variant="bodySmall">{blockLine(b)}</Text>
-            </View>
-          );
+          return <ToolBlock key={i} block={b} />;
         })}
         <Text
           variant="caption"
@@ -90,5 +80,6 @@ const styles = StyleSheet.create({
   row: { flexDirection: 'row' },
   mine: { justifyContent: 'flex-end' },
   bubble: { maxWidth: '85%' },
-  block: { borderWidth: StyleSheet.hairlineWidth },
+  // Cards and charts need the room; a short text reply still hugs its words.
+  wide: { width: '85%' },
 });

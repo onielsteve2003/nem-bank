@@ -4,12 +4,20 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ToastProvider } from '@/components';
 import { ApiError, RepositoryProvider, type Repositories } from '@/data';
-import { createMockRepositories } from '@/data/mock';
+import { createMockRepositories, DEMO_PIN } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
-import { SUGGESTIONS, assistantProblem, revealed, useAssistantStore } from '../assistant';
+import {
+  SUGGESTIONS,
+  actionStatus,
+  assistantProblem,
+  expiresIn,
+  revealed,
+  useAssistantStore,
+  type PreparedAction,
+} from '../assistant';
 import { AssistantScreen } from '../screens/AssistantScreen';
 
 const mockPush = jest.fn();
@@ -17,6 +25,13 @@ jest.mock('expo-router', () => ({
   useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn(), dismissTo: jest.fn() }),
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
+jest.mock('expo-local-authentication', () => ({
+  AuthenticationType: { FINGERPRINT: 1, FACIAL_RECOGNITION: 2 },
+  hasHardwareAsync: jest.fn(async () => false),
+  isEnrolledAsync: jest.fn(async () => false),
+  supportedAuthenticationTypesAsync: jest.fn(async () => []),
+  authenticateAsync: jest.fn(async () => ({ success: false })),
+}));
 
 configure({ defaultIncludeHiddenElements: true });
 
@@ -69,6 +84,18 @@ describe('assistant rules', () => {
     expect(assistantProblem(problemOf(404, 'not_found'))).toBe('gone');
     expect(assistantProblem(new Error('x'))).toBe('other');
   });
+
+  it('treats a prepared action past its time as expired', () => {
+    const now = new Date('2026-11-02T10:00:00Z');
+    const a = {
+      status: 'prepared',
+      expires_at: '2026-11-02T10:04:30Z',
+    } as PreparedAction;
+    expect(actionStatus(a, now)).toBe('prepared');
+    expect(expiresIn(a, now)).toBe('Expires in 5 min');
+    expect(actionStatus(a, new Date('2026-11-02T10:05:00Z'))).toBe('expired');
+    expect(actionStatus({ ...a, status: 'confirmed' }, new Date('2026-11-03'))).toBe('confirmed');
+  });
 });
 
 describe('AssistantScreen', () => {
@@ -101,7 +128,6 @@ describe('AssistantScreen', () => {
     );
     await fireEvent.press(screen.getByRole('button', { name: 'Ask' }));
     expect(await screen.findByLabelText('Here are your latest transactions.')).toBeOnTheScreen();
-    expect(screen.getByText(/\d+ transactions?/)).toBeOnTheScreen();
 
     const before = useAssistantStore.getState().conversationId;
     await fireEvent.press(screen.getByRole('button', { name: 'New chat' }));
@@ -128,5 +154,54 @@ describe('AssistantScreen', () => {
     useAssistantStore.setState({ conversationId: '00000000-0000-0000-0000-000000000000' });
     await render(wrap(bank()));
     expect(await screen.findByText(/What can I help with\?/)).toBeOnTheScreen();
+  });
+
+  const ask = async (question: string) => {
+    await screen.findByText(/What can I help with\?/);
+    await fireEvent.changeText(screen.getByLabelText('Ask the assistant'), question);
+    await fireEvent.press(screen.getByRole('button', { name: 'Ask' }));
+  };
+
+  it('draws the spending chart the assistant sends back', async () => {
+    await render(wrap(bank()));
+    await ask('How much did I spend this month?');
+    expect(await screen.findByText('Spending by category')).toBeOnTheScreen();
+  });
+
+  it('prepares a transfer, confirms it with the PIN and opens the result', async () => {
+    const repos = bank();
+    await render(wrap(repos));
+    await ask('Send ₦5,000 to @amaka_o');
+    expect(await screen.findByText('Send ₦5,000.00 to Amaka Obi (@amaka_o)')).toBeOnTheScreen();
+    expect(screen.getByText(/Nothing moves until you confirm/)).toBeOnTheScreen();
+    expect(screen.getByText('Total from your account')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('button', { name: 'Confirm' }));
+    for (const digit of DEMO_PIN) {
+      await fireEvent.press((await screen.findAllByRole('button', { name: digit })).at(-1)!);
+    }
+    await waitFor(() =>
+      expect(mockPush).toHaveBeenCalledWith({
+        pathname: '/send/result/[id]',
+        params: { id: expect.any(String) },
+      }),
+    );
+    expect(await screen.findByText('Done')).toBeOnTheScreen();
+    const { id } = mockPush.mock.calls.at(-1)![0].params;
+    expect((await repos.transfers.get({ path: { transfer_id: id } })).id).toBe(id);
+  });
+
+  it('cancels a prepared card freeze without touching the card', async () => {
+    const repos = bank();
+    const frozen = async () =>
+      (await repos.cards.list()).data.filter((c) => c.status === 'frozen').length;
+    const before = await frozen();
+    await render(wrap(repos));
+    await ask('Freeze my card');
+    await screen.findByText(/Freeze card ••••/);
+    await fireEvent.press(screen.getByRole('button', { name: 'Cancel' }));
+    expect(await screen.findByText('Cancelled. Nothing was sent.')).toBeOnTheScreen();
+    expect(screen.queryByRole('button', { name: 'Confirm' })).toBeNull();
+    expect(await frozen()).toBe(before);
   });
 });
