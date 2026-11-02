@@ -11,13 +11,22 @@ export type Props = {
   value: boolean;
   onValueChange: (value: boolean) => void;
   disabled?: boolean;
+  /** What a screen reader hears when the visible label needs its context, e.g. "Payments: Push". */
+  accessibilityLabel?: string;
 };
 
 /**
  * A settings row with the platform switch. The whole row toggles, so the touch
  * target is the row rather than the small switch, and it is announced once.
  */
-export function Switch({ label, description, value, onValueChange, disabled = false }: Props) {
+export function Switch({
+  label,
+  description,
+  value,
+  onValueChange,
+  disabled = false,
+  accessibilityLabel,
+}: Props) {
   const { colors, spacing } = useTheme();
 
   const toggle = () => {
@@ -28,7 +37,7 @@ export function Switch({ label, description, value, onValueChange, disabled = fa
   return (
     <Pressable
       accessibilityRole="switch"
-      accessibilityLabel={label}
+      accessibilityLabel={accessibilityLabel ?? label}
       accessibilityHint={description}
       accessibilityState={{ checked: value, disabled }}
       disabled={disabled}

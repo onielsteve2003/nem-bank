@@ -21,6 +21,7 @@ import { isApiError } from '@/data';
 import { AccountDetailsSheet } from '@/features/accounts/AccountDetailsSheet';
 import { AddWalletSheet, addableCurrencies } from '@/features/accounts/AddWalletSheet';
 import { BalanceExplainerSheet } from '@/features/accounts/BalanceExplainerSheet';
+import { NotificationBell } from '@/features/notifications/components/NotificationBell';
 import { TransactionRow } from '@/features/transactions/TransactionRow';
 import { env } from '@/lib/env';
 import { useRepoQuery } from '@/lib/query';
@@ -113,6 +114,7 @@ export function HomeScreen() {
         variant="ghost"
         onPress={toggleBalances}
       />
+      <NotificationBell />
     </View>
   );
 

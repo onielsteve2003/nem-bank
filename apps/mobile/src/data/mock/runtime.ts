@@ -172,7 +172,10 @@ export class MockBank {
     return result;
   }
 
+  /** Adds to the inbox unless the customer turned that category off in the app (NOT-2). */
   notify(input: Omit<Schema<'Notification'>, 'id' | 'read' | 'created_at'>): void {
+    const prefs = this.world.notificationPreferences.categories[input.category];
+    if (input.category !== 'security' && !prefs.in_app) return;
     this.world.notifications.push({
       ...input,
       id: this.id(),

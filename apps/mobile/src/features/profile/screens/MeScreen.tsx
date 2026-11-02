@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import {
   BadgeCheck,
+  Bell,
   FileText,
   Flag,
   Gauge,
@@ -150,6 +151,13 @@ export function MeScreen() {
             subtitle="Problems you've reported and where they are"
             leading={Flag}
             onPress={() => router.push('/disputes')}
+          />
+          <Divider />
+          <ListItem
+            title="Notifications"
+            subtitle="Your inbox and what we tell you about"
+            leading={Bell}
+            onPress={() => router.push('/notifications')}
           />
           <Divider />
           <ListItem
