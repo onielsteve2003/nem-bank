@@ -223,7 +223,9 @@
     },
     "about": "About",
     "legal": "Legal and about",
-    "legalHint": "Terms, privacy, licences and di demo warning"
+    "legalHint": "Terms, privacy, licences and di demo warning",
+    "yourData": "Your data",
+    "yourDataHint": "Export your data or delete your account"
   },
   "auth": {
     "welcome": {
@@ -4086,6 +4088,46 @@
           }
         }
       }
+    }
+  },
+  "yourData": {
+    "title": "Your data",
+    "intro": "Under Nigeria Data Protection Act 2023 you fit collect copy of your data or ask us to delete your account. We go answer inside 30 days.",
+    "export": {
+      "title": "Export my data",
+      "body": "One JSON file with everything wey we get about you, we go send am to {{email}}. E dey usually ready inside one day.",
+      "includes": [
+        "Your profile, verification details and consent history",
+        "Accounts, transactions and statements",
+        "Cards (only last four digits), payees and saved billers",
+        "Settings, alerts and di category corrections wey you make"
+      ],
+      "request": "Request my data",
+      "received": "You request am on {{date}}",
+      "receivedBody": "We go email am to {{email}} before {{date}}."
+    },
+    "delete": {
+      "row": "Delete my account",
+      "rowHint": "Close Nem and clear your profile",
+      "title": "Delete my account",
+      "what": "Wetin go happen",
+      "steps": [
+        "We go cancel your cards and sign out every device.",
+        "We go clear your profile, ID photos and selfie.",
+        "We go keep transaction records for five years, as anti-money-laundering rules talk, then we go delete dem.",
+        "We go finish inside 30 days and email you when e don finish."
+      ],
+      "balancesTitle": "Comot your money first",
+      "balancesBody": "Every balance must be zero before we fit close your account. Send am to another bank or convert am, then come back.",
+      "allClear": "All your balance na zero.",
+      "sendMoney": "Send money",
+      "understand": "I understand say I no fit undo dis",
+      "button": "Delete my account",
+      "confirm": "Confirm with your PIN to delete your Nem account",
+      "received": "We don receive your delete request",
+      "receivedBody": "We don get your request and we go finish before {{date}}. You fit still use Nem till then; contact Support if you change your mind.",
+      "loading": "We dey check your balance",
+      "failed": "We no fit check your balance"
     }
   }
 }

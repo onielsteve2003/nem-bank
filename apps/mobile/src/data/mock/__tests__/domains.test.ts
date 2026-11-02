@@ -223,6 +223,25 @@ describe('mock repositories', () => {
     expect((await repos.users.verifyPin({ body: { pin: '4826' } })).valid).toBe(true);
   });
 
+  it('answers a data export within 30 days and refuses deletion while money is left', async () => {
+    const { repos } = setup();
+    const exported = await repos.privacy.requestExport();
+    expect(exported).toMatchObject({ kind: 'export', status: 'received' });
+    expect(Date.parse(exported.completes_by) - START.getTime()).toBe(30 * 24 * 3600 * 1000);
+    // A second tap returns the open request instead of starting another.
+    expect((await repos.privacy.requestExport()).id).toBe(exported.id);
+
+    await expect(
+      repos.privacy.requestDeletion({ stepUpToken: 'not-a-token' }),
+    ).rejects.toMatchObject({
+      problem: { status: 403 },
+    });
+    const token = await stepUpToken(repos, 'account_deletion');
+    await expect(repos.privacy.requestDeletion({ stepUpToken: token })).rejects.toMatchObject({
+      problem: { status: 409, code: 'balance_not_zero' },
+    });
+  });
+
   it('serves the seeded persona with balances that match the ledger', async () => {
     const { repos } = setup();
     expect((await repos.users.getMe()).preferred_name).toBe('Tolu');

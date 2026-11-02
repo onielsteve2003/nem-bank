@@ -36,6 +36,16 @@ export function privacyRepo(bank: MockBank): PrivacyRepo {
     },
     async requestDeletion({ stepUpToken }) {
       bank.consumeStepUp(stepUpToken, 'account_deletion');
+      // Profile data can only be erased once nothing is left to pay out.
+      const funded = bank
+        .customerAccounts()
+        .filter((a) => a.balance.amount !== 0n)
+        .map((a) => a.currency);
+      if (funded.length) {
+        throw problem(409, 'balance_not_zero', 'Move your money out first', {
+          detail: `Your ${funded.join(', ')} balance must be zero before we can close your account.`,
+        });
+      }
       return request('deletion');
     },
   };

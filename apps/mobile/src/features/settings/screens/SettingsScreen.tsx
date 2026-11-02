@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import {
   Bell,
   Bot,
+  Database,
   Info,
   Monitor,
   Moon,
@@ -145,6 +146,13 @@ export function SettingsScreen() {
             />
           ))}
         </ChipRow>
+        <Divider />
+        <ListItem
+          title={t('settings.yourData')}
+          subtitle={t('settings.yourDataHint')}
+          leading={Database}
+          onPress={() => router.push('/settings/your-data')}
+        />
       </Group>
 
       <Group title={t('settings.data')}>

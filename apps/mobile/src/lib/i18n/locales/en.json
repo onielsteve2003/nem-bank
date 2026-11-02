@@ -223,7 +223,9 @@
     },
     "about": "About",
     "legal": "Legal and about",
-    "legalHint": "Terms, privacy, licences and the demo disclaimer"
+    "legalHint": "Terms, privacy, licences and the demo disclaimer",
+    "yourData": "Your data",
+    "yourDataHint": "Export your data or delete your account"
   },
   "auth": {
     "welcome": {
@@ -4081,6 +4083,46 @@
           }
         }
       }
+    }
+  },
+  "yourData": {
+    "title": "Your data",
+    "intro": "Under the Nigeria Data Protection Act 2023 you can get a copy of your data or ask us to delete your account. We answer within 30 days.",
+    "export": {
+      "title": "Export my data",
+      "body": "A JSON file with everything we hold about you, sent to {{email}}. It's usually ready within a day.",
+      "includes": [
+        "Your profile, verification details and consent history",
+        "Accounts, transactions and statements",
+        "Cards (last four digits only), payees and saved billers",
+        "Settings, alerts and your category corrections"
+      ],
+      "request": "Request my data",
+      "received": "Requested on {{date}}",
+      "receivedBody": "We'll email it to {{email}} by {{date}} at the latest."
+    },
+    "delete": {
+      "row": "Delete my account",
+      "rowHint": "Close Nem and erase your profile",
+      "title": "Delete my account",
+      "what": "What happens",
+      "steps": [
+        "Your cards are cancelled and every device is signed out.",
+        "Your profile, ID photos and selfie are erased.",
+        "Transaction records are kept for five years, as anti-money-laundering rules require, then deleted.",
+        "We finish within 30 days and email you when it is done."
+      ],
+      "balancesTitle": "Move your money out first",
+      "balancesBody": "Every balance must be zero before we can close your account. Send it to another bank or convert it, then come back.",
+      "allClear": "All your balances are zero.",
+      "sendMoney": "Send money",
+      "understand": "I understand this can't be undone",
+      "button": "Delete my account",
+      "confirm": "Confirm with your PIN to delete your Nem account",
+      "received": "Deletion requested",
+      "receivedBody": "We've received your request and will finish by {{date}}. You can keep using Nem until then; contact Support if you change your mind.",
+      "loading": "Checking your balances",
+      "failed": "We couldn't check your balances"
     }
   }
 }
