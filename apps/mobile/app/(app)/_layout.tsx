@@ -27,7 +27,7 @@ export default function AppLayout() {
         <Stack.Screen name="transactions/[id]" />
         <Stack.Screen name="statements/index" />
         <Stack.Screen name="statements/[id]" />
-        <Stack.Screen name="disputes/new" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="disputes" options={{ presentation: 'modal' }} />
         <Stack.Screen name="send" options={{ presentation: 'modal' }} />
         <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
         <Stack.Screen name="bills" options={{ presentation: 'modal' }} />

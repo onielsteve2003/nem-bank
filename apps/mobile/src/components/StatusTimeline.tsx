@@ -20,16 +20,19 @@ export function stepTone(status: string): keyof ColorTokens {
     case 'completed':
     case 'settled':
     case 'stepped_up':
+    case 'resolved_refunded':
       return 'success';
     case 'failed':
     case 'rejected':
     case 'cancelled':
+    case 'resolved_declined':
       return 'danger';
     case 'reversed':
       return 'info';
     case 'pending_step_up':
     case 'delayed':
     case 'held_for_review':
+    case 'awaiting_customer':
       return 'warning';
     default:
       return 'primaryText';

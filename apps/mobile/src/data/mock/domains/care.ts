@@ -231,7 +231,7 @@ export function disputesRepo(bank: MockBank): DisputesRepo {
       bank.world.sequence += 1;
       const dispute: Schema<'Dispute'> = {
         id: bank.id(),
-        case_number: `DSP-${bank.world.sequence.toString().padStart(6, '0')}`,
+        case_number: `DSP-${bank.world.sequence.toString().padStart(8, '0')}`,
         transaction_id: txn.id,
         reason: body.reason,
         description: body.description.trim(),

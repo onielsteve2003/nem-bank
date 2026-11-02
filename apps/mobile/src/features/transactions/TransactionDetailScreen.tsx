@@ -265,9 +265,19 @@ export function TransactionDetailScreen() {
           />
         )}
         {t.dispute_id ? (
-          <Text color="textMuted" style={styles.centerText}>
-            {"You've reported a problem with this payment. We'll update you here."}
-          </Text>
+          <>
+            <Text color="textMuted" style={styles.centerText}>
+              {"You've reported a problem with this payment. We'll update you on the case."}
+            </Text>
+            <Button
+              label="Track your dispute"
+              icon={Flag}
+              variant="ghost"
+              onPress={() =>
+                router.push({ pathname: '/disputes/[id]', params: { id: t.dispute_id! } })
+              }
+            />
+          </>
         ) : (
           t.can_dispute && (
             <Button

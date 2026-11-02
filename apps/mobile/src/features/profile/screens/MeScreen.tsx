@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import {
   BadgeCheck,
   FileText,
+  Flag,
   Gauge,
   LayoutGrid,
   LogOut,
@@ -141,6 +142,13 @@ export function MeScreen() {
             subtitle="Your children’s accounts and limits"
             leading={Users}
             onPress={() => router.push('/family')}
+          />
+          <Divider />
+          <ListItem
+            title="Disputes"
+            subtitle="Problems you've reported and where they are"
+            leading={Flag}
+            onPress={() => router.push('/disputes')}
           />
           <Divider />
           <ListItem

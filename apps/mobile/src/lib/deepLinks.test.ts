@@ -44,6 +44,7 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://family')).toBe('/family');
     expect(path('nembank://family/approvals')).toBe('/family/approvals');
     expect(path('nembank://family/d1')).toBe('/family/d1');
+    expect(path('nembank://disputes/d1')).toBe('/disputes/d1');
   });
 
   it('marks signed-out screens and pay pages as public, the rest as needing auth', () => {

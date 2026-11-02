@@ -91,7 +91,11 @@ const ROUTES: Route[] = [
     to: ({ id = '' }) => ({ pathname: '/family/[id]', params: { id } }),
   },
   { pattern: 'family/*', to: () => '/family' },
-  { pattern: 'disputes/:id', to: () => '/me' },
+  { pattern: 'disputes', to: () => '/disputes' },
+  {
+    pattern: 'disputes/:id',
+    to: ({ id = '' }) => ({ pathname: '/disputes/[id]', params: { id } }),
+  },
   { pattern: 'demo-controls', to: () => '/demo-controls' },
   // Signed-out screens
   { pattern: 'welcome', to: () => '/welcome', public: true },
