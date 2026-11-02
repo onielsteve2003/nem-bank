@@ -4,7 +4,7 @@ import { configure, fireEvent, render, screen, waitFor } from '@testing-library/
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ModalSheetHost, ToastProvider } from '@/components';
-import { RepositoryProvider, type Repositories } from '@/data';
+import { ApiError, RepositoryProvider, type Repositories } from '@/data';
 import { createMockRepositories } from '@/data/mock';
 import { DEMO_PIN } from '@/data/mock/domains/auth';
 import { createMemoryStore } from '@/data/mock/persistence/types';
@@ -442,7 +442,28 @@ describe('scam checker', () => {
     await fireEvent.press(screen.getByRole('button', { name: 'Check it' }));
     expect(await screen.findByText('Likely a scam')).toBeTruthy();
     expect(screen.getByText(/No bank ever asks for these/)).toBeTruthy();
-    expect(screen.getByText(/threatens to block your account/)).toBeTruthy();
+    expect(screen.getByText(/threatens you to rush you/)).toBeTruthy();
+  });
+
+  it('checks a message on the phone when the bank cannot be reached', async () => {
+    const repos = bank();
+    const offline: Repositories = {
+      ...repos,
+      security: {
+        ...repos.security,
+        checkScam: async () => {
+          throw new ApiError({ type: 'about:blank', title: 'Offline', status: 0, code: 'offline' });
+        },
+      },
+    };
+    await render(wrap(offline, <ScamCheckScreen />));
+    await fireEvent.changeText(
+      screen.getByLabelText('What do you want checked?'),
+      'Update your BVN at http://bit.ly/x or your account will be blocked',
+    );
+    await fireEvent.press(screen.getByRole('button', { name: 'Check it' }));
+    expect(await screen.findByText('Likely a scam')).toBeTruthy();
+    expect(screen.getByText(/Checked on this phone while you’re offline/)).toBeTruthy();
   });
 
   it('switches to an account check by itself and says when it was reported', async () => {

@@ -1,4 +1,5 @@
 import type { Schema } from '@nem/contracts';
+import { recipientWarning } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { AtSign, ChevronDown, Hash, Landmark, UserRound } from 'lucide-react-native';
 import { useState } from 'react';
@@ -21,6 +22,7 @@ import { useTheme } from '@/theme';
 
 import { BankPickerSheet } from '../components/BankPickerSheet';
 import { PayeeCard } from '../components/PayeeCard';
+import { ScamHint } from '../components/ScamHint';
 import { SendHeader } from '../components/SendHeader';
 import { isNuban, nemLookupQuery } from '../recipient';
 import { recipientFromPayee, useSendDraft, type SendMode } from '../sendDraft';
@@ -79,6 +81,8 @@ export function RecipientScreen() {
   );
   const payee = body ? lookup.data : undefined;
   const verdictBlocks = payee?.name_match?.result === 'no_match' && !acknowledged;
+  // The bank's name for the account, or the name they were told to expect.
+  const nameHint = recipientWarning(payee?.name ?? (mode === 'bank' ? settledName : ''));
 
   const apiError = body !== null && isApiError(lookup.error) ? lookup.error : null;
   // 4xx is the bank's answer (not found, your own account); 5xx and timeouts offer a retry.
@@ -196,6 +200,7 @@ export function RecipientScreen() {
       {payee && (
         <PayeeCard payee={payee} acknowledged={acknowledged} onAcknowledge={setAcknowledged} />
       )}
+      {nameHint && <ScamHint reason={nameHint} />}
 
       <BankPickerSheet
         open={pickerOpen}

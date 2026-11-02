@@ -6,6 +6,7 @@ export * from './money';
 export * from './nemtag';
 export * from './password';
 export * from './pin';
+export * from './scam';
 export * from './signup';
 export * from './split';
 export * from './statement';

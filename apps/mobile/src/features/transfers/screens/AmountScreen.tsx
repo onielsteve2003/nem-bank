@@ -1,3 +1,4 @@
+import { narrationWarning } from '@nem/shared';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MessageSquareText, UserSearch } from 'lucide-react-native';
@@ -24,6 +25,7 @@ import { useTheme } from '@/theme';
 
 import { amountProblem, NARRATION_MAX_LENGTH, typedNaira } from '../amount';
 import { QuoteSummary } from '../components/QuoteSummary';
+import { ScamHint } from '../components/ScamHint';
 import { SendHeader } from '../components/SendHeader';
 import { destinationOf, useSendDraft } from '../sendDraft';
 
@@ -48,6 +50,8 @@ export function AmountScreen() {
 
   const amount = typedNaira(typed);
   const settled = useDebounced(typed, QUOTE_DELAY_MS);
+  // Checked once typing pauses, so a warning never flashes up mid-word.
+  const narrationHint = narrationWarning(useDebounced(narration, QUOTE_DELAY_MS));
   const settledAmount = typedNaira(settled);
   const quote = useRepoQuery(
     'transfers',
@@ -155,6 +159,7 @@ export function AmountScreen() {
         maxLength={NARRATION_MAX_LENGTH}
         help={`${recipient.name.split(' ')[0]} sees this on their statement.`}
       />
+      {narrationHint && <ScamHint reason={narrationHint} />}
     </Screen>
   );
 }

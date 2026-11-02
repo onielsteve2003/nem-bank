@@ -1,4 +1,5 @@
 import type { Schema } from '@nem/contracts';
+import { checkScamText } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
 import { ClipboardPaste, Lock } from 'lucide-react-native';
 import { useState } from 'react';
@@ -38,6 +39,24 @@ const PLACEHOLDER: Record<ScamKind, string> = {
 const RULES_ONLY =
   'Rules only: known Nigerian scam phrases, link tricks and accounts other customers reported.';
 const MAX_LENGTH = 2000;
+
+/** The bank could not answer, so this phone's own rules can (messages and links only). */
+const unreachable = (e: unknown) =>
+  isApiError(e) && (e.problem.code === 'offline' || e.problem.status >= 500);
+
+function checkOnPhone(content: string): Schema<'ScamCheckResult'> {
+  return {
+    ...checkScamText(content),
+    reported_account: null,
+    ai: {
+      feature: 'scam_checker',
+      model_version: 'rules-on-device-1',
+      explanation:
+        "Checked on this phone with Nem's scam rules, because the bank couldn't be reached.",
+      fallback_used: true,
+    },
+  };
+}
 
 const message = (e: unknown) => {
   if (!isApiError(e)) return 'Something went wrong. Try again.';
@@ -83,6 +102,11 @@ function Verdict({ result }: { result: Schema<'ScamCheckResult'> }) {
             severity: r.severity,
           }))}
         />
+        {result.ai.model_version === 'rules-on-device-1' && (
+          <Text variant="caption" color="textMuted">
+            Checked on this phone while you’re offline. Reported accounts need the bank.
+          </Text>
+        )}
         {aiOn ? (
           <View style={styles.start}>
             <AIBadge
@@ -114,12 +138,17 @@ export function ScamCheckScreen() {
   const [picked, setPicked] = useState(false);
   const [error, setError] = useState<string>();
   const check = useRepoMutation('security', 'checkScam', { invalidates: [] });
-  const result = check.data;
+  const [onPhone, setOnPhone] = useState<Schema<'ScamCheckResult'> | null>(null);
+  const result = check.data ?? onPhone;
+  const reset = () => {
+    check.reset();
+    setOnPhone(null);
+  };
 
   const change = (next: string) => {
     setText(next);
     setError(undefined);
-    check.reset();
+    reset();
     if (!picked && next.trim()) setKind(guessScamKind(next));
   };
 
@@ -138,7 +167,16 @@ export function ScamCheckScreen() {
       setError('Enter a 10-digit account number');
       return;
     }
-    check.mutate({ body: { kind, content } }, { onError: (e) => setError(message(e)) });
+    setOnPhone(null);
+    check.mutate(
+      { body: { kind, content } },
+      {
+        onError: (e) => {
+          if (kind !== 'account_number' && unreachable(e)) setOnPhone(checkOnPhone(content));
+          else setError(message(e));
+        },
+      },
+    );
   };
 
   return (
@@ -168,7 +206,7 @@ export function ScamCheckScreen() {
               setPicked(true);
               setKind(k.kind);
               setError(undefined);
-              check.reset();
+              reset();
             }}
           />
         ))}

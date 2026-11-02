@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { KYC_TIERS } from '@nem/shared';
+import { KYC_TIERS, checkScamText, scamResult } from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { SecurityRepo } from '../../repositories';
@@ -69,68 +69,15 @@ const CHECKUP: {
 
 // Scam checker rules (SEC-6). Phrases seen in Nigerian bank-impersonation and
 // "you have won" scams, plus link and account signals.
-const SCAM_PHRASES: {
-  pattern: RegExp;
-  code: string;
-  severity: 'medium' | 'high';
-  message: string;
-}[] = [
-  {
-    pattern: /\b(otp|one[- ]time (pass)?code|pin|cvv)\b/i,
-    code: 'asks_for_secret',
-    severity: 'high',
-    message: 'It asks for a PIN, OTP or card code. No bank ever asks for these.',
-  },
-  {
-    pattern: /\bbvn\b.*\b(update|link|verify|block)/i,
-    code: 'bvn_update',
-    severity: 'high',
-    message: '"Update your BVN" messages are a common scam.',
-  },
-  {
-    pattern: /\b(blocked|suspended|restricted|deactivated)\b/i,
-    code: 'threat',
-    severity: 'medium',
-    message: 'It threatens to block your account to rush you.',
-  },
-  {
-    pattern: /\b(urgent|immediately|within 24 ?hours|right now)\b/i,
-    code: 'urgency',
-    severity: 'medium',
-    message: 'It pushes you to act fast.',
-  },
-  {
-    pattern: /\b(won|winner|prize|promo|giveaway|lottery)\b/i,
-    code: 'prize',
-    severity: 'medium',
-    message: 'Prizes you did not enter for are a classic scam.',
-  },
-  {
-    pattern: /\b(send|pay|transfer).{0,30}\b(first|fee|charge|to claim|to receive)\b/i,
-    code: 'advance_fee',
-    severity: 'high',
-    message: 'It asks you to pay first to receive money.',
-  },
-  {
-    pattern: /\b(investment|double your money|guaranteed returns?|forex|crypto)\b/i,
-    code: 'investment',
-    severity: 'medium',
-    message: 'Guaranteed or doubled returns are a red flag.',
-  },
-];
-const SHORTENERS = /\b(bit\.ly|tinyurl\.com|t\.co|cutt\.ly|is\.gd|rb\.gy)\b/i;
-const OUR_DOMAINS = /(^|\.)nem-bank-fodx\.vercel\.app$/i;
-
 function checkScam(body: Schema<'ScamCheckRequest'>): Omit<Schema<'ScamCheckResult'>, 'ai'> {
-  const reasons: Schema<'RiskReason'>[] = [];
-  let reported: boolean | null = null;
   const text = body.content.trim();
   if (body.kind === 'account_number') {
+    const reasons: Schema<'RiskReason'>[] = [];
     const digits = text.replace(/\D/g, '');
     if (digits.length !== 10)
       throw problem(422, 'validation_failed', 'Enter a 10-digit account number');
     // Demo reports: numbers ending 4444 or 9999 were reported by other customers.
-    reported = /(4444|9999)$/.test(digits);
+    const reported = /(4444|9999)$/.test(digits);
     if (reported)
       reasons.push({
         code: 'reported_account',
@@ -143,53 +90,10 @@ function checkScam(body: Schema<'ScamCheckRequest'>): Omit<Schema<'ScamCheckResu
         severity: 'medium',
         message: 'We could not confirm who owns this account.',
       });
-  } else {
-    for (const rule of SCAM_PHRASES) {
-      if (rule.pattern.test(text))
-        reasons.push({ code: rule.code, severity: rule.severity, message: rule.message });
-    }
-    for (const raw of text.match(/\b(?:https?:\/\/)?[a-z0-9-]+(?:\.[a-z0-9-]+)+(?:\/\S*)?/gi) ??
-      []) {
-      const link = raw.toLowerCase();
-      const host = link.replace(/^https?:\/\//, '').split('/')[0]!;
-      if (OUR_DOMAINS.test(host)) continue;
-      if (SHORTENERS.test(host))
-        reasons.push({
-          code: 'short_link',
-          severity: 'medium',
-          message: 'Short links hide where they really go.',
-        });
-      else if (/nem|bank|cbn|bvn/.test(host))
-        reasons.push({
-          code: 'lookalike_domain',
-          severity: 'high',
-          message: `${host} is not a Nem website.`,
-        });
-      if (link.startsWith('http://'))
-        reasons.push({
-          code: 'insecure_link',
-          severity: 'medium',
-          message: 'The link is not secure (http).',
-        });
-    }
+    return { ...scamResult(reasons), reported_account: reported };
   }
-  const score = Math.min(
-    1,
-    reasons.reduce((s, r) => s + (r.severity === 'high' ? 0.45 : 0.2), 0.02),
-  );
-  const verdict = score >= 0.6 ? 'likely_scam' : score >= 0.3 ? 'suspicious' : 'looks_safe';
-  return {
-    verdict,
-    score: Math.round(score * 100) / 100,
-    reasons,
-    advice:
-      verdict === 'likely_scam'
-        ? 'Do not reply, click or send money. Block the sender and report it from Support.'
-        : verdict === 'suspicious'
-          ? 'Be careful. Contact the person or company through a number you already trust.'
-          : 'We found no warning signs, but never share your PIN or OTP with anyone.',
-    reported_account: reported,
-  };
+  // Messages and links: the same on-device rules the app warns with (AI-2).
+  return { ...checkScamText(text), reported_account: null };
 }
 
 export function processLimitIncreases(bank: MockBank): boolean {

@@ -179,6 +179,20 @@ describe('amount', () => {
     expect(useSendDraft.getState()).toMatchObject({ amount: '6000', narration: 'Rent' });
   });
 
+  it('warns, without blocking, when the note sounds like a fee scam', async () => {
+    useSendDraft.getState().setRecipient(chidi);
+    await render(wrap(bank(), <AmountScreen />));
+    await screen.findByLabelText(/^Available/);
+    await fireEvent.changeText(
+      screen.getByLabelText(/What's it for/),
+      'Clearance fee for my parcel',
+    );
+    expect(await screen.findByText('This could be a scam')).toBeTruthy();
+    expect(screen.getByText(/Paying a fee to receive money/)).toBeTruthy();
+    await fireEvent.changeText(screen.getByLabelText(/What's it for/), 'Rent');
+    await waitFor(() => expect(screen.queryByText('This could be a scam')).toBeNull());
+  });
+
   it('stops an amount above the balance', async () => {
     useSendDraft.getState().setRecipient(chidi);
     await render(wrap(bank(), <AmountScreen />));
