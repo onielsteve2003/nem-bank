@@ -27,3 +27,16 @@ jest.mock('expo-secure-store', () => {
     deleteItemAsync: jest.fn(async (key) => void items.delete(key)),
   };
 });
+// expo-notifications' native module is missing in Jest: no permission, no taps, no token.
+jest.mock('expo-notifications', () => ({
+  AndroidImportance: { HIGH: 4 },
+  getPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: true })),
+  requestPermissionsAsync: jest.fn(async () => ({ granted: false, canAskAgain: false })),
+  getExpoPushTokenAsync: jest.fn(async () => ({ data: 'ExponentPushToken[test]' })),
+  setNotificationHandler: jest.fn(),
+  setNotificationChannelAsync: jest.fn(async () => null),
+  scheduleNotificationAsync: jest.fn(async () => 'id'),
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
+  getLastNotificationResponse: jest.fn(() => null),
+  clearLastNotificationResponse: jest.fn(),
+}));

@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { NewDeviceNotice } from '@/features/auth/components/NewDeviceNotice';
+import { PushBridge } from '@/features/notifications/components/PushBridge';
 import { RouteErrorBoundary } from '@/features/shell/RouteErrorBoundary';
 import { useTheme } from '@/theme';
 
@@ -52,6 +53,7 @@ export default function AppLayout() {
         <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
       </Stack>
       <NewDeviceNotice />
+      <PushBridge />
     </>
   );
 }

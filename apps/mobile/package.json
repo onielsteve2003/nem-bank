@@ -28,6 +28,7 @@
     "expo-image-picker": "~58.0.10",
     "expo-linking": "~58.0.14",
     "expo-local-authentication": "~58.0.2",
+    "expo-notifications": "~58.1.7",
     "expo-print": "~58.0.7",
     "expo-router": "~58.0.26",
     "expo-screen-capture": "~58.0.6",

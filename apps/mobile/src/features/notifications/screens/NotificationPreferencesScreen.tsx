@@ -19,6 +19,7 @@ import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
+import { PhoneAlertsCard } from '../components/PhoneAlertsCard';
 import {
   CATEGORIES,
   CHANNELS,
@@ -117,6 +118,7 @@ export function NotificationPreferencesScreen() {
       <Text variant="bodySmall" color="textMuted">
         Choose what we tell you about and where. Offers stay off unless you turn them on.
       </Text>
+      <PhoneAlertsCard />
       {body}
     </Screen>
   );
