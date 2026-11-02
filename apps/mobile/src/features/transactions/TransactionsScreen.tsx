@@ -17,6 +17,7 @@ import {
   TextField,
 } from '@/components';
 import { isApiError } from '@/data';
+import { usePageSize } from '@/lib/lowData';
 import { useTheme } from '@/theme';
 
 import { FilterSheet } from './FilterSheet';
@@ -25,6 +26,7 @@ import {
   DATE_RANGES,
   groupByDay,
   NO_FILTERS,
+  PAGE_SIZE,
   STATUS_LABELS,
   toQuery,
   typeGroupLabel,
@@ -77,7 +79,8 @@ export function TransactionsScreen() {
   }, [searchText]);
 
   // One query per filter set and day; `toQuery` reads the clock for date ranges.
-  const query = useMemo(() => toQuery(filters), [filters]);
+  const pageSize = usePageSize(PAGE_SIZE);
+  const query = useMemo(() => toQuery(filters, new Date(), pageSize), [filters, pageSize]);
   const list = useTransactionPages(query);
   const rows = useMemo(() => (list.data ? groupByDay(list.data) : []), [list.data]);
   const count = activeFilterCount(filters);

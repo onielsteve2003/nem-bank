@@ -1,16 +1,12 @@
 import type { Tabs } from 'expo-router';
 import { useEffect, useState, type ComponentProps, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View, type LayoutChangeEvent } from 'react-native';
-import Animated, {
-  useAnimatedStyle,
-  useReducedMotion,
-  useSharedValue,
-  withSpring,
-} from 'react-native-reanimated';
+import Animated, { useAnimatedStyle, useSharedValue, withSpring } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Badge, Text } from '@/components';
 import { haptic } from '@/lib/haptics';
+import { useReduceMotion } from '@/lib/motion';
 import { useTheme } from '@/theme';
 
 export type Props = Parameters<NonNullable<ComponentProps<typeof Tabs>['tabBar']>>[0];
@@ -29,7 +25,7 @@ const ICON_REST_SCALE = 0.86;
 export function TabBar({ state, descriptors, emitter, navigateToTab }: Props) {
   const { colors, spacing, motion } = useTheme();
   const insets = useSafeAreaInsets();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const [tabWidth, setTabWidth] = useState(0);
   const pillX = useSharedValue(0);
 
@@ -125,7 +121,7 @@ function TabButton({
   onLongPress,
 }: TabButtonProps) {
   const { spacing, motion } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const scale = useSharedValue(focused ? 1 : ICON_REST_SCALE);
 
   useEffect(() => {

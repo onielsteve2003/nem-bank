@@ -28,6 +28,7 @@ import i18n from '@/lib/i18n';
 import { formatDateTime } from '@/features/transactions/format';
 import { TransactionRow } from '@/features/transactions/TransactionRow';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
+import { usePageSize } from '@/lib/lowData';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
@@ -60,8 +61,9 @@ export function DependantScreen() {
   const { spacing } = useTheme();
   const { t } = useTranslation();
   const path = { dependant_id: id };
+  const pageSize = usePageSize(20);
   const q = useRepoQuery('family', 'getDependant', { path });
-  const activity = useRepoQuery('family', 'listActivity', { path, query: { limit: 20 } });
+  const activity = useRepoQuery('family', 'listActivity', { path, query: { limit: pageSize } });
   const accounts = useRepoQuery('accounts', 'list');
   const update = useRepoMutation('family', 'updateControls', {
     onError: (e) => toast.show({ message: message(e), tone: 'error' }),

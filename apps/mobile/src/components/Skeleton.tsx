@@ -3,12 +3,12 @@ import { StyleSheet, View, type DimensionValue } from 'react-native';
 import Animated, {
   cancelAnimation,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReduceMotion } from '@/lib/motion';
 import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
@@ -30,7 +30,7 @@ export type Props = {
  */
 export function Skeleton({ width = '100%', height = 16, circle = false, radius }: Props) {
   const { colors, radius: radii } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const opacity = useSharedValue(1);
 
   useEffect(() => {

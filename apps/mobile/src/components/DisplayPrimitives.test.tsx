@@ -2,6 +2,7 @@ import { fireEvent, render, screen } from '@testing-library/react-native';
 import { Wallet } from 'lucide-react-native';
 
 import { haptic } from '@/lib/haptics';
+import { DEFAULT_PREFERENCES, usePreferencesStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 import { Avatar } from './Avatar';
@@ -45,6 +46,19 @@ describe('Avatar', () => {
       nativeEvent: { error: 'boom' },
     });
     expect(screen.getByText('TB')).toBeOnTheScreen();
+  });
+
+  it('skips network photos in low-data mode but still shows one from the phone', async () => {
+    usePreferencesStore.setState({ lowDataMode: true });
+    try {
+      await renderThemed(<Avatar name="Tunde Bakare" uri="https://example.com/x.png" />);
+      expect(screen.queryByTestId('avatar-image')).toBeNull();
+      expect(screen.getByText('TB')).toBeOnTheScreen();
+      await renderThemed(<Avatar name="Tunde Bakare" uri="file:///photos/me.jpg" />);
+      expect(screen.getByTestId('avatar-image')).toBeOnTheScreen();
+    } finally {
+      usePreferencesStore.setState({ lowDataMode: DEFAULT_PREFERENCES.lowDataMode });
+    }
   });
 });
 

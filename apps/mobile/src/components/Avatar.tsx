@@ -2,6 +2,7 @@ import { Image } from 'expo-image';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
+import { useLowData } from '@/lib/lowData';
 import { useTheme } from '@/theme';
 
 import { avatarInitials } from './avatarInitials';
@@ -21,10 +22,14 @@ export type Props = {
   ring?: boolean;
 };
 
-/** A round photo with an initials fallback when there is no photo or it fails to load. */
+/**
+ * A round photo with an initials fallback when there is no photo, it fails to
+ * load, or it would come over the network in low-data mode (SET-3).
+ */
 export function Avatar({ name, uri, size = 'md', ring = false }: Props) {
   const { colors, radius } = useTheme();
   const [failed, setFailed] = useState(false);
+  const held = useLowData() && /^https?:/.test(uri ?? '');
   const diameter = DIAMETER[size];
 
   return (
@@ -43,7 +48,7 @@ export function Avatar({ name, uri, size = 'md', ring = false }: Props) {
         },
       ]}
     >
-      {uri && !failed ? (
+      {uri && !failed && !held ? (
         <Image
           testID="avatar-image"
           source={{ uri }}

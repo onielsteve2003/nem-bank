@@ -13,12 +13,12 @@ import Animated, {
   cancelAnimation,
   Easing,
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReduceMotion } from '@/lib/motion';
 import { withLabel } from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
@@ -82,7 +82,7 @@ export function StatusPill({ status, label }: Props) {
 
 /** Slowly turns the processing icon. Still with reduce motion. */
 function Spinner({ active, children }: { active: boolean; children: React.ReactNode }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const turn = useSharedValue(0);
 
   useEffect(() => {

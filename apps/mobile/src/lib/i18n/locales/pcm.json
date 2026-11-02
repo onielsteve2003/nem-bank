@@ -3862,7 +3862,9 @@
       },
       "valueOn": "{{value}} on {{label}}",
       "line": "{{title}}. {{count}} points from {{first}} to {{last}}, {{trend}} for everything. Low {{low}}, high {{high}}, latest {{latest}}.",
-      "bar": "{{title}}. The highest na {{highest}}. {{all}}."
+      "bar": "{{title}}. The highest na {{highest}}. {{all}}.",
+      "show": "Show chart",
+      "hidden": "E hide for low-data mode to save data"
     },
     "demoBadge": {
       "demo": "Demo money",

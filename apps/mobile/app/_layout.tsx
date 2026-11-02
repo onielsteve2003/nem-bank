@@ -4,6 +4,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { useEffect, type ReactNode } from 'react';
 import { StyleSheet } from 'react-native';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
+import { ReducedMotionConfig, ReduceMotion } from 'react-native-reanimated';
 
 import { ScreenBannerProvider, ToastProvider } from '@/components';
 import { RepositoryProvider, useSimulation } from '@/data';
@@ -44,6 +45,7 @@ export default function RootLayout() {
       <RepositoryProvider>
         <DemoSimulationSync />
         <LanguageSync />
+        <MotionSync />
         <QueryProvider>
           <StoredThemeProvider>
             <PhoneFrame>
@@ -97,6 +99,15 @@ function LanguageSync() {
     if (i18n.language !== language) void i18n.changeLanguage(language);
   }, [language]);
   return null;
+}
+
+/**
+ * Settings → Reduce motion → Always reduce (SET-4) for every Reanimated
+ * animation, entering and exiting ones included; `system` follows the phone.
+ */
+function MotionSync() {
+  const always = usePreferencesStore((s) => s.reduceMotion === 'always');
+  return <ReducedMotionConfig mode={always ? ReduceMotion.Always : ReduceMotion.System} />;
 }
 
 /** Applies the saved Demo Controls network settings to the mock bank. */

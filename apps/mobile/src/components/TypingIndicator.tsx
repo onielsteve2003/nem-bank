@@ -2,7 +2,6 @@ import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withDelay,
   withRepeat,
@@ -10,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReduceMotion } from '@/lib/motion';
 import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
@@ -17,7 +17,7 @@ import { Text } from './Text';
 
 function Dot({ index }: { index: number }) {
   const { colors } = useTheme();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const lift = useSharedValue(0);
   useEffect(() => {
     if (reduceMotion) return;

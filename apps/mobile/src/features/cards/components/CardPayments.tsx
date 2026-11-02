@@ -16,6 +16,7 @@ import {
   Text,
 } from '@/components';
 import { formatWhen } from '@/features/transactions/TransactionRow';
+import { usePageSize } from '@/lib/lowData';
 import { fromApiMoney } from '@/lib/money';
 import { useRepoQuery } from '@/lib/query';
 import { usePrivacyStore } from '@/stores';
@@ -38,10 +39,11 @@ export function CardPayments({ card }: Props) {
   const router = useRouter();
   const { spacing } = useTheme();
   const { t } = useTranslation();
+  const pageSize = usePageSize(20);
   const payments = useRepoQuery(
     'cards',
     'listTransactions',
-    { path: { card_id: card.id }, query: { limit: 20 } },
+    { path: { card_id: card.id }, query: { limit: pageSize } },
     {
       refetchInterval: (q) =>
         q.state.data?.data.some((p) => p.status === 'authorized') ? PENDING_REFRESH_MS : false,

@@ -22,6 +22,7 @@ import {
 } from '@/components';
 import { transactionTitle } from '@/features/transactions/TransactionRow';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
+import { usePageSize } from '@/lib/lowData';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
 import { useRepoQuery } from '@/lib/query';
 import { useKidGoalsStore, type KidGoal } from '@/stores/kidGoals';
@@ -47,8 +48,9 @@ export function KidHomeScreen() {
   const { colors, radius, spacing } = useTheme();
   const { t } = useTranslation();
   const path = { dependant_id: id };
+  const pageSize = usePageSize(20);
   const q = useRepoQuery('family', 'getDependant', { path });
-  const activity = useRepoQuery('family', 'listActivity', { path, query: { limit: 20 } });
+  const activity = useRepoQuery('family', 'listActivity', { path, query: { limit: pageSize } });
   const goals = useKidGoalsStore((s) => s.goals[id] ?? NO_GOALS);
   const addGoal = useKidGoalsStore((s) => s.addGoal);
   const removeGoal = useKidGoalsStore((s) => s.removeGoal);

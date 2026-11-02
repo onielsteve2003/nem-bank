@@ -3857,7 +3857,9 @@
       },
       "valueOn": "{{value}} on {{label}}",
       "line": "{{title}}. {{count}} points from {{first}} to {{last}}, {{trend}} overall. Low {{low}}, high {{high}}, latest {{latest}}.",
-      "bar": "{{title}}. Highest {{highest}}. {{all}}."
+      "bar": "{{title}}. Highest {{highest}}. {{all}}.",
+      "show": "Show chart",
+      "hidden": "Hidden in low-data mode to save data"
     },
     "demoBadge": {
       "demo": "Demo money",

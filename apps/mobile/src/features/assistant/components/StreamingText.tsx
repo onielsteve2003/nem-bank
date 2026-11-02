@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
-import { useReducedMotion } from 'react-native-reanimated';
 
 import { Text } from '@/components';
+import { useReduceMotion } from '@/lib/motion';
 
 import { revealed } from '../assistant';
 
@@ -12,7 +12,7 @@ const TICK_MS = 30;
  * at once, and with reduce motion on it simply appears.
  */
 export function StreamingText({ text }: { text: string }) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const [elapsed, setElapsed] = useState(0);
   const shown = reduceMotion ? text : revealed(text, elapsed);
   const done = shown === text;

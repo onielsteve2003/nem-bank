@@ -1,19 +1,20 @@
 import { useCallback } from 'react';
 import {
   useAnimatedStyle,
-  useReducedMotion,
   useSharedValue,
   withRepeat,
   withSequence,
   withTiming,
 } from 'react-native-reanimated';
 
+import { useReduceMotion } from '@/lib/motion';
+
 const OFFSET = 10;
 const STEP_MS = 50;
 
 /** A horizontal "no" shake for rejected input. Skipped when reduce motion is on. */
 export function useShake() {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const x = useSharedValue(0);
 
   const style = useAnimatedStyle(() => ({ transform: [{ translateX: x.value }] }));

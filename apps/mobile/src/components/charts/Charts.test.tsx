@@ -1,5 +1,6 @@
-import { render, screen } from '@testing-library/react-native';
+import { fireEvent, render, screen } from '@testing-library/react-native';
 
+import { DEFAULT_PREFERENCES, usePreferencesStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
 import { BarChart } from './BarChart';
@@ -113,6 +114,20 @@ describe('chart summaries', () => {
 });
 
 describe('chart components', () => {
+  it('waits for a tap in low-data mode and says what the chart shows meanwhile', async () => {
+    usePreferencesStore.setState({ lowDataMode: true });
+    try {
+      await renderThemed(<LineChart title="Rate" data={WEEK} width={300} formatValue={naira} />);
+      const summary = lineSummary('Rate', WEEK, naira);
+      expect(screen.queryByRole('image', { name: summary })).toBeNull();
+      expect(screen.getByText(summary)).toBeOnTheScreen();
+      await fireEvent.press(screen.getByRole('button', { name: 'Show chart' }));
+      expect(screen.getByRole('image', { name: summary })).toBeOnTheScreen();
+    } finally {
+      usePreferencesStore.setState({ lowDataMode: DEFAULT_PREFERENCES.lowDataMode });
+    }
+  });
+
   it('reads a line chart as one image with its summary', async () => {
     await renderThemed(<LineChart title="Rate" data={WEEK} width={300} formatValue={naira} />);
     expect(screen.getByRole('image', { name: /^Rate\. 3 points/ })).toBeOnTheScreen();

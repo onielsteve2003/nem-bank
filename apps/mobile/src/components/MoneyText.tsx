@@ -1,9 +1,9 @@
 import { CURRENCIES, formatMoney, zero, type Money, type TypeVariant } from '@nem/shared';
 import { useEffect, useRef, useState } from 'react';
 import type { TextStyle } from 'react-native';
-import { useReducedMotion } from 'react-native-reanimated';
 
 import i18n from '@/lib/i18n';
+import { useReduceMotion } from '@/lib/motion';
 
 import { easeOutCubic, interpolateMoney } from './moneyTween';
 import { Text, type TextColor } from './Text';
@@ -48,7 +48,7 @@ export function MoneyText({
   align,
   style,
 }: Props) {
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const tween = animate && !reduceMotion && !masked;
   const [shown, setShown] = useState<Money>(() => (tween ? zero(value.currency) : value));
   // Where the next count starts: the amount on screen, even mid-count.

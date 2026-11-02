@@ -8,11 +8,11 @@ import Animated, {
   interpolate,
   useAnimatedStyle,
   useDerivedValue,
-  useReducedMotion,
   withTiming,
 } from 'react-native-reanimated';
 import Svg, { Defs, LinearGradient, Rect, Stop } from 'react-native-svg';
 
+import { useReduceMotion } from '@/lib/motion';
 import { haptic } from '@/lib/haptics';
 import { useTheme } from '@/theme';
 
@@ -81,7 +81,7 @@ export function BankCard({
 }: Props) {
   const { radius } = useTheme();
   const { t } = useTranslation();
-  const reduceMotion = useReducedMotion();
+  const reduceMotion = useReduceMotion();
   const [own, setOwn] = useState(false);
   const flipped = controlled ?? own;
   const device = useDeviceTilt(tilt && !reduceMotion);

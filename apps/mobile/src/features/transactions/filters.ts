@@ -59,8 +59,11 @@ const DAY_MS = 86_400_000;
 export const lagosDate = (at: Date) =>
   new Date(at.getTime() + 3_600_000).toISOString().slice(0, 10);
 
-/** Filters → the list call's query (no cursor). Dates are Lagos days, inclusive. */
-export function toQuery(f: TransactionFilters, now: Date = new Date()) {
+/**
+ * Filters → the list call's query (no cursor). Dates are Lagos days, inclusive.
+ * `limit` is smaller in low-data mode (usePageSize).
+ */
+export function toQuery(f: TransactionFilters, now: Date = new Date(), limit = PAGE_SIZE) {
   const today = lagosDate(now);
   const back = (days: number) => lagosDate(new Date(now.getTime() - (days - 1) * DAY_MS));
   const from =
@@ -71,7 +74,7 @@ export function toQuery(f: TransactionFilters, now: Date = new Date()) {
         : undefined;
   const q = f.search.trim();
   return {
-    limit: PAGE_SIZE,
+    limit,
     ...(f.types.length > 0 && { type: f.types.flatMap((g) => TYPE_GROUPS[g].types) }),
     ...(f.currency && { currency: f.currency }),
     ...(f.status && { status: f.status }),
