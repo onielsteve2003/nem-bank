@@ -14,8 +14,9 @@ import { NotificationPreferencesScreen } from '../screens/NotificationPreference
 import { NotificationsScreen } from '../screens/NotificationsScreen';
 
 const mockPush = jest.fn();
+const mockBack = jest.fn();
 jest.mock('expo-router', () => ({
-  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: jest.fn() }),
+  useRouter: () => ({ push: mockPush, replace: jest.fn(), back: mockBack }),
   useLocalSearchParams: () => ({}),
 }));
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
@@ -100,6 +101,12 @@ describe('NotificationsScreen', () => {
     await fireEvent.press(request);
     expect(mockPush).toHaveBeenCalledWith('/send/requests');
     await waitFor(async () => expect((await repos.notifications.list()).unread_count).toBe(1));
+  });
+
+  it('closes, since a full-screen modal has no swipe to dismiss', async () => {
+    await render(wrap(bank(), <NotificationsScreen />));
+    await fireEvent.press(await screen.findByRole('button', { name: 'Close' }));
+    expect(mockBack).toHaveBeenCalled();
   });
 
   it('marks everything read and shows the caught-up state', async () => {

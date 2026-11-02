@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
-import { BellOff, CheckCheck, Settings2 } from 'lucide-react-native';
+import { BellOff, CheckCheck, Settings2, X } from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -65,6 +65,13 @@ export function NotificationsScreen() {
         variant="ghost"
         accessibilityLabel="Notification settings"
         onPress={() => router.push('/notifications/preferences')}
+      />
+      {/* A full-screen modal has no swipe to close, so it needs a way out. */}
+      <IconButton
+        icon={X}
+        variant="ghost"
+        accessibilityLabel="Close"
+        onPress={() => router.back()}
       />
     </View>
   );
