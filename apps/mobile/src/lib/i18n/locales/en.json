@@ -220,7 +220,10 @@
     "languages": {
       "en": "English",
       "pcm": "Naija Pidgin"
-    }
+    },
+    "about": "About",
+    "legal": "Legal and about",
+    "legalHint": "Terms, privacy, licences and the demo disclaimer"
   },
   "auth": {
     "welcome": {
@@ -3982,6 +3985,102 @@
       "noHaptics": "No haptics, and screenshots of card details cannot be blocked.",
       "fullExperience": "For the full experience, open it on a phone with Expo Go.",
       "source": "Source on GitHub"
+    }
+  },
+  "legal": {
+    "title": "Legal and about",
+    "version": "Version {{version}}",
+    "tagline": "Banking for Nigerians at home and abroad",
+    "demoTitle": "This is a demo bank",
+    "demo": "Nem Bank is a portfolio project, not a licensed bank. No real money moves, every account and card is simulated, and nothing here is financial advice. Don't enter a real card number, BVN or NIN.",
+    "documents": "Documents",
+    "terms": "Terms of use",
+    "termsHint": "The agreement between you and Nem",
+    "privacy": "Privacy notice",
+    "privacyHint": "What we collect and your rights under the NDPA 2023",
+    "licenses": "Open-source licences",
+    "licensesHint": "{{count}} packages Nem is built with",
+    "modelCards": "Model cards",
+    "modelCardsHint": "How each AI feature works and where it falls short",
+    "updated": "Last updated {{date}}",
+    "notFound": "We can't find that page",
+    "notFoundMessage": "Go back to Legal and about and pick a document.",
+    "licensesIntro": "Nem is built on open-source software. Each package below is used under its own licence; the full texts ship with each package.",
+    "source": "Nem's own code",
+    "sourceHint": "Public on GitHub to read. All rights reserved.",
+    "docs": {
+      "terms": {
+        "title": "Terms of use",
+        "summary": "In short: keep your PIN to yourself, check payments before you send them, and tell us quickly if something looks wrong.",
+        "sections": {
+          "about": {
+            "title": "About these terms",
+            "body": "These terms cover your Nem account, cards and the services in the app. By opening an account you agree to them. In this demo Nem is not a licensed bank, so the terms describe how the service is designed to work."
+          },
+          "eligibility": {
+            "title": "Who can open an account",
+            "body": "You must be 18 or older, with a Nigerian phone number and an email address you can reach. How much you can hold and send depends on your KYC tier; verifying your BVN, NIN and address raises your limits."
+          },
+          "security": {
+            "title": "Keeping your account safe",
+            "body": "Keep your PIN, password and one-time codes secret. Nem will never ask for them by call, SMS or email. Lock your card in the app and tell us at once if your phone is lost or you think someone else has used your account."
+          },
+          "payments": {
+            "title": "Payments",
+            "body": "We show the fee, the exchange rate and the recipient name before you confirm. A transfer is final once it is sent, so check the details. We may hold a payment that looks like fraud and ask you to confirm it."
+          },
+          "disputes": {
+            "title": "When something goes wrong",
+            "body": "Report a payment you did not make or a problem with a merchant from the transaction in the app. We aim to resolve disputes within the time the Central Bank of Nigeria sets and keep you updated as we go."
+          },
+          "closing": {
+            "title": "Closing your account",
+            "body": "You can ask us to close your account at any time from Settings. We may freeze or close an account to stop fraud or to meet the law, and will tell you why unless the law says we cannot."
+          },
+          "law": {
+            "title": "Governing law",
+            "body": "These terms are governed by the laws of the Federal Republic of Nigeria."
+          }
+        }
+      },
+      "privacy": {
+        "title": "Privacy notice",
+        "summary": "We collect what we need to run your account and meet the law, never sell your data, and you can export it or ask us to delete it at any time.",
+        "sections": {
+          "controller": {
+            "title": "Who we are",
+            "body": "Nem Bank is the data controller for the personal data you give us in the app. This notice follows the Nigeria Data Protection Act 2023 (NDPA)."
+          },
+          "collect": {
+            "title": "What we collect",
+            "body": "Your name, phone, email and date of birth; your BVN, NIN, ID photo, selfie and address when you verify; your transactions, cards and payees; and the device you sign in on, so we can spot new devices."
+          },
+          "why": {
+            "title": "Why we use it",
+            "body": "To run your account (our contract with you), to verify who you are and prevent fraud and money laundering (a legal duty), and for optional features such as AI ID prefill only with your consent, which you can withdraw in Settings."
+          },
+          "sharing": {
+            "title": "Who we share it with",
+            "body": "Payment networks such as NIBSS to move your money, identity services to check your BVN and NIN, and regulators when the law requires it. We never sell your data."
+          },
+          "ai": {
+            "title": "AI and your data",
+            "body": "Nem removes names, account numbers and other personal details before any request reaches a language model. Every AI feature can be switched off, and each has a model card."
+          },
+          "retention": {
+            "title": "How long we keep it",
+            "body": "We keep your data while your account is open. After it closes we keep transaction and identity records for at least five years, as anti-money-laundering rules require, then delete them."
+          },
+          "rights": {
+            "title": "Your rights",
+            "body": "You can see, export and correct your data, object to how we use it, withdraw consent and ask us to delete it. Export and deletion are in Settings. You can also complain to the Nigeria Data Protection Commission."
+          },
+          "contact": {
+            "title": "Contact us",
+            "body": "Reach our data protection officer through Support in the app."
+          }
+        }
+      }
     }
   }
 }

@@ -220,7 +220,10 @@
     "languages": {
       "en": "English",
       "pcm": "Naija Pidgin"
-    }
+    },
+    "about": "About",
+    "legal": "Legal and about",
+    "legalHint": "Terms, privacy, licences and di demo warning"
   },
   "auth": {
     "welcome": {
@@ -3987,6 +3990,102 @@
       "noHaptics": "No vibration, and we no fit block screenshot of card details.",
       "fullExperience": "For the full experience, open am for phone with Expo Go.",
       "source": "Source for GitHub"
+    }
+  },
+  "legal": {
+    "title": "Legal and about",
+    "version": "Version {{version}}",
+    "tagline": "Bank for Naija people for house and abroad",
+    "demoTitle": "Dis na demo bank",
+    "demo": "Nem Bank na portfolio project, e no be licensed bank. No real money dey move, every account and card na simulation, and nothing here be financial advice. No put real card number, BVN or NIN.",
+    "documents": "Documents",
+    "terms": "Terms of use",
+    "termsHint": "Di agreement between you and Nem",
+    "privacy": "Privacy notice",
+    "privacyHint": "Wetin we dey collect and your rights under NDPA 2023",
+    "licenses": "Open-source licences",
+    "licensesHint": "{{count}} packages wey we take build Nem",
+    "modelCards": "Model cards",
+    "modelCardsHint": "How each AI feature dey work and where e no strong",
+    "updated": "Last update {{date}}",
+    "notFound": "We no fit find dat page",
+    "notFoundMessage": "Go back to Legal and about and pick one document.",
+    "licensesIntro": "Nem dey build on top open-source software. Each package for down dey under im own licence; di full text dey inside each package.",
+    "source": "Nem own code",
+    "sourceHint": "E dey public for GitHub to read. All rights reserved.",
+    "docs": {
+      "terms": {
+        "title": "Terms of use",
+        "summary": "Short version: keep your PIN to yourself, check payment well before you send am, and tell us quick if anything no look right.",
+        "sections": {
+          "about": {
+            "title": "About these terms",
+            "body": "These terms cover your Nem account, cards and di services inside di app. When you open account, you don agree to dem. For dis demo Nem no be licensed bank, so di terms dey show how di service suppose work."
+          },
+          "eligibility": {
+            "title": "Who fit open account",
+            "body": "You must be 18 or pass, with Naija phone number and email wey you fit reach. How much you fit hold and send depend on your KYC tier; if you verify your BVN, NIN and address, your limit go increase."
+          },
+          "security": {
+            "title": "Keep your account safe",
+            "body": "Keep your PIN, password and one-time code secret. Nem no go ever ask for dem by call, SMS or email. Lock your card for di app and tell us sharp sharp if your phone loss or you think say another person don use your account."
+          },
+          "payments": {
+            "title": "Payments",
+            "body": "We go show you di fee, di exchange rate and di person name before you confirm. Once transfer don go, e don go, so check di details well. We fit hold payment wey look like fraud and ask you make you confirm am."
+          },
+          "disputes": {
+            "title": "When something go wrong",
+            "body": "Report payment wey you no make or wahala with merchant from di transaction inside di app. We go try settle dispute inside di time wey Central Bank of Nigeria set, and we go dey update you."
+          },
+          "closing": {
+            "title": "Close your account",
+            "body": "You fit ask us to close your account anytime from Settings. We fit freeze or close account to stop fraud or follow di law, and we go tell you why unless di law say we no fit."
+          },
+          "law": {
+            "title": "Governing law",
+            "body": "Na di laws of Federal Republic of Nigeria dey govern these terms."
+          }
+        }
+      },
+      "privacy": {
+        "title": "Privacy notice",
+        "summary": "We dey collect only wetin we need to run your account and follow di law, we no dey sell your data, and you fit export am or ask us to delete am anytime.",
+        "sections": {
+          "controller": {
+            "title": "Who we be",
+            "body": "Nem Bank na di data controller for di personal data wey you give us for di app. Dis notice follow di Nigeria Data Protection Act 2023 (NDPA)."
+          },
+          "collect": {
+            "title": "Wetin we dey collect",
+            "body": "Your name, phone, email and date of birth; your BVN, NIN, ID photo, selfie and address when you verify; your transactions, cards and payees; and di device wey you take sign in, so we fit catch new device."
+          },
+          "why": {
+            "title": "Why we dey use am",
+            "body": "To run your account (our contract with you), to confirm say na you and stop fraud and money laundering (na legal duty), and for optional features like AI ID prefill only if you agree, and you fit change your mind for Settings."
+          },
+          "sharing": {
+            "title": "Who we dey share am with",
+            "body": "Payment networks like NIBSS to move your money, identity services to check your BVN and NIN, and regulators when di law demand am. We no dey ever sell your data."
+          },
+          "ai": {
+            "title": "AI and your data",
+            "body": "Nem dey comot names, account numbers and other personal details before any request reach language model. You fit off every AI feature, and each one get model card."
+          },
+          "retention": {
+            "title": "How long we go keep am",
+            "body": "We go keep your data while your account dey open. After e close, we go keep transaction and identity records for at least five years, as anti-money-laundering rules talk, then we go delete dem."
+          },
+          "rights": {
+            "title": "Your rights",
+            "body": "You fit see, export and correct your data, object to how we dey use am, withdraw your consent and ask us to delete am. Export and delete dey for Settings. You fit also complain to Nigeria Data Protection Commission."
+          },
+          "contact": {
+            "title": "Contact us",
+            "body": "Reach our data protection officer through Support inside di app."
+          }
+        }
+      }
     }
   }
 }

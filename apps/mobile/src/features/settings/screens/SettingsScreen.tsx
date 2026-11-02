@@ -1,5 +1,14 @@
 import { useRouter } from 'expo-router';
-import { Bell, Bot, Monitor, Moon, ShieldAlert, Sun, type LucideIcon } from 'lucide-react-native';
+import {
+  Bell,
+  Bot,
+  Info,
+  Monitor,
+  Moon,
+  ShieldAlert,
+  Sun,
+  type LucideIcon,
+} from 'lucide-react-native';
 import type { ParseKeys } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
@@ -67,7 +76,8 @@ function Group({
 
 /**
  * Settings (SET-1..SET-4): appearance, language, privacy mode and auto-lock,
- * low-data mode, reduce motion, and the way to every alert setting.
+ * low-data mode, reduce motion, the way to every alert setting, and Legal and
+ * about (SET-6).
  */
 export function SettingsScreen() {
   const router = useRouter();
@@ -185,6 +195,18 @@ export function SettingsScreen() {
             subtitle={t('settings.aiFeaturesHint')}
             leading={Bot}
             onPress={() => router.push('/ai')}
+          />
+        </Card>
+      </View>
+
+      <View style={{ gap: spacing[2] }}>
+        <SectionHeader title={t('settings.about')} />
+        <Card padded={false}>
+          <ListItem
+            title={t('settings.legal')}
+            subtitle={t('settings.legalHint')}
+            leading={Info}
+            onPress={() => router.push('/settings/about')}
           />
         </Card>
       </View>
