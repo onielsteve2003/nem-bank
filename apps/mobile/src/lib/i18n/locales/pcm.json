@@ -1,0 +1,3992 @@
+{
+  "common": {
+    "tryAgain": "Try am again",
+    "goHome": "Go Home",
+    "matchPhone": "Follow phone",
+    "saveFailed": "E no save. Try am again.",
+    "continue": "Continue",
+    "cancel": "Cancel",
+    "signOut": "Comot",
+    "logIn": "Log in",
+    "back": "Go back",
+    "offline": "Network no dey. Connect again, then try am again.",
+    "problemTryAgain": "{{problem}}. Try am again.",
+    "resendCode": "Send code again",
+    "resendCodeIn": "Send code again for {{time}}",
+    "demoOtp": "Demo bank: the code na always {{code}}.",
+    "sendCodeFailed": "We no fit send code. Try am again.",
+    "resendFailed": "We no fit send new code. Try am again.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "todayAt": "Today, {{time}}",
+    "yesterdayAt": "Yesterday, {{time}}",
+    "copied": "{{label}} don copy",
+    "copyItem": "Copy {{item}}",
+    "close": "Close",
+    "hidden": "e hide",
+    "seeAll": "See all",
+    "addMoney": "Add money",
+    "demoDocument": "Demo bank. Na pretend money, no be real bank paper.",
+    "noTransactions": "No transaction yet",
+    "noTransactionsMessage": "Money wey you send, receive or spend go show for here.",
+    "walletName": "{{name}} wallet",
+    "done": "E don do",
+    "free": "Free",
+    "fee": "Charge",
+    "status": "Status",
+    "from": "From",
+    "to": "To",
+    "available": "Wetin dey",
+    "delete": "Delete",
+    "deleteFailed": "We no fit delete am. Try am again.",
+    "loadingMore": "E dey load more",
+    "loadMoreFailed": "We no fit load more",
+    "walletsFailed": "We no fit load your wallets",
+    "loadingWallets": "Your wallets dey load",
+    "addWallet": "Add wallet",
+    "shareDetails": "Share details",
+    "failed": "E no work",
+    "completed": "E don complete",
+    "amount": "Amount",
+    "reference": "Reference",
+    "date": "Date",
+    "copy": "Copy",
+    "share": "Share",
+    "remove": "Comot am",
+    "selected": ", you don pick am",
+    "tryAgainGeneric": "We no fit do am. Try am again.",
+    "saveFailedGeneric": "We no fit save am. Try am again.",
+    "shareImageFailed": "We no fit share the code. Try am again.",
+    "days_one": "{{count}} day",
+    "days_other": "{{count}} days",
+    "keepIt": "Leave am",
+    "note": "Note",
+    "all": "All",
+    "allCount": "All {{count}}",
+    "pay": "Pay",
+    "payAmount": "Pay {{amount}}",
+    "payName": "Pay {{name}}",
+    "payAmountTo": "Pay {{amount}} give {{name}}",
+    "balanceFailed": "We no fit load your balance",
+    "loadingBalance": "Your balance dey load",
+    "paymentFailed": "We no fit load this payment",
+    "lookingUp": "We dey find them…",
+    "lookingUpLabel": "We dey find them",
+    "nemUser": "Nem user",
+    "you": "You",
+    "removeName": "Comot {{name}}",
+    "loadingDots": "E dey load…",
+    "faceIdUsePin": "Face ID never set for this one here. Put your PIN.",
+    "confirmItsYou": "Show say na you",
+    "save": "Save",
+    "loading": "E dey load",
+    "tryAgainMoment": "Try am again small time.",
+    "accountFailed": "We no fit load your account",
+    "moreThanNaira": "E pass wetin dey your naira account",
+    "masked": "••••",
+    "nameYou": "{{name}} (you)",
+    "availableNaira": "{{amount}} dey your naira account",
+    "repayAutomatically": "Pay back by itself",
+    "repayAutomaticallyHelp": "We go comot each payment from your naira account the day e due.",
+    "months_one": "{{count}} month",
+    "months_other": "{{count}} months",
+    "amountHidden": "amount dey hide",
+    "somethingWrong": "Something no work well. Try am again.",
+    "noLimit": "No limit",
+    "turnOff": "Off am",
+    "change": "Change am",
+    "clear": "Clear",
+    "paste": "Paste",
+    "manage": "Manage",
+    "openSettings": "Open Settings",
+    "dateInvalid": "Put correct date like DD/MM/YYYY",
+    "datePlaceholder": "DD/MM/YYYY",
+    "dateOfBirth": "Date of birth",
+    "problem": "Wahala",
+    "profileFailed": "We no fit load your profile",
+    "photoTooBig": "That photo pass 5 MB. Try another one.",
+    "removePhotoN": "Comot photo {{n}}",
+    "photoN": "Photo {{n}}",
+    "takePhoto": "Snap photo",
+    "choosePhoto": "Pick photo",
+    "send": "Send",
+    "firstName": "First name",
+    "lastName": "Surname",
+    "name": "Name",
+    "approve": "Approve",
+    "decline": "Reject",
+    "weekly": "Every week",
+    "monthly": "Every month",
+    "kidMode": "Pikin mode",
+    "yearsOld": "{{count}} years old",
+    "confirm": "Confirm",
+    "view": "See am",
+    "reset": "Reset"
+  },
+  "tabs": {
+    "home": "Home",
+    "pay": "Pay",
+    "cards": "Cards",
+    "grow": "Grow",
+    "me": "Me"
+  },
+  "errors": {
+    "title": "Something no work well",
+    "message": "We no fit load this one. Your money dey safe.",
+    "offlineTitle": "Network no dey",
+    "offlineMessage": "Check your network, then try am again.",
+    "crashTitle": "This screen get wahala",
+    "crashMessage": "Your money dey safe. Nothing comot from this screen. Try am again, or go back Home."
+  },
+  "offline": {
+    "title": "Network no dey",
+    "simulated": "Demo Controls don off the bank",
+    "detail": "Na wetin we save for {{time}} we dey show. Payment need network."
+  },
+  "me": {
+    "title": "Me",
+    "loading": "Your profile dey load",
+    "kycTier": "KYC Tier {{tier}}",
+    "security": "Security",
+    "securityCenter": "Security center",
+    "checkupScore": "Checkup score {{score}} over 100",
+    "securityCenterHint": "Checkup, devices, limits and panic button",
+    "panic": "Panic button",
+    "panicOn": "E dey on: cards don freeze, nothing fit comot",
+    "panicOff": "Freeze everything",
+    "devices": "Devices and sessions",
+    "devicesHint": "Where you don sign in",
+    "limits": "Your limits",
+    "limitsHint": "Daily limit and one-time transfer limit",
+    "account": "Account",
+    "profile": "Profile",
+    "profileHint": "Photo, name and @nemtag",
+    "kyc": "Confirm who you be",
+    "kycHint": "Raise your limits",
+    "family": "Family",
+    "familyHint": "Your pikin dem accounts and limits",
+    "disputes": "Disputes",
+    "disputesHint": "Wahala wey you report and where e reach",
+    "notifications": "Notifications",
+    "notificationsHint": "Your inbox and wetin we dey tell you",
+    "statements": "Statements",
+    "statementsHint": "Official PDF wey get verification code",
+    "ai": "AI and your data",
+    "aiHint": "Wetin each AI feature dey use, with switch",
+    "settings": "Settings",
+    "settingsHint": "Theme, privacy mode, low data, motion and alerts",
+    "help": "Help",
+    "support": "Help and support",
+    "supportHint": "Answers, or chat with our team",
+    "demo": "Demo",
+    "demoControls": "Demo Controls",
+    "demoControlsHint": "Fund the wallet, pretend transfers, reset",
+    "designSystem": "Design system",
+    "designSystemHint": "Every Volt Noir component",
+    "signOut": "Comot",
+    "signOutHint": "Go back to the welcome screen"
+  },
+  "settings": {
+    "title": "Settings",
+    "appearance": "How e go look",
+    "theme": "Theme",
+    "dark": "Dark",
+    "light": "Light",
+    "privacy": "Privacy",
+    "privacyHint": "You fit also tap the eye for Home to show or hide amount anytime.",
+    "privacyMode": "Privacy mode",
+    "privacyModeHint": "E go hide balance and amount everywhere, so you fit use Nem for public",
+    "autoLock": "Lock Nem when e don stay for background reach",
+    "seconds": "{{count}} sec",
+    "minutes_one": "{{count}} min",
+    "minutes_other": "{{count}} min",
+    "data": "Data",
+    "lowData": "Low-data mode",
+    "lowDataHint": "Photo and chart go load only when you tap them, and list go fetch small small",
+    "accessibility": "Accessibility",
+    "accessibilityHint": "Text size and screen reader dey follow your phone settings. Nem support both.",
+    "reduceMotion": "Reduce movement",
+    "reduceMotionHint": "Animation go reduce: no card tilt, no count-up, no bouncy button.",
+    "alwaysReduce": "Always reduce am",
+    "alerts": "Alerts",
+    "notifications": "Notifications",
+    "notificationsHint": "Wetin we go tell you, and where",
+    "securityAlerts": "Security alerts",
+    "securityAlertsHint": "Sign-in, new device and big payment",
+    "aiFeatures": "AI features",
+    "aiFeaturesHint": "On or off each AI feature",
+    "language": "Language",
+    "languageHint": "Nem dey speak English and Naija Pidgin. Amount, date and name no go change.",
+    "languages": {
+      "en": "English",
+      "pcm": "Naija Pidgin"
+    }
+  },
+  "auth": {
+    "welcome": {
+      "designSystem": "Design system",
+      "slides": {
+        "speed": {
+          "title": "Banking wey dey move as you dey move",
+          "body": "Send money give any Nigerian bank or @nemtag sharp sharp, and you go see the charge before you pay."
+        },
+        "fx": {
+          "title": "Four currency, one app",
+          "body": "Keep naira, dollar, pound and euro. Change am for locked rate and see the exact amount wey you go get."
+        },
+        "ajo": {
+          "title": "Save by yourself or with your people",
+          "body": "Goals, locked savings and Ajo group wey dey pay each member one by one."
+        },
+        "security": {
+          "title": "Security wey you fit see",
+          "body": "Face ID, one key wey dey your phone for every payment, and clear reason anytime we hold transfer."
+        }
+      },
+      "slideOf": "Slide {{n}} of {{total}}",
+      "notReal": "No be real bank.",
+      "disclaimer": "Nem Bank na portfolio demo: balance and transfer na pretend, no real money dey move. No ever put your real card or bank details.",
+      "tryDemo": "Try the demo",
+      "tryDemoHint": "E go sign you in as Tolu, demo customer wey get six months history",
+      "createAccount": "Open account",
+      "data": "Data: {{source}}",
+      "mockSource": "mock bank (for this phone)"
+    },
+    "step": {
+      "of": "Step {{step}} of {{total}}",
+      "almostDone": "E remain small",
+      "last": "Last step"
+    },
+    "otp": {
+      "checkFailed": "We no fit check the code. Try am again.",
+      "wrong_one": "That code no correct. {{count}} try remain.",
+      "wrong_other": "That code no correct. {{count}} tries remain.",
+      "lastTry": "That code no correct, and na the last try be that. Ask for new code.",
+      "expired": "This code don expire. Ask for new one.",
+      "tooMany": "Too many wrong code. Ask for new one."
+    },
+    "login": {
+      "title": "Welcome back",
+      "intro": "Log in with your email or phone number and your password.",
+      "identifier": "Email or phone number",
+      "identifierInvalid": "Put your email or Nigerian phone number",
+      "identifierRequired": "Put your email or phone number",
+      "password": "Password",
+      "passwordRequired": "Put your password",
+      "failed": "We no fit log you in. Try am again.",
+      "wrongDetails": "That email, phone number or password no correct.",
+      "tooMany": "You don try too many times. Wait small, or reset your password.",
+      "withBiometrics": "Log in with {{label}}",
+      "orPassword": "or use your password",
+      "biometricsCancelled": "{{label}} no confirm. Try am again, or use your password.",
+      "biometricsBroken": "{{label}} login no dey work now. Use your password.",
+      "biometricsPrompt": "Log in to Nem Bank",
+      "forgot": "You forget password?",
+      "demoHint": "Demo bank: log in as {{email}} with {{password}}, or with the details wey you use sign up."
+    },
+    "signup": {
+      "title": "Open your account",
+      "intro": "Use your real name as e dey for your ID. We go email you code to confirm say na you.",
+      "firstName": "First name",
+      "lastName": "Surname",
+      "email": "Email",
+      "phone": "Phone number",
+      "phoneHelp": "Nigerian phone number. We dey send security alert go there.",
+      "dateOfBirth": "Date of birth",
+      "dateOfBirthHelp": "You must reach 18 years.",
+      "dateInvalid": "Put correct date like DD/MM/YYYY",
+      "dateRequired": "Put your date of birth",
+      "consent": "I agree to the Terms of Service and the Privacy Policy",
+      "consentHelp": "Nem Bank dey handle your details under the Nigeria Data Protection Act 2023.",
+      "consentRequired": "Agree to the terms and privacy policy before you continue",
+      "haveAccount": "I don get account before"
+    },
+    "verify": {
+      "title": "Check your email",
+      "intro": "Put the 6-digit code wey we send to {{destination}}. E go work for 10 minutes.",
+      "verify": "Confirm",
+      "sentAgain": "We don send new code to {{destination}}.",
+      "wait": "Wait small before you ask for another code.",
+      "sms": "Use SMS instead"
+    },
+    "password": {
+      "title": "Make password",
+      "intro": "Na am you go use log in. Short phrase of three or four words strong and e easy to remember.",
+      "label": "Password",
+      "good": "E don set",
+      "strength": "How strong the password be",
+      "strengthValue": "Strength: {{label}}"
+    },
+    "pin": {
+      "dateOfBirth": "No use your date of birth. Pick another PIN.",
+      "weak": "E too easy to guess. No repeat number or use 1234 kind.",
+      "mismatch": "The PINs no match. Pick your PIN again.",
+      "create": "Make your PIN",
+      "subtitle": "4 digits to approve payment and open the app",
+      "confirm": "Confirm your PIN",
+      "confirmSubtitle": "Put the same 4 digits again"
+    },
+    "biometrics": {
+      "setupFailed": "We no fit set up this device. Try am again.",
+      "goBack": "{{problem}}. Go back and change am.",
+      "emailExpired": "Your email check don expire. Start sign-up again.",
+      "prompt": "On {{label}} for Nem Bank",
+      "notConfirmed": "{{label}} no confirm. Try am again, or choose Not now.",
+      "turnOn": "On {{label}}",
+      "notNow": "Not now",
+      "openAccount": "Open my account",
+      "title": "Use {{label}}?",
+      "intro": "Open the app and approve payment with {{label}} instead of to type your PIN.",
+      "privateFace": "Your face no dey comot this phone. Nem Bank only know say the check pass.",
+      "privateFinger": "Your fingerprint no dey comot this phone. Nem Bank only know say the check pass.",
+      "key": "This phone go get im own security key, wey {{label}} dey guard, so na only from here payment fit approve.",
+      "finish": "Finish the setup",
+      "checking": "We dey check this device…",
+      "expoGo": "Expo Go no fit use Face ID: Apple only allow app use am when the app itself ask for am. You go use your PIN for this demo; the real Nem Bank app support Face ID.",
+      "web": "Browser no fit use Face ID or fingerprint, so you go use your PIN here. The phone app support both.",
+      "none": "No Face ID or fingerprint dey this device, so you go use your PIN. You fit on am later for Security."
+    },
+    "forgot": {
+      "header": "Reset password",
+      "title": "You forget your password?",
+      "intro": "Put the email wey dey your account. We go send code so you fit choose new password.",
+      "sendCode": "Send code",
+      "changed": "Password don change. Log in with your new password.",
+      "save": "Save new password",
+      "chooseTitle": "Choose new password",
+      "chooseIntro": "If {{destination}} get account, we don send am 6-digit code. E go work for 10 minutes.",
+      "newPassword": "New password",
+      "signsOut": "If you change your password, e go sign you out for every other device."
+    },
+    "nemtag": {
+      "taken": "Person just take @{{tag}}. Try another one.",
+      "saveFailed": "We no fit save your @nemtag. Try am again.",
+      "claimTag": "Take @{{tag}}",
+      "claim": "Take @nemtag",
+      "title": "Choose your @nemtag",
+      "intro": "Your people fit pay you with your @nemtag instead of account number. Use 3 to 20 letters, numbers or _, and start with letter.",
+      "label": "@nemtag",
+      "tryThese": "Try one of these",
+      "ideas": "Ideas",
+      "yours": "@{{tag}} na your @nemtag now",
+      "checking": "We dey check @{{tag}}…",
+      "checkFailed": "We no fit check am now. Try am again.",
+      "available": "@{{tag}} fit be your own if you want am",
+      "isTaken": "Person don take @{{tag}}"
+    },
+    "resetPin": {
+      "mismatch": "The PINs no match. Pick your new PIN again.",
+      "chooseAnother": "{{problem}}. Pick another PIN.",
+      "tooLong": "E don take too long. Ask for new code.",
+      "saveFailed": "We no fit save your PIN. Try am again.",
+      "choose": "Pick new PIN",
+      "confirm": "Confirm your new PIN",
+      "title": "Reset your PIN",
+      "codeSent": "Put the 6-digit code wey we send to {{destination}}.",
+      "intro": "To keep your money safe, we go email you code to confirm say na you. Then you fit pick new PIN.",
+      "emailMe": "Email me code"
+    },
+    "coolOff": {
+      "title": "New device: limit don reduce",
+      "detail": "To keep your money safe, sending limit go low for this device till {{time}}."
+    },
+    "newDevice": {
+      "title": "New device don sign in",
+      "message": "Na the first time wey you log in here be this. For the next 24 hours your sending limit go low for this device, and we don tell your other devices.",
+      "ok": "I don hear",
+      "notMe": "No be me",
+      "signedOut": "We don sign you out for every device. Reset your password make them no fit enter again."
+    }
+  },
+  "lock": {
+    "biometricsPrompt": "Open Nem Bank with {{label}}",
+    "offline": "Network no dey, so we no fit check your PIN. Connect again, then try am again.",
+    "checkFailed": "We no fit check your PIN. Try am again.",
+    "newPinSet": "Your new PIN don set.",
+    "title": "Welcome back",
+    "demoSubtitle": "Put your PIN. Demo PIN na {{pin}}",
+    "subtitle": "Put your PIN to open",
+    "useBiometrics": "Use {{label}}",
+    "forgotPin": "You forget PIN?",
+    "lockedOut": "Too many wrong tries. Try again after {{wait}}, or tap Forgot PIN.",
+    "wrong_one": "Wrong PIN. {{count}} try remain.",
+    "wrong_other": "Wrong PIN. {{count}} tries remain."
+  },
+  "home": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "profile": "Your profile",
+    "showBalances": "Show balance",
+    "hideBalances": "Hide balance",
+    "noWallets": "No wallet yet",
+    "noWalletsMessage": "Your naira account go show here once e open.",
+    "balancesFailed": "We no fit load your balance",
+    "loadingBalances": "Balance dey load",
+    "recent": "Wetin happen recently",
+    "activityFailed": "We no fit load wetin happen",
+    "loadingActivity": "Recent activity dey load",
+    "actions": {
+      "send": "Send",
+      "addMoney": "Add money",
+      "convert": "Change money",
+      "bills": "Bills",
+      "scan": "Scan"
+    },
+    "assistant": {
+      "label": "Ask Nem Assistant. Like, how much I spend for food for September?",
+      "hint": "E go open the assistant",
+      "title": "Ask Nem Assistant",
+      "example": "“How much I spend for food for September?”",
+      "feature": "Nem Assistant",
+      "explanation": "E dey answer question about your accounts and e fit prepare payment make you check am. E no dey move money by itself: you go confirm every payment with your PIN or Face ID. We dey comot name and account number before anything reach the AI model.",
+      "fallback": "Everything wey the assistant dey do, you fit do am from the app screens."
+    },
+    "carousel": {
+      "walletEnding": "{{name}} wallet, wey end with {{tail}}",
+      "availableAmount": "Balance wey you fit spend {{amount}}",
+      "onHoldAmount": "{{amount}} dey on hold",
+      "detailsHint": "E go show account details",
+      "available": "Balance wey you fit spend",
+      "onHold": "dey on hold",
+      "accountDetails": "Account details",
+      "addWallet": "Add currency wallet",
+      "addWalletHint": "Dollar, pound or euro",
+      "explain": "Available and ledger balance, {{name}} wallet",
+      "explainLabel": "Available vs ledger balance",
+      "cardOf": "Card {{n}} of {{total}}"
+    },
+    "insights": {
+      "nothingSpent": "You never spend anything this month.",
+      "mostWent": "Na {{category}} take most ({{pct}}%).",
+      "spentSoFar": "Wetin you don spend for {{month}}",
+      "spentSoFarAmount": "Wetin you don spend for {{month}}: {{amount}}",
+      "lastMonthAmount": "Last month: {{amount}}",
+      "lastMonth": "Last month:",
+      "hint": "E go open Insights"
+    }
+  },
+  "accounts": {
+    "details": {
+      "title": "{{flag}} {{name}} account",
+      "shareFailed": "Sharing no dey work here. Copy the details instead.",
+      "ngnIntro": "Send naira here from any Nigerian bank app.",
+      "foreignIntro": "Collect {{code}} here.",
+      "demoBadge": "Demo details",
+      "demoWarning": "These na demo details. Nem Bank na demo, so money wey real bank send go here no go land.",
+      "share": "Share details",
+      "howReceiving": "How receiving dey work",
+      "statement": "Get statement",
+      "addDemoMoney": "Add demo money now",
+      "shareTitle": "My {{currency}} account details",
+      "shareDemo": "These na demo details from Nem Bank demo, no be real account."
+    },
+    "rows": {
+      "accountNumber": "Account number",
+      "bank": "Bank",
+      "accountName": "Account name",
+      "routingNumber": "Routing number (ACH)",
+      "accountType": "Account type",
+      "checking": "Checking",
+      "sortCode": "Sort code",
+      "iban": "IBAN",
+      "bic": "BIC / SWIFT"
+    },
+    "addWallet": {
+      "receiveBy": {
+        "USD": "US account and routing number",
+        "GBP": "UK sort code and account number",
+        "EUR": "IBAN and BIC"
+      },
+      "ready": "{{name}} wallet don ready",
+      "verifyTitle": "Reach Tier {{tier}} first",
+      "verifyMessage": "Dollar, pound and euro wallet need BVN or NIN wey we don confirm. You dey Tier {{tier}}.",
+      "verify": "Confirm who I be",
+      "allTitle": "You don get every wallet",
+      "allMessage": "Nem Bank get naira, dollar, pound and euro wallet, and you don get all.",
+      "intro": "Keep and collect money for another currency. E free to open; the details na for demo.",
+      "opening": "E dey open…",
+      "receiveWith": "Collect with {{method}}",
+      "opensHint": "E go open {{code}} wallet",
+      "failed": "We no fit open that wallet.",
+      "tapRetry": "{{problem}} Tap am to try again.",
+      "title": "Add currency wallet"
+    },
+    "balance": {
+      "title": "{{flag}} {{name}} balance",
+      "intro": "Your ledger balance count every payment wey don post. Some of am fit dey on hold for payment wey never final. Wetin remain na your available balance, the money wey you fit spend now.",
+      "ledger": "Ledger balance",
+      "nothingHeld": "Nothing dey on hold now.",
+      "releasesBy": "E go release by {{time}} if e no go through",
+      "since": "Since {{time}}",
+      "otherHolds": "Other holds dey update",
+      "holdsFailed": "We no fit load the holds",
+      "loadingHolds": "Holds dey load",
+      "available": "Wetin you fit spend",
+      "holdsEnd": "Hold dey end by itself: card payment go settle or drop, transfer go complete or the money go come back."
+    },
+    "holdReasons": {
+      "card_authorization": "Card payment wey dey wait to settle",
+      "pending_transfer": "Transfer dey road",
+      "delayed_transfer": "New beneficiary waiting time",
+      "fraud_review": "We hold am for security check",
+      "ajo_contribution": "Ajo contribution",
+      "dispute": "E dey under dispute"
+    },
+    "tick": {
+      "up": "{{label}} balance don go up",
+      "down": "{{label}} balance don come down",
+      "upBy": "{{label}} balance don go up by {{amount}}",
+      "downBy": "{{label}} balance don come down by {{amount}}",
+      "moneyIn": "▲ Money enter",
+      "moneyOut": "▼ Money comot"
+    }
+  },
+  "categories": {
+    "food": "Food & drink",
+    "groceries": "Market things",
+    "transport": "Transport",
+    "airtime_data": "Airtime & data",
+    "bills_utilities": "Bills & utilities",
+    "shopping": "Shopping",
+    "entertainment": "Enjoyment",
+    "subscriptions": "Subscriptions",
+    "health": "Health",
+    "education": "School",
+    "rent_housing": "House rent",
+    "family": "Family",
+    "transfers": "Transfers",
+    "salary_income": "Salary & income",
+    "savings": "Savings",
+    "fees_charges": "Charges",
+    "cash": "Cash",
+    "other": "Other"
+  },
+  "transactions": {
+    "confidence": {
+      "very": "E sure well well",
+      "fairly": "E sure small",
+      "not": "E no too sure",
+      "value": "{{words}} ({{pct}}%)"
+    },
+    "source": {
+      "user": "Na you set am",
+      "smartWith": "Smart guess · {{confidence}}",
+      "smart": "Smart guess",
+      "merchant": "From the merchant list"
+    },
+    "groups": {
+      "transfers": "Transfers",
+      "card": "Card",
+      "bills": "Bills",
+      "fx": "Money change",
+      "saving": "Savings & ajo",
+      "loans": "Loans",
+      "charges": "Charges & interest",
+      "refunds": "Reversals"
+    },
+    "status": {
+      "pending": "E still dey wait",
+      "completed": "E don complete",
+      "failed": "E no work",
+      "reversed": "E don reverse"
+    },
+    "ranges": {
+      "d7": "Last 7 days",
+      "d30": "Last 30 days",
+      "d90": "Last 90 days",
+      "month": "This month"
+    },
+    "types": {
+      "transfer_in": "Money enter",
+      "transfer_out": "Transfer",
+      "card_payment": "Card payment",
+      "card_refund": "Card refund",
+      "bill_payment": "Bill payment",
+      "fx_conversion": "Currency change",
+      "savings": "Savings",
+      "ajo": "Ajo",
+      "loan_disbursement": "Loan wey we pay",
+      "loan_repayment": "Loan payback",
+      "interest": "Interest",
+      "fee": "Charge",
+      "levy": "Levy",
+      "reversal": "Reversal",
+      "deposit": "Deposit",
+      "dispute_refund": "Dispute refund"
+    },
+    "list": {
+      "title": "Transactions",
+      "filtersOn": "Filters, {{count}} dey on",
+      "filters": "Filters",
+      "search": "Search transactions",
+      "searchPlaceholder": "Name, narration or reference",
+      "clearSearch": "Clear search",
+      "noMatch": "No transaction match",
+      "noMatchMessage": "Try another search or reduce the filters.",
+      "clearFilters": "Clear filters",
+      "loadingMore": "E dey load more",
+      "moreFailed": "We no fit load more",
+      "failed": "We no fit load your transactions",
+      "loading": "Transactions dey load"
+    },
+    "filter": {
+      "title": "Filter transactions",
+      "type": "Type",
+      "currency": "Currency",
+      "status": "Status",
+      "date": "Date",
+      "clear": "Clear all",
+      "show": "Show results"
+    },
+    "detail": {
+      "thanks": "Thank you, Nem go remember",
+      "similarMoved": "Every {{name}} payment don become {{category}}",
+      "moved": "E don move go {{category}}",
+      "categoryFailed": "We no fit change the category.",
+      "title": "Transaction",
+      "notFound": "We no fit find that transaction",
+      "failed": "We no fit load this transaction",
+      "loading": "Transaction dey load",
+      "status": "Status",
+      "type": "Type",
+      "to": "To",
+      "from": "From",
+      "nemtag": "Nemtag",
+      "narration": "Narration",
+      "reference": "Reference",
+      "totalFees": "All charges",
+      "balanceAfter": "Balance after",
+      "category": "Category",
+      "smartFeature": "Smart categories",
+      "smartExplanation": "Nem dey read the merchant name and description, check list of merchants wey we know, then one model wey learn from your corrections go pick the category wey fit pass. The percentage na how sure e be.",
+      "smartFallback": "Merchant list and simple rules. You fit still change any category.",
+      "categoryLabel": "Category: {{category}}. {{source}}",
+      "changeCategory": "Change the category",
+      "unsure": "We no too sure about this one. {{name}} na really {{category}}?",
+      "yesRight": "Yes, e correct",
+      "change": "Change am",
+      "shareReceipt": "Share receipt",
+      "whyPending": "Why this one still dey wait?",
+      "sendAgain": "Send am again",
+      "disputed": "You don report wahala for this payment. We go update you on the case.",
+      "trackDispute": "Follow your dispute",
+      "report": "Report wahala",
+      "askSupport": "Ask support about this",
+      "choose": "Choose category",
+      "always": "Always put {{name}} for this category",
+      "alwaysNote": "Old and new payment with {{name}} go change too, and smart categories go learn from am.",
+      "onlyThis": "Na only this payment go change.",
+      "current": "Now"
+    }
+  },
+  "receipt": {
+    "title": "Receipt",
+    "shareFailed": "We no fit share the receipt. Try am again.",
+    "failed": "We no fit load the receipt",
+    "loading": "Receipt dey load",
+    "bankReceipt": "Bank receipt",
+    "shareImage": "Share as picture",
+    "sharePdf": "Share as PDF",
+    "savePdf": "Save as PDF",
+    "browserNote": "Your browser go open im print window. Choose \"Save as PDF\". Picture sharing dey the app.",
+    "lines": {
+      "from": "From",
+      "to": "To",
+      "narration": "Narration",
+      "amount": "Amount",
+      "fee": "Charge",
+      "total": "Total",
+      "date": "Date",
+      "completed": "E complete",
+      "reference": "Reference",
+      "verificationCode": "Verification code"
+    },
+    "fileTitle": "Nem Bank receipt {{reference}}",
+    "note": "Nem Bank na demo. This receipt dey show pretend money and e no be real bank paper. Mention the reference and verification code if you contact us about this payment."
+  },
+  "statements": {
+    "periods": {
+      "last_month": "Last month",
+      "m3": "Last 3 months",
+      "m6": "Last 6 months",
+      "m12": "Last 12 months",
+      "custom": "Choose dates"
+    },
+    "title": "{{currency}} statement, {{from}} to {{to}}",
+    "status": {
+      "generating": "E dey prepare",
+      "ready": "E don ready",
+      "failed": "E no work"
+    },
+    "list": {
+      "title": "Statements",
+      "intro": "Official PDF for visa, house rent or loan. Each one get code wey anybody fit check.",
+      "wallet": "Wallet",
+      "from": "From",
+      "to": "To",
+      "badDates": "Use correct dates like DD/MM/YYYY",
+      "get": "Get statement",
+      "startFailed": "We no fit start the statement.",
+      "yours": "Your statements",
+      "none": "No statement yet",
+      "noneMessage": "The ones wey you request go show here.",
+      "failed": "We no fit load your statements",
+      "loading": "Statements dey load"
+    },
+    "detail": {
+      "title": "Statement",
+      "failed": "We no fit load this statement",
+      "preparing": "We dey prepare your statement. E go take few seconds.",
+      "preparingLabel": "Statement dey prepare",
+      "prepareFailed": "We no fit prepare this statement",
+      "range": "{{from}} to {{to}}",
+      "opening": "Opening balance",
+      "closing": "Closing balance",
+      "summary_one": "{{count}} transaction · in {{moneyIn}} · out {{moneyOut}}",
+      "summary_other": "{{count}} transactions · in {{moneyIn}} · out {{moneyOut}}",
+      "qr": "QR code wey dey open the verification page",
+      "code": "Verification code",
+      "anyone": "Anybody fit scan the code or open {{url}} to check this statement.",
+      "copyHash": "Copy hash",
+      "hash": "Hash",
+      "linesFailed": "We no fit load the statement lines",
+      "share": "Share PDF",
+      "pdfFailed": "We no fit make the PDF. Try am again."
+    },
+    "pdf": {
+      "heading": "Account statement",
+      "moneyIn": "Money enter",
+      "moneyOut": "Money comot",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "balance": "Balance",
+      "empty": "No completed transaction for this period.",
+      "verifyAt": "Check this statement for {{url}}",
+      "demo": "Nem Bank na demo. Na pretend money, no be real bank paper."
+    }
+  },
+  "notifications": {
+    "categories": {
+      "transactions": {
+        "label": "Payments",
+        "hint": "Money wey enter and comot, transfers and bills"
+      },
+      "security": {
+        "label": "Security",
+        "hint": "Sign-in, new device and anything wey no normal"
+      },
+      "savings": {
+        "label": "Savings",
+        "hint": "Goals, locks and interest"
+      },
+      "ajo": {
+        "label": "Ajo",
+        "hint": "Contributions and payouts"
+      },
+      "credit": {
+        "label": "Credit",
+        "hint": "Payback and offers wey you ask for"
+      },
+      "support": {
+        "label": "Support",
+        "hint": "Reply from our team"
+      },
+      "product": {
+        "label": "Product news",
+        "hint": "New features for Nem"
+      },
+      "marketing": {
+        "label": "Offers",
+        "hint": "Promo from Nem and partners"
+      }
+    },
+    "channels": {
+      "in_app": "Inside the app",
+      "push": "Push",
+      "email": "Email"
+    },
+    "groups": {
+      "today": "Today",
+      "week": "This week",
+      "earlier": "Before"
+    },
+    "inbox": {
+      "title": "Notifications",
+      "markAll": "Mark all as read",
+      "allCaught": "You don read all",
+      "settings": "Notification settings",
+      "unreadPrefix": "You never read am.",
+      "unread": "Never read",
+      "unreadCount": "Never read ({{count}})",
+      "all": "All",
+      "failed": "We no fit load your notifications",
+      "loading": "Your notifications dey load",
+      "none": "No notification",
+      "readAll": "You don read everything.",
+      "noneMessage": "Payments, security alerts and reply from support go show here."
+    },
+    "bell": {
+      "unread": "Notifications, {{count}} never read"
+    },
+    "prefs": {
+      "offline": "Network no dey, so e no save.",
+      "failed": "We no fit load your settings",
+      "loading": "Your settings dey load",
+      "alwaysOn": "E dey always on, to keep you safe",
+      "intro": "Choose wetin we go tell you and where. Offers go stay off unless you on am."
+    },
+    "phone": {
+      "stay": "Alerts go stay for your inbox for now.",
+      "testTitle": "Nem test alert",
+      "testBody": "Alerts dey work for this phone.",
+      "turnOn": "On alerts",
+      "openSettings": "Open phone settings",
+      "test": "Send test alert",
+      "none": {
+        "title": "Phone alerts need the app",
+        "detail": "For browser, everything still dey enter your inbox."
+      },
+      "denied": {
+        "title": "Alerts don off for Nem for this phone",
+        "detail": "On notifications for Nem for your phone settings."
+      },
+      "ask": {
+        "title": "Get alerts for this phone",
+        "detail": "Know the moment money move or person sign in."
+      },
+      "push": {
+        "title": "Alerts dey on for this phone",
+        "detail": "Nem fit reach you even when the app close."
+      },
+      "local": {
+        "title": "Alerts dey on while Nem dey run",
+        "detail": "Expo Go for Android no fit collect alert from server, so Nem dey show them by itself while e open or e dey background."
+      }
+    }
+  },
+  "fx": {
+    "convert": "Change money",
+    "convertAmount": "Change {{amount}}",
+    "convertPair": "Change {{sell}} to {{buy}}",
+    "convertCurrency": "Change {{currency}}",
+    "convertToNaira": "Change {{currency}} to naira",
+    "received": "Wetin you collect",
+    "converted": "E don change",
+    "rate": "Rate",
+    "when": "When",
+    "youGet": "You go get",
+    "yourRate": "Your rate",
+    "midRate": "Mid-market rate",
+    "spread": "Spread ({{percent}})",
+    "spreadCost": "Spread cost",
+    "requoting": "We dey find rate for the new amount…",
+    "expired": "This rate don expire. Rate dey move, so get new one before you change am.",
+    "newRate": "Get new rate",
+    "heldFor": "We hold the rate for {{seconds}} seconds",
+    "heldForShort": "Rate dey hold for {{time}}",
+    "walletEntry": "{{currency}} wallet entry",
+    "spreadNote": "The spread dey inside the rate; we show am before you confirm.",
+    "again": "Change again",
+    "doneAt": "For {{rate}}. E don enter your wallet.",
+    "conversionTitle": "{{sell}} to {{buy}}",
+    "pair": {
+      "from": "Change from",
+      "to": "Change to",
+      "walletName": "{{currency}} wallet",
+      "availableAmount": "{{amount}} dey",
+      "swap": "Swap: change {{to}} to {{from}} instead",
+      "backToNaira": "Foreign wallet dey change back to naira.",
+      "addAnother": "Add another wallet"
+    },
+    "errors": {
+      "tooMuch": "E pass the {{amount}} wey you get.",
+      "nothingLeft": "We no fit change am. Nothing comot from your wallet. Try am again.",
+      "rateExpired": "That rate don expire. Check the new rate and confirm again.",
+      "offline": "Network no dey. Connect again and try am; e no go change two times.",
+      "noReply": "We no hear back. Try am again: if e don go before, e no go change two times.",
+      "failed": "We no fit change am. Try am again."
+    },
+    "screen": {
+      "noForeign": "Add foreign wallet first",
+      "noForeignMessage": "Open USD, GBP or EUR wallet, then change naira enter am and back.",
+      "rateFailed": "We no fit get rate",
+      "indicative": "Rate na estimate, and we go hold am for 60 seconds once we quote.",
+      "charts": "Rate charts and alerts",
+      "history": "Money change history",
+      "receive": "Collect money from abroad"
+    },
+    "history": {
+      "none": "You never change money yet",
+      "noneMessage": "When you change between naira and foreign wallet, e go show here.",
+      "convertNow": "Change now",
+      "failed": "We no fit load your money change",
+      "loading": "Money change dey load"
+    },
+    "rates": {
+      "title": "Rates and alerts",
+      "failed": "We no fit load rates",
+      "indicative": "Mid-market rate na estimate. Your rate get spread inside, and we go show am before you change.",
+      "alerts": "Rate alerts",
+      "newAlert": "New alert for {{pair}}",
+      "willTell": "We go tell you when {{alert}}",
+      "midMarket": "{{pair}} · mid-market",
+      "isAt": "{{pair}} na {{rate}}",
+      "trend": {
+        "up": "e go up {{change}} for the {{period}}",
+        "down": "e come down {{change}} for the {{period}}",
+        "flat": "e no move {{change}} for the {{period}}"
+      },
+      "chartTitle": "{{pair}}, {{period}}",
+      "chartFailed": "We no fit load the chart",
+      "chartLoading": "Chart dey load",
+      "spoken": {
+        "1D": "last day",
+        "1W": "last week",
+        "1M": "last month",
+        "1Y": "last year"
+      }
+    },
+    "alerts": {
+      "failed": "We no fit load your alerts",
+      "loading": "Your alerts dey load",
+      "none": "No rate alert yet",
+      "noneMessage": "Get notification when rate pass or fall below the number wey you pick.",
+      "create": "Make alert",
+      "deleted": "Alert don delete",
+      "reached": "E reach {{time}}",
+      "set": "You set am {{time}}",
+      "watching": "We dey watch",
+      "reachedBadge": "E don reach",
+      "deleteLabel": "Delete alert: {{alert}}",
+      "deleteTitle": "Delete this alert?",
+      "title": {
+        "above": "{{pair}} pass {{rate}}",
+        "below": "{{pair}} fall below {{rate}}"
+      },
+      "sheetTitle": "Alert me about {{pair}}",
+      "now": "E be {{rate}} now. We go tell you one time when e cross your rate.",
+      "above": "E pass",
+      "below": "E fall below",
+      "rateLabel": "Rate for naira",
+      "createButton": "Make alert",
+      "badRate": "Put rate for naira, like 1650 or 1650.50.",
+      "pickHigher": "{{pair}} don already reach {{rate}}. Pick higher rate.",
+      "pickLower": "{{pair}} don already reach {{rate}}. Pick lower rate."
+    },
+    "receive": {
+      "title": "Collect money from abroad",
+      "openForeign": "Open foreign wallet",
+      "openForeignMessage": "USD, GBP or EUR wallet get im own local details, so people abroad fit pay you like any local account.",
+      "intro": "Your {{name}} details. People go pay am from their own bank, like any local account.",
+      "how": "How e dey work",
+      "moneyIn": "Money enter",
+      "paymentsFailed": "We no fit load payments",
+      "loadingPayments": "Payments dey load",
+      "nothingYet": "Nothing yet. Payment wey enter your {{currency}} wallet go show here.",
+      "sentBy": "Who send am",
+      "takes": "E dey usually take",
+      "payers": "Who dey pay this way",
+      "fees": "Charges",
+      "feesValue": "E free to collect. Their bank fit charge them to send.",
+      "step": "Step {{n}}: {{step}}",
+      "steps": {
+        "share": "Share these details give whoever wan pay you.",
+        "pay": "Them go pay from their own bank by {{rail}}, like to pay any local account.",
+        "lands": "E go land for your {{currency}} wallet as {{name}}, and we go tell you the moment e land.",
+        "keep": "Keep am, or change am to naira for live rate anytime you want."
+      },
+      "guides": {
+        "us_ach": {
+          "rail": "ACH or domestic wire for US",
+          "speed": "1 to 3 working days by ACH, same day by wire",
+          "payers": "US clients, Upwork, Deel, Payoneer and payroll"
+        },
+        "uk_fps": {
+          "rail": "Faster Payments for UK",
+          "speed": "Usually inside few minutes, any day of the week",
+          "payers": "UK employers, family and friends, Wise and Revolut"
+        },
+        "iban": {
+          "rail": "SEPA transfer for euro area",
+          "speed": "Next working day, or seconds with SEPA Instant",
+          "payers": "European clients, marketplaces and family for EU"
+        }
+      },
+      "demo": "Demo: see payment land without to wait for real one.",
+      "getFrom": "Collect {{amount}} from {{name}}",
+      "sentYou": "{{name}} send you {{amount}}",
+      "moreDemo": "More for Demo Controls"
+    }
+  },
+  "bills": {
+    "categories": {
+      "airtime": {
+        "label": "Airtime",
+        "description": "Recharge any network"
+      },
+      "data": {
+        "label": "Data",
+        "description": "Bundles for every network"
+      },
+      "electricity": {
+        "label": "Light bill",
+        "description": "Prepaid meter tokens"
+      },
+      "cable_tv": {
+        "label": "Cable TV",
+        "description": "DStv, GOtv, StarTimes"
+      }
+    },
+    "customer": {
+      "airtime": "Phone number",
+      "data": "Phone number",
+      "electricity": "Meter number",
+      "cable_tv": "Smartcard number"
+    },
+    "action": {
+      "buy": "Buy",
+      "buyAmount": "Buy {{amount}}",
+      "pay": "Pay",
+      "payAmount": "Pay {{amount}}",
+      "schedule": "Schedule am",
+      "scheduleAmount": "Schedule {{amount}}"
+    },
+    "options": {
+      "payNow": "Pay now",
+      "changeHint": "Tap to change am or pay now instead",
+      "laterHint": "Or schedule am, or repeat am",
+      "when": "When: {{when}}",
+      "now": "now",
+      "whenHint": "Choose later day or repeat",
+      "save": "Save am for next time",
+      "saveHint": "Billers wey you save go fill the provider and number for you.",
+      "saveAs": "Save am as",
+      "nameIt": "Give am name",
+      "payNowInstead": "Pay now instead",
+      "footnote": "Each payment need enough money for your naira account. Cancel anytime."
+    },
+    "hub": {
+      "title": "Pay bills",
+      "saved": "Billers wey you save",
+      "savedHint": "Pay this bill with the details already filled",
+      "removeLabel": "Comot {{name}}",
+      "scheduled": "Bills wey you schedule",
+      "comingUp": "{{count}} dey come",
+      "scheduleHint": "Pay bill later, or every day, week or month",
+      "recent": "Recent bills",
+      "failed": "We no fit load your bills",
+      "loading": "Bills dey load",
+      "none": "No bill yet",
+      "noneMessage": "Airtime, data, light and TV wey you pay for go show here.",
+      "removeTitle": "Comot {{name}}?",
+      "thisBiller": "this biller",
+      "removeMessage": "You fit save am again next time wey you pay am."
+    },
+    "schedules": {
+      "next": "{{customer}} · {{every}} · next {{day}}",
+      "ended": "{{customer}} · {{every}} · {{status}}",
+      "cancelHint": "Cancel this schedule",
+      "made": "E don schedule. We go pay {{biller}} on {{day}} around 9 am.",
+      "none": "No bill wey you schedule",
+      "noneMessage": "Pay bill for later day, or every day, week or month. Tap “Pay now” before you pay to choose.",
+      "payBill": "Pay bill",
+      "endedTitle": "E don end",
+      "note": "We dey pay bills around 9 am Lagos time from your naira account. If money no reach that day, we go skip am and tell you.",
+      "failed": "We no fit load the bills wey you schedule",
+      "loading": "Bills wey you schedule dey load",
+      "cancelTitle": "Cancel this schedule?",
+      "cancelMessage": "We no go pay {{biller}} for {{customer}} again. Payment wey don go before go stay as e be.",
+      "cancel": "Cancel schedule",
+      "keep": "Leave am",
+      "cancelFailed": "We no fit cancel am. Try am again."
+    },
+    "receipt": {
+      "headline": {
+        "completed": "Payment don go",
+        "processing": "Payment dey process",
+        "failed": "Payment no work",
+        "reversed": "Payment don reverse"
+      },
+      "tokenMessage": "{{biller}} token for meter {{meter}}: {{token}}",
+      "tokenUnits": " ({{units}})",
+      "tokenRef": ". Ref {{reference}}",
+      "failed": "We no fit load this payment",
+      "token": "Your token",
+      "tokenLabel": "Token {{token}}",
+      "tokenCopied": "Token don copy",
+      "keypad": "Type the 20 digits for the meter keypad to load the units."
+    },
+    "topUp": {
+      "buyData": "Buy data",
+      "buyAirtime": "Buy airtime",
+      "phone": "Phone number",
+      "badPhone": "Put 11-digit Nigerian number",
+      "unknownNetwork": "We no fit know the network. Pick am below.",
+      "network": "Network",
+      "detected": "We see am from the number. You don port am? Pick the correct one.",
+      "bundles": "Bundles",
+      "pickFirst": "Put number or pick network to see bundles.",
+      "bundlesFailed": "We no fit load bundles",
+      "loadingBundles": "Bundles dey load",
+      "lasts": "E go last {{count}} days",
+      "minimum": "The smallest wey you fit buy na ₦50",
+      "data": "data",
+      "airtime": "airtime",
+      "confirm": {
+        "buy": "Buy {{amount}} {{network}} {{what}} for {{phone}}",
+        "schedule": "Schedule {{amount}} {{network}} {{what}} for {{phone}}"
+      }
+    },
+    "utility": {
+      "provider": "Provider",
+      "providersFailed": "We no fit load the providers",
+      "loadingProviders": "Providers dey load",
+      "pickProvider": "Pick provider first",
+      "meterHelp": "{{count}} digits, for the meter or your last token receipt",
+      "cardHelp": "{{count}} digits, under the decoder",
+      "meterNotFound": "We no fit find that meter for {{biller}}",
+      "cardNotFound": "We no fit find that smartcard for {{biller}}",
+      "checkFailed": "We no fit check that number. Try am again.",
+      "checkingMeter": "We dey check the meter",
+      "checkingCard": "We dey check the smartcard",
+      "currentPlan": "Plan wey you dey now: {{plan}}",
+      "atLeast": "At least {{amount}}",
+      "minimum": "The smallest wey you fit buy na {{amount}}",
+      "plans": "Plans",
+      "plansFailed": "We no fit load the plans",
+      "loadingPlans": "Plans dey load",
+      "renew": "Your plan now · Renew",
+      "days": "{{count}} days",
+      "meter": "meter",
+      "decoder": "decoder",
+      "simulated": "Billers na pretend: payment go complete sharp and no real provider go collect money.",
+      "confirm": {
+        "pay": "Pay {{amount}} give {{biller}}, {{customer}}",
+        "payPlan": "Pay {{amount}} give {{biller}} for {{plan}}, {{customer}}",
+        "schedule": "Schedule {{amount}} give {{biller}}, {{customer}}",
+        "schedulePlan": "Schedule {{amount}} give {{biller}} for {{plan}}, {{customer}}"
+      }
+    }
+  },
+  "transfers": {
+    "abroad": {
+      "purposes": {
+        "family_support": "Family support",
+        "education": "School fees",
+        "medical": "Hospital",
+        "business": "Business",
+        "other": "Another thing"
+      },
+      "delivery": "1 to 2 working days",
+      "fullName": "Use their full name, as e dey for their bank",
+      "badBic": "SWIFT/BIC code get 8 or 11 letters and numbers",
+      "accountNumber": "Account number",
+      "accountOrIban": "Account number or IBAN",
+      "iban": "IBAN",
+      "usHelp": "US account number get 4 to 17 digits",
+      "gbHelp": "Use the 8-digit account number or GB IBAN",
+      "ibanHelp": "IBAN from {{country}} dey start with {{code}}"
+    },
+    "amount": {
+      "aboveLimit": "E pass your own limit of {{amount}} for one transfer.",
+      "tooMuch": "E pass the {{amount}} wey you get.",
+      "remaining": "You fit send {{amount}} more today for Tier {{tier}}.",
+      "reached": "You don reach today limit for Tier {{tier}}.",
+      "needTotal": "You need {{total}} plus the {{fee}} charge.",
+      "newDevice": "You just sign in for this phone, so we go ask you to confirm say na you.",
+      "coolingOff": "First big payment to new beneficiary: e go comot in {{minutes}} minutes.",
+      "coolingOffSkip": "First big payment to new beneficiary: e go comot in {{minutes}} minutes, or sharp sharp if you confirm say na you."
+    },
+    "beneficiaries": {
+      "coolingOff": "New: big payment need extra check till {{until}}.",
+      "subtitleNem": "@{{nemtag}} · Nem",
+      "new": "New · {{subtitle}}",
+      "spoken": {
+        "pay": "Pay {{title}}, {{subtitle}}",
+        "manage": "Manage {{title}}, {{subtitle}}"
+      },
+      "favourite": "favourite",
+      "spokenNew": "new, big payment need extra check till {{until}}",
+      "deleteFailed": "We no fit delete {{name}}. Try am again.",
+      "payName": "Pay {{name}}",
+      "favouriteLabel": "Favourite",
+      "favouriteHint": "Favourites go first when you dey send money.",
+      "nickname": "Nickname",
+      "nicknamePlaceholder": "Mummy, landlord, Chidi (work)…",
+      "nicknameHelp": "Na only you go see am. The bank still dey check the account name.",
+      "saveNickname": "Save nickname",
+      "changeNickname": "Change nickname",
+      "addNickname": "Add nickname",
+      "deleteName": "Delete {{name}}",
+      "historyStays": "Old payments go stay for your history.",
+      "deleteTitle": "Delete {{name}}?",
+      "deleteMessage": "If you save them again later, new safety waiting time go start for big payments."
+    },
+    "errors": {
+      "nothingLeft": "We no fit send am. Nothing comot from your account. Try am again.",
+      "changed": "The charge or limit don change. Check the new total and confirm again.",
+      "offline": "Network no dey. Connect again and try am; e no go send two times.",
+      "noReply": "We no hear back. Try am again: if e don go before, e no go send two times.",
+      "failed": "We no fit send am. Try am again."
+    },
+    "hold": {
+      "risk": {
+        "high": "Risk high",
+        "medium": "Risk medium",
+        "low": "Risk low"
+      },
+      "reasons": {
+        "large_amount": "Na big payment fraudsters dey find, so the first one wey big reach this go get second look.",
+        "unusual_amount": "Person wey hijack account dey usually send pass wetin the owner dey send. Quick check go clear am.",
+        "new_device": "Most account hijack dey start from new phone. For the first day, big payment need one more check.",
+        "new_beneficiary": "Scammers dey push people to pay new person quick quick. Small waiting time go give you chance to make sure.",
+        "velocity": "Plenty payments for short time fit mean say another person dey empty the account.",
+        "reported_account": "Other customers tell us say dem use this account do scam.",
+        "unknown": "Our checks see something wey no normal for this payment."
+      },
+      "steps": {
+        "held": [
+          "We keep the money for side for your account. E never comot.",
+          "Person for Nem go look the payment, usually inside few minutes.",
+          "We go tell you sharp: e go go, or the money go come back to your balance."
+        ],
+        "step_up": [
+          "Nothing don comot from your account.",
+          "Put the code wey we email you to show say na really you.",
+          "The payment go go immediately after. You fit cancel am instead."
+        ],
+        "delayed": [
+          "We keep the money for side for your account. E never comot.",
+          "The payment go go by itself when the waiting time end.",
+          "You don change your mind, or person dey rush you? Cancel am before then."
+        ]
+      },
+      "titles": {
+        "held": "Why we hold this one?",
+        "step_up": "Why I need to confirm?",
+        "delayed": "Why this one dey wait?"
+      }
+    },
+    "links": {
+      "expiry": {
+        "none": "E no get end date"
+      },
+      "status": {
+        "active": "E dey collect payment",
+        "inactive": "E don pause",
+        "expired": "E don expire"
+      },
+      "anyAmount": "Any amount",
+      "noPayments": "{{amount}} · no payment yet",
+      "payments_one": "{{amount}} · {{count}} payment · {{total}} enter",
+      "payments_other": "{{amount}} · {{count}} payments · {{total}} enter",
+      "shareMessage": "Pay me for {{title}}{{amount}} with Nem: {{url}}",
+      "paused": "This link don pause. Ask the person wey send am.",
+      "expired": "This link don expire. Ask for new one.",
+      "expiredMakeNew": "This link don expire. Make new one.",
+      "copied": "Link don copy",
+      "shareFailed": "Sharing no dey work here. Copy the link instead.",
+      "nowActive": "Link dey collect payment",
+      "nowPaused": "Link don pause",
+      "qrLabel": "QR code for the {{title}} pay link",
+      "pause": "Pause link",
+      "resume": "Start to collect payment again"
+    },
+    "qr": {
+      "invalid": {
+        "expired": {
+          "title": "This code don expire",
+          "message": "Code wey get amount dey last 15 minutes. Ask them to show new one."
+        },
+        "bad_signature": {
+          "title": "This code no be original",
+          "message": "No be Nem make am, or person don change am. No pay am. Ask for their @nemtag instead."
+        },
+        "unknown_account": {
+          "title": "We no know this account",
+          "message": "The account for this code don close or e no exist."
+        },
+        "not_nem_qr": {
+          "title": "That one no be Nem code",
+          "message": "Scan Nem QR code or Nem pay link."
+        }
+      },
+      "fileTitle": "My Nem QR",
+      "makeFailed": "We no fit make your code",
+      "askingFor": "Your QR code wey dey ask for {{amount}}",
+      "toReceive": "Your QR code to collect money",
+      "refreshes": "Code dey change every 15 minutes",
+      "newCodeIn": "New code in {{time}}",
+      "removeAmount": "Comot amount",
+      "askAmount": "Ask for amount",
+      "showCodeFor": "Show code for {{amount}}",
+      "showCode": "Show code"
+    },
+    "cop": {
+      "typedFallback": "the name wey you type",
+      "match": {
+        "title": "Name match",
+        "message": "The bank confirm say this account na {{name}} own."
+      },
+      "close": {
+        "title": "Name near match",
+        "message": "The account dey for name {{name}}, e no too match {{typed}}. Check say na the person wey you wan pay."
+      },
+      "none": {
+        "title": "Name no match",
+        "message": "This account na {{name}} own, no be {{typed}}. Scammers dey give one name and account for another name. Money wey you send to wrong person hard to collect back."
+      }
+    },
+    "requests": {
+      "status": {
+        "pending": "E dey wait",
+        "paid": "Dem don pay",
+        "declined": "Dem reject am",
+        "cancelled": "E don cancel",
+        "expired": "E don expire"
+      },
+      "expires": {
+        "today": "today",
+        "tomorrow": "tomorrow",
+        "inDays": "in {{count}} days"
+      },
+      "noNote": "No note",
+      "subtitleClosed": "{{note}} · {{status}}",
+      "subtitleOpen": "{{note}} · e go expire {{when}}",
+      "notOpen": "This request no dey open again."
+    },
+    "schedule": {
+      "frequencies": {
+        "once": "One time",
+        "daily": "Every day",
+        "weekly": "Every week",
+        "monthly": "Every month"
+      },
+      "presets": {
+        "tomorrow": "Tomorrow",
+        "week": "In one week",
+        "month": "1st of next month"
+      },
+      "fromTomorrow": "Pick day from tomorrow go",
+      "withinYear": "Pick day inside one year",
+      "endAfterStart": "The last day must be on or after the first payment",
+      "onceOn": "One time on {{day}}",
+      "repeat": "{{every}} from {{day}}",
+      "repeatUntil": "{{every}} from {{day}} till {{end}}",
+      "status": {
+        "active": "E dey active",
+        "paused": "E don pause",
+        "cancelled": "E don cancel",
+        "completed": "E don finish"
+      },
+      "subtitlePaused": "{{every}} · e don pause",
+      "subtitleNext": "{{every}} · next {{day}}",
+      "subtitleCancelled_one": "{{every}} · e cancel after {{count}} payment",
+      "subtitleCancelled_other": "{{every}} · e cancel after {{count}} payments",
+      "subtitleFinished_one": "{{every}} · e finish after {{count}} payment",
+      "subtitleFinished_other": "{{every}} · e finish after {{count}} payments"
+    },
+    "splits": {
+      "remindedNow": "We just remind them now",
+      "remindedMin": "We remind them {{count}} min ago",
+      "remindedHours": "We remind them {{count}} h ago"
+    },
+    "banks": {
+      "title": "Choose bank",
+      "search": "Search banks",
+      "searchPlaceholder": "Name or bank code",
+      "none": "No bank match that one",
+      "noneMessage": "Try im short name.",
+      "failed": "We no fit load the bank list",
+      "loading": "Banks dey load"
+    },
+    "confirm": {
+      "biometrics": "Approve with {{label}}",
+      "title": "Show say na you",
+      "pin": "Put your PIN",
+      "demo": "{{subtitle}}. Demo PIN na {{pin}}"
+    },
+    "payee": {
+      "nemUser": "@{{nemtag}} · Nem user",
+      "accountName": "Account name {{name}}",
+      "saved": "You don save am",
+      "instant": "E go land sharp. No charge between Nem users.",
+      "acknowledge": "I don check, and I still wan pay {{name}}"
+    },
+    "scanner": {
+      "noCamera": "No camera here",
+      "noCameraMessage": "Paste the code or pay link below instead.",
+      "scanToPay": "Scan to pay",
+      "needCamera": "Nem need your camera to read QR code. We no dey record anything.",
+      "allowCamera": "Allow camera",
+      "cameraOff": "Camera don off for Nem",
+      "cameraOffMessage": "On am for Settings to scan, or paste the code below.",
+      "openSettings": "Open Settings",
+      "cameraLabel": "Camera. Point am for Nem QR code.",
+      "point": "Point your camera for Nem QR code.",
+      "paste": "Or paste code",
+      "pastePlaceholder": "Nem QR code or pay link",
+      "check": "Check code"
+    },
+    "quote": {
+      "total": "Total wey go comot your account",
+      "totalLabel": "Total",
+      "leftToday": "Wetin remain to send today (Tier {{tier}})",
+      "leftTodayLabel": "Wetin remain to send today",
+      "updating": "E dey update for the new amount…"
+    },
+    "requestSheet": {
+      "askedYou": "{{name}} ask you",
+      "youAsked": "You ask",
+      "for": "For",
+      "asked": "Asked",
+      "expires": "E go expire",
+      "partOf": "Part of",
+      "splitBill": "Bill wey we share",
+      "pay": "Pay {{amount}}",
+      "decline": "Reject",
+      "safety": "Pay only people wey you know. Nem no go ever ask you to pay request to unlock or confirm your account.",
+      "cancel": "Cancel request",
+      "theySee": "{{name}} go see am for their requests and fit pay or reject am.",
+      "declineTitle": "Reject {{name}} request?",
+      "cancelTitle": "Cancel this request?",
+      "declineMessage": "{{name}} go see say you reject am. Nothing go pay.",
+      "cancelMessage": "{{name}} no go fit pay am again."
+    },
+    "scam": {
+      "high": "This one fit be scam",
+      "medium": "Take small time",
+      "check": "Check am with the scam checker"
+    },
+    "scheduleSheet": {
+      "sendNowInstead": "Send now instead",
+      "feeEach": "The charge dey for each payment.",
+      "badDates": "Use correct dates like DD/MM/YYYY",
+      "title": "When e go go?",
+      "howOften": "How often",
+      "on": "On",
+      "first": "First payment",
+      "pickDay": "Pick day",
+      "day": "Day",
+      "ends": "E go end",
+      "whenCancel": "When I cancel am",
+      "onDay": "For one day",
+      "lastDay": "Last day",
+      "summary": "{{schedule}}, around 9 am. {{footnote}}",
+      "use": "Use this schedule"
+    },
+    "scheduled": {
+      "lastRun": {
+        "completed": "e don go",
+        "processing": "e dey road",
+        "failed": "e no go",
+        "reversed": "e come back",
+        "waiting": "e dey wait"
+      },
+      "lastRunValue": "{{day}}, {{status}}",
+      "noneYet": "Nothing yet",
+      "changeFailed": "We no fit change am. Try am again.",
+      "cancelFailed": "We no fit cancel am. Try am again.",
+      "title": "Payment wey you schedule",
+      "nemUser": "@{{nemtag}} · Nem user",
+      "howOften": "How often",
+      "next": "Next payment",
+      "paused": "E don pause",
+      "nextValue": "{{day}}, around 9 am",
+      "none": "Nothing",
+      "lastDay": "Last day",
+      "lastPayment": "Last payment",
+      "pause": "Pause",
+      "resume": "Continue",
+      "cancel": "Cancel schedule",
+      "pausedNote": "Payment wey pause go skip, e no go gather. When you continue, e go start again from the next day wey e due.",
+      "activeNote": "We dey check and price each payment to {{name}} when e dey go. If money no reach, we go skip that one and tell you.",
+      "cancelTitle": "Cancel this schedule?",
+      "cancelMessage": "No more payment go go {{name}}. Payment wey don go go stay for your history."
+    },
+    "split": {
+      "paidOf": "{{paid}} of {{total}} don pay",
+      "amountOf": "{{paid}} of {{total}}",
+      "countOf": "{{paid}} of {{of}} don pay"
+    },
+    "stepUp": {
+      "title": "One more check",
+      "codeSent": "Put the 6-digit code wey we send to",
+      "checking": "We dey check and send…",
+      "newCodeIn": "Send new code in {{time}}",
+      "newCode": "Send new code",
+      "sending": "We dey send you code…"
+    },
+    "amountScreen": {
+      "title": "Amount",
+      "chooseFirst": "Choose who you wan pay first",
+      "choose": "Choose person",
+      "review": "Check am",
+      "nem": "@{{nemtag}} · Nem",
+      "priceFailed": "We no fit price this transfer",
+      "whatFor": "Wetin e be for?",
+      "whatForPlaceholder": "House rent, school fees, owambe…",
+      "seesThis": "{{name}} go see this for their statement."
+    },
+    "beneficiariesScreen": {
+      "title": "Beneficiaries",
+      "search": "Search beneficiaries",
+      "searchPlaceholder": "Name, nickname, bank or account",
+      "noMatch": "Nobody match that one",
+      "none": "No beneficiary yet",
+      "noMatchMessage": "Try part of name, bank or the last digits of account.",
+      "noneMessage": "On \"Save am for next time\" when you dey check payment.",
+      "safetyNote": "New person go get small safety waiting time: big first payment to them need extra check.",
+      "failed": "We no fit load your beneficiaries",
+      "loading": "Beneficiaries dey load"
+    },
+    "holdScreen": {
+      "explanation": "Rules (amount, device, who you dey pay, how often) and fraud model dey score every payment. The risky ones go wait for check, and you go always see why.",
+      "checkedBy": "{{explanation}} Na {{model}} check am.",
+      "fallback": "Rules only. You no fit off fraud protection, because e dey guard your money.",
+      "title": "Payment checks",
+      "loading": "Payment checks dey load",
+      "nothing": "Nothing dey hold this payment",
+      "passed": "E pass our checks. See where e reach now.",
+      "see": "See the payment",
+      "firstLarge": "Na your first big payment to new person be this.",
+      "notMe": "No be me make this payment",
+      "notMeHint": "Freeze everything now with the panic button",
+      "talk": "Talk to us",
+      "talkHint": "Chat with Nem support about this payment",
+      "sendNow": "Send now",
+      "confirmMe": "Confirm say na me",
+      "cancel": "Cancel payment",
+      "to": "to {{name}}",
+      "score": "{{band}}, {{score}} over 100",
+      "scoreShort": "{{score}} / 100",
+      "feature": "Fraud protection",
+      "noticed": "Wetin we notice",
+      "next": "Wetin go happen next",
+      "pressure": "Person call or message you make you do this payment? Stop and cancel am. Nem no go ever ask you to move money to keep am safe.",
+      "oneMore": "This payment need one more check before e go."
+    },
+    "newLink": {
+      "title": "New payment link",
+      "create": "Make link",
+      "whatFor": "Wetin e be for?",
+      "whatForPlaceholder": "Ankara cloth, 6 yards",
+      "whatForHelp": "People wey dey pay go see this for the pay page.",
+      "amount": "Amount",
+      "fixed": "Set amount",
+      "open": "Them go choose",
+      "openHint": "Good for contribution and tips: each person go type wetin dem wan give.",
+      "notePlaceholder": "Delivery for Lekki on Saturday",
+      "takesFor": "E go collect payment for"
+    },
+    "payLink": {
+      "title": "Pay link",
+      "logIn": "Log in to pay",
+      "tryDemo": "You new for Nem? Try the demo",
+      "asking": "{{name}} dey ask you to pay for",
+      "notTaking": "E no dey collect payment",
+      "yours": "Na your link be this",
+      "yoursMessage": "Share am give whoever wan pay you. Payment go land for your naira account.",
+      "yourLinks": "Your payment links",
+      "howMuch": "How much for {{name}}",
+      "tooMuch": "E pass the balance wey you get",
+      "needFixed": "You need {{amount}} to pay this link.",
+      "notePlaceholder": "For {{name}}",
+      "from": "From your naira account · {{amount}} dey · No charge, Nem to Nem",
+      "notFound": "We no fit find this link",
+      "notFoundDemo": "For this demo, every phone and browser dey run im own pretend bank, so link go open only for the device wey make am. Shared links go work everywhere once the real backend start.",
+      "notFoundReal": "Check the link with the person wey send am. Dem fit type am wrong.",
+      "openFailed": "We no fit open this link",
+      "opening": "Pay link dey open"
+    },
+    "pay": {
+      "actions": {
+        "send": "Send",
+        "scan": "Scan QR",
+        "request": "Ask for money",
+        "split": "Share bill",
+        "links": "Links",
+        "scheduled": "Scheduled"
+      },
+      "bills": "Pay bills",
+      "billsHint": "Airtime, data, light and cable TV",
+      "recent": "Recent",
+      "waiting": "E dey wait for you",
+      "comingUp": "E dey come"
+    },
+    "linksScreen": {
+      "showHint": "E go show the link to copy or share",
+      "notPayLink": "That one no be Nem pay link.",
+      "title": "Payment links",
+      "create": "Make link",
+      "none": "No link yet",
+      "noneMessage": "Make link for party contribution, sale or house rent. Anybody wey get am fit pay you.",
+      "failed": "We no fit load your links",
+      "loading": "Payment links dey load",
+      "gotOne": "Person send you link?",
+      "payLink": "Pay link",
+      "pastePlaceholder": "Paste Nem pay link",
+      "open": "Open link",
+      "demo": "Demo: try your friend link.",
+      "emeka": "Emeka birthday"
+    },
+    "qrScreen": {
+      "scanTitle": "Scan to pay",
+      "mineTitle": "My QR",
+      "checking": "We dey check the code with Nem",
+      "own": "Na your own code be this",
+      "ownMessage": "Show am to whoever wan pay you.",
+      "scanAgain": "Scan again",
+      "askingFor": "Nem don check am. {{name}} dey ask for {{amount}}.",
+      "youChoose": "Nem don check am. Na you go choose how much to send {{name}}.",
+      "scan": "Scan"
+    },
+    "recipient": {
+      "noNemUser": "No Nem user match that one. Check the @nemtag or number.",
+      "notAtBank": "We no fit find that account for {{bank}}.",
+      "thatBank": "that bank",
+      "tickHint": "Tick the box to confirm say you don check the name",
+      "nemTitle": "Pay Nem user",
+      "bankTitle": "Pay another bank",
+      "nemLabel": "@nemtag, phone or account number",
+      "asYouType": "We go find them as you dey type.",
+      "bank": "Bank",
+      "bankLabel": "Bank, {{bank}}",
+      "notSelected": "you never pick",
+      "bankHint": "E go open the list of banks",
+      "chooseBank": "Choose bank",
+      "accountNumber": "Account number",
+      "tenDigits": "10 digits",
+      "name": "Name wey dey the account",
+      "namePlaceholder": "Who you think say you dey pay",
+      "nameHelp": "We go check am with the bank records before you pay.",
+      "checkFailed": "We no fit check that one now",
+      "bankFee": "Bank transfer dey cost ₦10 to ₦50, we go show am before you confirm."
+    },
+    "requestMoney": {
+      "lookupFailed": "We no fit find them. Try am again.",
+      "title": "Ask for money",
+      "requestFrom": "Ask {{name}} for {{amount}}",
+      "from": "From",
+      "fromPlaceholder": "@nemtag, phone or account number",
+      "nemOnly": "Request dey go only to Nem users.",
+      "nemUser": "@{{nemtag}} · Nem user",
+      "whatFor": "Wetin e be for?",
+      "whatForPlaceholder": "Suya for Friday",
+      "theyHave": "Them get"
+    },
+    "requestsScreen": {
+      "payOrDecline": "Pay or reject",
+      "show": "E go show the request",
+      "title": "Requests",
+      "toPay": "To pay",
+      "toPayCount": "To pay ({{count}})",
+      "sent": "Sent",
+      "justSent": "Request don go. {{name}} fit pay or reject am from their requests.",
+      "nothing": "Nothing to pay",
+      "nothingMessage": "When Nem user ask you for money, e go show here.",
+      "none": "No request yet",
+      "noneMessage": "Ask your friend to pay you back for suya, fuel or house rent.",
+      "failed": "We no fit load your requests",
+      "loading": "Requests dey load"
+    },
+    "review": {
+      "title": "Check am",
+      "nothing": "Nothing to check yet",
+      "nothingMessage": "Choose who you wan pay and how much first.",
+      "startAgain": "Start again",
+      "sendAmount": "Send {{amount}}",
+      "scheduleAmount": "Schedule {{amount}}",
+      "nemUser": "@{{nemtag}} · Nem user",
+      "transferTo": "Transfer to {{name}}",
+      "nairaWallet": "Naira wallet",
+      "loadingFee": "The charge dey load",
+      "sendNow": "Send now",
+      "changeHint": "Tap to change am or send now instead",
+      "laterHint": "Or schedule am, or repeat am",
+      "saveName": "Save {{name}} for next time",
+      "saveHint": "People wey you save dey quick to pay and easy to check.",
+      "signed": "This phone don sign am and e go go one time, even if you tap two times.",
+      "confirmSchedule": "Schedule {{amount}} to {{name}}",
+      "confirmSend": "Send {{amount}} to {{name}}"
+    },
+    "scheduledScreen": {
+      "hint": "Pause, continue or cancel",
+      "title": "Payments wey you schedule",
+      "made": "E don schedule. The first payment to {{name}} go go on {{day}} around 9 am.",
+      "none": "Nothing dey scheduled",
+      "noneMessage": "Set payment to go for later day, or every day, week or month. Tap “Send now” for the review screen to choose.",
+      "schedule": "Schedule payment",
+      "ended": "E don end",
+      "note": "Payments dey go around 9 am Lagos time. We dey check and price each one when e dey go.",
+      "failed": "We no fit load the payments wey you schedule",
+      "loading": "Payments wey you schedule dey load"
+    },
+    "abroadScreen": {
+      "title": "Send go abroad",
+      "sendAmount": "Send {{amount}}",
+      "partnerNote": "To send go abroad need licensed remittance partner. Everything here dey work as e go work then; the last step go show wetin we need.",
+      "partnerNeeded": "We need partner",
+      "sendingTo": "You dey send go",
+      "youSend": "You go send",
+      "rate": "Rate",
+      "rateValue": "{{symbol}}1 = {{amount}}",
+      "fee": "Partner charge (estimate)",
+      "feeHint": "1%, at least ₦2,000",
+      "total": "Total wey go comot your account",
+      "theyGet": "Them go get about",
+      "arrives": "E go land in",
+      "indicative": "Estimate rate. The partner go fix the exact rate when you send.",
+      "receiving": "Who go collect am",
+      "fullName": "Full name",
+      "bic": "SWIFT / BIC",
+      "bicHelp": "US banks need am for international transfer.",
+      "whatFor": "Wetin e be for?",
+      "reasonRule": "Nigerian rules dey ask for reason for every transfer wey dey go abroad.",
+      "tryAgain": "Try am again."
+    },
+    "hub": {
+      "title": "Send money",
+      "nem": "To Nem user",
+      "nemHint": "By @nemtag, phone or account number. E sharp and e free.",
+      "bank": "To another bank",
+      "bankHint": "Any Nigerian bank. ₦10 to ₦50 charge.",
+      "abroad": "Send go abroad",
+      "abroadHint": "International transfer",
+      "requests": "Requests",
+      "waiting": "{{count}} dey wait make you pay",
+      "requestsHint": "Ask Nem user for money, or pay wetin you owe.",
+      "toPay": "{{count}} to pay",
+      "split": "Share bill",
+      "splitHint": "Share cost with Nem users and see who don pay.",
+      "links": "Payment links",
+      "linksHint": "Link or QR wey anybody fit use pay you.",
+      "scheduled": "Payments wey you schedule",
+      "scheduledHint": "Pay later, or every day, week or month.",
+      "beneficiaries": "Beneficiaries",
+      "manage": "Manage",
+      "searchPlaceholder": "Name, @nemtag, bank or account",
+      "noneMessage": "People wey you save after you pay them go show here, ready for next time."
+    },
+    "splitBill": {
+      "reminded_one": "We don remind {{count}} person.",
+      "reminded_other": "We don remind {{count}} people.",
+      "allReminded": "We don remind everybody wey never pay for the last one day.",
+      "title": "Bill wey we share",
+      "notFound": "We no fit find the bill",
+      "notFoundMessage": "Dem fit make am for another device.",
+      "seeAll": "See the bills wey you share",
+      "failed": "We no fit load this bill",
+      "loading": "The bill dey load",
+      "remind": "Remind the people wey never pay",
+      "equal": "{{amount}} · everybody pay the same",
+      "custom": "{{amount}} · different amounts",
+      "settled": "Everybody don pay",
+      "yourShare": "Your own share",
+      "paid": "don pay",
+      "spoken": "{{name}}, {{amount}}, {{status}}",
+      "note": "Each person don get money request for their share. E go show as paid the moment dem pay."
+    },
+    "splitBills": {
+      "title": "Bills wey we share",
+      "split": "Share bill",
+      "none": "No shared bill yet",
+      "noneMessage": "You pay for dinner, fuel or trip? Share am and everybody go get request for their share.",
+      "spoken": "{{title}}, {{paid}} of {{of}} don pay",
+      "failed": "We no fit load the bills wey you share",
+      "loading": "Shared bills dey load"
+    },
+    "newSplit": {
+      "noUser": "No Nem user match that one.",
+      "already": "{{name}} dey this bill already.",
+      "title": "Share bill",
+      "send_one": "Send {{count}} request",
+      "send_other": "Send {{count}} requests",
+      "splitIt": "Share am",
+      "whatFor": "Wetin e be for?",
+      "whatForPlaceholder": "Dinner for Yellow Chilli",
+      "total": "Total",
+      "badTotal": "Put amount like 12500 or 12,500.50",
+      "split": "Share",
+      "equally": "The same for everybody",
+      "custom": "Different amounts",
+      "includeMe": "Add my own share",
+      "includeHint": "Na you pay the bill, so your share don count as paid.",
+      "excludeHint": "Na only the people wey you add go pay; their shares go make the total.",
+      "whoIn": "Who dey inside ({{count}}/{{max}})",
+      "addUser": "Add Nem user",
+      "addName": "Add {{name}}",
+      "share": "{{name}} share",
+      "note": "Everybody go get request wey dem fit pay from their Nem app inside 7 days."
+    },
+    "result": {
+      "sent": {
+        "title": "E don go",
+        "message": "{{name}} don get am now."
+      },
+      "processing": {
+        "title": "E dey road",
+        "message": "{{bank}} dey usually credit {{name}} inside few minutes."
+      },
+      "step_up": {
+        "title": "Confirm say na you",
+        "message": "This payment go wait till you pass one more check. Nothing don go yet."
+      },
+      "delayed": {
+        "title": "We schedule am for safety",
+        "message": "First big payment to new person, so e go go by {{time}}. Send am now with one more check, or cancel am before then.",
+        "endOfWait": "the end of the waiting time"
+      },
+      "held": {
+        "title": "We hold am for quick check",
+        "message": "Person for Nem go check am first. We keep the money for side, we no send am, and we go tell you as soon as dem decide."
+      },
+      "reversed": {
+        "title": "Money don come back",
+        "message": "{{bank}} no accept am, so we send {{name}} payment back to your balance. We no charge you.",
+        "messageAt": "{{bank}} no accept am, so we send {{name}} payment back to your balance by {{time}}. We no charge you."
+      },
+      "stopped": {
+        "title": "E no go",
+        "cancelled": "You cancel am. The money don come back to your available balance.",
+        "failed": "This payment no go through. Any money wey we hold for am don come back to your balance."
+      },
+      "credited": "E don enter {{name}} account",
+      "receivedBy": "{{bank}} don collect am",
+      "loading": "The payment dey load",
+      "to": "to {{name}} · {{bank}}",
+      "whyChecking": "Why we dey check",
+      "whyAsking": "Why we dey ask",
+      "reference": "Reference {{reference}}"
+    }
+  },
+  "cards": {
+    "title": "Cards",
+    "types": {
+      "standard": {
+        "label": "Standard",
+        "description": "For everyday spending online and for apps. Freeze am or put limit anytime."
+      },
+      "single_use": {
+        "label": "One-time",
+        "description": "E go close by itself after one payment. Use am for free trial or site wey you no trust."
+      },
+      "merchant_locked": {
+        "label": "One-merchant",
+        "description": "E dey work for only one merchant. If e leak there, nobody fit spend am anywhere else."
+      }
+    },
+    "typeCard": "{{type}} card",
+    "facts": {
+      "summary": "{{type}} · {{currency}} · e end with {{last4}}",
+      "lockedTo": "E dey work only for {{merchant}}",
+      "limit": "Limit {{limit}}"
+    },
+    "endsIn": "{{currency}} · e end with {{last4}}",
+    "nameEnds": "{{name}} · e end with {{last4}}",
+    "closedReason": {
+      "used": "Dem don use am once",
+      "terminated": "E don close"
+    },
+    "limit": {
+      "periods": {
+        "per_transaction": "Each payment",
+        "daily": "One day",
+        "monthly": "One month"
+      },
+      "summary": {
+        "per_transaction": "{{amount}} each payment",
+        "daily": "{{amount}} a day",
+        "monthly": "{{amount}} a month"
+      },
+      "none": "No limit",
+      "title": "Spend limit",
+      "label": "Limit for {{currency}}",
+      "invalid": "Put amount wey pass zero",
+      "help": "Payment wey pass this go fail. The card still no fit spend pass wetin dey im wallet.",
+      "save": "Save limit",
+      "remove": "Comot limit"
+    },
+    "address": {
+      "line1": "Address",
+      "line1Placeholder": "12 Admiralty Way",
+      "line2": "Flat, landmark",
+      "line2Placeholder": "Flat 3, opposite the filling station",
+      "city": "City or town",
+      "cityPlaceholder": "Lekki",
+      "state": "State",
+      "statePlaceholder": "Choose state",
+      "postalCode": "Postal code",
+      "problems": {
+        "line1": "Add the house number and street",
+        "city": "Use only letters",
+        "postalCode": "Nigerian postal code get 6 digits"
+      }
+    },
+    "carousel": {
+      "dot": "Show card {{index}} of {{count}}"
+    },
+    "controls": {
+      "title": "Controls",
+      "freeze": "Freeze card",
+      "frozenByPanic": "Panic mode freeze this card. If you off panic mode, e go unfreeze.",
+      "freezeHelp": "E go reject every new payment till you unfreeze am.",
+      "online": "Online payments",
+      "onlineHelp": "Websites and apps",
+      "onlineOn": "Online payments don on",
+      "onlineOff": "Online payments don off",
+      "international": "International payments",
+      "internationalHelp": "Merchants wey dey outside Nigeria",
+      "internationalOn": "International payments don on",
+      "internationalOff": "International payments don off",
+      "frozen": "Card don freeze",
+      "unfrozen": "Card don unfreeze",
+      "unfreezeFailed": "We no fit unfreeze the card. Try am again.",
+      "limitSaved": "Spend limit don save",
+      "limitRemoved": "Spend limit don comot",
+      "lockTitle": "Merchant lock",
+      "lockOnly": "Only {{merchant}}",
+      "anyMerchant": "Any merchant",
+      "lockedTo": "E don lock to {{merchant}}",
+      "lockRemoved": "Merchant lock don comot",
+      "unfreezeSubtitle": "Unfreeze the card wey end with {{last4}}"
+    },
+    "lock": {
+      "must": "This card dey work for only one merchant. Pick which one.",
+      "optional": "Lock the card to one merchant and e go fail everywhere else."
+    },
+    "details": {
+      "number": "Card number",
+      "expiry": "Expiry",
+      "cvv": "CVV",
+      "row": "{{label}}: {{value}}",
+      "hiding": "E go hide in {{seconds}} s. Paste these only for site wey you trust.",
+      "hide": "Hide",
+      "show": "Show card details",
+      "showSubtitle": "Show details for the card wey end with {{last4}}",
+      "offline": "Network no dey. Connect again to see card details.",
+      "closed": "This card don close, so im details no dey again.",
+      "failed": "We no fit show the details. Try am again."
+    },
+    "manage": {
+      "title": "Manage card",
+      "replace": {
+        "title": "Change this card",
+        "points": [
+          "You go get new card number, expiry and CVV sharp sharp.",
+          "This card go stop to work now. Payment wey dey wait still go settle.",
+          "Your name, design, limit and merchant lock go move go the new card.",
+          "Update any subscription wey dey use this card."
+        ],
+        "confirm": "Change card",
+        "subtitle": "New number if this one fit don leak",
+        "step": "Change the card wey end with {{last4}}",
+        "done": "Your new card wey end with {{last4}} don ready"
+      },
+      "terminate": {
+        "title": "Close this card",
+        "points": [
+          "The card go close forever. You no fit undo am.",
+          "New payments go fail. Payment wey dey wait still go settle.",
+          "Im payments go stay for your history."
+        ],
+        "confirm": "Close card",
+        "subtitle": "Close am forever",
+        "step": "Close the card wey end with {{last4}}",
+        "done": "Card wey end with {{last4}} don close"
+      },
+      "keep": "Keep card",
+      "failed": "E no go through. Try am again; e no go happen two times."
+    },
+    "payments": {
+      "title": "Payments",
+      "failed": "We no fit load this card payments",
+      "loading": "Payments dey load",
+      "empty": "No payment with this card yet.",
+      "pending": "E dey wait",
+      "pendingHelp": "We hold am from your balance till the merchant settle, usually inside few days.",
+      "settled": "E don settle",
+      "authorised": "Dem approve am {{when}}",
+      "paid": "Paid"
+    },
+    "home": {
+      "newCard": "New card",
+      "failed": "We no fit load your cards",
+      "loading": "Cards dey load",
+      "emptyTitle": "No card yet",
+      "emptyMessage": "Make virtual card sharp sharp for online shopping, subscription or one payment.",
+      "create": "Make virtual card",
+      "frozen": "E don freeze",
+      "atMax": "You get {{max}} cards, na the most wey you fit hold. Close one to make another.",
+      "physical": "Order physical card",
+      "physicalHelp": "Verve card wey we go post give you, for shops and ATM",
+      "closed": "Cards wey don close"
+    },
+    "new": {
+      "title": "New virtual card",
+      "yourName": "Your name",
+      "ready": "Your card wey end with {{last4}} don ready",
+      "failed": "We no fit make the card. Try am again; you no go get two.",
+      "create": "Make card",
+      "spendsFrom": "E go spend from",
+      "wallet": "{{currency}} wallet",
+      "needUsd": "Open USD wallet for Home to make dollar card.",
+      "type": "Type",
+      "lockedTo": "E lock to",
+      "pickMerchant": "Pick the one merchant wey this card go work for.",
+      "name": "Card name",
+      "nameHelp": "Reach {{max}} characters, like \"Netflix\" or \"Travel\".",
+      "look": "How e go look",
+      "confirm": "Make {{type}} {{currency}} card"
+    },
+    "physical": {
+      "title": "Physical card",
+      "whatYouGet": [
+        "Verve debit card for your NGN account, with your name for top",
+        "Contactless and chip and PIN for shops and ATM",
+        "The same freeze, limit and channel controls as your virtual cards",
+        "E go reach you in 5 to 7 working days; activate am for the app with your PIN"
+      ],
+      "order": "Order card · ₦1,000",
+      "deliverTo": "Bring am to",
+      "cardAndDelivery": "Card and delivery",
+      "paidFrom": "Pay from",
+      "ngnAccount": "NGN account",
+      "chargedWhenPosted": "We go charge you only when we post the card."
+    }
+  },
+  "savings": {
+    "autoSave": {
+      "title": "Auto-save",
+      "help": "Move money from your naira account enter this goal on schedule. E go stop when you reach the target.",
+      "howMuch": "How much",
+      "howOften": "How often",
+      "frequencies": {
+        "daily": "Every day",
+        "weekly": "Every week",
+        "monthly": "Every month"
+      },
+      "describe": {
+        "daily": "{{amount}} every day",
+        "weekly": "{{amount}} every week",
+        "monthly": "{{amount}} every month"
+      },
+      "fromNaira": "{{rule}} from your naira account",
+      "off": "E dey off · save on schedule without to think about am",
+      "hint": "On or off auto-save, or change am",
+      "saveFailed": "We no fit save am. Try am again."
+    },
+    "progress": {
+      "hidden": "{{pct}}% of the target don save",
+      "shown": "{{saved}} of {{target}} don save"
+    },
+    "goalRow": "{{name}}, {{pct}}% don save. {{subtitle}}",
+    "subtitle": {
+      "completed": "You don reach target",
+      "closed": "E don close",
+      "saved": "{{pct}}% don save",
+      "savedBy": "{{pct}}% don save · by {{date}}"
+    },
+    "move": {
+      "addTitle": "Add money to {{name}}",
+      "withdrawTitle": "Collect from {{name}}",
+      "availableNaira": "{{amount}} dey your naira account",
+      "inGoal": "{{amount}} dey this goal",
+      "moreThanGoal": "E pass wetin dey this goal",
+      "withdrawAll": "Collect everything",
+      "add": "Add",
+      "withdraw": "Collect",
+      "addAmount": "Add {{amount}}",
+      "withdrawAmount": "Collect {{amount}}",
+      "withdrawConfirm": "Collect {{amount}} go your naira account"
+    },
+    "goal": {
+      "title": "Goal",
+      "failed": "We no fit load this goal",
+      "loading": "Goal dey load",
+      "saved": "Wetin you don save",
+      "targetHidden": "Target dey hide",
+      "ofTarget": "of {{amount}}",
+      "reachedTitle": "You don reach your target",
+      "reachedMessage": "Well done. Leave am here make e dey get interest, or collect am when you ready.",
+      "target": "Target",
+      "reachBy": "Reach am by",
+      "noDate": "No date",
+      "interest": "Interest",
+      "rateYear": "{{rate}}% every year",
+      "interestEarned": "Interest wey you don get",
+      "projected30": "Wetin e fit be in 30 days",
+      "projectedYear": "Wetin e fit be in one year",
+      "projectedNote": "Na with today balance. We dey add interest every day and pay am enter this goal.",
+      "close": "Close goal",
+      "closeTitle": "Close {{name}}?",
+      "thisGoal": "this goal",
+      "closeWithMoney": "{{amount}} go go back to your naira account and auto-save go stop.",
+      "closeEmpty": "Auto-save go stop and the goal go move go Closed.",
+      "closeFailed": "We no fit close am. Try am again."
+    },
+    "goals": {
+      "title": "Savings goals",
+      "new": "New goal",
+      "failed": "We no fit load your goals",
+      "loading": "Goals dey load",
+      "emptyTitle": "No goal yet",
+      "emptyMessage": "Name wetin you dey save for, set target and watch am grow. Goals dey get 10% every year.",
+      "closed": "E don close"
+    },
+    "grow": {
+      "title": "Grow",
+      "soon": "E dey come",
+      "comingSoon": "E dey come soon",
+      "entryLabel": "{{title}}. {{subtitle}}",
+      "goalsSubtitle": "{{count}} open · 10% every year",
+      "goalsIdle": "Save for something",
+      "roundUps": "Round-ups",
+      "roundUpsOn": "E dey on · change go enter goal",
+      "roundUpsOff": "E dey off · save the change from every spend",
+      "roundUpsIdle": "Save the change from every spend",
+      "locks": "Locked savings",
+      "locksActive": "{{count}} active · reach 18% every year",
+      "locksNone": "Reach 18% every year for 30 to 365 days",
+      "locksIdle": "Reach 18% every year",
+      "ajo": "Ajo",
+      "ajoGroups_one": "{{count}} group",
+      "ajoGroups_other": "{{count}} groups",
+      "ajoIdle": "Save one by one with people wey you trust",
+      "credit": "Credit",
+      "creditSubtitle": "See how much you fit borrow",
+      "insights": "Insights and budgets",
+      "insightsSubtitle": "Where your money dey go every month",
+      "totalSaved": "All wey you don save",
+      "interestEarned": "Interest wey you don get",
+      "roundUpsMonth": "Round-ups this month",
+      "interestNote": "Goals and locked savings dey get interest every day, and we dey pay am enter each one.",
+      "failed": "We no fit load your savings",
+      "loading": "Your savings dey load",
+      "yourGoals": "Your goals",
+      "seeAllGoals": "See all goals",
+      "emptyMessage": "Name wetin you dey save for, set target and watch am grow.",
+      "startGoal": "Start goal",
+      "waysToSave": "Ways to save",
+      "borrowPlan": "Borrow and plan",
+      "demo": "Demo money: interest na pretend, and Nem test ledger dey pay am."
+    },
+    "locks": {
+      "title": "Locked savings",
+      "status": {
+        "active": "E dey locked",
+        "matured": "E don mature",
+        "broken": "You break am early"
+      },
+      "term": {
+        "year": "1 year",
+        "days": "{{count}} days"
+      },
+      "lockedFor": "Locked for {{term}}",
+      "failed": "We no fit load this lock",
+      "loading": "Locked saving dey load",
+      "locked": "Wetin you lock",
+      "maturesOn": "E go mature on {{date}}",
+      "maturedTitle": "Your lock don mature",
+      "maturedMessage": "Your money and all the interest don go back to your naira account.",
+      "rate": "Rate",
+      "rateFixed": "{{rate}} every year, e no go change",
+      "started": "E start",
+      "matures": "E go mature",
+      "interestSoFar": "Interest so far",
+      "interestAtMaturity": "Interest when e mature",
+      "paidOut": "Wetin we pay you",
+      "breakNote": "If you break am early, you go get your full amount but only {{rate}} of the interest wey you don get so far.",
+      "break": "Break lock early",
+      "breakTitle": "Break this lock early?",
+      "breakMessage": "You go get {{total}} today: your {{principal}} plus {{kept}} interest. You go lose {{lost}} of the interest wey you don get, and the {{expected}} wey for come when e mature.",
+      "breakConfirm": "Break lock",
+      "keepLocked": "Leave am locked",
+      "breakStep": "Break lock and get {{amount}}",
+      "rowActive": "{{rate}} every year · e go mature {{date}}",
+      "rowEnded": "{{rate}} every year · {{term}}",
+      "rowTitle": "{{amount}} · {{term}}",
+      "rowLabel": "{{amount}} locked for {{term}}. {{subtitle}}. {{status}}",
+      "lockMoney": "Lock money",
+      "listFailed": "We no fit load your locked savings",
+      "listLoading": "Locked savings dey load",
+      "emptyTitle": "Nothing dey locked yet",
+      "emptyMessage": "Lock money for 30 days reach one year and get up to 18% every year. The rate no go change from the day you lock am.",
+      "ended": "E don end"
+    },
+    "newGoal": {
+      "title": "New goal",
+      "create": "Make goal",
+      "failed": "We no fit make the goal. Try am again.",
+      "name": "Wetin you dey save for?",
+      "namePlaceholder": "New laptop",
+      "emoji": "Pick emoji",
+      "target": "Target",
+      "date": "Reach am by (if you want)",
+      "datePlaceholder": "DD/MM/YYYY",
+      "dateInvalid": "Use correct date like DD/MM/YYYY",
+      "dateAfterToday": "Pick day after today",
+      "dateTooFar": "Pick day inside ten years",
+      "note": "Goals dey get 10% every year, we dey calculate am every day. Collect your money anytime."
+    },
+    "newLock": {
+      "title": "Lock money",
+      "lock": "Lock",
+      "lockAmount": "Lock {{amount}}",
+      "help": "{{amount}} dey · lock at least {{min}}",
+      "tooSmall": "Lock at least {{min}}",
+      "termLabel": "Lock am for",
+      "maturesOn": "E go mature on",
+      "youGetBack": "You go get back",
+      "ifBreak": "If you break am early",
+      "penalty": "{{explanation}} The penalty na {{rate}} of the interest wey you don get so far.",
+      "accept": "I understand the early-break penalty",
+      "quoteFailed": "We no fit get rate. Change the amount or try am again.",
+      "quoteLoading": "We dey find your rate",
+      "confirm": "Lock {{amount}} for {{term}} from your naira account"
+    },
+    "roundUps": {
+      "title": "Round-ups",
+      "sources": {
+        "card": {
+          "label": "Card payments",
+          "description": "Online and shop card spend"
+        },
+        "transfer": {
+          "label": "Transfers",
+          "description": "Money wey you send to anybody"
+        }
+      },
+      "example": "{{spend}} spend go save {{saved}}",
+      "failed": "We no fit load your round-ups",
+      "loading": "Round-ups dey load",
+      "needGoalTitle": "Start goal first",
+      "needGoalMessage": "Round-ups need goal to save enter. Make one, then come back here.",
+      "toggle": "Round up my spending",
+      "toggleHelp": "Save the change from every naira spend",
+      "saveInto": "Save enter",
+      "pickGoal": "Pick goal",
+      "roundTo": "Round up reach the next",
+      "historyFailed": "We no fit load round-ups",
+      "historyLoading": "Round-up history dey load",
+      "historyEmpty": "No round-up yet. E go show here after your next card payment or transfer.",
+      "rowLabel": "Round-up from {{from}}, {{amount}}, {{when}}",
+      "amountHidden": "amount dey hide",
+      "history": "History"
+    }
+  },
+  "ajo": {
+    "title": "Ajo",
+    "frequencies": {
+      "daily": "Every day",
+      "weekly": "Every week",
+      "monthly": "Every month"
+    },
+    "per": {
+      "daily": "{{amount}} a day",
+      "weekly": "{{amount}} a week",
+      "monthly": "{{amount}} a month"
+    },
+    "duration": {
+      "daily_one": "{{count}} day",
+      "daily_other": "{{count}} days",
+      "weekly_one": "{{count}} week",
+      "weekly_other": "{{count}} weeks",
+      "monthly_one": "{{count}} month",
+      "monthly_other": "{{count}} months"
+    },
+    "subtitle": {
+      "forming": "{{amount}} · {{joined}} of {{total}} don join",
+      "active": "{{amount}} · turn {{turn}} of {{total}}"
+    },
+    "status": {
+      "forming": "E dey form",
+      "active": "E dey run",
+      "completed": "E don finish",
+      "cancelled": "E don cancel"
+    },
+    "inviteMessage": "Join my ajo \"{{name}}\" for Nem: {{contribution}}, {{count}} people, everybody go collect the pot one time. {{url}}",
+    "payout": {
+      "upcoming": "E dey come",
+      "collecting": "We dey collect",
+      "paid": "We don pay",
+      "short_paid": "We pay short"
+    },
+    "contribution": {
+      "pending": "Not yet",
+      "paid": "E don pay",
+      "late": "E late",
+      "defaulted": "E no pay"
+    },
+    "flag": {
+      "owes": "E owe the ajo",
+      "missed": "E miss {{count}}"
+    },
+    "dashboard": {
+      "inPot": "Inside the pot",
+      "yourPayout": "Your {{amount}} payout go due {{date}}.",
+      "theirPayout": "{{name}} go collect {{amount}} on {{date}}.",
+      "complete": "Everybody don collect their turn. {{name}} don finish.",
+      "noPayout": "No payout dey due.",
+      "held": "We dey collect contribution from each member by itself the day e due, and Nem dey hold am till payout. Payout dey go only to the member wey get the turn.",
+      "scheduleFailed": "We no fit load the schedule",
+      "turnPaid": "Turn {{turn}} · {{paid}} of {{total}} don pay",
+      "paidOn": "E pay {{date}}",
+      "attempts_one": "{{count}} try so far",
+      "attempts_other": "{{count}} tries so far",
+      "dueOn": "E due {{date}}",
+      "schedule": "Schedule and history",
+      "turnWho": "Turn {{turn}} · {{who}}",
+      "paidLine": "{{amount}} don pay {{date}}",
+      "dueLine": "{{amount}} go due {{date}}",
+      "defaulted": "{{count}} no pay",
+      "missesTitle": "If person miss payment",
+      "protected": "The ledger dey protect the pot",
+      "retries": "We go try again",
+      "retriesValue": "The day e due and when grace end",
+      "grace": "Grace time",
+      "graceValue": "{{hours}} hours",
+      "defaulterRule": "Member wey never pay after grace time go show as defaulter, and everybody for the ajo go see am. Late money wey come go straight to the person wey get that turn.",
+      "owesRule": "Defaulter wey don collect im payout owe the ajo: e no go fit start or join another ajo for Nem till e pay wetin e miss."
+    },
+    "details": {
+      "eachPays": "Each person go pay",
+      "eachPayout": "Each payout",
+      "people": "People",
+      "runsFor": "E go run for",
+      "payoutOrder": "Payout order",
+      "orderJoined": "As people take join",
+      "orderRandom": "Random draw for start",
+      "firstPayment": "First payment",
+      "nextPayment": "Next payment",
+      "organiser": "Organiser",
+      "placesLeft_one": "Members · {{count}} space remain",
+      "placesLeft_other": "Members · {{count}} spaces remain",
+      "turn": "Turn {{turn}}",
+      "turnDrawn": "We go draw turn for start"
+    },
+    "group": {
+      "failed": "We no fit load this ajo",
+      "loading": "Ajo dey load",
+      "everyoneIn": "Everybody don enter",
+      "invitePeople": "Invite people",
+      "shareLink": "Share invite link",
+      "addByTag": "Or add with Nem tag",
+      "tagPlaceholder": "@emeka",
+      "add": "Add",
+      "inviteFailed": "We no fit invite them. Try am again.",
+      "start": "Start ajo",
+      "startCollects": "When e start, we go collect the first {{amount}} from each person.",
+      "startWhenFull": "You fit start once all {{count}} people don enter.",
+      "organiserStarts": "{{name}} go start am once everybody don enter. Nobody go pay till then.",
+      "cancel": "Cancel ajo",
+      "leave": "Comot from ajo",
+      "startStep": "Start {{name}} and pay your first {{amount}}",
+      "cancelTitle": "Cancel {{name}}?",
+      "leaveTitle": "Comot from {{name}}?",
+      "cancelMessage": "We go tell everybody wey join say e don cancel. Nobody don pay anything yet.",
+      "leaveMessage": "Your space go go back to the organiser. Nobody don pay anything yet.",
+      "leaveConfirm": "Comot"
+    },
+    "invite": {
+      "title": "Ajo invite",
+      "invalidTitle": "This invite link no correct",
+      "failedTitle": "We no fit open this invite",
+      "invalidMessage": "Check the link or code with the person wey send am.",
+      "loading": "Invite dey load",
+      "started": "This ajo don start, so e no dey take new people.",
+      "full": "This ajo don full.",
+      "open": "Open ajo",
+      "join": "Join ajo",
+      "invitedYou": "{{name}} invite you make una save together.",
+      "alreadyIn": "You dey this ajo already.",
+      "agree": "I go pay {{contribution}} from my naira account till everybody collect their turn",
+      "joinStep": "Join {{name}}: {{amount}} every turn"
+    },
+    "list": {
+      "start": "Start ajo",
+      "failed": "We no fit load your ajo groups",
+      "loading": "Ajo groups dey load",
+      "emptyTitle": "No ajo yet",
+      "emptyMessage": "Save one by one with people wey you trust: everybody dey pay every cycle and one person go collect the whole pot.",
+      "rowLabel": "{{name}}. {{subtitle}}. {{status}}",
+      "gotInvite": "Person invite you?",
+      "inviteField": "Invite link or code",
+      "invitePlaceholder": "like YABA04",
+      "inviteInvalid": "Paste the full link or the 6-character code",
+      "openInvite": "Open invite"
+    },
+    "new": {
+      "starts": {
+        "1": "Tomorrow",
+        "7": "In one week",
+        "14": "In 2 weeks"
+      },
+      "rotations": {
+        "fixed": {
+          "label": "As people take join",
+          "help": "You go first, then each person wey join."
+        },
+        "random_draw": {
+          "label": "Random draw",
+          "help": "Nem go draw the order when you start, so nobody go pick im own turn."
+        }
+      },
+      "failed": "We no fit make the ajo. Try am again.",
+      "create": "Make ajo",
+      "name": "Name",
+      "namePlaceholder": "Lekki Girls Ajo",
+      "howOften": "How often",
+      "people": "People, plus you",
+      "between": "Between {{min}} and {{max}}",
+      "fewer": "Reduce one person",
+      "more": "Add one person",
+      "count": "{{count}} people",
+      "summary": "Everybody go pay {{contribution}}; each turn go pay out {{pot}}.",
+      "runs": "E go run for {{duration}} from {{date}}, once all {{count}} people don enter. Payment go come from your naira account."
+    }
+  },
+  "credit": {
+    "title": "Credit",
+    "bands": {
+      "poor": "E no good",
+      "fair": "E manage",
+      "good": "E good",
+      "excellent": "E sweet well well"
+    },
+    "impact": {
+      "positive": "E dey help",
+      "negative": "E dey hold you back",
+      "neutral": "We note am"
+    },
+    "loanStatus": {
+      "active": "E dey on track",
+      "overdue": "E don pass due",
+      "repaid": "You don pay finish",
+      "defaulted": "You no pay"
+    },
+    "installment": {
+      "upcoming": "E dey come",
+      "due": "E due today",
+      "paid": "E don pay",
+      "overdue": "E don pass due",
+      "partPaid": " · {{amount}} don pay",
+      "label": "Payment {{number}}, {{date}}, {{amount}}"
+    },
+    "accept": {
+      "expired": "That offer don expire. See new one here: check am and borrow again.",
+      "borrow": "Borrow {{amount}}",
+      "step": "Borrow {{amount}} enter your naira account and pay back {{total}} for {{tenor}}"
+    },
+    "actions": {
+      "autoFailed": "We no fit change auto-repay. Try am again.",
+      "overdue": "{{amount}} don pass due",
+      "dueToday": "{{amount}} go due today",
+      "autoMissed": "We no fit collect am by itself: money no reach for your naira account. Add money or pay am now.",
+      "overdueHelp": "Pay am now make your loan go back on track. Late payment go reduce wetin you fit borrow next time.",
+      "autoOff": "Auto-repay dey off, so pay am today make you stay on track.",
+      "payNow": "Pay {{amount}} now",
+      "repayEarly": "Pay back early or pay finish"
+    },
+    "summary": {
+      "yourLoan": "Your loan, {{status}}",
+      "opens": "E go open the loan and im schedule",
+      "left": "Wetin remain to pay",
+      "repaidOf": "{{pct}}% of {{total}} don pay",
+      "next": "Next payment {{amount}} on {{date}}",
+      "nextAuto": "Next payment {{amount}} on {{date}}, we go collect am by itself",
+      "allRepaid": "All {{total}} don pay"
+    },
+    "repay": {
+      "title": "Pay back your loan",
+      "overdue": "Wetin don pass due {{amount}}",
+      "next": "Next payment {{amount}}",
+      "payOff": "Pay finish {{amount}}",
+      "clears": "{{amount}} go clear the whole loan today",
+      "saving": "To pay finish today na {{payoff}}: {{saving}} less than the {{owed}} wey remain, because you no go pay interest for the days wey you no borrow again.",
+      "left": "{{amount}} remain to pay.",
+      "payOffLoan": "Pay finish the loan",
+      "repayAmount": "Pay back {{amount}}",
+      "repay": "Pay back",
+      "payOffStep": "Pay finish your loan with {{amount}} from your naira account",
+      "repayStep": "Pay back {{amount}} from your naira account"
+    },
+    "hub": {
+      "standardRules": "Standard rules: salary wey enter Nem for the last three months, KYC Tier 3 and no loan wey you still dey pay.",
+      "failed": "We no fit check how much you fit borrow",
+      "loading": "We dey check how much you fit borrow",
+      "aiFeature": "Credit scoring",
+      "aiOff": "AI scoring dey off · normal check",
+      "canBorrow": "You fit borrow reach",
+      "cannotBorrow": "You no fit borrow yet",
+      "why": "See why, and wetin to do",
+      "bandLabel": "Credit score band: {{band}}, {{position}} of 4",
+      "bandScore": "{{band}} score",
+      "checked": "We check am {{when}}",
+      "checkAgain": "Check again",
+      "whyTitle": "Why",
+      "reason": "{{impact}}: {{message}}",
+      "verify": "Confirm who you be",
+      "repayFirst": "Once you pay finish the loan wey you get now, check again to borrow.",
+      "salary": "Make dem pay your salary enter your Nem account. After e land, check again.",
+      "seeOffer": "See your offer",
+      "rates": "Rate dey start from 24% every year. You no go borrow anything till you accept offer."
+    },
+    "loan": {
+      "title": "Your loan",
+      "failed": "We no fit load this loan",
+      "loading": "Your loan dey load",
+      "inNaira": "{{amount}} don enter your naira account",
+      "borrowed": "Wetin you borrow",
+      "apr": "APR",
+      "aprYear": "{{apr}} every year",
+      "term": "How long",
+      "paidOutOn": "We pay am on",
+      "schedule": "Payback schedule"
+    },
+    "offer": {
+      "title": "Your offer",
+      "failed": "We no fit load your offer",
+      "loading": "Your offer dey load",
+      "cannotTitle": "You no fit borrow now",
+      "cannotMessage": "Go back to Credit to see why and wetin to do next.",
+      "borrow": "Borrow",
+      "amountSlider": "Amount to borrow",
+      "repayOver": "Pay back for",
+      "priceFailed": "We no fit price this loan",
+      "pricing": "We dey price your loan",
+      "interest": "Interest",
+      "fee": "Charge (1%, one time)",
+      "total": "Total to pay back",
+      "payments_one": "{{count}} payment. You go pay {{total}} for everything for {{principal}}. No other charge.",
+      "payments_other": "{{count}} monthly payments. You go pay {{total}} for everything for {{principal}}. No other charge."
+    }
+  },
+  "insights": {
+    "title": "Insights",
+    "budgetStatus": {
+      "ok": "E dey on track",
+      "warning": "E don near",
+      "exceeded": "E don pass budget"
+    },
+    "budgetRow": {
+      "used": "{{pct}}% don use",
+      "left": "{{amount}} remain",
+      "over": "{{amount}} pass",
+      "label": "{{category}} budget, {{status}}. {{detail}}.",
+      "spentOf": "{{spent}} of {{limit}} don spend, {{remaining}}",
+      "hint": "Change or comot this budget",
+      "of": "of {{amount}}"
+    },
+    "budgetSheet": {
+      "exists": "You don get budget for this category already.",
+      "saveFailed": "We no fit save am. Try am again.",
+      "titleEdit": "{{name}} budget",
+      "titleLimit": "Set monthly limit",
+      "titlePick": "Budget for wetin?",
+      "limit": "Monthly limit",
+      "spent": "{{amount}} don spend this month",
+      "alerts": "We go tell you for 80% and again for 100%.",
+      "tooSmall": "Set at least ₦1,000",
+      "save": "Save budget",
+      "add": "Add {{name}} budget",
+      "remove": "Comot budget",
+      "removeTitle": "Comot your {{name}} budget?",
+      "removeMessage": "You no go get alert for am again. E no go touch your spending.",
+      "removeConfirm": "Comot am"
+    },
+    "budgets": {
+      "title": "Budgets",
+      "manage": "Manage",
+      "intro": "Set monthly limit for category and we go tell you for 80% and again for 100%.",
+      "set": "Set budget",
+      "failed": "We no fit load your budgets",
+      "loading": "Your budgets dey load",
+      "emptyTitle": "No budget yet",
+      "add": "Add budget",
+      "reset": "Budgets dey reset on the 1st of every month. Money wey you move enter your own savings no count."
+    },
+    "compare": {
+      "new": "Nothing for here for {{month}}",
+      "same": "{{month}}: {{amount}}",
+      "more": "{{amount}} pass {{month}}",
+      "less": "{{amount}} less than {{month}}",
+      "withMonth": "Compare with {{month}}",
+      "row": "{{category}}: {{amount}}, {{pct}}% of spending. {{change}}."
+    },
+    "forecastCard": {
+      "beforePayday": "Before payday",
+      "byDate": "By {{date}}",
+      "summary": "{{when}} you go get about {{amount}}.",
+      "runOut": " Your balance fit finish around {{date}}.",
+      "hint": "E go open the cash-flow forecast",
+      "haveAbout": "{{when}} you go get about",
+      "couldRunOut": "E fit finish around {{date}}",
+      "seeHow": "Cash-flow forecast · see how"
+    },
+    "month": {
+      "show": "Show {{month}}"
+    },
+    "story": {
+      "slide": "Slide {{index}} of {{count}}",
+      "shareCardLabel": "Share card. My {{month}} with Nem. {{lines}}.",
+      "brand": "NEM MONEY STORY",
+      "my": "My {{month}}",
+      "noAmounts": "No amount dey shared · nem-bank demo",
+      "mostWentPct": "Na {{category}} take most ({{pct}}%)",
+      "mostWent": "Na {{category}} take most",
+      "putAside": "I keep money for side",
+      "myWithNem": "My {{month}} with Nem",
+      "shareFailed": "We no fit open sharing. Try am again.",
+      "noneTitle": "No story for this month",
+      "noneMessage": "Story go ready once month wey get spending don end.",
+      "failed": "We no fit load your story",
+      "loading": "Your Money Story dey load",
+      "previous": "Previous slide",
+      "next": "Next slide",
+      "share": "Share my story",
+      "shareHint": "E go share the card for top. E no get any amount.",
+      "title": "Money Story",
+      "titleMonth": "Money Story · {{month}}",
+      "play": "Play story",
+      "pause": "Pause story",
+      "close": "Close story"
+    },
+    "subscriptionRow": {
+      "label": "{{merchant}}, {{amount}} {{per}}. {{next}}. {{paidWith}}.",
+      "controls": "Card controls",
+      "controlsHint": "Freeze, limit or lock the card wey dey pay {{merchant}}"
+    },
+    "subscriptionsCard": {
+      "count_one": "{{count}} subscription",
+      "count_other": "{{count}} subscriptions",
+      "label": "{{count}}, {{amount}} every month. Next: {{merchant}}.",
+      "hint": "E go open your subscriptions",
+      "perMonth": "{{count}} every month",
+      "next": "Next: {{merchant}} · card controls dey inside"
+    },
+    "everythingElse": "Every other thing",
+    "forecast": {
+      "title": "Cash-flow forecast",
+      "simple": "Simple forecast: wetin you dey spend every day for the last 90 days, plus your salary and the subscriptions wey you dey pay.",
+      "failed": "We no fit work out your forecast",
+      "loading": "We dey work out your forecast",
+      "aiOff": "AI forecast dey off · simple average",
+      "beforePayday": "The day before payday ({{date}}) you go get about",
+      "onDate": "On {{date}} you go get about",
+      "balance": "Forecast balance",
+      "range": "E fit be between {{low}} and {{high}}",
+      "chart": "Forecast naira balance, day by day",
+      "runOut": "As you dey go so, your balance fit finish around {{date}}. Budget or to move payment fit help.",
+      "how": "How we take work am out",
+      "expected": "Wetin we expect before then",
+      "in": "Money wey go enter",
+      "out": "Money wey go comot",
+      "disclaimer": "Na forecast, no be promise: e assume say you go continue to spend the way you dey spend."
+    },
+    "home": {
+      "more": "{{amount}} pass {{month}}",
+      "less": "{{amount}} less than {{month}}",
+      "inAll": "{{month}} total: {{amount}}",
+      "failed": "We no fit load your spending",
+      "loading": "Your spending dey load",
+      "nothing": "You no spend anything for {{month}}",
+      "nothingYet": "You never spend anything for {{month}}",
+      "nothingMessage": "Card payments, bills and transfer to other people go show here.",
+      "soFar": "Wetin you don spend for {{month}} so far",
+      "youSpent": "Wetin you spend",
+      "donut": "Spending by category for {{month}}",
+      "categories_one": "{{count}} category",
+      "categories_other": "{{count}} categories",
+      "notOver": "The month never end, so category go show as up only when e pass {{month}}.",
+      "storyTitle": "Your {{month}} Money Story",
+      "storySubtitle": "Your month for few slides, to keep or share"
+    },
+    "subscriptions": {
+      "title": "Subscriptions",
+      "frequency": {
+        "weekly": "every week",
+        "monthly": "every month",
+        "yearly": "every year"
+      },
+      "simple": "Without AI we still dey list merchants wey charge you similar amount for three months or more.",
+      "failed": "We no fit check your subscriptions",
+      "loading": "We dey find subscriptions",
+      "emptyTitle": "We no find any subscription",
+      "emptyMessage": "When merchant charge you similar amount three months back to back, e go show here.",
+      "aiFeature": "Subscription detection",
+      "aiOff": "Smart detection dey off · simple repeat check",
+      "costYou_one": "{{count}} subscription dey cost you",
+      "costYou_other": "{{count}} subscriptions dey cost you",
+      "perMonth": "Subscriptions every month",
+      "monthNaira": "every month, for naira",
+      "nextFirst": "Next charge first",
+      "howToStop": "To stop one, cancel am with the merchant. To freeze or lock the card go stop the charge too, but you fit still owe the merchant.",
+      "wasDue": "E due {{date}}",
+      "today": "Next charge today",
+      "tomorrow": "Next charge tomorrow",
+      "inDays": "Next charge {{date}} (in {{count}} days)",
+      "wallet": "You dey pay am from your wallet as bill",
+      "cardEnding": "{{name}} wey end with {{last4}}",
+      "closed": "This card don close, so the next charge go fail.",
+      "frozen": "This card don freeze, so the next charge go fail."
+    }
+  },
+  "security": {
+    "title": "Security",
+    "limitSheet": {
+      "daily": "Daily limit",
+      "single": "One-transfer limit",
+      "capOnly": "Na only your KYC cap of {{cap}} a day go apply.",
+      "help": "Reach {{cap}}, your KYC cap",
+      "raise": "To raise limit need your PIN and e go start after 24 hours, so nobody fit raise am and spend am same time.",
+      "lower": "To reduce limit go work sharp sharp.",
+      "same": "Na your limit be this now.",
+      "raiseButton": "Raise am in 24 hours"
+    },
+    "score": {
+      "label": "Security score {{score}} over 100. {{band}}.",
+      "outOf": "over 100",
+      "strong": "E strong",
+      "good": "E good, but e fit better",
+      "weak": "E need attention"
+    },
+    "question": {
+      "saveFailed": "We no fit save am. Try am again.",
+      "answerTitle": "Your answer",
+      "pickTitle": "Pick question",
+      "pickAnother": "Pick another question",
+      "answer": "Answer",
+      "answerHelp": "Capital or small letter no matter. Pick something wey you no go forget, and no share am.",
+      "tooShort": "Use {{min}} characters or more",
+      "save": "Save security question",
+      "saved": "Security question don save",
+      "list": [
+        "Wetin be the name of your first primary school?",
+        "Wetin be the name of your best friend when you small?",
+        "Which town your papa and mama meet?",
+        "Wetin be the first thing wey you buy with your own money?"
+      ]
+    },
+    "alerts": {
+      "title": "Login and payment alerts",
+      "loginOffTitle": "Off login alerts?",
+      "loginOffMessage": "You no go hear from us when person log in to your account, even if no be you.",
+      "deviceOffTitle": "Off new device alerts?",
+      "deviceOffMessage": "You no go hear from us when new phone or browser enter your account.",
+      "failed": "We no fit load your alerts",
+      "loading": "Your alerts dey load",
+      "signIns": "Sign-ins",
+      "login": "Login alerts",
+      "loginHelp": "Every time person log in to your account",
+      "newDevice": "New device alerts",
+      "coolingOff": "E go stay on while {{name}} still new for your account, till {{until}}",
+      "newDeviceHelp": "When new phone or browser enter",
+      "scoreNote": "If you leave both on, e go add to your security score.",
+      "payments": "Payments",
+      "leavesFor": "Alert me when money comot for",
+      "every": "You go get alert for every payment, card payment and bill.",
+      "smaller": "Small payments still go show for your activity, just without alert.",
+      "everyPayment": "Every payment",
+      "orMore": "{{amount}} or more"
+    },
+    "devices": {
+      "title": "Devices and sessions",
+      "removed": "{{name}} don comot",
+      "signedOut": "{{name}} don sign out",
+      "signedOutAll": "We don sign out everywhere else",
+      "failed": "We no fit load your devices",
+      "loading": "Your devices dey load",
+      "devices": "Devices",
+      "intro": "These ones fit approve payment with their own key. Comot any one wey you no know.",
+      "lastUsed": "{{status}} · last use {{when}}",
+      "thisDevice": "This device",
+      "deviceLabel": "{{name}}. {{status}}. Last use {{when}}.",
+      "deviceLabelCurrent": "{{name}}. {{status}}. Last use {{when}}. This device.",
+      "signedIn": "Signed in",
+      "active": "active {{when}}",
+      "youreHere": "You dey here",
+      "signOut": "Sign out",
+      "sessionLabel": "{{name}}. {{where}}{{when}}.",
+      "sessionLabelCurrent": "{{name}}. {{where}}{{when}}. This session.",
+      "signOutAll": "Sign out everywhere else",
+      "removeTitle": "Comot {{name}}?",
+      "removeMessage": "E go sign out and e no go fit approve payment again. If you sign in for am again, e go count as new device, with low limit for 24 hours.",
+      "removeConfirm": "Comot device",
+      "signOutTitle": "Sign out {{name}}?",
+      "signOutMessage": "That sign-in go end now. The device go still dey trusted for next time.",
+      "signOutConfirm": "Sign out now",
+      "signOutAllTitle": "Sign out everywhere else?",
+      "signOutAllMessage_one": "This one go end {{count}} other sign-in. You go still dey signed in here.",
+      "signOutAllMessage_other": "This one go end {{count}} other sign-ins. You go still dey signed in here.",
+      "signOutAllConfirm": "Sign out all",
+      "status": {
+        "new": "New device, limit dey low for now",
+        "untrusted": "We never trust am yet",
+        "hardware": "We trust am, key dey secure hardware",
+        "trusted": "We trust am"
+      }
+    },
+    "duress": {
+      "title": "Duress PIN",
+      "mismatch": "The PINs no match. Pick your duress PIN again.",
+      "choose": "Pick duress PIN",
+      "chooseHelp": "4 digits, wey no be your real PIN",
+      "again": "Put am again",
+      "againHelp": "The same 4 digits",
+      "set": "Your duress PIN don set",
+      "removed": "Your duress PIN don comot",
+      "removeStep": "Comot your duress PIN",
+      "saveStep": "Save your duress PIN",
+      "failed": "We no fit check your duress PIN",
+      "loading": "We dey check your duress PIN",
+      "on": "On",
+      "isOn": "Your duress PIN dey on",
+      "secret": "Na only you know am. No write am near your real PIN.",
+      "intro": "If person ever force you to open Nem Bank or approve payment, put this PIN instead of your real one.",
+      "setButton": "Set duress PIN",
+      "whatHappens": "Wetin go happen when you use am",
+      "opens": "The app go open like normal",
+      "opensHelp": "Nothing for screen go show am",
+      "small": "Them go see small balance",
+      "smallHelp": "Your real balance and big payments go dey hide",
+      "fake": "Payment go look like e don go, but no money go move",
+      "fakeHelp": "E go show like e dey road",
+      "alerted": "We go hear quietly",
+      "alertedHelp": "Our security team go see am sharp sharp",
+      "ends": "Your real PIN go end am",
+      "endsHelp": "Open with am later and everything go come back; those payments go show as stopped",
+      "removeTitle": "Comot your duress PIN?",
+      "removeMessage": "You fit set new one anytime. You go confirm with your PIN or Face ID."
+    },
+    "limits": {
+      "title": "Your limits",
+      "saveFailed": "We no fit save your limit. Try am again.",
+      "failed": "We no fit load your limits",
+      "loading": "Your limits dey load",
+      "lowered": "Limit don reduce. E dey work now.",
+      "startsAt": "Your new limit go start {{when}}",
+      "saved": "Limit don save",
+      "cancelled": "Increase don cancel",
+      "cap": "Your KYC cap",
+      "capPerDay": "{{amount}} a day",
+      "capHelp": "Set your own limits under am. If person enter your account, e no go fit send pass wetin you allow.",
+      "waiting": "E dey wait",
+      "higherFrom": "Higher limits go start {{when}}",
+      "pending": "Daily: {{daily}}. One transfer: {{single}}. Till then your limits now go apply. If you reduce any limit, e go cancel this one.",
+      "keep": "Keep my limits wey dey now",
+      "daily": "Daily limit",
+      "dailyHelp": "All wey you fit send for one day",
+      "dailyUnset": "You never set am: your KYC cap dey apply",
+      "dailyLabel": "Daily limit, {{amount}}. Change",
+      "single": "One transfer",
+      "singleHelp": "The most wey you fit send one time",
+      "singleUnset": "You never set am",
+      "singleLabel": "One-transfer limit, {{amount}}. Change",
+      "raiseStep": "Raise your limit. E go start after 24 hours.",
+      "aboveCapDaily": "Your daily limit no fit pass your KYC cap of {{cap}}",
+      "aboveCapSingle": "One transfer no fit pass your KYC cap of {{cap}}",
+      "singleAboveDaily": "One transfer no fit pass your daily limit"
+    },
+    "panic": {
+      "title": "Panic button",
+      "off": "Panic mode don off",
+      "failed": "We no fit check panic mode",
+      "loading": "We dey check panic mode",
+      "onLabel": "Panic mode dey on",
+      "isOn": "Panic mode dey on",
+      "since": "Since {{when}}. {{summary}}",
+      "stillIn": "Money fit still enter. If you off panic mode, e go unfreeze the cards wey e freeze and allow money to comot again.",
+      "turnOff": "Off panic mode",
+      "whileSafe": "While you dey safe",
+      "reviewDevices": "Check your devices",
+      "reviewDevicesHelp": "Comot any one wey you no know",
+      "intro": "You lose your phone, card or you think say person dey your account? One tap go stop everything.",
+      "freeze": "Freeze everything",
+      "freezeHint": "E go freeze every card and block money from to comot",
+      "whatHappens": "Wetin go happen",
+      "cards": "Every card go freeze",
+      "cardsHelp": "No card payment",
+      "noLeave": "No money fit comot",
+      "noLeaveHelp": "Transfers, bills and money change go stop",
+      "comeIn": "Money fit still enter",
+      "comeInHelp": "Salary and transfer wey dem send you go still land",
+      "needsPin": "To off am need your PIN or Face ID.",
+      "confirmTitle": "Freeze everything?",
+      "confirmMessage": "Every card go freeze and no money fit comot your account till you off am with your PIN.",
+      "summaryOff": "Panic mode don off.",
+      "noCards": "No card need to freeze",
+      "cardsFrozen_one": "{{count}} card don freeze",
+      "cardsFrozen_other": "{{count}} cards don freeze",
+      "summary": "{{cards}}.",
+      "summaryBlocked": "{{cards}} and no money fit comot your account."
+    },
+    "scam": {
+      "title": "Scam checker",
+      "kinds": {
+        "message": "Message",
+        "link": "Link",
+        "account_number": "Account number"
+      },
+      "placeholders": {
+        "message": "Paste the SMS, WhatsApp or email text",
+        "link": "Paste the link, like bit.ly/…",
+        "account_number": "The 10-digit account wey dem want make you pay"
+      },
+      "rulesOnly": "Rules only: Nigerian scam words wey we know, link tricks and accounts wey other customers report.",
+      "onPhone": "We check am for this phone with Nem scam rules, because we no fit reach the bank.",
+      "tooMany": "You don check plenty now. Try am again after one minute.",
+      "verdictLabel": "{{verdict}}. {{advice}}",
+      "reported": "Other customers don report this account.",
+      "notReported": "Nobody don report this account to us.",
+      "noticed": "Wetin we notice",
+      "offlineNote": "We check am for this phone because network no dey. To check reported account need the bank.",
+      "aiOff": "AI scam checker dey off · rules only",
+      "empty": "Paste or type wetin you want make we check",
+      "badAccount": "Put 10-digit account number",
+      "check": "Check am",
+      "intro": "Message ask you for money, code or make you click? Check am before you do anything.",
+      "field": "Wetin you want make we check?",
+      "privacy": "We go check am and throw am away. We no dey keep am or send am to chatbot.",
+      "verdicts": {
+        "likely_scam": "E fit be scam",
+        "suspicious": "Shine your eye",
+        "safe": "We no see any warning sign"
+      }
+    },
+    "center": {
+      "tools": {
+        "panic": {
+          "title": "Panic button",
+          "subtitle": "Freeze every card and stop money from to comot"
+        },
+        "devices": {
+          "title": "Devices and sessions",
+          "subtitle": "See where you don sign in"
+        },
+        "limits": {
+          "title": "Your limits",
+          "subtitle": "Set daily limit under your KYC cap"
+        },
+        "duress": {
+          "title": "Duress PIN",
+          "subtitle": "PIN wey dey open fake app if dem force you"
+        },
+        "scam": {
+          "title": "Scam checker",
+          "subtitle": "Paste message, link or account number"
+        },
+        "alerts": {
+          "title": "Login and payment alerts",
+          "subtitle": "Choose wetin we go tell you"
+        }
+      },
+      "done": "E don do",
+      "toDo": "To do",
+      "fix": "Fix am",
+      "fixSoon": "You go fit fix this one soon",
+      "failed": "We no fit run your checkup",
+      "loading": "We dey run your security checkup",
+      "allDone": "Everything for the checkup don do. Correct.",
+      "left_one": "{{count}} thing remain, e worth {{points}} points.",
+      "left_other": "{{count}} things remain, dem worth {{points}} points.",
+      "doNext": "Do am next",
+      "panicHint": "Panic mode",
+      "tools_title": "Tools"
+    }
+  },
+  "kyc": {
+    "title": "Confirm who you be",
+    "photo": {
+      "id_front": {
+        "guide": "Put the front of your ID inside the frame, flat and for good light.",
+        "take": "Snap photo",
+        "sample": "Use sample ID",
+        "added": "ID photo don enter"
+      },
+      "selfie": {
+        "guide": "Put your face inside the oval. Comot glasses and cap.",
+        "take": "Snap selfie",
+        "sample": "Use sample selfie",
+        "added": "Selfie don enter"
+      },
+      "uploadFailed": "E no upload. Try am again.",
+      "cameraFailed": "The camera no fit snap am. Try am again.",
+      "retake": "Snap am again",
+      "noCamera": "No camera here",
+      "noCameraMessage": "Use the sample below to continue.",
+      "takeSelfie": "Snap selfie",
+      "photographId": "Snap your ID",
+      "cameraWhy": "Nem need your camera for this one. The photo go go only to our review team.",
+      "allowCamera": "Allow camera",
+      "cameraOff": "Camera don off for Nem",
+      "cameraOffMessage": "On am for Settings, or use the sample below.",
+      "cameraLabel": "Camera. {{guide}}",
+      "keep": "Keep the one wey I add"
+    },
+    "unlocks": {
+      "fx_wallets": "Dollar, pound and euro wallets",
+      "usd_cards": "Dollar cards",
+      "credit": "Loans",
+      "higher_limits": "Higher limits"
+    },
+    "status": {
+      "pending": "We dey check your documents. E dey usually take few minutes.",
+      "rejected": "We no approve your last upgrade.",
+      "resubmit": "We need some documents again.",
+      "full": "We don confirm you finish.",
+      "more": "Confirm small more to raise your limits."
+    },
+    "idTypes": {
+      "bvn": {
+        "label": "BVN",
+        "name": "Bank Verification Number",
+        "find": "Dial *565*0# from the phone number wey dey your bank account."
+      },
+      "nin": {
+        "label": "NIN",
+        "name": "National Identification Number",
+        "find": "Dial *346# from the phone number wey you register with NIMC."
+      }
+    },
+    "identityProblem": {
+      "dob": "That date of birth no match your {{label}} record. Use the one wey you register with.",
+      "notFound": "We no fit find that {{label}}. Check the 11 digits and try am again."
+    },
+    "quality": {
+      "blurry": "That photo no clear. Hold am steady and try am again.",
+      "glare": "Light dey shine for your ID. Tilt am away from the light.",
+      "cropped": "Part of your ID cut. Put all of am inside the frame.",
+      "face_not_found": "We no fit see your face. Face the camera for good light.",
+      "other": "We no fit use that photo. Try another one."
+    },
+    "documents": {
+      "national_id": {
+        "label": "National ID",
+        "hint": "Your 11-digit NIN"
+      },
+      "drivers_licence": {
+        "label": "Driver’s licence",
+        "hint": "Like ABC12345AA01"
+      },
+      "international_passport": {
+        "label": "International passport",
+        "hint": "One letter and 8 digits, like A01234567"
+      },
+      "voters_card": {
+        "label": "Voter’s card",
+        "hint": "The 19 characters for your PVC"
+      }
+    },
+    "idNumberProblem": "That one no look like {{type}} number. {{hint}}.",
+    "expired": "This ID don expire. Use one wey never expire.",
+    "documentNames": {
+      "id_front": "new photo of your ID",
+      "id_back": "photo of the back of your ID",
+      "selfie": "new selfie",
+      "proof_of_address": "proof of your address"
+    },
+    "documentsAgain": "your documents again",
+    "listAnd": "{{list}} and {{last}}",
+    "review": {
+      "pendingTitle": "We dey check your documents",
+      "pendingMessage": "E dey usually take few minutes. We go tell you when e finish.",
+      "rejectedTitle": "We no approve am",
+      "rejectedMessage": "We no fit approve these documents.",
+      "resubmitTitle": "We need {{what}}",
+      "resubmitMessage": "We no fit use one of your photos.",
+      "sendAgain": "Send am again"
+    },
+    "tier3": {
+      "title": "Tier 3",
+      "steps": ["Your ID", "Selfie", "ID details", "Address"],
+      "sendFailed": "We no fit send am. Try am again.",
+      "failed": "We no fit load your verification",
+      "sentMessage": "E dey usually take few minutes. We go tell you once you reach Tier 3.",
+      "needTier2": "Confirm your BVN or NIN first",
+      "needTier2Message": "Tier 3 dey build on top Tier 2.",
+      "verifyId": "Confirm BVN or NIN",
+      "send": "Send am for review",
+      "step": "Step {{step}} of {{count}}",
+      "toFix": "To fix",
+      "fillTitle": "Fill am from your ID photo",
+      "prefillFeature": "ID prefill",
+      "prefillExplanation": "E dey read the type, number and expiry date from the photo of your ID. Nothing go comot till you agree, and you go check every field before e go.",
+      "prefillFallback": "Type the details by yourself.",
+      "consent": "Make Nem read my ID photo to fill these ones",
+      "fill": "Fill am from photo",
+      "idNumber": "ID number",
+      "expiry": "Expiry date",
+      "addressNote": "Where you dey live now. E no need to match your ID."
+    },
+    "tier2": {
+      "title": "BVN or NIN",
+      "checkFailed": "We no fit check that number. Try am again.",
+      "onTier": "You dey Tier {{tier}} now",
+      "verified": "We don confirm your {{label}} and the name match your account.",
+      "nowHave": " You don get {{unlocks}} now.",
+      "verify": "Confirm {{label}}",
+      "real": "Real verification",
+      "intro": "Confirm one of these to reach Tier 2. We go check am once and we no go ever show am again.",
+      "digits": "11 digits",
+      "dobHelp": "As e dey your {{label}} record.",
+      "sandbox": "Sandbox numbers only",
+      "sandboxHelp": "Any 11 digits go work except 00000000000, wey we no go ever find.",
+      "sandboxDob": " Your sandbox record get date of birth {{date}}.",
+      "encrypted": "We lock your number with encryption and we dey use am only to confirm who you be."
+    },
+    "tiers": {
+      "waiting": "E dey wait",
+      "notApproved": "We no approve am",
+      "needsDocument": "E need document",
+      "failed": "We no fit load your verification",
+      "loading": "Your verification dey load",
+      "youreOn": "You dey",
+      "tier": "Tier {{tier}}",
+      "full": "We don confirm you finish",
+      "canSend": "You fit send",
+      "perDay": "{{amount}} a day",
+      "canHold": "You fit hold",
+      "approved": "We approve am",
+      "upgradeTo": "Upgrade to Tier {{tier}}",
+      "youNeed": "You go need: {{requirements}}. You go get {{amount}} a day.",
+      "youNeedUnlocks": "You go need: {{requirements}}. You go get {{amount}} a day and {{unlocks}}.",
+      "sent": "You send am {{when}}",
+      "soon": "E dey come",
+      "tiersAndLimits": "Tiers and limits",
+      "yourTier": "Your tier",
+      "dailyLimit": "Daily limit",
+      "mostHold": "The most wey you fit hold",
+      "needs": "E need",
+      "adds": "E add",
+      "unlocksLabel": "E go open",
+      "demo": "Demo limits wey follow public CBN guidance. The bank fit change them.",
+      "fact": "{{label}}: {{value}}"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "nemtagLocked": "You go fit change am again on {{date}}",
+    "nemtagRule": "You fit change am once every 30 days",
+    "saveFailed": "We no fit save am. Try am again.",
+    "loading": "Your profile dey load",
+    "photoUpdated": "Photo don update",
+    "photoRemoved": "Photo don comot",
+    "photoTooLarge": "That photo too big. Try another one.",
+    "nameSaved": "Name don save",
+    "takePhoto": "Snap photo",
+    "choosePhoto": "Pick photo",
+    "removePhoto": "Comot photo",
+    "cameraDenied": "Nem need the camera to snap your photo. You fit pick one instead.",
+    "nameSection": "The name wey people go see",
+    "preferred": "Name wey you prefer",
+    "preferredHelp": "E go show for the app and to people wey you pay. Leave am empty to use {{name}}.",
+    "saveName": "Save name",
+    "nemtag": "@nemtag",
+    "chooseNemtag": "Choose @nemtag",
+    "details": "Details wey the bank get",
+    "legalName": "Your real name",
+    "email": "Email",
+    "phone": "Phone",
+    "legalNote": "Your real name and date of birth come from your ID, so dem go change only through identity verification.",
+    "verify": "Confirm who you be",
+    "kycTier": "KYC Tier {{tier}}",
+    "change": {
+      "title": "Change @nemtag",
+      "rules": [
+        "You fit change your @nemtag once every 30 days.",
+        "We go keep your old @nemtag for you for 30 days, so nobody else fit take am. You fit switch back to am for that time.",
+        "People wey save your old @nemtag go need the new one to pay you."
+      ],
+      "yoursForNow": "@{{tag}} na your own for now",
+      "lockedMessage": "{{rule}}. @nemtag fit change once every 30 days.",
+      "done": "You don become @{{tag}} now",
+      "taken": "Person just take @{{tag}}. Try another one.",
+      "failed": "We no fit change your @nemtag. Try am again.",
+      "changeTo": "Change to @{{tag}}",
+      "button": "Change @nemtag",
+      "current": "Your @nemtag now",
+      "new": "New @nemtag",
+      "tryThese": "Try one of these",
+      "confirmTitle": "Change to @{{tag}}?",
+      "confirmReserved": "You no go fit change am again for 30 days. We go keep @{{tag}} for you till then.",
+      "confirmFirst": "Your people fit pay you with am sharp sharp."
+    }
+  },
+  "disputes": {
+    "title": "Disputes",
+    "evidence": {
+      "label": "Evidence photo {{n}}",
+      "full": "Na the most wey you fit add be that ({{max}}).",
+      "help": "Receipt, chat or screenshot go help. Reach 5 photos, 5 MB each.",
+      "cameraDenied": "Nem no fit use the camera. Allow am for Settings, or pick photo instead."
+    },
+    "reasons": {
+      "failed_but_debited": {
+        "label": "E fail but dem charge me",
+        "hint": "The payment no go through"
+      },
+      "duplicate_charge": {
+        "label": "Dem charge me two times",
+        "hint": "The same payment show pass one time"
+      },
+      "wrong_amount": {
+        "label": "Wrong amount",
+        "hint": "Dem charge me pass wetin I agree"
+      },
+      "not_received": {
+        "label": "The money no reach them",
+        "hint": "The person or business talk say nothing land"
+      },
+      "goods_not_received": {
+        "label": "I no get wetin I pay for",
+        "hint": "The goods or service no come"
+      },
+      "unauthorised": {
+        "label": "No be me make this payment",
+        "hint": "Another person fit don use my account"
+      },
+      "other": {
+        "label": "Another thing",
+        "hint": "Tell us for your own words"
+      }
+    },
+    "status": {
+      "submitted": "We don receive am",
+      "under_review": "We dey check am",
+      "awaiting_customer": "E need you",
+      "resolved_refunded": "We don refund",
+      "resolved_declined": "We no accept am",
+      "withdrawn": "You don withdraw am"
+    },
+    "descriptionShort_one": "Tell us small more ({{count}} more character)",
+    "descriptionShort_other": "Tell us small more ({{count}} more characters)",
+    "descriptionLong": "Make e no pass {{max}} characters",
+    "next": {
+      "submitted": "Specialist go pick am up soon",
+      "under_review": "We go tell you as soon as we decide, usually inside 10 working days",
+      "awaiting_customer": "Add the evidence wey we ask for make e continue to move"
+    },
+    "one": {
+      "title": "Dispute",
+      "withdrawn": "Dispute don withdraw",
+      "evidenceAdded": "Evidence don enter",
+      "failed": "We no fit load this dispute",
+      "loading": "Your dispute dey load",
+      "reported": "{{reason}} · you report am {{when}}",
+      "refunded": "We don refund am to your account",
+      "progress": "Where e reach",
+      "payment": "The payment",
+      "openPayment": "Open the payment",
+      "told": "Wetin you tell us",
+      "addEvidence": "Add evidence",
+      "addPhotos_one": "Add {{count}} photo",
+      "addPhotos_other": "Add {{count}} photos",
+      "withdraw": "Withdraw dispute",
+      "withdrawTitle": "Withdraw this dispute?",
+      "withdrawMessage": "We go stop to look into am. You fit report the payment again later if you need am.",
+      "withdrawConfirm": "Withdraw"
+    },
+    "list": {
+      "failed": "We no fit load your disputes",
+      "loading": "Your disputes dey load",
+      "emptyTitle": "No dispute",
+      "emptyMessage": "If anything wrong with payment, open am from your transactions and tap Report wahala.",
+      "rowLabel": "{{case}}, {{reason}}, {{status}}",
+      "open": "E dey open",
+      "closed": "E don close"
+    },
+    "new": {
+      "title": "Report wahala",
+      "track": "Follow your dispute",
+      "gotIt": "We don get am",
+      "caseIs": "Your case number na",
+      "caseLabel": "Case number {{case}}",
+      "updates": "We go send you update for every step. Any refund go go straight back to your account.",
+      "missed_one": "{{count}} photo no upload. Add am from the case.",
+      "missed_other": "{{count}} photos no upload. Add them from the case.",
+      "send": "Send report",
+      "whatWrong": "Wetin happen?",
+      "tellMore": "Tell us more",
+      "whatHappened": "Wetin happen",
+      "placeholder": "When e happen, who you pay and wetin you expect",
+      "evidence": "Evidence (if you get)"
+    }
+  },
+  "family": {
+    "title": "Family",
+    "age": {
+      "future": "That date never reach",
+      "young": "Pikin must reach at least {{min}}",
+      "old": "When dem reach 18 dem fit open their own Nem account"
+    },
+    "controls": {
+      "daily": "E fit spend reach {{amount}} a day",
+      "approval": "E go ask you before e send pass {{amount}}",
+      "banks": "E fit send to other banks",
+      "nemOnly": "E fit pay only Nem users"
+    },
+    "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "allowanceWeekly": "{{amount}} every {{day}}",
+    "allowanceMonthly": "{{amount}} on the {{day}} of every month",
+    "approvalStatus": {
+      "pending": "E dey wait for you",
+      "approved": "You approve am",
+      "declined": "You reject am",
+      "expired": "E don expire"
+    },
+    "add": {
+      "title": "Add pikin",
+      "steps": ["About your pikin", "Their @nemtag", "Wetin dem fit do", "Check and confirm"],
+      "taken": "Person just take @{{tag}}. Pick another one.",
+      "onNem": "{{name}} don enter Nem",
+      "kidMode": "Their account don open for pikin mode. Use this code for their phone to set up their own login.",
+      "setupCode": "Setup code",
+      "codeLabel": "Setup code {{code}}",
+      "shownOnce": "We go show am only once. E go work till {{when}}.",
+      "share": "Share code",
+      "shareMessage": "Your Nem setup code na {{code}}. E go work till {{when}}.",
+      "onlyChild": "Share am only with your pikin. Nem no go ever ask you for am.",
+      "addName": "Add {{name}}",
+      "child": "pikin",
+      "ageHelp": "Pikin for Nem dey from 6 to 17",
+      "tagIntro": "Friends and family fit send {{name}} money with am. 3 to 20 letters, numbers or _, and e go start with letter.",
+      "theirTag": "Their @nemtag",
+      "safeStart": "Safe start. You fit change these anytime.",
+      "mostPerDay": "The most wey dem fit spend for one day",
+      "askBefore": "Ask me before dem send pass",
+      "letBanks": "Allow them send to other banks",
+      "letBanksHelp": "If e off, dem fit pay only Nem users.",
+      "next": "Wetin go happen next",
+      "nextBody": "{{name}} go get naira account and pikin mode: simple app with goals. You go see their activity and approve big payments. You go get one-time code to set up their login for their phone.",
+      "confirm": "Add {{name}} to your family"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "declined": "You reject {{name}} request",
+      "failed": "We no fit load approvals",
+      "loading": "Approvals dey load",
+      "sent": "We don send {{amount}} for {{name}}",
+      "expires": "E go expire {{when}}",
+      "emptyTitle": "Nothing to approve",
+      "emptyMessage": "When your pikin try send pass their limit, e go wait here for you.",
+      "earlier": "Before",
+      "confirm": "Allow {{child}} send {{amount}} to {{recipient}}",
+      "waiting": "Approvals ({{count}} dey wait)"
+    },
+    "child": {
+      "title": "Pikin",
+      "allowanceSet": "Allowance don set",
+      "allowanceStopped": "Allowance don stop",
+      "failed": "We no fit load this pikin",
+      "seeKid": "See {{name}} pikin mode",
+      "limits": "Limits",
+      "dailyLimit": "Daily spend limit",
+      "askBefore": "Ask me before dem send pass",
+      "banks": "Send to other banks",
+      "banksHelp": "If e off, {{name}} fit pay only Nem users",
+      "pause": "Pause spending",
+      "pauseHelp": "{{name}} fit still collect money",
+      "kidModeHelp": "Simple app with goals",
+      "allowance": "Allowance",
+      "nextOn": "Next on {{when}}",
+      "stop": "Stop allowance",
+      "allowanceIntro": "Send {{name}} money by itself from your naira account.",
+      "day": "Day {{day}}",
+      "setAllowance": "Set allowance",
+      "activity": "Activity",
+      "activityFailed": "We no fit load their activity",
+      "nothing": "Nothing yet",
+      "nothingMessage": "Wetin {{name}} spend and collect go show here."
+    },
+    "hub": {
+      "failed": "We no fit load your family",
+      "loading": "Your family dey load",
+      "emptyTitle": "Add your pikin",
+      "emptyMessage": "Dem go get their own login, simple pikin mode and naira account. You go set wetin dem fit spend and approve big payments.",
+      "rowLabel": "{{name}}: limits, allowance and activity",
+      "paused": "Spending don pause"
+    },
+    "kid": {
+      "failed": "We no fit load pikin mode",
+      "loading": "Pikin mode dey load",
+      "sees": "Na wetin {{name}} dey see for their phone be this.",
+      "hi": "Hi {{name}} 👋",
+      "youHave": "You get",
+      "paused": "Spending don pause. Ask your papa or mama.",
+      "left": "{{amount}} remain to spend today",
+      "savingFor": "Wetin you dey save for",
+      "enough": "E don reach! 🎉",
+      "pctOf": "{{pct}}% of {{amount}}",
+      "progress": "{{name}} progress",
+      "goalName": "Wetin you dey save for?",
+      "saveGoal": "Save goal",
+      "addAnother": "Add another goal",
+      "addGoal": "Add goal",
+      "recently": "Recently",
+      "paymentsFailed": "We no fit load your payments",
+      "gotMoney": "Money enter: {{title}}",
+      "spent": "You spend: {{title}}",
+      "noPayments": "No payment yet",
+      "noPaymentsMessage": "When you get or spend money, e go show here."
+    }
+  },
+  "support": {
+    "title": "Help and support",
+    "status": {
+      "open": "E dey with us",
+      "waiting_on_customer": "We don reply",
+      "resolved": "E don close"
+    },
+    "topics": {
+      "transfer": "Transfer",
+      "card": "My card",
+      "verification": "Verification",
+      "bills": "Bills or airtime",
+      "account": "My account",
+      "other": "Another thing"
+    },
+    "sentPhotos_one": "I send photo",
+    "sentPhotos_other": "I send {{count}} photos",
+    "article": {
+      "title": "Help",
+      "moved": "This article don move",
+      "failed": "We no fit load this article",
+      "loading": "The article dey load",
+      "chat": "E no help? Chat with us",
+      "updated": "We update am {{date}}"
+    },
+    "chat": {
+      "title": "Chat",
+      "support": "Support",
+      "bubble": "{{who}}: {{body}}. {{when}}",
+      "failed": "We no fit load this chat",
+      "loading": "Your chat dey load",
+      "closed": "This chat don close. Send message to open am again.",
+      "cameraDenied": "Nem no fit use the camera. Allow am for Settings.",
+      "photoToSend": "Photo {{n}} to send",
+      "takePhoto": "Snap photo",
+      "addPhoto": "Add photo",
+      "message": "Message",
+      "send": "Send message",
+      "neverAsk": "Nem staff no go ever ask for your PIN, password or code."
+    },
+    "help": {
+      "title": "Help center",
+      "failed": "We no fit load help",
+      "loading": "Answers dey load",
+      "noneTitle": "We no find any answer",
+      "noneQuery": "Nothing match “{{q}}”. Try other words, or ask us for chat.",
+      "none": "Nothing dey here yet. Ask us for chat.",
+      "answers_one": "{{count}} answer",
+      "answers_other": "{{count}} answers",
+      "stuck": "You still dey hook? Chat with us",
+      "search": "Search help",
+      "placeholder": "like transfer pending, freeze card",
+      "rowLabel": "{{title}}, {{category}}"
+    },
+    "new": {
+      "title": "New chat",
+      "about": "Wetin e concern?",
+      "subject": "Subject",
+      "subjectPlaceholder": "Few words",
+      "yourMessage": "Your message",
+      "placeholder": "Tell us wetin happen. No ever share your PIN or password.",
+      "attach": "We go attach the payment wey you come from.",
+      "replies": "Our team dey reply here, usually inside few minutes. Nem staff no go ever ask for your PIN, password or code."
+    },
+    "hub": {
+      "start": "Start chat",
+      "rowLabel": "{{subject}}, {{status}}",
+      "rowLabelNew": "{{subject}}, {{status}}, {{count}} new",
+      "waiting": "E dey wait for agent",
+      "failed": "We no fit load your chats",
+      "loading": "Your chats dey load",
+      "emptyTitle": "No chat yet",
+      "emptyMessage": "Start chat and person from our team go reply here, usually inside few minutes.",
+      "yourChats": "Your chats",
+      "helpHint": "Search answers to common questions"
+    }
+  },
+  "ai": {
+    "features": {
+      "assistant": {
+        "name": "Nem Assistant",
+        "summary": "E dey answer questions about your money and prepare payment make you approve.",
+        "uses": ["Your question", "Totals and categories wey e dey find through bank tools"],
+        "neverUses": [
+          "Your name, BVN, phone, email or full account number (we dey comot them before any model call)",
+          "Your PIN or card details"
+        ],
+        "runsOn": "Nem servers, then free-tier language model (Gemini, with Groq as backup)",
+        "fallback": "Search, shortcuts and the help center. Payment no need the assistant.",
+        "card": {
+          "approach": "Big language model wey fit only call typed bank tools. E dey prepare payment; you go approve am with your PIN or Face ID.",
+          "data": ["General model from the provider; Nem no train am"],
+          "baseline": "Answers wey we write before for the common questions",
+          "limitations": [
+            "E fit make mistake. The amounts wey e show come from the bank, no be the model.",
+            "Free-tier providers fit learn from wetin dem receive, na why we dey comot personal details first.",
+            "E no fit move money by itself."
+          ]
+        }
+      },
+      "fraud": {
+        "name": "Fraud protection",
+        "summary": "E dey score every payment for sign of fraud and hold the risky ones, with the reasons.",
+        "uses": [
+          "Amount, time and who you don pay before",
+          "Device and sign-in signals",
+          "How fast payments dey go"
+        ],
+        "neverUses": ["Messages wey you send", "Your contacts"],
+        "runsOn": "Nem servers, under 10 ms for each payment",
+        "fallback": "Fixed rules (new beneficiary, big amount, new device) if the model no dey.",
+        "card": {
+          "approach": "Rules plus gradient-boosted tree model (LightGBM), wey we score directly for Go.",
+          "data": [
+            "PaySim synthetic mobile-money transactions (Kaggle, CC BY-SA 4.0)",
+            "Synthetic Nigerian fraud patterns wey Nem generate"
+          ],
+          "baseline": "The rules alone, for the same payments wey we keep aside",
+          "limitations": [
+            "We train am with synthetic data, so real fraud go dey different.",
+            "E dey always run: if you off am, payments no go get protection."
+          ]
+        }
+      },
+      "scam-checker": {
+        "name": "Scam checker",
+        "summary": "E dey check message, link or account number for sign of scam.",
+        "uses": ["Only the text wey you paste"],
+        "neverUses": ["Your messages or clipboard unless you paste them", "Your account data"],
+        "runsOn": "Rules for your phone, then text classifier for Nem servers",
+        "fallback": "Rules only: Nigerian scam words wey we know, link tricks and accounts wey people report.",
+        "card": {
+          "approach": "Rules for the phone plus text classifier for wetin the rules miss.",
+          "data": [
+            "UCI SMS Spam Collection (CC BY 4.0)",
+            "Nigerian scam words wey Nem gather from public warnings"
+          ],
+          "baseline": "The phone rules alone",
+          "limitations": [
+            "Scammers dey change their words; clean result no be guarantee.",
+            "English and Pidgin only."
+          ]
+        }
+      },
+      "smart-categories": {
+        "name": "Smart categories",
+        "summary": "E dey arrange your spending into categories and find your subscriptions.",
+        "uses": ["Merchant names and payment descriptions", "Categories wey you correct"],
+        "neverUses": ["The name of people wey you send money to"],
+        "runsOn": "Nem servers",
+        "fallback": "Merchant list and simple rules; you fit still change any category.",
+        "card": {
+          "approach": "Rules, merchant dictionary, then TF-IDF logistic regression wey dey learn from your corrections.",
+          "data": ["Synthetic Nigerian transactions wey Nem generate"],
+          "baseline": "The merchant dictionary alone",
+          "limitations": ["New or local merchants fit land for \"Other\" till you correct one."]
+        }
+      },
+      "forecast": {
+        "name": "Cash-flow forecast",
+        "summary": "E dey estimate your balance before payday and warn you if e fit finish.",
+        "uses": ["Your money wey enter and comot for the last six months"],
+        "neverUses": ["Anything outside Nem"],
+        "runsOn": "Nem servers",
+        "fallback": "Simple average of your recent months.",
+        "card": {
+          "approach": "Recurrence detection plus exponential smoothing: statistics wey you fit explain, no be black box.",
+          "data": ["Na only your own history; we no dey mix am with other customers"],
+          "baseline": "Simple monthly average",
+          "limitations": ["One-off spending and income wey no regular go make the range wide."]
+        }
+      },
+      "credit": {
+        "name": "Credit scoring",
+        "summary": "E dey decide how much you fit borrow, and e go tell you why.",
+        "uses": [
+          "Income wey dey enter Nem",
+          "How you don pay back before",
+          "How your balance dey move",
+          "Verification tier"
+        ],
+        "neverUses": ["Gender, religion, tribe or where you dey live", "Your contacts"],
+        "runsOn": "Nem servers",
+        "fallback": "Standard rules wey follow your tier and income.",
+        "card": {
+          "approach": "Logistic regression with reason codes, because every credit decision must get explanation.",
+          "data": ["Synthetic borrower data wey Nem generate"],
+          "baseline": "The standard tier-and-income rules",
+          "limitations": ["Synthetic training data: limits for the demo na example."]
+        }
+      },
+      "id-prefill": {
+        "name": "ID prefill",
+        "summary": "E dey read the number and expiry date from ID photo so you no go type much.",
+        "uses": ["The ID photo wey you choose, only after you agree"],
+        "neverUses": ["Your selfie", "Any photo wey you no pick"],
+        "runsOn": "Free-tier vision model, with sample IDs only for the demo",
+        "fallback": "You go type the details by yourself.",
+        "card": {
+          "approach": "Vision language model dey read the fields; you go always check them before you send.",
+          "data": ["General model from the provider; Nem no train am"],
+          "baseline": "To type the details by hand",
+          "limitations": [
+            "E dey off till you on am.",
+            "Glare or photo wey cut fit make am read one digit wrong."
+          ]
+        }
+      }
+    },
+    "principles": [
+      "AI no dey ever move money. You go approve every payment with your PIN or Face ID.",
+      "We dey comot personal details before anything reach language model.",
+      "Every feature dey work without AI, and every decision get reasons."
+    ],
+    "transparency": {
+      "title": "AI and your data",
+      "features": "Features",
+      "hint": "E go open wetin e dey use and im model card",
+      "useAi": "Use AI",
+      "useAiFor": "Use AI for {{name}}",
+      "off": "E dey off · {{fallback}}",
+      "alwaysOn": "E dey always on, to protect every payment"
+    },
+    "card": {
+      "title": "AI feature",
+      "notFound": "We no fit find that feature",
+      "notFoundMessage": "Go back to see all of them.",
+      "unavailable": "If the model no dey",
+      "instead": "Wetin you go get instead",
+      "uses": "Wetin e dey use",
+      "neverUses": "Wetin e no dey ever use",
+      "modelCard": "Model card",
+      "runsOn": "Where e dey run",
+      "approach": "How e dey work",
+      "data": "Training data",
+      "baseline": "Wetin e must beat",
+      "results": "Results wey we measure",
+      "resultsValue": "We go publish am here with held-out metrics when the model ship with the live backend. The demo dey run the fallback rules, so e no claim any accuracy.",
+      "limitations": "Wetin e no fit do"
+    }
+  },
+  "assistant": {
+    "name": "Nem Assistant",
+    "suggestions": [
+      "Wetin be my balance?",
+      "How much I spend this month?",
+      "Show my recent transactions",
+      "Send ₦5,000 to @amaka_o",
+      "Freeze my card abeg"
+    ],
+    "problems": {
+      "off": "The assistant dey off.",
+      "unavailable": "The assistant no dey available now. These shortcuts still dey work.",
+      "busy": "You don ask plenty now. Try am again after one minute.",
+      "offline": "Network no dey. Connect again, then try am again.",
+      "gone": "That chat don end. Start new one.",
+      "other": "E no go through. Try am again."
+    },
+    "expiresSoon": "E go expire in less than one minute",
+    "expiresIn": "E go expire in {{count}} min",
+    "statusLine": {
+      "confirmed": "E don do",
+      "discarded": "E don cancel. Nothing go.",
+      "expired": "This one don expire, so nothing go. Ask again to start again.",
+      "failed": "This one no go through. Nothing go."
+    },
+    "action": {
+      "prepared": "Prepared: {{summary}}",
+      "total": "Total wey go comot your account",
+      "nothingMoves": "{{expires}} · Nothing go move till you confirm.",
+      "confirmHint": "E go ask for your PIN or Face ID"
+    },
+    "chartEmpty": "{{title}}: nothing to show yet.",
+    "noTransactions": "No transaction to show.",
+    "explanation": "E dey answer questions about your money and prepare payment. E no dey ever move money: you go check and approve each one with your PIN or Face ID.",
+    "fallback": "The shortcuts below: balance, spending, send money and card controls.",
+    "shortcuts": {
+      "balance": "See my balance",
+      "spending": "My spending",
+      "send": "Send money",
+      "cards": "Card controls"
+    },
+    "newChat": "New chat",
+    "offTitle": "The assistant dey off",
+    "offMessage": "On am for AI and your data, or use the shortcuts.",
+    "opening": "The assistant dey open",
+    "suggestionsLabel": "Suggestions",
+    "placeholder": "Ask about your money",
+    "inputLabel": "Ask the assistant",
+    "ask": "Ask",
+    "disclaimer": "Answers fit wrong. Nem no dey ever move money without your PIN or Face ID."
+  },
+  "demo": {
+    "title": "Demo Controls",
+    "money": {
+      "title": "Money wey dey enter",
+      "description": "Add demo money, or make person send you transfer. Both dey pass through the ledger, like the real thing.",
+      "walletBalance": "{{currency}} wallet balance",
+      "wallet": "Wallet",
+      "amount": "Amount",
+      "add": "Add demo money",
+      "added": "{{amount}} don enter your {{currency}} wallet",
+      "receive": "Collect from {{name}}",
+      "received": "{{name}} send you {{amount}}"
+    },
+    "network": {
+      "title": "Network",
+      "description": "See every loading, error and offline screen without real network wahala.",
+      "speed": "Speed",
+      "latency": {
+        "off": "Sharp sharp",
+        "fast": "Fast",
+        "realistic": "Normal",
+        "slow": "Slow 3G"
+      },
+      "failed": "Requests wey fail",
+      "none": "None",
+      "all": "All",
+      "offline": "Bank offline",
+      "offlineHelp": "You fit still read balance wey we save; payment need network.",
+      "lose": "Lose some responses",
+      "loseHelp": "Payment go go through but the answer no go reach. To try again no suppose pay two times.",
+      "friends": "Friends dey send money",
+      "friendsHelp": "Small transfers go dey land from time to time, live.",
+      "reset": "Reset network"
+    },
+    "reset": {
+      "done": "Demo data don reset",
+      "failed": "We no fit reset the demo. Try am again.",
+      "title": "Start again",
+      "description": "E go make the demo account again with im original history and balances.",
+      "button": "Reset demo data",
+      "confirmTitle": "Reset the demo?",
+      "confirmMessage": "Everything wey you do for the demo go clear: transfers, cards, savings and ajo groups."
+    },
+    "scenarios": {
+      "title": "Scenarios",
+      "description": "Practise the things wey hard to make happen by yourself.",
+      "review": {
+        "approve": {
+          "label": "Approve",
+          "toast": "The next Tier 3 review go approve."
+        },
+        "reject": {
+          "label": "Reject",
+          "toast": "The next Tier 3 review go reject."
+        },
+        "resubmit": {
+          "label": "Ask for new selfie",
+          "toast": "The next Tier 3 review go ask for new selfie."
+        }
+      },
+      "tierNow": "You dey KYC Tier {{tier}} now",
+      "failNextDone": "Your next bank transfer go fail for the partner bank and e go reverse.",
+      "now": "E don be {{date}} now",
+      "failNext": "Make my next bank transfer fail",
+      "timeTravel": "Time travel",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "wouldEarn": "Your savings goals go get about {{amount}} interest. Ajo turns, auto-saves and locks wey due go run too.",
+      "demoDate": "Demo date {{date}}, {{count}} days ahead",
+      "jump_one": "Jump {{count}} day go front",
+      "jump_other": "Jump {{count}} days go front",
+      "tier": "KYC tier",
+      "tierN": "Tier {{tier}}",
+      "tierHelp": "Go down to lower tier to waka the verification flows again.",
+      "nextReview": "Next Tier 3 review",
+      "reviewHelp": "The sandbox reviewer go decide about 10 seconds after you send your documents.",
+      "endSession": "End my session",
+      "endSessionHint": "E go sign you out like say the session don expire"
+    },
+    "travel": {
+      "interest": "{{amount}} interest don enter",
+      "locks_one": "{{count}} lock don mature",
+      "locks_other": "{{count}} locks don mature",
+      "payouts_one": "{{count}} ajo payout don go",
+      "payouts_other": "{{count}} ajo payouts don go",
+      "nothing": "No savings or ajo activity dey due."
+    },
+    "onlyDemo": "Na only for the demo account",
+    "onlyDemoMessage": "Demo Controls dey move pretend money. Sign in with “Try the demo” to use them.",
+    "walletsFailed": "We no fit load your wallets."
+  },
+  "components": {
+    "aiBadge": {
+      "label": "AI: {{feature}}",
+      "hint": "E go explain how this AI feature dey work",
+      "how": "How e dey work",
+      "without": "Without AI",
+      "note": "AI fit make mistake. E no dey ever move money: you go always confirm with your PIN or biometrics.",
+      "manage": "Manage am for Settings"
+    },
+    "amount": "Amount",
+    "bankCard": {
+      "virtualName": "Virtual {{network}} card wey end with {{last4}}",
+      "physicalName": "Physical {{network}} card wey end with {{last4}}",
+      "label": "{{name}}, {{holder}}, e go expire {{expiry}}",
+      "labelFrozen": "{{name}}, {{holder}}, e go expire {{expiry}}, e don freeze",
+      "showFront": "E go show the front of the card",
+      "showBack": "E go show the back of the card",
+      "virtual": "VIRTUAL",
+      "debit": "DEBIT",
+      "holder": "Card owner",
+      "expires": "E go expire",
+      "number": "Card number",
+      "cvv": "CVV",
+      "hiddenAgain": "E go hide again when you comot",
+      "unlock": "Open am to see details",
+      "frozen": "E don freeze"
+    },
+    "sheet": {
+      "close": "Close sheet"
+    },
+    "chart": {
+      "noData": "No data yet.",
+      "trend": {
+        "up": "e go up",
+        "down": "e come down",
+        "flat": "e no move"
+      },
+      "valueOn": "{{value}} on {{label}}",
+      "line": "{{title}}. {{count}} points from {{first}} to {{last}}, {{trend}} for everything. Low {{low}}, high {{high}}, latest {{latest}}.",
+      "bar": "{{title}}. The highest na {{highest}}. {{all}}."
+    },
+    "demoBadge": {
+      "demo": "Demo money",
+      "demoSpoken": "Demo money. These balances na pretend.",
+      "sandbox": "Sandbox",
+      "sandboxSpoken": "Sandbox. This one dey run for test environment, no be real money."
+    },
+    "optional": " (if you want)",
+    "money": {
+      "minus": "minus {{amount}}",
+      "labelled": "{{label}}, {{amount}}"
+    },
+    "keypad": {
+      "decimal": "Decimal point",
+      "delete": "Delete",
+      "deleteHint": "Hold am to clear everything"
+    },
+    "otp": "Verification code",
+    "paid": {
+      "features": {
+        "smsOtp": {
+          "name": "SMS one-time codes",
+          "partner": "paid SMS gateway",
+          "steps": [
+            "The Mailer interface go get SMS adapter for Nigerian SMS gateway.",
+            "Codes go come from registered sender ID, and we go track delivery receipts.",
+            "Till then, codes dey go by email and trusted devices dey sign in with device keys."
+          ]
+        },
+        "ussd": {
+          "name": "USSD banking",
+          "partner": "licensed USSD aggregator and shortcode",
+          "steps": [
+            "USSD aggregator go forward each session to Nem Bank menu service.",
+            "The menu go call the same transfer and balance APIs as the app.",
+            "Every money action still need the account PIN."
+          ]
+        },
+        "internationalTransfer": {
+          "name": "International transfers",
+          "partner": "licensed remittance partner",
+          "steps": [
+            "The BankPartner interface go get adapter for remittance provider.",
+            "Quotes go come from the partner, and the FX leg go book through the same ledger.",
+            "Compliance checks go run for the partner side before money comot."
+          ]
+        },
+        "physicalCard": {
+          "name": "Physical cards",
+          "partner": "card issuer and card printing bureau",
+          "steps": [
+            "The CardProcessor interface go get adapter for licensed issuer.",
+            "Dem go print the card, post am, and you go activate am for the app with the PIN.",
+            "Virtual cards dey use the same freeze, limit and channel controls already."
+          ]
+        },
+        "identityVerification": {
+          "name": "Real BVN and NIN checks",
+          "partner": "licensed identity verification provider",
+          "steps": [
+            "The IdentityVerifier interface go get adapter for provider wey get NIBSS and NIMC access.",
+            "We go check the number, name and date of birth live, and keep the number with encryption.",
+            "Till then, the bank dey accept only sandbox test numbers."
+          ]
+        },
+        "realMoney": {
+          "name": "Real money accounts",
+          "partner": "licensed banking-as-a-service partner",
+          "steps": [
+            "BaaS partner go hold the real accounts; Nem Bank go keep im own ledger in sync.",
+            "KYC go move from sandbox test numbers to live BVN and NIN checks.",
+            "The switch na console feature flag, so no app code go change."
+          ]
+        }
+      },
+      "howTitle": "How e go work",
+      "title": "This feature need paid partner service",
+      "step": "Step {{n}}",
+      "body": "{{name}} need {{partner}}. Nem Bank na portfolio project wey dey run on pretend money, so we don design this connection finish but e dey off. We go on am once money dey for the service.",
+      "gotIt": "I don hear",
+      "seeHow": "See how e go work"
+    },
+    "pin": {
+      "entered": "{{count}} of {{length}} digits don enter"
+    },
+    "risk": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "title": "Why we flag this one",
+      "none": "We no see any risk sign."
+    },
+    "select": {
+      "placeholder": "Pick",
+      "label": "{{label}}, {{value}}",
+      "notSelected": "you never pick",
+      "hint": "E go open list of options"
+    },
+    "loading": "E dey load",
+    "status": {
+      "pending": "E still dey wait",
+      "processing": "E dey process",
+      "completed": "E don complete",
+      "failed": "E no work",
+      "reversed": "E don reverse",
+      "held": "We hold am"
+    },
+    "textField": {
+      "show": "Show {{label}}",
+      "hide": "Hide {{label}}"
+    },
+    "typing": {
+      "support": "Support",
+      "label": "{{name}} dey type"
+    }
+  },
+  "shell": {
+    "sessionEnded": "Your session don end. Sign in again to continue.",
+    "web": {
+      "eyebrow": "Web demo",
+      "intro": "Digital bank wey dey run on pretend ledger inside this page. No real money dey move, and nothing wey you type dey comot your browser.",
+      "inBrowser": "For browser",
+      "noBiometrics": "No Face ID or fingerprint: the app go open with your PIN.",
+      "noKeychain": "No secure keychain: we go keep your session for this tab only and e go end when you close am.",
+      "camera": "QR scanning go ask to use your browser camera.",
+      "noCamera": "We no find camera: pay links still dey work.",
+      "noHaptics": "No vibration, and we no fit block screenshot of card details.",
+      "fullExperience": "For the full experience, open am for phone with Expo Go.",
+      "source": "Source for GitHub"
+    }
+  }
+}

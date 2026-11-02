@@ -214,7 +214,13 @@
     "securityAlerts": "Security alerts",
     "securityAlertsHint": "Sign-ins, new devices and large payments",
     "aiFeatures": "AI features",
-    "aiFeaturesHint": "Switch each AI feature on or off"
+    "aiFeaturesHint": "Switch each AI feature on or off",
+    "language": "Language",
+    "languageHint": "Nem speaks English and Nigerian Pidgin. Amounts, dates and names stay the same.",
+    "languages": {
+      "en": "English",
+      "pcm": "Naija Pidgin"
+    }
   },
   "auth": {
     "welcome": {

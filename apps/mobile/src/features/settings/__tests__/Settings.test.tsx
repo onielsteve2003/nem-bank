@@ -79,6 +79,18 @@ it('changes theme, privacy mode, auto-lock and low-data mode here and at the ban
   );
 });
 
+it('switches the language here and at the bank', async () => {
+  const repos = bank();
+  await renderSettings(repos);
+
+  await fireEvent.press(screen.getByRole('togglebutton', { name: 'Naija Pidgin' }));
+
+  expect(usePreferencesStore.getState().language).toBe('pcm');
+  await waitFor(async () =>
+    expect(await repos.users.getPreferences()).toMatchObject({ language: 'pcm' }),
+  );
+});
+
 it('keeps reduce motion on this phone only', async () => {
   const base = bank();
   const save = jest.fn(base.users.setPreferences);

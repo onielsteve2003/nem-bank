@@ -3,14 +3,19 @@ import { initReactI18next } from 'react-i18next';
 
 import { deviceLanguage, languageFor } from './deviceLanguage';
 import en from './locales/en.json';
+import pcm from './locales/pcm.json';
 
-// Every user-facing string lives in locales/<language>.json (SET-2). English is
-// the source and the fallback: a key missing in another language shows English,
-// never the key. Strings are keyed by screen, e.g. t('settings.title').
+// Every user-facing string lives in locales/<language>.json (SET-2): English and
+// Nigerian Pidgin. English is the source and the fallback: a key missing in
+// another language shows English, never the key. A test keeps pcm.json in step
+// with en.json. Strings are keyed by screen, e.g. t('settings.title').
 
 export type Language = 'en' | 'pcm';
 
-export const resources = { en: { translation: en } } as const;
+export const resources = {
+  en: { translation: en },
+  pcm: { translation: pcm },
+} as const;
 
 const i18n = createInstance();
 

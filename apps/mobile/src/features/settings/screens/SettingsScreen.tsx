@@ -11,6 +11,7 @@ import {
   usePrivacyStore,
   type Appearance,
   type AutoLockSeconds,
+  type Language,
   type ReduceMotion,
 } from '@/stores';
 import { useTheme } from '@/theme';
@@ -22,6 +23,8 @@ const APPEARANCES: { value: Appearance; label: ParseKeys; icon: LucideIcon }[] =
   { value: 'dark', label: 'settings.dark', icon: Moon },
   { value: 'light', label: 'settings.light', icon: Sun },
 ];
+
+const LANGUAGES: readonly Language[] = ['en', 'pcm'];
 
 const AUTO_LOCK: readonly AutoLockSeconds[] = [30, 60, 120, 300];
 
@@ -63,7 +66,7 @@ function Group({
 }
 
 /**
- * Settings (SET-1, SET-3, SET-4): appearance, privacy mode and auto-lock,
+ * Settings (SET-1..SET-4): appearance, language, privacy mode and auto-lock,
  * low-data mode, reduce motion, and the way to every alert setting.
  */
 export function SettingsScreen() {
@@ -71,6 +74,7 @@ export function SettingsScreen() {
   const { spacing } = useTheme();
   const save = useSavePreferences();
   const appearance = usePreferencesStore((s) => s.appearance);
+  const language = usePreferencesStore((s) => s.language);
   const lowData = usePreferencesStore((s) => s.lowDataMode);
   const autoLock = usePreferencesStore((s) => s.autoLockSeconds);
   const reduceMotion = usePreferencesStore((s) => s.reduceMotion);
@@ -94,6 +98,19 @@ export function SettingsScreen() {
               icon={a.icon}
               selected={appearance === a.value}
               onPress={() => save({ appearance: a.value })}
+            />
+          ))}
+        </ChipRow>
+      </Group>
+
+      <Group title={t('settings.language')} hint={t('settings.languageHint')}>
+        <ChipRow>
+          {LANGUAGES.map((l) => (
+            <Chip
+              key={l}
+              label={t(`settings.languages.${l}`)}
+              selected={language === l}
+              onPress={() => save({ language: l })}
             />
           ))}
         </ChipRow>
