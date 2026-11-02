@@ -166,7 +166,7 @@ export function MeScreen() {
         <Card padded={false}>
           <ListItem
             title="Help and support"
-            subtitle="Chat with our team"
+            subtitle="Answers, or chat with our team"
             leading={LifeBuoy}
             onPress={() => router.push('/support')}
           />

@@ -97,6 +97,12 @@ const ROUTES: Route[] = [
     to: ({ id = '' }) => ({ pathname: '/disputes/[id]', params: { id } }),
   },
   { pattern: 'support', to: () => '/support' },
+  { pattern: 'support/help', to: () => '/support/help' },
+  {
+    pattern: 'support/help/:slug',
+    to: ({ slug = '' }) => ({ pathname: '/support/help/[slug]', params: { slug } }),
+  },
+  { pattern: 'help', to: () => '/support/help' },
   {
     pattern: 'support/:id',
     to: ({ id = '' }) => ({ pathname: '/support/[id]', params: { id } }),

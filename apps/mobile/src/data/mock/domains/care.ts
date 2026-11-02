@@ -217,7 +217,77 @@ const ARTICLES: Schema<'HelpArticle'>[] = [
       'Everyone pays the same amount each cycle into a protected pot, and one member takes the whole pot in turn.',
     updated_at: '2026-10-01T09:00:00Z',
   },
+  {
+    slug: 'freeze-card',
+    title: 'Freeze or replace a lost card',
+    category: 'Cards',
+    body_markdown:
+      'Open the card in the Cards tab and tap Freeze. Nothing can be charged until you unfreeze it.\n\nIf the card is gone for good, freeze it, then create a new virtual card. Your old card number stops working.',
+    updated_at: '2026-10-01T09:00:00Z',
+  },
+  {
+    slug: 'convert-currency',
+    title: 'Converting naira to dollars, pounds or euros',
+    category: 'FX',
+    body_markdown:
+      'Open Convert, choose the currencies and the amount. The rate is locked for 60 seconds while you confirm.\n\nThe rate you see is the rate you get: there is no hidden markup on top.',
+    updated_at: '2026-10-01T09:00:00Z',
+  },
+  {
+    slug: 'report-a-problem',
+    title: 'Reporting a problem with a payment',
+    category: 'Disputes',
+    body_markdown:
+      'Open the payment from your transactions and tap Report a problem. Tell us what went wrong and add photos if you have them.\n\nYou get a case number straight away and can follow it in Me > Disputes. If you were charged for a failed payment or charged twice, we usually refund you within a day.',
+    updated_at: '2026-10-01T09:00:00Z',
+  },
+  {
+    slug: 'statements',
+    title: 'Getting a bank statement for a visa or loan',
+    category: 'Account',
+    body_markdown:
+      'Go to Me > Statements and pick the dates. Every statement has a verification code and QR, so an embassy or lender can check it is real.',
+    updated_at: '2026-10-01T09:00:00Z',
+  },
+  {
+    slug: 'never-share-pin',
+    title: 'Someone asked for my PIN or a code',
+    category: 'Security',
+    body_markdown:
+      'Nem staff will never ask for your PIN, password or a one-time code, by phone, chat or email.\n\nIf someone does, stop talking to them, turn on the panic button if you shared anything, and chat with us from Me > Help and support.',
+    updated_at: '2026-10-01T09:00:00Z',
+  },
+  {
+    slug: 'bills-failed',
+    title: 'My airtime or electricity token did not arrive',
+    category: 'Bills',
+    body_markdown:
+      'Most bills complete in seconds. If the biller fails, the money comes back to you automatically.\n\nFor electricity, the token is on the receipt in your transactions. If it still has not arrived after 15 minutes, report a problem on the payment.',
+    updated_at: '2026-10-01T09:00:00Z',
+  },
 ];
+
+/** The first paragraph, cut at a word if it runs long. */
+function excerpt(body: string): string {
+  const first = body.split('\n\n')[0] ?? '';
+  return first.length > 120 ? `${first.slice(0, first.lastIndexOf(' ', 117))}…` : first;
+}
+
+/** Every word must appear; title matches come first. */
+function searchHelp(q: string, category?: string): Schema<'HelpArticle'>[] {
+  const words = q.toLowerCase().split(/\s+/).filter(Boolean);
+  const inCategory = ARTICLES.filter(
+    (a) => !category || a.category.toLowerCase() === category.toLowerCase(),
+  );
+  if (!words.length) return inCategory;
+  const scored = inCategory.flatMap((a) => {
+    const title = a.title.toLowerCase();
+    const text = `${title} ${a.category} ${a.body_markdown}`.toLowerCase();
+    if (!words.every((w) => text.includes(w))) return [];
+    return [{ a, score: words.filter((w) => title.includes(w)).length }];
+  });
+  return scored.sort((x, y) => y.score - x.score).map((x) => x.a);
+}
 
 export function disputesRepo(bank: MockBank): DisputesRepo {
   const find = (id: string) => {
@@ -364,17 +434,12 @@ export function supportRepo(bank: MockBank): SupportRepo {
       return attachmentFrom(bank, body);
     },
     async searchArticles({ query } = {}) {
-      const q = query?.q?.trim().toLowerCase();
       return {
-        data: ARTICLES.filter(
-          (a) =>
-            (!query?.category || a.category.toLowerCase() === query.category.toLowerCase()) &&
-            (!q || `${a.title} ${a.body_markdown}`.toLowerCase().includes(q)),
-        ).map((a) => ({
+        data: searchHelp(query?.q ?? '', query?.category).map((a) => ({
           slug: a.slug,
           title: a.title,
           category: a.category,
-          excerpt: a.body_markdown.slice(0, 120),
+          excerpt: excerpt(a.body_markdown),
         })),
       };
     },

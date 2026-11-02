@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
-import { MessageCircle, Plus } from 'lucide-react-native';
+import { BookOpen, MessageCircle, Plus } from 'lucide-react-native';
 import { View } from 'react-native';
 
 import {
@@ -9,6 +9,7 @@ import {
   Card,
   EmptyState,
   ErrorState,
+  ListItem,
   Screen,
   SectionHeader,
   Skeleton,
@@ -22,7 +23,7 @@ import { useTheme } from '@/theme';
 
 import { CONVERSATION_STATUS } from '../support';
 
-/** Help and support (SUP-1): your chats with the support team, newest first. */
+/** Help and support: the help center (SUP-2) and your chats with the team (SUP-1). */
 export function SupportScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
@@ -91,6 +92,14 @@ export function SupportScreen() {
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
     >
+      <Card padded={false}>
+        <ListItem
+          title="Help center"
+          subtitle="Search answers to common questions"
+          leading={BookOpen}
+          onPress={() => router.push('/support/help')}
+        />
+      </Card>
       {body}
     </Screen>
   );

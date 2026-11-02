@@ -9,12 +9,14 @@ import { createMemoryStore } from '@/data/mock/persistence/types';
 import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
+import { ArticleScreen } from '../screens/ArticleScreen';
 import { ChatScreen } from '../screens/ChatScreen';
+import { HelpScreen } from '../screens/HelpScreen';
 import { NewChatScreen } from '../screens/NewChatScreen';
 import { SupportScreen } from '../screens/SupportScreen';
 import { messageBody } from '../support';
 
-const mockParams: { id?: string; transaction?: string } = {};
+const mockParams: { id?: string; transaction?: string; slug?: string } = {};
 const mockReplace = jest.fn();
 jest.mock('expo-router', () => ({
   useRouter: () => ({ push: jest.fn(), replace: mockReplace, back: jest.fn() }),
@@ -144,5 +146,32 @@ describe('support screens', () => {
         data: { conversation_id: c.id, sender: 'agent', typing: true },
       });
     expect(await screen.findByLabelText('Support is typing')).toBeOnTheScreen();
+  });
+});
+
+describe('help center', () => {
+  it('searches by every word, filters by topic and says when nothing matches', async () => {
+    await render(wrap(createMockRepositories(options()), <HelpScreen />));
+    expect(await screen.findByText('My transfer is pending')).toBeOnTheScreen();
+    await fireEvent.press(await screen.findByRole('togglebutton', { name: 'Cards' }));
+    expect(await screen.findByText('1 answer')).toBeOnTheScreen();
+    expect(screen.getByText('Freeze or replace a lost card')).toBeOnTheScreen();
+
+    await fireEvent.press(screen.getByRole('togglebutton', { name: 'All' }));
+    await fireEvent.changeText(screen.getByLabelText('Search help'), 'refund charged');
+    expect(await screen.findByText('Reporting a problem with a payment')).toBeOnTheScreen();
+    await waitFor(() => expect(screen.queryByText('My transfer is pending')).not.toBeOnTheScreen());
+    expect(screen.getByText('Reporting a problem with a payment')).toBeOnTheScreen();
+
+    await fireEvent.changeText(screen.getByLabelText('Search help'), 'crypto staking');
+    expect(await screen.findByText('No answers found')).toBeOnTheScreen();
+  });
+
+  it('opens an article with each paragraph', async () => {
+    mockParams.slug = 'never-share-pin';
+    await render(wrap(createMockRepositories(options()), <ArticleScreen />));
+    expect(await screen.findByText('Someone asked for my PIN or a code')).toBeOnTheScreen();
+    expect(screen.getByText(/^If someone does, stop talking/)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Didn’t help? Chat with us' })).toBeOnTheScreen();
   });
 });
