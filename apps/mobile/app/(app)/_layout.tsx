@@ -33,6 +33,7 @@ export default function AppLayout() {
             scrolling back up never drags an iOS sheet down to close it. */}
         <Stack.Screen name="support" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="notifications" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="assistant" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="send" options={{ presentation: 'modal' }} />
         <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
         <Stack.Screen name="bills" options={{ presentation: 'modal' }} />
@@ -50,7 +51,6 @@ export default function AppLayout() {
         <Stack.Screen name="insights" options={{ presentation: 'modal' }} />
         <Stack.Screen name="security" options={{ presentation: 'modal' }} />
         <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
         <Stack.Screen name="ai" options={{ presentation: 'modal' }} />
       </Stack>
       <NewDeviceNotice />

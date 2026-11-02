@@ -10,8 +10,9 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
-import { Text } from '@/components';
 import { useTheme } from '@/theme';
+
+import { Text } from './Text';
 
 function Dot({ index }: { index: number }) {
   const { colors } = useTheme();

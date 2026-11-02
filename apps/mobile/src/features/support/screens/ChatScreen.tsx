@@ -12,6 +12,7 @@ import {
   Skeleton,
   SkeletonGroup,
   Text,
+  TypingIndicator,
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
@@ -21,7 +22,6 @@ import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { queryKeys, useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
-import { TypingIndicator } from '../components/TypingIndicator';
 import { MAX_ATTACHMENTS, MESSAGE_MAX, messageBody, useAgentTyping } from '../support';
 
 const message = (e: unknown) =>

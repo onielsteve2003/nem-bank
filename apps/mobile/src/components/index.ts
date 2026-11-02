@@ -45,6 +45,7 @@ export { Slider } from './Slider';
 export { Switch } from './Switch';
 export { Text, type TextColor } from './Text';
 export { TextField } from './TextField';
+export { TypingIndicator } from './TypingIndicator';
 export {
   TOAST_DURATION,
   ToastProvider,

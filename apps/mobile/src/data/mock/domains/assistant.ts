@@ -3,7 +3,7 @@ import { formatMoney, parseMajor } from '@nem/shared';
 
 import { problem } from '../../errors';
 import type { AssistantRepo, Repositories } from '../../repositories';
-import { addMinutes, api, newestFirst, notFound, paginate } from '../convert';
+import { addMinutes, api, notFound, paginate } from '../convert';
 import type { MockBank } from '../runtime';
 import { accountView, customerTransactions, personByNemtag } from '../views';
 
@@ -205,7 +205,9 @@ export function assistantRepo(bank: MockBank, repos: () => Repositories): Assist
       const messages = bank.world.assistant.messages
         .filter((m) => m.conversationId === path.conversation_id)
         .map(({ conversationId: _c, ...m }) => m);
-      return paginate(newestFirst(messages), query);
+      // Oldest first, as the contract says. Kept in the order they were said: a
+      // question and its reply share a timestamp, so sorting could swap them.
+      return paginate(messages, query);
     },
     async sendMessage({ path, body }) {
       const c = conversation(path.conversation_id);
