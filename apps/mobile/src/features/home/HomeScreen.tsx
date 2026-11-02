@@ -252,7 +252,9 @@ export function HomeScreen() {
       {assistantOn && (
         <AssistantEntry
           onOpen={() => router.push('/assistant')}
-          onManage={() => router.push('/me')}
+          onManage={() =>
+            router.push({ pathname: '/ai/[feature]', params: { feature: 'assistant' } })
+          }
         />
       )}
     </Screen>

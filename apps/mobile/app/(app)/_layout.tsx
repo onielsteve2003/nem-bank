@@ -51,6 +51,7 @@ export default function AppLayout() {
         <Stack.Screen name="security" options={{ presentation: 'modal' }} />
         <Stack.Screen name="qr" options={{ presentation: 'modal' }} />
         <Stack.Screen name="assistant" options={{ presentation: 'modal' }} />
+        <Stack.Screen name="ai" options={{ presentation: 'modal' }} />
       </Stack>
       <NewDeviceNotice />
       <PushBridge />

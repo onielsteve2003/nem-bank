@@ -2,6 +2,7 @@ import { useRouter } from 'expo-router';
 import {
   BadgeCheck,
   Bell,
+  Bot,
   FileText,
   Flag,
   Gauge,
@@ -165,6 +166,13 @@ export function MeScreen() {
             subtitle="Official PDFs with a verification code"
             leading={FileText}
             onPress={() => router.push('/statements')}
+          />
+          <Divider />
+          <ListItem
+            title="AI and your data"
+            subtitle="What each AI feature uses, with switches"
+            leading={Bot}
+            onPress={() => router.push('/ai')}
           />
         </Card>
       </View>

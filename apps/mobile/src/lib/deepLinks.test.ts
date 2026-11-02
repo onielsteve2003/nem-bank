@@ -46,6 +46,8 @@ describe('resolveDeepLink', () => {
     expect(path('nembank://family/approvals')).toBe('/family/approvals');
     expect(path('nembank://family/d1')).toBe('/family/d1');
     expect(path('nembank://disputes/d1')).toBe('/disputes/d1');
+    expect(path('nembank://ai')).toBe('/ai');
+    expect(path('nembank://ai/forecast')).toBe('/ai/forecast');
     expect(path('nembank://support/c1')).toBe('/support/c1');
     expect(path('nembank://support/help/emtl')).toBe('/support/help/emtl');
     expect(path('nembank://help')).toBe('/support/help');
