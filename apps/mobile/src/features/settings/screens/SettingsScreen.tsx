@@ -108,7 +108,7 @@ export function SettingsScreen() {
           onValueChange={(on) => save({ hideBalances: on })}
         />
         <Divider />
-        <Text variant="bodyStrong">Lock Nem after it's been in the background for</Text>
+        <Text variant="bodyStrong">{"Lock Nem after it's been in the background for"}</Text>
         <ChipRow>
           {AUTO_LOCK.map((o) => (
             <Chip
