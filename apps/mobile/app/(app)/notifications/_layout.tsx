@@ -1,6 +1,6 @@
 import { Stack } from 'expo-router';
 
-import { ModalSheetHost } from '@/components';
+import { FullScreenModalProvider, ModalSheetHost } from '@/components';
 import { useTheme } from '@/theme';
 
 export const unstable_settings = { initialRouteName: 'index' };
@@ -9,10 +9,15 @@ export const unstable_settings = { initialRouteName: 'index' };
 export default function NotificationsFlowLayout() {
   const { colors } = useTheme();
   return (
-    <ModalSheetHost>
-      <Stack
-        screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.background } }}
-      />
-    </ModalSheetHost>
+    <FullScreenModalProvider>
+      <ModalSheetHost>
+        <Stack
+          screenOptions={{
+            headerShown: false,
+            contentStyle: { backgroundColor: colors.background },
+          }}
+        />
+      </ModalSheetHost>
+    </FullScreenModalProvider>
   );
 }

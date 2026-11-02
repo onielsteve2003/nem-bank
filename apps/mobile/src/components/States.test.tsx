@@ -1,12 +1,13 @@
 import { act, fireEvent, render, screen } from '@testing-library/react-native';
 import { Inbox } from 'lucide-react-native';
+import { StyleSheet } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 
 import { ThemeProvider } from '@/theme';
 
 import { EmptyState } from './EmptyState';
 import { ErrorState } from './ErrorState';
-import { Screen } from './Screen';
+import { FullScreenModalProvider, Screen } from './Screen';
 import { Skeleton, SkeletonGroup } from './Skeleton';
 import { Text } from './Text';
 
@@ -76,6 +77,21 @@ describe('ErrorState', () => {
 });
 
 describe('Screen', () => {
+  it('keeps a full-screen modal clear of the status bar', async () => {
+    await renderThemed(
+      <FullScreenModalProvider>
+        <Screen header={<Text>Title</Text>}>
+          <Text>Body</Text>
+        </Screen>
+      </FullScreenModalProvider>,
+    );
+    let root = screen.getByText('Title');
+    while (root.props.edges === undefined) root = root.parent!;
+    expect(StyleSheet.flatten(root.props.style)).toMatchObject({ paddingTop: METRICS.insets.top });
+    // The native inset stays off at the top, so the gap is never doubled.
+    expect(root.props.edges).toMatchObject({ top: 'off', bottom: 'additive' });
+  });
+
   it('renders header, content and footer', async () => {
     await renderThemed(
       <Screen header={<Text>Title</Text>} footer={<Text>Continue</Text>}>

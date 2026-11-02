@@ -19,7 +19,7 @@ import {
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
-import { SafeAreaView, type Edge } from 'react-native-safe-area-context';
+import { SafeAreaView, useSafeAreaInsets, type Edge } from 'react-native-safe-area-context';
 
 import { useTheme } from '@/theme';
 
@@ -47,6 +47,16 @@ export type Props = {
  */
 const ScreenBannerContext = createContext<ReactNode>(null);
 export const ScreenBannerProvider = ScreenBannerContext.Provider;
+
+/**
+ * Wraps screens shown as an iOS full-screen modal. There the native safe area
+ * view can report no top inset, which put the header under the clock and
+ * battery icons, so the top gap comes from the window's own insets instead.
+ */
+const FullScreenModalContext = createContext(false);
+export const FullScreenModalProvider = ({ children }: { children: ReactNode }) => (
+  <FullScreenModalContext.Provider value>{children}</FullScreenModalContext.Provider>
+);
 
 /**
  * How far the screen sits below the top of the window. KeyboardAvoidingView
@@ -82,6 +92,9 @@ export function Screen({
   const banner = useContext(ScreenBannerContext);
   const root = useRef<ComponentRef<typeof View>>(null);
   const keyboardOffset = useSheetOffset(root);
+  const insets = useSafeAreaInsets();
+  const fullScreenModal = useContext(FullScreenModalContext);
+  const padTop = fullScreenModal && edges.includes('top');
   const padding = padded ? { padding: spacing[4], gap: spacing[6] } : undefined;
 
   const body = scroll ? (
@@ -112,8 +125,12 @@ export function Screen({
   return (
     <SafeAreaView
       ref={root}
-      edges={edges}
-      style={[styles.flex, { backgroundColor: colors.background }]}
+      edges={padTop ? edges.filter((e) => e !== 'top') : edges}
+      style={[
+        styles.flex,
+        { backgroundColor: colors.background },
+        padTop && { paddingTop: insets.top },
+      ]}
     >
       {banner}
       {header}
