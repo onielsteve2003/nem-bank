@@ -1,5 +1,15 @@
-import { createContext, useContext, type ReactNode } from 'react';
 import {
+  createContext,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+  type ComponentRef,
+  type RefObject,
+} from 'react';
+import {
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   RefreshControl,
@@ -38,6 +48,24 @@ export type Props = {
 const ScreenBannerContext = createContext<ReactNode>(null);
 export const ScreenBannerProvider = ScreenBannerContext.Provider;
 
+/**
+ * How far the screen sits below the top of the window. KeyboardAvoidingView
+ * measures itself against its parent, so inside an iOS sheet (which starts
+ * lower down) it would lift the content too little and the keyboard would
+ * cover the field. Measured as the keyboard opens, when the sheet has settled.
+ */
+function useSheetOffset(root: RefObject<ComponentRef<typeof View> | null>): number {
+  const [offset, setOffset] = useState(0);
+  useEffect(() => {
+    if (Platform.OS !== 'ios') return;
+    const sub = Keyboard.addListener('keyboardWillShow', () =>
+      root.current?.measureInWindow((_x, y) => setOffset(Math.max(0, Math.round(y)))),
+    );
+    return () => sub.remove();
+  }, [root]);
+  return offset;
+}
+
 /** The shell every screen renders in: themed background, safe areas, keyboard avoiding, refresh. */
 export function Screen({
   children,
@@ -52,6 +80,8 @@ export function Screen({
 }: Props) {
   const { colors, spacing } = useTheme();
   const banner = useContext(ScreenBannerContext);
+  const root = useRef<ComponentRef<typeof View>>(null);
+  const keyboardOffset = useSheetOffset(root);
   const padding = padded ? { padding: spacing[4], gap: spacing[6] } : undefined;
 
   const body = scroll ? (
@@ -80,12 +110,17 @@ export function Screen({
   );
 
   return (
-    <SafeAreaView edges={edges} style={[styles.flex, { backgroundColor: colors.background }]}>
+    <SafeAreaView
+      ref={root}
+      edges={edges}
+      style={[styles.flex, { backgroundColor: colors.background }]}
+    >
       {banner}
       {header}
       <KeyboardAvoidingView
         style={styles.flex}
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        keyboardVerticalOffset={keyboardOffset}
       >
         {body}
         {footer && (

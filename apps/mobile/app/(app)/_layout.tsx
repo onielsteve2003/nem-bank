@@ -28,8 +28,10 @@ export default function AppLayout() {
         <Stack.Screen name="statements/index" />
         <Stack.Screen name="statements/[id]" />
         <Stack.Screen name="disputes" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="support" options={{ presentation: 'modal' }} />
-        <Stack.Screen name="notifications" options={{ presentation: 'modal' }} />
+        {/* Long, scrolling content (a chat, articles, the inbox): full screen, so
+            scrolling back up never drags an iOS sheet down to close it. */}
+        <Stack.Screen name="support" options={{ presentation: 'fullScreenModal' }} />
+        <Stack.Screen name="notifications" options={{ presentation: 'fullScreenModal' }} />
         <Stack.Screen name="send" options={{ presentation: 'modal' }} />
         <Stack.Screen name="convert" options={{ presentation: 'modal' }} />
         <Stack.Screen name="bills" options={{ presentation: 'modal' }} />
