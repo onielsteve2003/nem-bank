@@ -1,4 +1,4 @@
-import { createInstance } from 'i18next';
+import { createInstance, type ParseKeys } from 'i18next';
 import { initReactI18next } from 'react-i18next';
 
 import { deviceLanguage, languageFor } from './deviceLanguage';
@@ -23,6 +23,23 @@ void i18n.use(initReactI18next).init({
   interpolation: { escapeValue: false },
   returnNull: false,
 });
+
+export type TranslationKey = ParseKeys;
+
+/**
+ * A lookup table (status → words) for module-level constants. Each value is
+ * read in the current language when it is used, so a language change shows
+ * up without a reload.
+ */
+export function localized<K extends string>(
+  keys: Record<K, TranslationKey>,
+): Readonly<Record<K, string>> {
+  const table = {} as Record<K, string>;
+  for (const key of Object.keys(keys) as K[]) {
+    Object.defineProperty(table, key, { enumerable: true, get: () => i18n.t(keys[key]) });
+  }
+  return table;
+}
 
 export { deviceLanguage, languageFor };
 export default i18n;

@@ -11,15 +11,16 @@ import { StyleSheet, View } from 'react-native';
 import { Icon, PressableScale, Text } from '@/components';
 import { haptic } from '@/lib/haptics';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 export type QuickAction = 'send' | 'addMoney' | 'convert' | 'bills' | 'scan';
 
-const ACTIONS: readonly { key: QuickAction; label: string; icon: LucideIcon }[] = [
-  { key: 'send', label: 'Send', icon: ArrowUpRight },
-  { key: 'addMoney', label: 'Add money', icon: Plus },
-  { key: 'convert', label: 'Convert', icon: ArrowLeftRight },
-  { key: 'bills', label: 'Bills', icon: Receipt },
-  { key: 'scan', label: 'Scan', icon: ScanLine },
+const ACTIONS: readonly { key: QuickAction; icon: LucideIcon }[] = [
+  { key: 'send', icon: ArrowUpRight },
+  { key: 'addMoney', icon: Plus },
+  { key: 'convert', icon: ArrowLeftRight },
+  { key: 'bills', icon: Receipt },
+  { key: 'scan', icon: ScanLine },
 ];
 
 const BUTTON = 52;
@@ -27,13 +28,14 @@ const BUTTON = 52;
 /** The five things people come to Home to do (PRD §8), one tap each. */
 export function QuickActions({ onAction }: { onAction: (action: QuickAction) => void }) {
   const { colors, spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={[styles.row, { paddingHorizontal: spacing[4] }]}>
-      {ACTIONS.map(({ key, label, icon }) => (
+      {ACTIONS.map(({ key, icon }) => (
         <PressableScale
           key={key}
           accessibilityRole="button"
-          accessibilityLabel={label}
+          accessibilityLabel={t(`home.actions.${key}`)}
           onPress={() => {
             haptic('tap');
             onAction(key);
@@ -53,7 +55,7 @@ export function QuickActions({ onAction }: { onAction: (action: QuickAction) => 
             <Icon icon={icon} size="md" color={key === 'send' ? 'onPrimary' : 'text'} />
           </View>
           <Text variant="caption" color="textMuted" numberOfLines={1}>
-            {label}
+            {t(`home.actions.${key}`)}
           </Text>
         </PressableScale>
       ))}

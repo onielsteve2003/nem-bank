@@ -9,6 +9,7 @@ import { useTheme } from '@/theme';
 
 import { ReceivingDetailsCard } from './ReceivingDetailsCard';
 import { shareMessage } from './receivingDetails';
+import { useTranslation } from 'react-i18next';
 
 /**
  * How to pay into a wallet from another bank (ACC-1, ACC-2): each detail with
@@ -29,6 +30,7 @@ export function AccountDetailsSheet({
   const { spacing } = useTheme();
   const toast = useToast();
   const router = useRouter();
+  const { t } = useTranslation();
   const details = account?.receiving_details;
   const currency = account ? CURRENCIES[account.currency] : null;
 
@@ -38,7 +40,7 @@ export function AccountDetailsSheet({
       await Share.share({ message: shareMessage(details, currency.name) });
     } catch {
       toast.show({
-        message: "Sharing isn't available here. Copy the details instead.",
+        message: t('accounts.details.shareFailed'),
         tone: 'error',
       });
     }
@@ -48,17 +50,21 @@ export function AccountDetailsSheet({
     <BottomSheet
       open={account !== null}
       onClose={onClose}
-      title={currency ? `${currency.flag} ${currency.name} account` : undefined}
+      title={
+        currency
+          ? t('accounts.details.title', { flag: currency.flag, name: currency.name })
+          : undefined
+      }
     >
       {details && currency && (
         <View style={{ gap: spacing[4] }}>
           <View style={[styles.row, { gap: spacing[2] }]}>
             <Text color="textMuted" style={styles.flex}>
               {account?.currency === 'NGN'
-                ? 'Send naira here from any Nigerian bank app.'
-                : `Get paid in ${currency.code} here.`}
+                ? t('accounts.details.ngnIntro')
+                : t('accounts.details.foreignIntro', { code: currency.code })}
             </Text>
-            {details.demo && <Badge label="Demo details" tone="warning" />}
+            {details.demo && <Badge label={t('accounts.details.demoBadge')} tone="warning" />}
           </View>
 
           <ReceivingDetailsCard details={details} />
@@ -67,17 +73,21 @@ export function AccountDetailsSheet({
             <View style={[styles.row, { gap: spacing[2] }]}>
               <Icon icon={TriangleAlert} size="sm" color="warning" />
               <Text variant="caption" color="textMuted" style={styles.flex}>
-                These are demo details. Nem Bank is a demo, so money sent to them from a real bank
-                will not arrive.
+                {t('accounts.details.demoWarning')}
               </Text>
             </View>
           )}
 
           <View style={{ gap: spacing[2] }}>
-            <Button label="Share details" icon={Share2} fullWidth onPress={() => void share()} />
+            <Button
+              label={t('accounts.details.share')}
+              icon={Share2}
+              fullWidth
+              onPress={() => void share()}
+            />
             {account?.currency !== 'NGN' && (
               <Button
-                label="How receiving works"
+                label={t('accounts.details.howReceiving')}
                 icon={CircleHelp}
                 variant="ghost"
                 fullWidth
@@ -91,7 +101,7 @@ export function AccountDetailsSheet({
               />
             )}
             <Button
-              label="Get a statement"
+              label={t('accounts.details.statement')}
               icon={FileText}
               variant="ghost"
               fullWidth
@@ -102,7 +112,7 @@ export function AccountDetailsSheet({
             />
             {onAddDemoMoney && (
               <Button
-                label="Add demo money now"
+                label={t('accounts.details.addDemoMoney')}
                 variant="ghost"
                 fullWidth
                 onPress={onAddDemoMoney}

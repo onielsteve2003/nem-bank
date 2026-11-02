@@ -8,6 +8,7 @@ import { getPushSupport, showLocalAlert } from '@/lib/pushNotifications';
 import { useTheme } from '@/theme';
 
 import { askPushPermission, phoneAlertStatus, usePushStore } from '../push';
+import { useTranslation } from 'react-i18next';
 
 const ICONS = { success: CircleCheck, warning: TriangleAlert, info: Info } as const;
 
@@ -15,6 +16,7 @@ const ICONS = { success: CircleCheck, warning: TriangleAlert, info: Info } as co
 export function PhoneAlertsCard() {
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const permission = usePushStore((s) => s.permission);
   const [asking, setAsking] = useState(false);
   const status = phoneAlertStatus(getPushSupport(), permission);
@@ -24,15 +26,15 @@ export function PhoneAlertsCard() {
     const result = await askPushPermission();
     setAsking(false);
     if (result !== 'granted') {
-      toast.show({ message: 'Alerts stay in your inbox for now.', tone: 'info' });
+      toast.show({ message: t('notifications.phone.stay'), tone: 'info' });
     }
   };
 
   const test = () =>
     void showLocalAlert({
       id: 'test',
-      title: 'Nem test alert',
-      body: 'Alerts are working on this phone.',
+      title: t('notifications.phone.testTitle'),
+      body: t('notifications.phone.testBody'),
       deepLink: null,
     });
 
@@ -49,7 +51,7 @@ export function PhoneAlertsCard() {
       </View>
       {status.action === 'enable' && (
         <Button
-          label="Turn on alerts"
+          label={t('notifications.phone.turnOn')}
           icon={BellRing}
           loading={asking}
           onPress={() => void enable()}
@@ -58,7 +60,7 @@ export function PhoneAlertsCard() {
       )}
       {status.action === 'settings' && (
         <Button
-          label="Open phone settings"
+          label={t('notifications.phone.openSettings')}
           variant="secondary"
           onPress={() => void Linking.openSettings()}
           style={{ marginTop: spacing[3] }}
@@ -66,7 +68,7 @@ export function PhoneAlertsCard() {
       )}
       {status.action === 'test' && (
         <Button
-          label="Send a test alert"
+          label={t('notifications.phone.test')}
           variant="secondary"
           onPress={test}
           style={{ marginTop: spacing[3] }}

@@ -2,17 +2,18 @@ import type { Schema } from '@nem/contracts';
 import { isPositive, subtract, sum, zero, type Money } from '@nem/shared';
 
 import { fromApiMoney } from '@/lib/money';
+import { localized } from '@/lib/i18n';
 
 type Hold = Schema<'Hold'>;
 
-export const HOLD_REASONS: Record<Schema<'HoldReason'>, string> = {
-  card_authorization: 'Card payment waiting to settle',
-  pending_transfer: 'Transfer on its way',
-  delayed_transfer: 'New-beneficiary cooling-off',
-  fraud_review: 'Held for a security review',
-  ajo_contribution: 'Ajo contribution',
-  dispute: 'Under dispute',
-};
+export const HOLD_REASONS = localized<Schema<'HoldReason'>>({
+  card_authorization: 'accounts.holdReasons.card_authorization',
+  pending_transfer: 'accounts.holdReasons.pending_transfer',
+  delayed_transfer: 'accounts.holdReasons.delayed_transfer',
+  fraud_review: 'accounts.holdReasons.fraud_review',
+  ajo_contribution: 'accounts.holdReasons.ajo_contribution',
+  dispute: 'accounts.holdReasons.dispute',
+});
 
 export interface BalanceBreakdown {
   ledger: Money;

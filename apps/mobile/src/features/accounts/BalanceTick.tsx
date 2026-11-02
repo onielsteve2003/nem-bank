@@ -4,6 +4,7 @@ import { AccessibilityInfo } from 'react-native';
 import Animated, { FadeInDown, FadeOut } from 'react-native-reanimated';
 
 import { Text, type TextColor } from '@/components';
+import i18n from '@/lib/i18n';
 
 const SHOW_MS = 2_500;
 
@@ -49,8 +50,11 @@ export function BalanceTick({ value, hidden, color, label }: Props) {
     if (!delta) return;
     AccessibilityInfo.announceForAccessibility(
       hidden
-        ? `${label} balance went ${up ? 'up' : 'down'}`
-        : `${label} balance went ${up ? 'up' : 'down'} by ${formatMoney(up ? delta : negate(delta))}`,
+        ? i18n.t(up ? 'accounts.tick.up' : 'accounts.tick.down', { label })
+        : i18n.t(up ? 'accounts.tick.upBy' : 'accounts.tick.downBy', {
+            label,
+            amount: formatMoney(up ? delta : negate(delta)),
+          }),
     );
   }, [delta, hidden, label, up]);
 
@@ -58,7 +62,9 @@ export function BalanceTick({ value, hidden, color, label }: Props) {
   return (
     <Animated.View entering={FadeInDown.duration(220)} exiting={FadeOut.duration(400)}>
       <Text variant="caption" color={color} importantForAccessibility="no">
-        {hidden ? (up ? '▲ Money in' : '▼ Money out') : formatMoney(delta, { signPositive: true })}
+        {hidden
+          ? i18n.t(up ? 'accounts.tick.moneyIn' : 'accounts.tick.moneyOut')
+          : formatMoney(delta, { signPositive: true })}
       </Text>
     </Animated.View>
   );

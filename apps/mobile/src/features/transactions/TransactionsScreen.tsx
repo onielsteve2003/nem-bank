@@ -27,12 +27,13 @@ import {
   NO_FILTERS,
   STATUS_LABELS,
   toQuery,
-  TYPE_GROUPS,
+  typeGroupLabel,
   type ListRow,
   type TransactionFilters,
 } from './filters';
 import { TransactionRow } from './TransactionRow';
 import { useTransactionPages } from './useTransactionPages';
+import { useTranslation } from 'react-i18next';
 
 const SEARCH_DEBOUNCE_MS = 300;
 
@@ -41,7 +42,7 @@ function activeChips(f: TransactionFilters) {
   return [
     ...f.types.map((g) => ({
       key: `type-${g}`,
-      label: TYPE_GROUPS[g].label,
+      label: typeGroupLabel(g),
       clear: { types: f.types.filter((t) => t !== g) },
     })),
     f.currency && {
@@ -65,6 +66,7 @@ export function TransactionsScreen() {
   const [filters, setFilters] = useState<TransactionFilters>(NO_FILTERS);
   const [searchText, setSearchText] = useState('');
   const [sheetOpen, setSheetOpen] = useState(false);
+  const { t } = useTranslation();
 
   useEffect(() => {
     const id = setTimeout(
@@ -87,23 +89,25 @@ export function TransactionsScreen() {
       <View style={[styles.row, { gap: spacing[2] }]}>
         <IconButton
           icon={ArrowLeft}
-          accessibilityLabel="Back"
+          accessibilityLabel={t('common.back')}
           variant="ghost"
           onPress={() => router.back()}
         />
         <Text variant="title" accessibilityRole="header" style={styles.flex}>
-          Transactions
+          {t('transactions.list.title')}
         </Text>
         <IconButton
           icon={SlidersHorizontal}
-          accessibilityLabel={count > 0 ? `Filters, ${count} on` : 'Filters'}
+          accessibilityLabel={
+            count > 0 ? t('transactions.list.filtersOn', { count }) : t('transactions.list.filters')
+          }
           variant="ghost"
           onPress={() => setSheetOpen(true)}
         />
       </View>
       <TextField
-        label="Search transactions"
-        placeholder="Name, narration or reference"
+        label={t('transactions.list.search')}
+        placeholder={t('transactions.list.searchPlaceholder')}
         leadingIcon={Search}
         value={searchText}
         onChangeText={setSearchText}
@@ -113,7 +117,7 @@ export function TransactionsScreen() {
           searchText ? (
             <IconButton
               icon={X}
-              accessibilityLabel="Clear search"
+              accessibilityLabel={t('transactions.list.clearSearch')}
               variant="ghost"
               size="sm"
               onPress={() => setSearchText('')}
@@ -163,13 +167,11 @@ export function TransactionsScreen() {
     rows.length === 0 ? (
       <EmptyState
         icon={ReceiptText}
-        title={filtered ? 'No matching transactions' : 'No transactions yet'}
+        title={filtered ? t('transactions.list.noMatch') : t('common.noTransactions')}
         message={
-          filtered
-            ? 'Try another search or fewer filters.'
-            : 'Money you send, receive or spend shows up here.'
+          filtered ? t('transactions.list.noMatchMessage') : t('common.noTransactionsMessage')
         }
-        actionLabel={filtered ? 'Clear filters' : undefined}
+        actionLabel={filtered ? t('transactions.list.clearFilters') : undefined}
         onAction={
           filtered
             ? () => {
@@ -201,12 +203,15 @@ export function TransactionsScreen() {
         ListFooterComponent={
           list.isFetchingNextPage ? (
             <ActivityIndicator
-              accessibilityLabel="Loading more"
+              accessibilityLabel={t('transactions.list.loadingMore')}
               color={colors.primaryText}
               style={{ padding: spacing[4] }}
             />
           ) : list.isFetchNextPageError ? (
-            <ErrorState title="We couldn't load more" onRetry={() => void list.fetchNextPage()} />
+            <ErrorState
+              title={t('transactions.list.moreFailed')}
+              onRetry={() => void list.fetchNextPage()}
+            />
           ) : (
             <View style={{ height: spacing[8] }} />
           )
@@ -216,11 +221,11 @@ export function TransactionsScreen() {
   ) : list.isError ? (
     <ErrorState
       kind={isApiError(list.error) && list.error.problem.code === 'offline' ? 'offline' : 'error'}
-      title="We couldn't load your transactions"
+      title={t('transactions.list.failed')}
       onRetry={() => void list.refetch()}
     />
   ) : (
-    <SkeletonGroup accessibilityLabel="Loading transactions">
+    <SkeletonGroup accessibilityLabel={t('transactions.list.loading')}>
       {Array.from({ length: 6 }, (_, i) => (
         <SkeletonListItem key={i} />
       ))}

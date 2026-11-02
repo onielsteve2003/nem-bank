@@ -5,18 +5,19 @@ import { transactionTitle } from '@/features/transactions/TransactionRow';
 import { fromApiMoney } from '@/lib/money';
 import { qrSvg } from '@/lib/qr';
 import { escapeHtml } from '@/lib/shareHtml';
+import i18n, { localized, type TranslationKey } from '@/lib/i18n';
 
 type Statement = Schema<'Statement'>;
 type Transaction = Schema<'Transaction'>;
 
-export const PERIODS = {
-  last_month: 'Last month',
-  m3: 'Last 3 months',
-  m6: 'Last 6 months',
-  m12: 'Last 12 months',
-  custom: 'Choose dates',
-} as const;
-export type Period = keyof typeof PERIODS;
+export type Period = 'last_month' | 'm3' | 'm6' | 'm12' | 'custom';
+export const PERIODS = localized<Period>({
+  last_month: 'statements.periods.last_month',
+  m3: 'statements.periods.m3',
+  m6: 'statements.periods.m6',
+  m12: 'statements.periods.m12',
+  custom: 'statements.periods.custom',
+});
 
 /** A preset period as inclusive Lagos dates ending on or before `today`. */
 export function periodRange(period: Exclude<Period, 'custom'>, today: string) {
@@ -39,7 +40,11 @@ const longDate = new Intl.DateTimeFormat('en-NG', {
 export const formatDay = (iso: string) => longDate.format(new Date(`${iso}T00:00:00Z`));
 
 export const statementTitle = (s: Pick<Statement, 'currency' | 'period_from' | 'period_to'>) =>
-  `${s.currency} statement, ${formatDay(s.period_from)} to ${formatDay(s.period_to)}`;
+  i18n.t('statements.title', {
+    currency: s.currency,
+    from: formatDay(s.period_from),
+    to: formatDay(s.period_to),
+  });
 
 export interface StatementHolder {
   name: string;
@@ -86,6 +91,7 @@ export function statementHtml(
     })
     .join('');
   const url = statement.verification_url ?? '';
+  const tr = (key: TranslationKey) => e(i18n.t(key));
   return `<!doctype html>
 <html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
 <title>${e(statementTitle(statement))}</title>
@@ -109,21 +115,21 @@ export function statementHtml(
 </style></head>
 <body>
   <div class="brand"><span>Nem</span> Bank</div>
-  <h1>Account statement</h1>
+  <h1>${tr('statements.pdf.heading')}</h1>
   <div class="muted">${e(formatDay(statement.period_from))} to ${e(formatDay(statement.period_to))} · ${e(statement.currency)}</div>
   <p><b>${e(holder.name)}</b><br>${e(holder.bankName)} · ${e(holder.account)}</p>
   <div class="summary">
-    <div>Opening balance<b>${money(statement.opening_balance)}</b></div>
-    <div>Money in<b>${e(totals.moneyIn)}</b></div>
-    <div>Money out<b>${e(totals.moneyOut)}</b></div>
-    <div>Closing balance<b>${money(statement.closing_balance)}</b></div>
+    <div>${tr('statements.detail.opening')}<b>${money(statement.opening_balance)}</b></div>
+    <div>${tr('statements.pdf.moneyIn')}<b>${e(totals.moneyIn)}</b></div>
+    <div>${tr('statements.pdf.moneyOut')}<b>${e(totals.moneyOut)}</b></div>
+    <div>${tr('statements.detail.closing')}<b>${money(statement.closing_balance)}</b></div>
   </div>
-  <table><thead><tr><th>Date</th><th>Description</th><th class="num">Amount</th><th class="num">Balance</th></tr></thead>
-  <tbody>${rows || '<tr><td colspan="4" class="muted">No completed transactions in this period.</td></tr>'}</tbody></table>
+  <table><thead><tr><th>${tr('statements.pdf.date')}</th><th>${tr('statements.pdf.description')}</th><th class="num">${tr('statements.pdf.amount')}</th><th class="num">${tr('statements.pdf.balance')}</th></tr></thead>
+  <tbody>${rows || `<tr><td colspan="4" class="muted">${tr('statements.pdf.empty')}</td></tr>`}</tbody></table>
   <div class="verify">
     ${url ? qrSvg(url, 72) : ''}
-    <div>Verify this statement at ${e(url)}<br>Verification code <b>${e(statement.verification_code ?? '')}</b><br>SHA-256 <code>${e(statement.sha256 ?? '')}</code><br>
-    Nem Bank is a demo. Simulated money, not a real bank document.</div>
+    <div>${e(i18n.t('statements.pdf.verifyAt', { url }))}<br>${tr('statements.detail.code')} <b>${e(statement.verification_code ?? '')}</b><br>SHA-256 <code>${e(statement.sha256 ?? '')}</code><br>
+    ${tr('statements.pdf.demo')}</div>
   </div>
 </body></html>`;
 }

@@ -45,7 +45,12 @@ describe('receiving details', () => {
       account_name: 'Tolu',
       demo: true,
     });
-    expect(uk[0]).toEqual({ label: 'Sort code', value: '04-00-00', copy: '040000' });
+    expect(uk[0]).toMatchObject({
+      id: 'sortCode',
+      label: 'Sort code',
+      value: '04-00-00',
+      copy: '040000',
+    });
     const eu = detailRows({
       scheme: 'iban',
       bank_name: 'Partner',

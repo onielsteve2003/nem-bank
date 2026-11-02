@@ -32,15 +32,17 @@ import { AssistantEntry } from './components/AssistantEntry';
 import { BalanceCarousel, type Account } from './components/BalanceCarousel';
 import { InsightsTeaser } from './components/InsightsTeaser';
 import { QuickActions, type QuickAction } from './components/QuickActions';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 export const RECENT_COUNT = 5;
 
 /** By the Lagos clock (UTC+1), whatever the phone's time zone. */
 export function greetingFor(now: Date = new Date()): string {
   const hour = (now.getUTCHours() + 1) % 24;
-  if (hour < 12) return 'Good morning';
-  if (hour < 17) return 'Good afternoon';
-  return 'Good evening';
+  if (hour < 12) return i18n.t('home.greeting.morning');
+  if (hour < 17) return i18n.t('home.greeting.afternoon');
+  return i18n.t('home.greeting.evening');
 }
 
 /** Add money opens the naira account details instead of a route. */
@@ -61,6 +63,7 @@ const offline = (error: unknown) => isApiError(error) && error.problem.code === 
 export function HomeScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const toggleBalances = usePrivacyStore((s) => s.toggleBalances);
   const assistantOn = usePreferencesStore((s) => s.ai.assistant);
@@ -94,7 +97,7 @@ export function HomeScreen() {
     <View style={[styles.header, { paddingHorizontal: spacing[4], gap: spacing[3] }]}>
       <PressableScale
         accessibilityRole="button"
-        accessibilityLabel="Your profile"
+        accessibilityLabel={t('home.profile')}
         onPress={() => router.push('/me')}
       >
         <Avatar name={name || 'Nem'} size="md" />
@@ -110,7 +113,7 @@ export function HomeScreen() {
       {user?.is_demo && <DemoMoneyBadge />}
       <IconButton
         icon={hidden ? EyeOff : Eye}
-        accessibilityLabel={hidden ? 'Show balances' : 'Hide balances'}
+        accessibilityLabel={hidden ? t('home.showBalances') : t('home.hideBalances')}
         variant="ghost"
         onPress={toggleBalances}
       />
@@ -130,8 +133,8 @@ export function HomeScreen() {
       {accounts.data?.data.length === 0 ? (
         <EmptyState
           icon={Wallet}
-          title="No wallets yet"
-          message="Your naira account appears here once it is open."
+          title={t('home.noWallets')}
+          message={t('home.noWalletsMessage')}
         />
       ) : accounts.data ? (
         <BalanceCarousel
@@ -144,12 +147,12 @@ export function HomeScreen() {
       ) : accounts.isError ? (
         <ErrorState
           kind={offline(accounts.error) ? 'offline' : 'error'}
-          title="We couldn't load your balances"
+          title={t('home.balancesFailed')}
           onRetry={() => accounts.refetch()}
         />
       ) : (
         <View style={{ paddingHorizontal: spacing[4] }}>
-          <SkeletonGroup accessibilityLabel="Loading balances">
+          <SkeletonGroup accessibilityLabel={t('home.loadingBalances')}>
             <Skeleton height={148} radius={24} />
           </SkeletonGroup>
         </View>
@@ -160,8 +163,8 @@ export function HomeScreen() {
       <View style={{ gap: spacing[2] }}>
         <View style={{ paddingHorizontal: spacing[4] }}>
           <SectionHeader
-            title="Recent activity"
-            actionLabel="See all"
+            title={t('home.recent')}
+            actionLabel={t('common.seeAll')}
             onAction={() => router.push('/transactions')}
           />
         </View>
@@ -179,20 +182,20 @@ export function HomeScreen() {
           ) : (
             <EmptyState
               icon={ReceiptText}
-              title="No transactions yet"
-              message="Money you send, receive or spend shows up here."
-              actionLabel="Add money"
+              title={t('common.noTransactions')}
+              message={t('common.noTransactionsMessage')}
+              actionLabel={t('common.addMoney')}
               onAction={addMoney}
             />
           )
         ) : recent.isError ? (
           <ErrorState
             kind={offline(recent.error) ? 'offline' : 'error'}
-            title="We couldn't load your activity"
+            title={t('home.activityFailed')}
             onRetry={() => recent.refetch()}
           />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading recent activity">
+          <SkeletonGroup accessibilityLabel={t('home.loadingActivity')}>
             {Array.from({ length: 3 }, (_, i) => (
               <SkeletonListItem key={i} />
             ))}

@@ -17,6 +17,7 @@ import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { balanceBreakdown, HOLD_REASONS } from './balance';
+import { useTranslation } from 'react-i18next';
 
 export type Props = { account: Schema<'Account'>; hidden: boolean; onClose: () => void };
 
@@ -39,27 +40,28 @@ export function BalanceExplainerSheet({ account, hidden, onClose }: Props) {
   const holds = useRepoQuery('accounts', 'listHolds', { path: { account_id: account.id } });
   const b = balanceBreakdown(account, holds.data?.data ?? []);
   const currency = CURRENCIES[account.currency];
+  const { t } = useTranslation();
 
   return (
-    <BottomSheet open onClose={onClose} title={`${currency.flag} ${currency.name} balance`}>
+    <BottomSheet
+      open
+      onClose={onClose}
+      title={t('accounts.balance.title', { flag: currency.flag, name: currency.name })}
+    >
       <View style={{ gap: spacing[4] }}>
-        <Text color="textMuted">
-          Your ledger balance counts every payment that has posted. Some of it can be held for
-          payments that are not final yet. What is left is your available balance, the amount you
-          can spend now.
-        </Text>
+        <Text color="textMuted">{t('accounts.balance.intro')}</Text>
 
         <View
           style={{ backgroundColor: colors.raised, borderRadius: radius.lg, padding: spacing[4] }}
         >
-          <Line label="Ledger balance">
+          <Line label={t('accounts.balance.ledger')}>
             <MoneyText value={b.ledger} masked={hidden} />
           </Line>
 
           {holds.data ? (
             holds.data.data.length === 0 && !isPositive(b.unlisted) ? (
               <Text variant="caption" color="textMuted" style={{ paddingVertical: spacing[2] }}>
-                Nothing is on hold right now.
+                {t('accounts.balance.nothingHeld')}
               </Text>
             ) : (
               <View accessibilityRole="list">
@@ -72,8 +74,8 @@ export function BalanceExplainerSheet({ account, hidden, onClose }: Props) {
                       <Text variant="caption">{h.description ?? HOLD_REASONS[h.reason]}</Text>
                       <Text variant="caption" color="textMuted">
                         {h.expires_at
-                          ? `Releases by ${formatDateTime(h.expires_at)} if it does not go through`
-                          : `Since ${formatDateTime(h.created_at)}`}
+                          ? t('accounts.balance.releasesBy', { time: formatDateTime(h.expires_at) })
+                          : t('accounts.balance.since', { time: formatDateTime(h.created_at) })}
                       </Text>
                     </View>
                     <MoneyText
@@ -87,7 +89,7 @@ export function BalanceExplainerSheet({ account, hidden, onClose }: Props) {
                 {isPositive(b.unlisted) && (
                   <View style={[styles.row, { gap: spacing[3], paddingVertical: spacing[2] }]}>
                     <Text variant="caption" style={styles.flex}>
-                      Other holds being updated
+                      {t('accounts.balance.otherHolds')}
                     </Text>
                     <MoneyText
                       value={negate(b.unlisted)}
@@ -100,22 +102,24 @@ export function BalanceExplainerSheet({ account, hidden, onClose }: Props) {
               </View>
             )
           ) : holds.isError ? (
-            <ErrorState title="We couldn't load the holds" onRetry={() => void holds.refetch()} />
+            <ErrorState
+              title={t('accounts.balance.holdsFailed')}
+              onRetry={() => void holds.refetch()}
+            />
           ) : (
-            <SkeletonGroup accessibilityLabel="Loading holds">
+            <SkeletonGroup accessibilityLabel={t('accounts.balance.loadingHolds')}>
               <Skeleton height={40} />
             </SkeletonGroup>
           )}
 
           <Divider />
-          <Line label="Available to spend">
+          <Line label={t('accounts.balance.available')}>
             <MoneyText value={b.available} variant="bodyStrong" masked={hidden} />
           </Line>
         </View>
 
         <Text variant="caption" color="textMuted">
-          Holds end on their own: a card payment settles or drops off, a transfer completes or the
-          money comes back.
+          {t('accounts.balance.holdsEnd')}
         </Text>
       </View>
     </BottomSheet>

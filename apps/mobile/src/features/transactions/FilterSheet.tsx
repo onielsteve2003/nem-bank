@@ -10,11 +10,13 @@ import {
   NO_FILTERS,
   STATUS_LABELS,
   TYPE_GROUPS,
+  typeGroupLabel,
   type DateRange,
   type TransactionFilters,
   type TransactionStatus,
   type TypeGroup,
 } from './filters';
+import { useTranslation } from 'react-i18next';
 
 const entries = <K extends string, V>(o: Record<K, V>) => Object.entries(o) as [K, V][];
 
@@ -47,6 +49,7 @@ export function FilterSheet({
 }) {
   const { spacing } = useTheme();
   const [draft, setDraft] = useState(value);
+  const { t } = useTranslation();
   const set = (patch: Partial<TransactionFilters>) => setDraft((d) => ({ ...d, ...patch }));
   const toggleType = (g: TypeGroup) =>
     set({
@@ -54,19 +57,19 @@ export function FilterSheet({
     });
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Filter transactions">
+    <BottomSheet open={open} onClose={onClose} title={t('transactions.filter.title')}>
       <View style={{ gap: spacing[5] }}>
-        <Group title="Type">
-          {entries(TYPE_GROUPS).map(([key, group]) => (
+        <Group title={t('transactions.filter.type')}>
+          {(Object.keys(TYPE_GROUPS) as TypeGroup[]).map((key) => (
             <Chip
               key={key}
-              label={group.label}
+              label={typeGroupLabel(key)}
               selected={draft.types.includes(key)}
               onPress={() => toggleType(key)}
             />
           ))}
         </Group>
-        <Group title="Currency">
+        <Group title={t('transactions.filter.currency')}>
           {CURRENCY_CODES.map((code) => (
             <Chip
               key={code}
@@ -76,7 +79,7 @@ export function FilterSheet({
             />
           ))}
         </Group>
-        <Group title="Status">
+        <Group title={t('transactions.filter.status')}>
           {entries(STATUS_LABELS).map(([status, label]) => (
             <Chip
               key={status}
@@ -88,7 +91,7 @@ export function FilterSheet({
             />
           ))}
         </Group>
-        <Group title="Date">
+        <Group title={t('transactions.filter.date')}>
           {entries(DATE_RANGES).map(([range, label]) => (
             <Chip
               key={range}
@@ -100,12 +103,16 @@ export function FilterSheet({
         </Group>
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Button
-            label="Clear all"
+            label={t('transactions.filter.clear')}
             variant="secondary"
             style={styles.flex}
             onPress={() => setDraft({ ...NO_FILTERS, search: draft.search })}
           />
-          <Button label="Show results" style={styles.flex} onPress={() => onApply(draft)} />
+          <Button
+            label={t('transactions.filter.show')}
+            style={styles.flex}
+            onPress={() => onApply(draft)}
+          />
         </View>
       </View>
     </BottomSheet>

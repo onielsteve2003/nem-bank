@@ -25,8 +25,7 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { periodRange, PERIODS, statementTitle, type Period } from './statements';
-
-const STATUS_WORDS = { generating: 'Preparing', ready: 'Ready', failed: 'Failed' } as const;
+import { useTranslation } from 'react-i18next';
 
 /**
  * Request an official statement (ACC-8): pick a wallet and a period of up to
@@ -38,6 +37,7 @@ export function StatementsScreen() {
   const params = useLocalSearchParams<{ account?: string }>();
   const { spacing } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const accounts = useRepoQuery('accounts', 'list');
   const history = useRepoQuery('statements', 'list');
   const [accountId, setAccountId] = useState<string | null>(params.account ?? null);
@@ -49,7 +49,7 @@ export function StatementsScreen() {
     onSuccess: (s) => router.push({ pathname: '/statements/[id]', params: { id: s.id } }),
     onError: (e) =>
       toast.show({
-        message: e.problem.detail ?? "We couldn't start the statement.",
+        message: e.problem.detail ?? t('statements.list.startFailed'),
         tone: 'error',
       }),
   });
@@ -63,7 +63,7 @@ export function StatementsScreen() {
     range.from && range.to
       ? statementRangeError(range.from, range.to, today)
       : period === 'custom' && custom.from.length === 10 && custom.to.length === 10
-        ? 'Use real dates in DD/MM/YYYY'
+        ? t('statements.list.badDates')
         : null;
   const options = (accounts.data?.data ?? []).map((a) => ({
     value: a.id,
@@ -76,12 +76,12 @@ export function StatementsScreen() {
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <IconButton
         icon={ArrowLeft}
-        accessibilityLabel="Back"
+        accessibilityLabel={t('common.back')}
         variant="ghost"
         onPress={() => router.back()}
       />
       <Text variant="title" accessibilityRole="header">
-        Statements
+        {t('statements.list.title')}
       </Text>
     </View>
   );
@@ -90,11 +90,9 @@ export function StatementsScreen() {
     <Screen header={header} edges={['top', 'bottom']}>
       <Card>
         <View style={{ gap: spacing[4] }}>
-          <Text color="textMuted">
-            An official PDF for visas, rent or loans. Each one carries a code anyone can check.
-          </Text>
+          <Text color="textMuted">{t('statements.list.intro')}</Text>
           <SelectSheet
-            label="Wallet"
+            label={t('statements.list.wallet')}
             options={options}
             value={chosen}
             onChange={setAccountId}
@@ -113,7 +111,7 @@ export function StatementsScreen() {
           {period === 'custom' && (
             <View style={[styles.row, { gap: spacing[3] }]}>
               <TextField
-                label="From"
+                label={t('statements.list.from')}
                 placeholder="DD/MM/YYYY"
                 keyboardType="numbers-and-punctuation"
                 value={custom.from}
@@ -121,7 +119,7 @@ export function StatementsScreen() {
                 style={styles.flex}
               />
               <TextField
-                label="To"
+                label={t('statements.list.to')}
                 placeholder="DD/MM/YYYY"
                 keyboardType="numbers-and-punctuation"
                 value={custom.to}
@@ -136,7 +134,7 @@ export function StatementsScreen() {
             </Text>
           )}
           <Button
-            label="Get statement"
+            label={t('statements.list.get')}
             icon={FileText}
             loading={request.isPending}
             disabled={!canSubmit}
@@ -150,13 +148,13 @@ export function StatementsScreen() {
         </View>
       </Card>
 
-      <SectionHeader title="Your statements" />
+      <SectionHeader title={t('statements.list.yours')} />
       {history.data ? (
         history.data.data.length === 0 ? (
           <EmptyState
             icon={FileText}
-            title="No statements yet"
-            message="The ones you request appear here."
+            title={t('statements.list.none')}
+            message={t('statements.list.noneMessage')}
           />
         ) : (
           <Card padded={false}>
@@ -165,7 +163,7 @@ export function StatementsScreen() {
                 key={s.id}
                 leading={FileText}
                 title={statementTitle(s)}
-                subtitle={STATUS_WORDS[s.status]}
+                subtitle={t(`statements.status.${s.status}`)}
                 showChevron
                 onPress={() => router.push({ pathname: '/statements/[id]', params: { id: s.id } })}
               />
@@ -173,12 +171,9 @@ export function StatementsScreen() {
           </Card>
         )
       ) : history.isError ? (
-        <ErrorState
-          title="We couldn't load your statements"
-          onRetry={() => void history.refetch()}
-        />
+        <ErrorState title={t('statements.list.failed')} onRetry={() => void history.refetch()} />
       ) : (
-        <SkeletonGroup accessibilityLabel="Loading statements">
+        <SkeletonGroup accessibilityLabel={t('statements.list.loading')}>
           <Skeleton height={64} radius={16} />
           <Skeleton height={64} radius={16} />
         </SkeletonGroup>

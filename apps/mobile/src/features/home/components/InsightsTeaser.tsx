@@ -8,6 +8,7 @@ import { monthLabel } from '@/features/insights/insights';
 import { CATEGORIES } from '@/features/transactions/categories';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * This month's spending so far and where most of it went. The full breakdown
@@ -25,6 +26,7 @@ export function InsightsTeaser({
   onOpen: () => void;
 }) {
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   const total = fromApiMoney(spending.total);
   const top = spending.categories[0];
   const topMeta = top ? (CATEGORIES[top.category] ?? CATEGORIES.other) : null;
@@ -32,12 +34,20 @@ export function InsightsTeaser({
   const previous = fromApiMoney(spending.previous_total);
   const where =
     isZero(total) || !top || !topMeta
-      ? 'Nothing spent yet this month.'
-      : `Most went on ${topMeta.label.toLowerCase()} (${top.share_pct}%).`;
+      ? t('home.insights.nothingSpent')
+      : t('home.insights.mostWent', {
+          category: topMeta.label.toLowerCase(),
+          pct: top.share_pct,
+        });
   const summary = [
-    `Spent in ${month} so far: ${hidden ? 'hidden' : formatMoney(total)}`,
+    t('home.insights.spentSoFarAmount', {
+      month,
+      amount: hidden ? t('common.hidden') : formatMoney(total),
+    }),
     where,
-    !isZero(previous) && !hidden ? `Last month: ${formatMoney(previous)}` : null,
+    !isZero(previous) && !hidden
+      ? t('home.insights.lastMonthAmount', { amount: formatMoney(previous) })
+      : null,
   ]
     .filter(Boolean)
     .join('. ');
@@ -48,7 +58,7 @@ export function InsightsTeaser({
       onPress={onOpen}
       accessibilityRole="button"
       accessibilityLabel={summary}
-      accessibilityHint="Opens Insights"
+      accessibilityHint={t('home.insights.hint')}
       style={{ marginHorizontal: spacing[4] }}
     >
       <View style={[styles.row, { gap: spacing[3] }]}>
@@ -57,7 +67,7 @@ export function InsightsTeaser({
         </View>
         <View style={[styles.flex, { gap: spacing[1] }]}>
           <Text variant="label" color="textMuted">
-            Spent in {month} so far
+            {t('home.insights.spentSoFar', { month })}
           </Text>
           <MoneyText value={total} variant="amount" masked={hidden} />
           <Text variant="caption" color="textMuted">
@@ -66,7 +76,7 @@ export function InsightsTeaser({
           {!isZero(previous) && (
             <View style={[styles.row, { gap: spacing[1] }]}>
               <Text variant="caption" color="textMuted">
-                Last month:
+                {t('home.insights.lastMonth')}
               </Text>
               <MoneyText value={previous} variant="caption" color="textMuted" masked={hidden} />
             </View>

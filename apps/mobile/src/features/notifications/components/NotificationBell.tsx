@@ -4,19 +4,23 @@ import { StyleSheet, View } from 'react-native';
 
 import { Badge, IconButton, badgeCountLabel } from '@/components';
 import { useRepoQuery } from '@/lib/query';
+import { useTranslation } from 'react-i18next';
 
 /** The inbox button with its unread count, kept current by realtime events (NOT-1). */
 export function NotificationBell() {
   const router = useRouter();
   const q = useRepoQuery('notifications', 'list', { query: { limit: 1 } });
   const unread = q.data?.unread_count ?? 0;
+  const { t } = useTranslation();
   return (
     <View>
       <IconButton
         icon={Bell}
         variant="ghost"
         accessibilityLabel={
-          unread ? `Notifications, ${badgeCountLabel(unread)} unread` : 'Notifications'
+          unread
+            ? t('notifications.bell.unread', { count: badgeCountLabel(unread) })
+            : t('notifications.inbox.title')
         }
         onPress={() => router.push('/notifications')}
       />

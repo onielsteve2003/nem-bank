@@ -7,16 +7,18 @@ import { haptic } from '@/lib/haptics';
 import { useTheme } from '@/theme';
 
 import { detailRows, type ReceivingDetails } from './receivingDetails';
+import { useTranslation } from 'react-i18next';
 
 /** A wallet's receiving details, one row each with its own copy button (ACC-1, FX-3). */
 export function ReceivingDetailsCard({ details }: { details: ReceivingDetails }) {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
 
   const copy = async (label: string, value: string) => {
     await Clipboard.setStringAsync(value);
     haptic('success');
-    toast.show({ message: `${label} copied`, tone: 'success' });
+    toast.show({ message: t('common.copied', { label }), tone: 'success' });
   };
 
   return (
@@ -50,7 +52,7 @@ export function ReceivingDetailsCard({ details }: { details: ReceivingDetails })
           </View>
           <IconButton
             icon={Copy}
-            accessibilityLabel={`Copy ${row.label.toLowerCase()}`}
+            accessibilityLabel={t('common.copyItem', { item: row.label.toLowerCase() })}
             variant="ghost"
             onPress={() => void copy(row.label, row.copy)}
           />

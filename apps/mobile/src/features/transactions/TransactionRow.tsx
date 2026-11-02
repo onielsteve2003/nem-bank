@@ -8,6 +8,7 @@ import { usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
 import { CATEGORIES } from './categories';
+import i18n from '@/lib/i18n';
 
 const timeFormat = new Intl.DateTimeFormat('en-NG', { hour: 'numeric', minute: '2-digit' });
 const dayFormat = new Intl.DateTimeFormat('en-NG', { day: 'numeric', month: 'short' });
@@ -19,8 +20,8 @@ export function formatWhen(iso: string, now: Date = new Date()): string {
   const at = new Date(iso);
   const day = lagosDay(at);
   const yesterday = lagosDay(new Date(now.getTime() - 86_400_000));
-  if (day === lagosDay(now)) return `Today, ${timeFormat.format(at)}`;
-  if (day === yesterday) return `Yesterday, ${timeFormat.format(at)}`;
+  if (day === lagosDay(now)) return i18n.t('common.todayAt', { time: timeFormat.format(at) });
+  if (day === yesterday) return i18n.t('common.yesterdayAt', { time: timeFormat.format(at) });
   return dayFormat.format(at);
 }
 

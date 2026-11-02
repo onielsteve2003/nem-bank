@@ -28,15 +28,17 @@ import {
   type Category,
   type Channel,
 } from '../notifications';
+import { useTranslation } from 'react-i18next';
+import i18n from '@/lib/i18n';
 
 type Prefs = Schema<'NotificationPreferences'>;
 
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline, so that didn't save."
+      ? i18n.t('notifications.prefs.offline')
       : (e.problem.detail ?? e.problem.title)
-    : "That didn't save. Try again.";
+    : i18n.t('common.saveFailed');
 
 /**
  * What Nem tells you about, and where (NOT-2): in the app, by push and by
@@ -46,6 +48,7 @@ const message = (e: unknown) =>
 export function NotificationPreferencesScreen() {
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const q = useRepoQuery('notifications', 'getPreferences');
   const save = useRepoMutation('notifications', 'setPreferences');
   /** What the customer last chose, shown while it saves and after. */
@@ -70,10 +73,10 @@ export function NotificationPreferencesScreen() {
 
   let body;
   if (q.isError && !prefs) {
-    body = <ErrorState title="We couldn't load your settings" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('notifications.prefs.failed')} onRetry={() => q.refetch()} />;
   } else if (!prefs) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your settings">
+      <SkeletonGroup accessibilityLabel={t('notifications.prefs.loading')}>
         <Skeleton height={180} />
         <Skeleton height={180} />
       </SkeletonGroup>
@@ -100,7 +103,7 @@ export function NotificationPreferencesScreen() {
                 label={ch.label}
                 accessibilityLabel={`${c.label}: ${ch.label}`}
                 description={
-                  isLocked(c.value, ch.value) ? 'Always on, to keep you safe' : undefined
+                  isLocked(c.value, ch.value) ? t('notifications.prefs.alwaysOn') : undefined
                 }
                 value={prefs.categories[c.value][ch.value]}
                 disabled={isLocked(c.value, ch.value)}
@@ -114,9 +117,12 @@ export function NotificationPreferencesScreen() {
   }
 
   return (
-    <Screen header={<SendHeader title="Notification settings" />} edges={['top', 'bottom']}>
+    <Screen
+      header={<SendHeader title={t('notifications.inbox.settings')} />}
+      edges={['top', 'bottom']}
+    >
       <Text variant="bodySmall" color="textMuted">
-        Choose what we tell you about and where. Offers stay off unless you turn them on.
+        {t('notifications.prefs.intro')}
       </Text>
       <PhoneAlertsCard />
       {body}

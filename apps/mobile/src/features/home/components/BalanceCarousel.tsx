@@ -16,6 +16,7 @@ import { Icon, MoneyText, Text } from '@/components';
 import { BalanceTick } from '@/features/accounts/BalanceTick';
 import { fromApiMoney } from '@/lib/money';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 const DOT = 6;
 const DOT_ACTIVE = 18;
@@ -55,6 +56,7 @@ export function BalanceCarousel({
   const { colors, spacing, radius } = useTheme();
   const [width, setWidth] = useState(0);
   const [index, setIndex] = useState(0);
+  const { t } = useTranslation();
   const cards = accounts.length + (onAdd ? 1 : 0);
   const cardWidth = cards > 1 ? Math.max(0, width - PEEK - spacing[4]) : width - spacing[4] * 2;
   const step = cardWidth + spacing[3];
@@ -91,9 +93,15 @@ export function BalanceCarousel({
             const fg = primary ? 'onPrimary' : 'text';
             const muted = primary ? 'onPrimary' : 'textMuted';
             const label = [
-              `${currency.name} wallet${tail ? `, ending ${tail.slice(-4)}` : ''}`,
-              `Available balance ${hidden ? 'hidden' : formatMoney(available)}`,
-              isPositive(onHold) && !hidden ? `${formatMoney(onHold)} on hold` : null,
+              tail
+                ? t('home.carousel.walletEnding', { name: currency.name, tail: tail.slice(-4) })
+                : t('common.walletName', { name: currency.name }),
+              t('home.carousel.availableAmount', {
+                amount: hidden ? t('common.hidden') : formatMoney(available),
+              }),
+              isPositive(onHold) && !hidden
+                ? t('home.carousel.onHoldAmount', { amount: formatMoney(onHold) })
+                : null,
             ]
               .filter(Boolean)
               .join('. ');
@@ -104,7 +112,7 @@ export function BalanceCarousel({
                 accessible
                 accessibilityRole={onOpen ? 'button' : 'summary'}
                 accessibilityLabel={label}
-                accessibilityHint={onOpen ? 'Shows account details' : undefined}
+                accessibilityHint={onOpen ? t('home.carousel.detailsHint') : undefined}
                 disabled={!onOpen}
                 onPress={onOpen ? () => onOpen(account) : undefined}
                 style={({ pressed }) => [
@@ -132,7 +140,7 @@ export function BalanceCarousel({
                   )}
                 </View>
                 <Text variant="caption" color={muted}>
-                  Available balance
+                  {t('home.carousel.available')}
                 </Text>
                 <View style={[styles.row, { justifyContent: 'flex-start', gap: spacing[2] }]}>
                   <MoneyText
@@ -149,7 +157,7 @@ export function BalanceCarousel({
                   <View style={[styles.row, { justifyContent: 'flex-start', gap: spacing[1] }]}>
                     <MoneyText value={onHold} variant="caption" color={muted} masked={hidden} />
                     <Text variant="caption" color={muted}>
-                      on hold
+                      {t('home.carousel.onHold')}
                     </Text>
                   </View>
                 )}
@@ -158,7 +166,7 @@ export function BalanceCarousel({
                     style={[styles.row, { justifyContent: 'flex-start', marginTop: spacing[1] }]}
                   >
                     <Text variant="caption" color={muted}>
-                      Account details
+                      {t('home.carousel.accountDetails')}
                     </Text>
                     <Icon icon={ChevronRight} size="sm" color={muted} />
                   </View>
@@ -170,8 +178,8 @@ export function BalanceCarousel({
           <Pressable
             testID="balance-add"
             accessibilityRole="button"
-            accessibilityLabel="Add a currency wallet"
-            accessibilityHint="Dollar, pound or euro"
+            accessibilityLabel={t('home.carousel.addWallet')}
+            accessibilityHint={t('home.carousel.addWalletHint')}
             onPress={onAdd}
             style={({ pressed }) => [
               styles.card,
@@ -187,9 +195,9 @@ export function BalanceCarousel({
             ]}
           >
             <Icon icon={Plus} size="lg" color="primaryText" />
-            <Text variant="label">Add a currency wallet</Text>
+            <Text variant="label">{t('home.carousel.addWallet')}</Text>
             <Text variant="caption" color="textMuted">
-              Dollar, pound or euro
+              {t('home.carousel.addWalletHint')}
             </Text>
           </Pressable>
         )}
@@ -198,7 +206,9 @@ export function BalanceCarousel({
       {onExplain && accounts[index] && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Available and ledger balance, ${CURRENCIES[accounts[index].currency].name} wallet`}
+          accessibilityLabel={t('home.carousel.explain', {
+            name: CURRENCIES[accounts[index].currency].name,
+          })}
           onPress={() => onExplain(accounts[index]!)}
           style={({ pressed }) => [
             styles.row,
@@ -208,7 +218,7 @@ export function BalanceCarousel({
         >
           <Icon icon={Info} size="sm" color="textMuted" />
           <Text variant="caption" color="textMuted">
-            Available vs ledger balance
+            {t('home.carousel.explainLabel')}
           </Text>
         </Pressable>
       )}
@@ -217,7 +227,7 @@ export function BalanceCarousel({
         <View
           style={[styles.dots, { gap: spacing[1] }]}
           accessible
-          accessibilityLabel={`Card ${index + 1} of ${cards}`}
+          accessibilityLabel={t('home.carousel.cardOf', { n: index + 1, total: cards })}
         >
           {Array.from({ length: cards }, (_, i) => (
             <View

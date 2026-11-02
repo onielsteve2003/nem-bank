@@ -34,11 +34,12 @@ import {
   type StatementHolder,
 } from './statements';
 import { useStatementLines } from './useStatementLines';
+import { useTranslation } from 'react-i18next';
 
 /** Holder block for the PDF: the first receiving detail (account number or IBAN), masked. */
 export function holderOf(account: Schema<'Account'>): StatementHolder {
   const d = account.receiving_details;
-  const id = detailRows(d).find((r) => /account number|iban/i.test(r.label))?.copy ?? '';
+  const id = detailRows(d).find((r) => r.id === 'accountNumber' || r.id === 'iban')?.copy ?? '';
   return { name: d.account_name, account: `****${id.slice(-4)}`, bankName: d.bank_name };
 }
 
@@ -52,6 +53,7 @@ export function StatementScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { spacing } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const [sharing, setSharing] = useState(false);
   const query = useRepoQuery(
     'statements',
@@ -71,7 +73,7 @@ export function StatementScreen() {
   const copy = async (label: string, value: string) => {
     await Clipboard.setStringAsync(value);
     haptic('success');
-    toast.show({ message: `${label} copied`, tone: 'success' });
+    toast.show({ message: t('common.copied', { label }), tone: 'success' });
   };
 
   const share = async () => {
@@ -81,7 +83,7 @@ export function StatementScreen() {
       await shareHtmlAsPdf(statementHtml(s, holderOf(account.data), lines.data), statementTitle(s));
       haptic('success');
     } catch {
-      toast.show({ message: "We couldn't make the PDF. Try again.", tone: 'error' });
+      toast.show({ message: t('statements.detail.pdfFailed'), tone: 'error' });
     } finally {
       setSharing(false);
     }
@@ -91,12 +93,12 @@ export function StatementScreen() {
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <IconButton
         icon={ArrowLeft}
-        accessibilityLabel="Back"
+        accessibilityLabel={t('common.back')}
         variant="ghost"
         onPress={() => router.back()}
       />
       <Text variant="title" accessibilityRole="header">
-        Statement
+        {t('statements.detail.title')}
       </Text>
     </View>
   );
@@ -105,16 +107,13 @@ export function StatementScreen() {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {query.isError ? (
-          <ErrorState
-            title="We couldn't load this statement"
-            onRetry={() => void query.refetch()}
-          />
+          <ErrorState title={t('statements.detail.failed')} onRetry={() => void query.refetch()} />
         ) : (
           <>
             <Text color="textMuted" accessibilityLiveRegion="polite">
-              Preparing your statement. This takes a few seconds.
+              {t('statements.detail.preparing')}
             </Text>
-            <SkeletonGroup accessibilityLabel="Preparing statement">
+            <SkeletonGroup accessibilityLabel={t('statements.detail.preparingLabel')}>
               <Skeleton height={160} radius={24} />
               <Skeleton height={240} radius={24} />
             </SkeletonGroup>
@@ -127,7 +126,7 @@ export function StatementScreen() {
   if (s.status === 'failed') {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <ErrorState title="We couldn't prepare this statement" onRetry={() => router.back()} />
+        <ErrorState title={t('statements.detail.prepareFailed')} onRetry={() => router.back()} />
       </Screen>
     );
   }
@@ -143,25 +142,32 @@ export function StatementScreen() {
             {CURRENCIES[s.currency].flag} {CURRENCIES[s.currency].name}
           </Text>
           <Text color="textMuted">
-            {formatDay(s.period_from)} to {formatDay(s.period_to)}
+            {t('statements.detail.range', {
+              from: formatDay(s.period_from),
+              to: formatDay(s.period_to),
+            })}
           </Text>
           <View style={[styles.row, styles.between]}>
             <View>
               <Text variant="caption" color="textMuted">
-                Opening balance
+                {t('statements.detail.opening')}
               </Text>
               {s.opening_balance && <MoneyText value={fromApiMoney(s.opening_balance)} />}
             </View>
             <View style={styles.end}>
               <Text variant="caption" color="textMuted">
-                Closing balance
+                {t('statements.detail.closing')}
               </Text>
               {s.closing_balance && <MoneyText value={fromApiMoney(s.closing_balance)} />}
             </View>
           </View>
           {totals && lines.data && (
             <Text variant="caption" color="textMuted">
-              {lines.data.length} transactions · in {totals.moneyIn} · out {totals.moneyOut}
+              {t('statements.detail.summary', {
+                count: lines.data.length,
+                moneyIn: totals.moneyIn,
+                moneyOut: totals.moneyOut,
+              })}
             </Text>
           )}
         </View>
@@ -173,18 +179,18 @@ export function StatementScreen() {
             <QrCode
               value={s.verification_url}
               size={112}
-              accessibilityLabel="QR code that opens the verification page"
+              accessibilityLabel={t('statements.detail.qr')}
             />
           )}
           <View style={[styles.flex, { gap: spacing[1] }]}>
             <Text variant="label" color="textMuted">
-              Verification code
+              {t('statements.detail.code')}
             </Text>
             <Text variant="bodyStrong" selectable>
               {s.verification_code}
             </Text>
             <Text variant="caption" color="textMuted">
-              Anyone can scan the code or open {s.verification_url} to check this statement.
+              {t('statements.detail.anyone', { url: s.verification_url })}
             </Text>
           </View>
         </View>
@@ -195,10 +201,10 @@ export function StatementScreen() {
             </Text>
             <IconButton
               icon={Copy}
-              accessibilityLabel="Copy hash"
+              accessibilityLabel={t('statements.detail.copyHash')}
               variant="ghost"
               size="sm"
-              onPress={() => void copy('Hash', s.sha256!)}
+              onPress={() => void copy(t('statements.detail.hash'), s.sha256!)}
             />
           </View>
         )}
@@ -206,12 +212,12 @@ export function StatementScreen() {
 
       {lines.isError || account.isError ? (
         <ErrorState
-          title="We couldn't load the statement lines"
+          title={t('statements.detail.linesFailed')}
           onRetry={() => void Promise.all([lines.refetch(), account.refetch()])}
         />
       ) : (
         <Button
-          label="Share PDF"
+          label={t('statements.detail.share')}
           icon={FileText}
           loading={sharing || !ready}
           disabled={!ready}
@@ -219,7 +225,7 @@ export function StatementScreen() {
         />
       )}
       <Text variant="caption" color="textMuted" style={styles.center}>
-        Demo bank. Simulated money, not a real bank document.
+        {t('common.demoDocument')}
       </Text>
     </Screen>
   );

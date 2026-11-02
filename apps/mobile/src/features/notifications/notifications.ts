@@ -10,49 +10,49 @@ import {
   Sparkles,
   type LucideIcon,
 } from 'lucide-react-native';
+import i18n from '@/lib/i18n';
 
 export type Category = Schema<'NotificationCategory'>;
 export type Channel = keyof Schema<'ChannelPreferences'>;
 
 /** Categories in the order the preferences screen lists them (NOT-2). */
-export const CATEGORIES: { value: Category; label: string; hint: string; icon: LucideIcon }[] = [
-  {
-    value: 'transactions',
-    label: 'Payments',
-    hint: 'Money in and out, transfers and bills',
-    icon: ArrowLeftRight,
-  },
-  {
-    value: 'security',
-    label: 'Security',
-    hint: 'Sign-ins, new devices and anything unusual',
-    icon: ShieldCheck,
-  },
-  { value: 'savings', label: 'Savings', hint: 'Goals, locks and interest', icon: PiggyBank },
-  { value: 'ajo', label: 'Ajo', hint: 'Contributions and payouts', icon: Handshake },
-  {
-    value: 'credit',
-    label: 'Credit',
-    hint: 'Repayments and offers you asked for',
-    icon: CreditCard,
-  },
-  { value: 'support', label: 'Support', hint: 'Replies from our team', icon: LifeBuoy },
-  { value: 'product', label: 'Product news', hint: 'New features in Nem', icon: Sparkles },
-  {
-    value: 'marketing',
-    label: 'Offers',
-    hint: 'Promotions from Nem and partners',
-    icon: Megaphone,
-  },
+const ORDER: [Category, LucideIcon][] = [
+  ['transactions', ArrowLeftRight],
+  ['security', ShieldCheck],
+  ['savings', PiggyBank],
+  ['ajo', Handshake],
+  ['credit', CreditCard],
+  ['support', LifeBuoy],
+  ['product', Sparkles],
+  ['marketing', Megaphone],
 ];
+
+export const CATEGORIES: {
+  value: Category;
+  readonly label: string;
+  readonly hint: string;
+  icon: LucideIcon;
+}[] = ORDER.map(([value, icon]) => ({
+  value,
+  icon,
+  get label() {
+    return i18n.t(`notifications.categories.${value}.label`);
+  },
+  get hint() {
+    return i18n.t(`notifications.categories.${value}.hint`);
+  },
+}));
 
 export const categoryMeta = (c: Category) => CATEGORIES.find((x) => x.value === c)!;
 
-export const CHANNELS: { value: Channel; label: string }[] = [
-  { value: 'in_app', label: 'In the app' },
-  { value: 'push', label: 'Push' },
-  { value: 'email', label: 'Email' },
-];
+export const CHANNELS: { value: Channel; readonly label: string }[] = (
+  ['in_app', 'push', 'email'] as const
+).map((value) => ({
+  value,
+  get label() {
+    return i18n.t(`notifications.channels.${value}`);
+  },
+}));
 
 /** Security alerts always reach the inbox; only their push and email can go off. */
 export const isLocked = (category: Category, channel: Channel) =>
@@ -84,9 +84,9 @@ const lagosDayStart = (t: number) => Math.floor((t + 3_600_000) / DAY) * DAY - 3
 export function groupByDay(items: Schema<'Notification'>[], now = Date.now()): Group[] {
   const today = lagosDayStart(now);
   const groups: Group[] = [
-    { title: 'Today', items: [] },
-    { title: 'This week', items: [] },
-    { title: 'Earlier', items: [] },
+    { title: i18n.t('notifications.groups.today'), items: [] },
+    { title: i18n.t('notifications.groups.week'), items: [] },
+    { title: i18n.t('notifications.groups.earlier'), items: [] },
   ];
   for (const n of items) {
     const at = Date.parse(n.created_at);

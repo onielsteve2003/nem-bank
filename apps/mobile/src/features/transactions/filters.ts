@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import type { CurrencyCode } from '@nem/shared';
+import i18n, { localized } from '@/lib/i18n';
 
 type Transaction = Schema<'Transaction'>;
 type TransactionType = Schema<'TransactionType'>;
@@ -7,31 +8,33 @@ export type TransactionStatus = Schema<'TransactionStatus'>;
 
 /** Types grouped the way people think about them; the API filters on the raw list. */
 export const TYPE_GROUPS = {
-  transfers: { label: 'Transfers', types: ['transfer_in', 'transfer_out', 'deposit'] },
-  card: { label: 'Card', types: ['card_payment', 'card_refund'] },
-  bills: { label: 'Bills', types: ['bill_payment'] },
-  fx: { label: 'Conversions', types: ['fx_conversion'] },
-  saving: { label: 'Savings & ajo', types: ['savings', 'ajo'] },
-  loans: { label: 'Loans', types: ['loan_disbursement', 'loan_repayment'] },
-  charges: { label: 'Fees & interest', types: ['interest', 'fee', 'levy'] },
-  refunds: { label: 'Reversals', types: ['reversal', 'dispute_refund'] },
-} as const satisfies Record<string, { label: string; types: readonly TransactionType[] }>;
+  transfers: { types: ['transfer_in', 'transfer_out', 'deposit'] },
+  card: { types: ['card_payment', 'card_refund'] },
+  bills: { types: ['bill_payment'] },
+  fx: { types: ['fx_conversion'] },
+  saving: { types: ['savings', 'ajo'] },
+  loans: { types: ['loan_disbursement', 'loan_repayment'] },
+  charges: { types: ['interest', 'fee', 'levy'] },
+  refunds: { types: ['reversal', 'dispute_refund'] },
+} as const satisfies Record<string, { types: readonly TransactionType[] }>;
 export type TypeGroup = keyof typeof TYPE_GROUPS;
 
-export const STATUS_LABELS: Record<TransactionStatus, string> = {
-  pending: 'Pending',
-  completed: 'Completed',
-  failed: 'Failed',
-  reversed: 'Reversed',
-};
+export const typeGroupLabel = (group: TypeGroup) => i18n.t(`transactions.groups.${group}`);
 
-export const DATE_RANGES = {
-  d7: 'Last 7 days',
-  d30: 'Last 30 days',
-  d90: 'Last 90 days',
-  month: 'This month',
-} as const;
-export type DateRange = keyof typeof DATE_RANGES;
+export const STATUS_LABELS = localized<TransactionStatus>({
+  pending: 'transactions.status.pending',
+  completed: 'transactions.status.completed',
+  failed: 'transactions.status.failed',
+  reversed: 'transactions.status.reversed',
+});
+
+export type DateRange = 'd7' | 'd30' | 'd90' | 'month';
+export const DATE_RANGES = localized<DateRange>({
+  d7: 'transactions.ranges.d7',
+  d30: 'transactions.ranges.d30',
+  d90: 'transactions.ranges.d90',
+  month: 'transactions.ranges.month',
+});
 
 export interface TransactionFilters {
   types: readonly TypeGroup[];
@@ -95,8 +98,8 @@ const dayLabel = new Intl.DateTimeFormat('en-NG', {
 /** "Today", "Yesterday", else "Mon, 12 Oct" (with the year once it isn't this one). */
 export function formatDay(date: string, now: Date = new Date()): string {
   const today = lagosDate(now);
-  if (date === today) return 'Today';
-  if (date === lagosDate(new Date(now.getTime() - DAY_MS))) return 'Yesterday';
+  if (date === today) return i18n.t('common.today');
+  if (date === lagosDate(new Date(now.getTime() - DAY_MS))) return i18n.t('common.yesterday');
   const label = dayLabel.format(new Date(`${date}T00:00:00Z`));
   return date.slice(0, 4) === today.slice(0, 4) ? label : `${label} ${date.slice(0, 4)}`;
 }

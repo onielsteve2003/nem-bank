@@ -7,6 +7,7 @@ import {
   type PushPermission,
   type PushSupport,
 } from '@/lib/pushNotifications';
+import i18n from '@/lib/i18n';
 
 // Phone alerts for this device (NOT-3). Not persisted: the OS owns the
 // permission, and the token is re-read and re-registered on every launch.
@@ -66,39 +67,38 @@ export function phoneAlertStatus(
   if (support === 'none') {
     return {
       tone: 'info',
-      title: 'Phone alerts need the app',
-      detail: 'In the browser, everything still arrives in your inbox.',
+      title: i18n.t('notifications.phone.none.title'),
+      detail: i18n.t('notifications.phone.none.detail'),
       action: null,
     };
   }
   if (permission === 'denied') {
     return {
       tone: 'warning',
-      title: 'Alerts are off for Nem on this phone',
-      detail: 'Turn on notifications for Nem in your phone settings.',
+      title: i18n.t('notifications.phone.denied.title'),
+      detail: i18n.t('notifications.phone.denied.detail'),
       action: 'settings',
     };
   }
   if (permission !== 'granted') {
     return {
       tone: 'info',
-      title: 'Get alerts on this phone',
-      detail: 'Know the moment money moves or someone signs in.',
+      title: i18n.t('notifications.phone.ask.title'),
+      detail: i18n.t('notifications.phone.ask.detail'),
       action: 'enable',
     };
   }
   return support === 'push'
     ? {
         tone: 'success',
-        title: 'Alerts are on for this phone',
-        detail: 'Nem can reach you even when the app is closed.',
+        title: i18n.t('notifications.phone.push.title'),
+        detail: i18n.t('notifications.phone.push.detail'),
         action: 'test',
       }
     : {
         tone: 'success',
-        title: 'Alerts are on while Nem is running',
-        detail:
-          "Expo Go on Android can't receive alerts from a server, so Nem shows them itself while it is open or in the background.",
+        title: i18n.t('notifications.phone.local.title'),
+        detail: i18n.t('notifications.phone.local.detail'),
         action: 'test',
       };
 }

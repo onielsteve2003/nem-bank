@@ -25,6 +25,7 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
 
 import { categoryMeta, groupByDay } from '../notifications';
+import { useTranslation } from 'react-i18next';
 
 /** The notification inbox (NOT-1): newest first, unread marked, each opens where it's about. */
 export function NotificationsScreen() {
@@ -32,6 +33,7 @@ export function NotificationsScreen() {
   const toast = useToast();
   const { colors, radius, spacing } = useTheme();
   const [unreadOnly, setUnreadOnly] = useState(false);
+  const { t } = useTranslation();
   const q = useRepoQuery('notifications', 'list', {
     query: { limit: 100, ...(unreadOnly ? { unread_only: true } : {}) },
   });
@@ -46,31 +48,34 @@ export function NotificationsScreen() {
   const header = (
     <View style={[styles.header, { paddingHorizontal: spacing[4], gap: spacing[1] }]}>
       <Text variant="title" accessibilityRole="header" style={styles.flex}>
-        Notifications
+        {t('notifications.inbox.title')}
       </Text>
       <IconButton
         icon={CheckCheck}
         variant="ghost"
-        accessibilityLabel="Mark all as read"
+        accessibilityLabel={t('notifications.inbox.markAll')}
         disabled={unread === 0 || markRead.isPending}
         onPress={() =>
           markRead.mutate(
             { body: { all: true } },
-            { onSuccess: () => toast.show({ message: 'All caught up', tone: 'success' }) },
+            {
+              onSuccess: () =>
+                toast.show({ message: t('notifications.inbox.allCaught'), tone: 'success' }),
+            },
           )
         }
       />
       <IconButton
         icon={Settings2}
         variant="ghost"
-        accessibilityLabel="Notification settings"
+        accessibilityLabel={t('notifications.inbox.settings')}
         onPress={() => router.push('/notifications/preferences')}
       />
       {/* A full-screen modal has no swipe to close, so it needs a way out. */}
       <IconButton
         icon={X}
         variant="ghost"
-        accessibilityLabel="Close"
+        accessibilityLabel={t('common.close')}
         onPress={() => router.back()}
       />
     </View>
@@ -83,7 +88,7 @@ export function NotificationsScreen() {
         key={n.id}
         variant={n.read ? 'surface' : 'raised'}
         onPress={() => open(n)}
-        accessibilityLabel={`${n.read ? '' : 'Unread. '}${n.title}. ${n.body}. ${formatDateTime(n.created_at)}`}
+        accessibilityLabel={`${n.read ? '' : t('notifications.inbox.unreadPrefix')}${n.title}. ${n.body}. ${formatDateTime(n.created_at)}`}
       >
         <View style={[styles.row, { gap: spacing[3] }]}>
           <View
@@ -96,7 +101,9 @@ export function NotificationsScreen() {
               <Text variant="bodyStrong" style={styles.flex} numberOfLines={2}>
                 {n.title}
               </Text>
-              {!n.read && <Badge dot tone="primary" accessibilityLabel="Unread" />}
+              {!n.read && (
+                <Badge dot tone="primary" accessibilityLabel={t('notifications.inbox.unread')} />
+              )}
             </View>
             <Text variant="bodySmall" color="textMuted">
               {n.body}
@@ -113,9 +120,9 @@ export function NotificationsScreen() {
   let body;
   if (!q.data) {
     body = q.isError ? (
-      <ErrorState title="We couldn't load your notifications" onRetry={() => q.refetch()} />
+      <ErrorState title={t('notifications.inbox.failed')} onRetry={() => q.refetch()} />
     ) : (
-      <SkeletonGroup accessibilityLabel="Loading your notifications">
+      <SkeletonGroup accessibilityLabel={t('notifications.inbox.loading')}>
         <SkeletonListItem />
         <SkeletonListItem />
         <SkeletonListItem />
@@ -125,11 +132,9 @@ export function NotificationsScreen() {
     body = (
       <EmptyState
         icon={BellOff}
-        title={unreadOnly ? 'All caught up' : 'No notifications'}
+        title={unreadOnly ? t('notifications.inbox.allCaught') : t('notifications.inbox.none')}
         message={
-          unreadOnly
-            ? 'You’ve read everything.'
-            : 'Payments, security alerts and replies from support show up here.'
+          unreadOnly ? t('notifications.inbox.readAll') : t('notifications.inbox.noneMessage')
         }
       />
     );
@@ -150,9 +155,17 @@ export function NotificationsScreen() {
       refreshing={q.isRefetching}
     >
       <View style={[styles.row, { gap: spacing[2] }]}>
-        <Chip label="All" selected={!unreadOnly} onPress={() => setUnreadOnly(false)} />
         <Chip
-          label={unread ? `Unread (${unread})` : 'Unread'}
+          label={t('notifications.inbox.all')}
+          selected={!unreadOnly}
+          onPress={() => setUnreadOnly(false)}
+        />
+        <Chip
+          label={
+            unread
+              ? t('notifications.inbox.unreadCount', { count: unread })
+              : t('notifications.inbox.unread')
+          }
           selected={unreadOnly}
           onPress={() => setUnreadOnly(true)}
         />

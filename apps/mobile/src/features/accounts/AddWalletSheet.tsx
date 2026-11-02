@@ -7,6 +7,7 @@ import { BottomSheet, Button, EmptyState, ListItem, Text, useToast } from '@/com
 import { haptic } from '@/lib/haptics';
 import { useMoneyMutation } from '@/lib/query';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 type Account = Schema<'Account'>;
 export type ForeignCurrency = Schema<'OpenAccountRequest'>['currency'];
@@ -18,12 +19,6 @@ export function addableCurrencies(accounts: readonly Pick<Account, 'currency'>[]
   const held = new Set(accounts.map((a) => a.currency));
   return FOREIGN_CURRENCIES.filter((c) => !held.has(c));
 }
-
-const RECEIVE_BY: Record<ForeignCurrency, string> = {
-  USD: 'US account and routing number',
-  GBP: 'UK sort code and account number',
-  EUR: 'IBAN and BIC',
-};
 
 /**
  * Open a USD, GBP or EUR wallet (ACC-2). Foreign wallets need Tier 2 (KYC-7):
@@ -49,6 +44,7 @@ export function AddWalletSheet({
 }) {
   const { spacing } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const addable = addableCurrencies(accounts);
   const needed = MIN_TIER_FOR.fxWallets;
   const allowed = tier !== undefined && tier >= needed;
@@ -57,7 +53,10 @@ export function AddWalletSheet({
     invalidates: [['accounts']],
     onSuccess: (account) => {
       haptic('success');
-      toast.show({ message: `${CURRENCIES[account.currency].name} wallet ready`, tone: 'success' });
+      toast.show({
+        message: t('accounts.addWallet.ready', { name: CURRENCIES[account.currency].name }),
+        tone: 'success',
+      });
       onOpened(account);
     },
   });
@@ -67,22 +66,20 @@ export function AddWalletSheet({
     <View style={{ gap: spacing[4] }}>
       <EmptyState
         icon={ShieldCheck}
-        title={`Verify to Tier ${needed} first`}
-        message={`Dollar, pound and euro wallets need a verified BVN or NIN. You're on Tier ${tier ?? 1}.`}
+        title={t('accounts.addWallet.verifyTitle', { tier: needed })}
+        message={t('accounts.addWallet.verifyMessage', { tier: tier ?? 1 })}
       />
-      <Button label="Verify my identity" onPress={onUpgrade} />
+      <Button label={t('accounts.addWallet.verify')} onPress={onUpgrade} />
     </View>
   ) : addable.length === 0 ? (
     <EmptyState
       icon={ShieldCheck}
-      title="You have every wallet"
-      message="Nem Bank offers naira, dollar, pound and euro wallets, and you have them all."
+      title={t('accounts.addWallet.allTitle')}
+      message={t('accounts.addWallet.allMessage')}
     />
   ) : (
     <View style={{ gap: spacing[3] }}>
-      <Text color="textMuted">
-        Hold and receive money in another currency. Free to open; details are for the demo.
-      </Text>
+      <Text color="textMuted">{t('accounts.addWallet.intro')}</Text>
       <View>
         {addable.map((code) => {
           const currency = CURRENCIES[code];
@@ -90,9 +87,15 @@ export function AddWalletSheet({
             <ListItem
               key={code}
               leading={<Text variant="title">{currency.flag}</Text>}
-              title={`${currency.name} wallet`}
-              subtitle={pending === code ? 'Opening…' : `Receive with ${RECEIVE_BY[code]}`}
-              accessibilityHint={`Opens a ${code} wallet`}
+              title={t('common.walletName', { name: currency.name })}
+              subtitle={
+                pending === code
+                  ? t('accounts.addWallet.opening')
+                  : t('accounts.addWallet.receiveWith', {
+                      method: t(`accounts.addWallet.receiveBy.${code}`),
+                    })
+              }
+              accessibilityHint={t('accounts.addWallet.opensHint', { code })}
               disabled={openWallet.isPending}
               showChevron
               onPress={() => openWallet.mutate({ body: { currency: code } })}
@@ -102,14 +105,16 @@ export function AddWalletSheet({
       </View>
       {openWallet.isError && (
         <Text color="danger" accessibilityLiveRegion="polite" accessibilityRole="alert">
-          {openWallet.error.problem.detail ?? "We couldn't open that wallet."} Tap it to try again.
+          {t('accounts.addWallet.tapRetry', {
+            problem: openWallet.error.problem.detail ?? t('accounts.addWallet.failed'),
+          })}
         </Text>
       )}
     </View>
   );
 
   return (
-    <BottomSheet open={open} onClose={onClose} title="Add a currency wallet">
+    <BottomSheet open={open} onClose={onClose} title={t('accounts.addWallet.title')}>
       {body}
     </BottomSheet>
   );

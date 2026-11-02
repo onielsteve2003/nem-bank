@@ -45,27 +45,9 @@ import { CATEGORIES, categorySourceText, isUnsure, type Category } from './categ
 import { formatDateTime } from './format';
 import { ReceiptSheet } from './ReceiptSheet';
 import { transactionTitle } from './TransactionRow';
+import { useTranslation } from 'react-i18next';
 
 type Detail = Schema<'TransactionDetail'>;
-
-const TYPE_LABELS: Record<Schema<'TransactionType'>, string> = {
-  transfer_in: 'Money in',
-  transfer_out: 'Transfer',
-  card_payment: 'Card payment',
-  card_refund: 'Card refund',
-  bill_payment: 'Bill payment',
-  fx_conversion: 'Currency conversion',
-  savings: 'Savings',
-  ajo: 'Ajo',
-  loan_disbursement: 'Loan paid out',
-  loan_repayment: 'Loan repayment',
-  interest: 'Interest',
-  fee: 'Fee',
-  levy: 'Levy',
-  reversal: 'Reversal',
-  deposit: 'Deposit',
-  dispute_refund: 'Dispute refund',
-};
 
 /** Total of the fee lines, in the transaction's currency. */
 export function totalFees(detail: Pick<Detail, 'fees' | 'amount'>): Money {
@@ -77,6 +59,7 @@ export function totalFees(detail: Pick<Detail, 'fees' | 'amount'>): Money {
 
 function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: () => void }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={[styles.row, { gap: spacing[3], minHeight: 44 }]}>
       <Text color="textMuted" style={styles.label}>
@@ -88,7 +71,7 @@ function Row({ label, value, onCopy }: { label: string; value: string; onCopy?: 
       {onCopy && (
         <IconButton
           icon={Copy}
-          accessibilityLabel={`Copy ${label.toLowerCase()}`}
+          accessibilityLabel={t('common.copyItem', { item: label.toLowerCase() })}
           variant="ghost"
           size="sm"
           onPress={onCopy}
@@ -108,6 +91,7 @@ export function TransactionDetailScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const { t: tr } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const query = useRepoQuery('transactions', 'get', { path: { transaction_id: id } });
   const [picking, setPicking] = useState(false);
@@ -124,16 +108,19 @@ export function TransactionDetailScreen() {
       toast.show({
         message:
           previous === t.category
-            ? 'Thanks, Nem will remember'
+            ? tr('transactions.detail.thanks')
             : vars.body.apply_to_similar
-              ? `Every ${t.counterparty.name} payment is now ${label}`
-              : `Moved to ${label}`,
+              ? tr('transactions.detail.similarMoved', {
+                  name: t.counterparty.name,
+                  category: label,
+                })
+              : tr('transactions.detail.moved', { category: label }),
         tone: 'success',
       });
     },
     onError: (e) =>
       toast.show({
-        message: e.problem.detail ?? "We couldn't change the category.",
+        message: e.problem.detail ?? tr('transactions.detail.categoryFailed'),
         tone: 'error',
       }),
   });
@@ -141,19 +128,19 @@ export function TransactionDetailScreen() {
   const copy = async (label: string, value: string) => {
     await Clipboard.setStringAsync(value);
     haptic('success');
-    toast.show({ message: `${label} copied`, tone: 'success' });
+    toast.show({ message: tr('common.copied', { label }), tone: 'success' });
   };
 
   const header = (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[2] }]}>
       <IconButton
         icon={ArrowLeft}
-        accessibilityLabel="Back"
+        accessibilityLabel={tr('common.back')}
         variant="ghost"
         onPress={() => router.back()}
       />
       <Text variant="title" accessibilityRole="header">
-        Transaction
+        {tr('transactions.detail.title')}
       </Text>
     </View>
   );
@@ -171,13 +158,13 @@ export function TransactionDetailScreen() {
             }
             title={
               isApiError(query.error) && query.error.problem.status === 404
-                ? "We can't find that transaction"
-                : "We couldn't load this transaction"
+                ? tr('transactions.detail.notFound')
+                : tr('transactions.detail.failed')
             }
             onRetry={() => void query.refetch()}
           />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading transaction">
+          <SkeletonGroup accessibilityLabel={tr('transactions.detail.loading')}>
             <Skeleton height={120} radius={24} />
             <Skeleton height={200} radius={24} />
           </SkeletonGroup>
@@ -221,7 +208,7 @@ export function TransactionDetailScreen() {
 
       <Card>
         <Text variant="label" color="textMuted" accessibilityRole="header">
-          Status
+          {tr('transactions.detail.status')}
         </Text>
         <View style={{ marginTop: spacing[3] }}>
           <StatusTimeline steps={t.timeline} formatAt={formatDateTime} />
@@ -229,16 +216,25 @@ export function TransactionDetailScreen() {
       </Card>
 
       <Card>
-        <Row label="Type" value={TYPE_LABELS[t.type]} />
+        <Row label={tr('transactions.detail.type')} value={tr(`transactions.types.${t.type}`)} />
         {account !== '' && (
-          <Row label={t.direction === 'debit' ? 'To' : 'From'} value={`${them.name}\n${account}`} />
+          <Row
+            label={
+              t.direction === 'debit'
+                ? tr('transactions.detail.to')
+                : tr('transactions.detail.from')
+            }
+            value={`${them.name}\n${account}`}
+          />
         )}
-        {them.nemtag && <Row label="Nemtag" value={`@${them.nemtag}`} />}
-        {t.narration !== '' && <Row label="Narration" value={t.narration} />}
+        {them.nemtag && <Row label={tr('transactions.detail.nemtag')} value={`@${them.nemtag}`} />}
+        {t.narration !== '' && (
+          <Row label={tr('transactions.detail.narration')} value={t.narration} />
+        )}
         <Row
-          label="Reference"
+          label={tr('transactions.detail.reference')}
           value={t.reference}
-          onCopy={() => void copy('Reference', t.reference)}
+          onCopy={() => void copy(tr('transactions.detail.reference'), t.reference)}
         />
         {t.fees.map((f) => (
           <Row
@@ -248,11 +244,14 @@ export function TransactionDetailScreen() {
           />
         ))}
         {t.fees.length > 1 && (
-          <Row label="Total fees" value={hidden ? '••••' : formatMoney(fees)} />
+          <Row
+            label={tr('transactions.detail.totalFees')}
+            value={hidden ? '••••' : formatMoney(fees)}
+          />
         )}
         {t.balance_after && (
           <Row
-            label="Balance after"
+            label={tr('transactions.detail.balanceAfter')}
             value={hidden ? '••••' : formatMoney(fromApiMoney(t.balance_after))}
           />
         )}
@@ -261,13 +260,13 @@ export function TransactionDetailScreen() {
       <Card>
         <View style={[styles.row, { gap: spacing[2] }]}>
           <Text variant="label" color="textMuted" accessibilityRole="header" style={styles.flex}>
-            Category
+            {tr('transactions.detail.category')}
           </Text>
           {t.category_source === 'model' && (
             <AIBadge
-              feature="Smart categories"
-              explanation="Nem reads the merchant name and description, checks a list of known merchants, then a model trained on your corrections picks the most likely category. The percentage is how sure it is."
-              fallback="A merchant list and simple rules. You can still change any category."
+              feature={tr('transactions.detail.smartFeature')}
+              explanation={tr('transactions.detail.smartExplanation')}
+              fallback={tr('transactions.detail.smartFallback')}
               onManage={() => router.push('/ai')}
             />
           )}
@@ -276,18 +275,26 @@ export function TransactionDetailScreen() {
           leading={category.icon}
           title={category.label}
           subtitle={categorySourceText(t)}
-          accessibilityLabel={`Category: ${category.label}. ${categorySourceText(t)}`}
-          accessibilityHint="Change the category"
+          accessibilityLabel={tr('transactions.detail.categoryLabel', {
+            category: category.label,
+            source: categorySourceText(t),
+          })}
+          accessibilityHint={tr('transactions.detail.changeCategory')}
           showChevron
           onPress={() => setPicking(true)}
         />
         {isUnsure(t) && (
           <View style={{ gap: spacing[3] }}>
-            <Text color="textMuted">{`Not sure about this one. Is ${them.name} really ${category.label.toLowerCase()}?`}</Text>
+            <Text color="textMuted">
+              {tr('transactions.detail.unsure', {
+                name: them.name,
+                category: category.label.toLowerCase(),
+              })}
+            </Text>
             <View style={[styles.row, { gap: spacing[3] }]}>
               <View style={styles.flex}>
                 <Button
-                  label="Yes, that's right"
+                  label={tr('transactions.detail.yesRight')}
                   variant="secondary"
                   loading={recategorise.isPending}
                   onPress={() =>
@@ -300,7 +307,7 @@ export function TransactionDetailScreen() {
               </View>
               <View style={styles.flex}>
                 <Button
-                  label="Change"
+                  label={tr('transactions.detail.change')}
                   variant="ghost"
                   icon={Tag}
                   onPress={() => setPicking(true)}
@@ -313,14 +320,14 @@ export function TransactionDetailScreen() {
 
       <View style={{ gap: spacing[3] }}>
         <Button
-          label="Share receipt"
+          label={tr('transactions.detail.shareReceipt')}
           icon={ReceiptText}
           variant="secondary"
           onPress={() => setReceipt(true)}
         />
         {t.status === 'pending' && t.transfer_id && (
           <Button
-            label="Why is this pending?"
+            label={tr('transactions.detail.whyPending')}
             icon={ShieldQuestion}
             variant="secondary"
             onPress={() =>
@@ -330,7 +337,7 @@ export function TransactionDetailScreen() {
         )}
         {t.can_repeat && (
           <Button
-            label="Send again"
+            label={tr('transactions.detail.sendAgain')}
             icon={Repeat}
             variant="secondary"
             onPress={() =>
@@ -341,10 +348,10 @@ export function TransactionDetailScreen() {
         {t.dispute_id ? (
           <>
             <Text color="textMuted" style={styles.centerText}>
-              {"You've reported a problem with this payment. We'll update you on the case."}
+              {tr('transactions.detail.disputed')}
             </Text>
             <Button
-              label="Track your dispute"
+              label={tr('transactions.detail.trackDispute')}
               icon={Flag}
               variant="ghost"
               onPress={() =>
@@ -355,7 +362,7 @@ export function TransactionDetailScreen() {
         ) : (
           t.can_dispute && (
             <Button
-              label="Report a problem"
+              label={tr('transactions.detail.report')}
               icon={Flag}
               variant="ghost"
               onPress={() =>
@@ -365,7 +372,7 @@ export function TransactionDetailScreen() {
           )
         )}
         <Button
-          label="Ask support about this"
+          label={tr('transactions.detail.askSupport')}
           icon={MessageCircle}
           variant="ghost"
           onPress={() => router.push({ pathname: '/support/new', params: { transaction: t.id } })}
@@ -375,17 +382,21 @@ export function TransactionDetailScreen() {
       {receipt && <ReceiptSheet transactionId={t.id} onClose={() => setReceipt(false)} />}
 
       {picking && (
-        <BottomSheet open onClose={() => setPicking(false)} title="Choose a category">
+        <BottomSheet
+          open
+          onClose={() => setPicking(false)}
+          title={tr('transactions.detail.choose')}
+        >
           <View style={{ gap: spacing[3] }}>
             <Checkbox
-              label={`Always categorise ${them.name} like this`}
+              label={tr('transactions.detail.always', { name: them.name })}
               checked={similar}
               onChange={setSimilar}
             />
             <Text variant="caption" color="textMuted">
               {similar
-                ? `Past and future payments with ${them.name} change too, and smart categories learns from it.`
-                : 'Only this payment changes.'}
+                ? tr('transactions.detail.alwaysNote', { name: them.name })
+                : tr('transactions.detail.onlyThis')}
             </Text>
             <View>
               {(Object.keys(CATEGORIES) as Category[]).map((c) => (
@@ -393,7 +404,11 @@ export function TransactionDetailScreen() {
                   key={c}
                   leading={CATEGORIES[c].icon}
                   title={CATEGORIES[c].label}
-                  trailing={c === t.category ? <Text color="primaryText">Current</Text> : undefined}
+                  trailing={
+                    c === t.category ? (
+                      <Text color="primaryText">{tr('transactions.detail.current')}</Text>
+                    ) : undefined
+                  }
                   disabled={recategorise.isPending}
                   onPress={() =>
                     c === t.category && !similar

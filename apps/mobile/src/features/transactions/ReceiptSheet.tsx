@@ -20,6 +20,7 @@ import { canShareImage, shareHtmlAsPdf, shareViewAsImage } from '@/lib/share';
 import { useTheme } from '@/theme';
 
 import { receiptFileTitle, receiptHtml, receiptLines } from './receipt';
+import { useTranslation } from 'react-i18next';
 
 export type Props = { transactionId: string; onClose: () => void };
 
@@ -32,6 +33,7 @@ export type Props = { transactionId: string; onClose: () => void };
 export function ReceiptSheet({ transactionId, onClose }: Props) {
   const { colors, spacing, radius } = useTheme();
   const toast = useToast();
+  const { t } = useTranslation();
   const card = useRef<ComponentRef<typeof View>>(null);
   const [busy, setBusy] = useState<'image' | 'pdf' | null>(null);
   const query = useRepoQuery('transactions', 'getReceipt', {
@@ -49,19 +51,19 @@ export function ReceiptSheet({ transactionId, onClose }: Props) {
       else await shareHtmlAsPdf(receiptHtml(r), receiptFileTitle(r));
       haptic('success');
     } catch {
-      toast.show({ message: "We couldn't share the receipt. Try again.", tone: 'error' });
+      toast.show({ message: t('receipt.shareFailed'), tone: 'error' });
     } finally {
       setBusy(null);
     }
   };
 
   return (
-    <BottomSheet open onClose={onClose} title="Receipt" snapPoints={['90%']}>
+    <BottomSheet open onClose={onClose} title={t('receipt.title')} snapPoints={['90%']}>
       {!r ? (
         query.isError ? (
-          <ErrorState title="We couldn't load the receipt" onRetry={() => void query.refetch()} />
+          <ErrorState title={t('receipt.failed')} onRetry={() => void query.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading receipt">
+          <SkeletonGroup accessibilityLabel={t('receipt.loading')}>
             <Skeleton height={420} radius={24} />
           </SkeletonGroup>
         )
@@ -90,7 +92,7 @@ export function ReceiptSheet({ transactionId, onClose }: Props) {
                   Nem
                 </Text>
               </View>
-              <Text variant="bodyStrong">Bank receipt</Text>
+              <Text variant="bodyStrong">{t('receipt.bankReceipt')}</Text>
             </View>
             <MoneyText value={fromApiMoney(r.amount)} variant="amountLarge" />
             <StatusPill status={r.status} />
@@ -116,13 +118,13 @@ export function ReceiptSheet({ transactionId, onClose }: Props) {
               ))}
             </View>
             <Text variant="caption" color="textMuted">
-              Demo bank. Simulated money, not a real bank document.
+              {t('common.demoDocument')}
             </Text>
           </View>
 
           {canShareImage && (
             <Button
-              label="Share as image"
+              label={t('receipt.shareImage')}
               icon={ImageIcon}
               loading={busy === 'image'}
               disabled={busy !== null}
@@ -130,7 +132,7 @@ export function ReceiptSheet({ transactionId, onClose }: Props) {
             />
           )}
           <Button
-            label={canShareImage ? 'Share as PDF' : 'Save as PDF'}
+            label={canShareImage ? t('receipt.sharePdf') : t('receipt.savePdf')}
             icon={FileText}
             variant={canShareImage ? 'secondary' : 'primary'}
             loading={busy === 'pdf'}
@@ -139,9 +141,7 @@ export function ReceiptSheet({ transactionId, onClose }: Props) {
           />
           {!canShareImage && (
             <Text variant="caption" color="textMuted" style={styles.center}>
-              {
-                'Your browser opens its print window. Choose "Save as PDF". Image sharing is in the app.'
-              }
+              {t('receipt.browserNote')}
             </Text>
           )}
         </View>

@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 
 import { AIBadge, Card, Icon, Text } from '@/components';
 import { useTheme } from '@/theme';
+import { useTranslation } from 'react-i18next';
 
 /**
  * The way into Nem Assistant (AI-6). It answers questions about your money and
@@ -12,22 +13,23 @@ import { useTheme } from '@/theme';
  */
 export function AssistantEntry({ onOpen, onManage }: { onOpen: () => void; onManage: () => void }) {
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={{ gap: spacing[2], marginHorizontal: spacing[4] }}>
       <Card
         variant="surface"
         onPress={onOpen}
-        accessibilityLabel="Ask Nem Assistant. For example, how much did I spend on food in September?"
-        accessibilityHint="Opens the assistant"
+        accessibilityLabel={t('home.assistant.label')}
+        accessibilityHint={t('home.assistant.hint')}
       >
         <View style={[styles.row, { gap: spacing[3] }]}>
           <View style={[styles.icon, { backgroundColor: colors.raised, borderRadius: radius.md }]}>
             <Icon icon={Sparkles} size="md" color="primaryText" />
           </View>
           <View style={[styles.flex, { gap: spacing[1] }]}>
-            <Text variant="bodyStrong">Ask Nem Assistant</Text>
+            <Text variant="bodyStrong">{t('home.assistant.title')}</Text>
             <Text variant="caption" color="textMuted">
-              “How much did I spend on food in September?”
+              {t('home.assistant.example')}
             </Text>
           </View>
           <Icon icon={ChevronRight} size="sm" color="textMuted" />
@@ -35,9 +37,9 @@ export function AssistantEntry({ onOpen, onManage }: { onOpen: () => void; onMan
       </Card>
       <View style={styles.badge}>
         <AIBadge
-          feature="Nem Assistant"
-          explanation="Answers questions about your accounts and can prepare a payment for you to check. It never moves money by itself: you confirm every payment with your PIN or Face ID. Names and account numbers are removed before anything reaches the AI model."
-          fallback="Everything the assistant does can be done from the app’s own screens."
+          feature={t('home.assistant.feature')}
+          explanation={t('home.assistant.explanation')}
+          fallback={t('home.assistant.fallback')}
           onManage={onManage}
         />
       </View>

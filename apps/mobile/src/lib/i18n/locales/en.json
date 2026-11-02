@@ -15,7 +15,21 @@
     "resendCodeIn": "Resend code in {{time}}",
     "demoOtp": "Demo bank: the code is always {{code}}.",
     "sendCodeFailed": "We couldn't send a code. Try again.",
-    "resendFailed": "We couldn't send a new code. Try again."
+    "resendFailed": "We couldn't send a new code. Try again.",
+    "today": "Today",
+    "yesterday": "Yesterday",
+    "todayAt": "Today, {{time}}",
+    "yesterdayAt": "Yesterday, {{time}}",
+    "copied": "{{label}} copied",
+    "copyItem": "Copy {{item}}",
+    "close": "Close",
+    "hidden": "hidden",
+    "seeAll": "See all",
+    "addMoney": "Add money",
+    "demoDocument": "Demo bank. Simulated money, not a real bank document.",
+    "noTransactions": "No transactions yet",
+    "noTransactionsMessage": "Money you send, receive or spend shows up here.",
+    "walletName": "{{name}} wallet"
   },
   "tabs": {
     "home": "Home",
@@ -299,5 +313,461 @@
     "lockedOut": "Too many wrong tries. Try again in {{wait}}, or tap Forgot PIN.",
     "wrong_one": "Wrong PIN. {{count}} try left.",
     "wrong_other": "Wrong PIN. {{count}} tries left."
+  },
+  "home": {
+    "greeting": {
+      "morning": "Good morning",
+      "afternoon": "Good afternoon",
+      "evening": "Good evening"
+    },
+    "profile": "Your profile",
+    "showBalances": "Show balances",
+    "hideBalances": "Hide balances",
+    "noWallets": "No wallets yet",
+    "noWalletsMessage": "Your naira account appears here once it is open.",
+    "balancesFailed": "We couldn't load your balances",
+    "loadingBalances": "Loading balances",
+    "recent": "Recent activity",
+    "activityFailed": "We couldn't load your activity",
+    "loadingActivity": "Loading recent activity",
+    "actions": {
+      "send": "Send",
+      "addMoney": "Add money",
+      "convert": "Convert",
+      "bills": "Bills",
+      "scan": "Scan"
+    },
+    "assistant": {
+      "label": "Ask Nem Assistant. For example, how much did I spend on food in September?",
+      "hint": "Opens the assistant",
+      "title": "Ask Nem Assistant",
+      "example": "“How much did I spend on food in September?”",
+      "feature": "Nem Assistant",
+      "explanation": "Answers questions about your accounts and can prepare a payment for you to check. It never moves money by itself: you confirm every payment with your PIN or Face ID. Names and account numbers are removed before anything reaches the AI model.",
+      "fallback": "Everything the assistant does can be done from the app’s own screens."
+    },
+    "carousel": {
+      "walletEnding": "{{name}} wallet, ending {{tail}}",
+      "availableAmount": "Available balance {{amount}}",
+      "onHoldAmount": "{{amount}} on hold",
+      "detailsHint": "Shows account details",
+      "available": "Available balance",
+      "onHold": "on hold",
+      "accountDetails": "Account details",
+      "addWallet": "Add a currency wallet",
+      "addWalletHint": "Dollar, pound or euro",
+      "explain": "Available and ledger balance, {{name}} wallet",
+      "explainLabel": "Available vs ledger balance",
+      "cardOf": "Card {{n}} of {{total}}"
+    },
+    "insights": {
+      "nothingSpent": "Nothing spent yet this month.",
+      "mostWent": "Most went on {{category}} ({{pct}}%).",
+      "spentSoFar": "Spent in {{month}} so far",
+      "spentSoFarAmount": "Spent in {{month}} so far: {{amount}}",
+      "lastMonthAmount": "Last month: {{amount}}",
+      "lastMonth": "Last month:",
+      "hint": "Opens Insights"
+    }
+  },
+  "accounts": {
+    "details": {
+      "title": "{{flag}} {{name}} account",
+      "shareFailed": "Sharing isn't available here. Copy the details instead.",
+      "ngnIntro": "Send naira here from any Nigerian bank app.",
+      "foreignIntro": "Get paid in {{code}} here.",
+      "demoBadge": "Demo details",
+      "demoWarning": "These are demo details. Nem Bank is a demo, so money sent to them from a real bank will not arrive.",
+      "share": "Share details",
+      "howReceiving": "How receiving works",
+      "statement": "Get a statement",
+      "addDemoMoney": "Add demo money now",
+      "shareTitle": "My {{currency}} account details",
+      "shareDemo": "These are demo details from the Nem Bank demo, not a real account."
+    },
+    "rows": {
+      "accountNumber": "Account number",
+      "bank": "Bank",
+      "accountName": "Account name",
+      "routingNumber": "Routing number (ACH)",
+      "accountType": "Account type",
+      "checking": "Checking",
+      "sortCode": "Sort code",
+      "iban": "IBAN",
+      "bic": "BIC / SWIFT"
+    },
+    "addWallet": {
+      "receiveBy": {
+        "USD": "US account and routing number",
+        "GBP": "UK sort code and account number",
+        "EUR": "IBAN and BIC"
+      },
+      "ready": "{{name}} wallet ready",
+      "verifyTitle": "Verify to Tier {{tier}} first",
+      "verifyMessage": "Dollar, pound and euro wallets need a verified BVN or NIN. You're on Tier {{tier}}.",
+      "verify": "Verify my identity",
+      "allTitle": "You have every wallet",
+      "allMessage": "Nem Bank offers naira, dollar, pound and euro wallets, and you have them all.",
+      "intro": "Hold and receive money in another currency. Free to open; details are for the demo.",
+      "opening": "Opening…",
+      "receiveWith": "Receive with {{method}}",
+      "opensHint": "Opens a {{code}} wallet",
+      "failed": "We couldn't open that wallet.",
+      "tapRetry": "{{problem}} Tap it to try again.",
+      "title": "Add a currency wallet"
+    },
+    "balance": {
+      "title": "{{flag}} {{name}} balance",
+      "intro": "Your ledger balance counts every payment that has posted. Some of it can be held for payments that are not final yet. What is left is your available balance, the amount you can spend now.",
+      "ledger": "Ledger balance",
+      "nothingHeld": "Nothing is on hold right now.",
+      "releasesBy": "Releases by {{time}} if it does not go through",
+      "since": "Since {{time}}",
+      "otherHolds": "Other holds being updated",
+      "holdsFailed": "We couldn't load the holds",
+      "loadingHolds": "Loading holds",
+      "available": "Available to spend",
+      "holdsEnd": "Holds end on their own: a card payment settles or drops off, a transfer completes or the money comes back."
+    },
+    "holdReasons": {
+      "card_authorization": "Card payment waiting to settle",
+      "pending_transfer": "Transfer on its way",
+      "delayed_transfer": "New-beneficiary cooling-off",
+      "fraud_review": "Held for a security review",
+      "ajo_contribution": "Ajo contribution",
+      "dispute": "Under dispute"
+    },
+    "tick": {
+      "up": "{{label}} balance went up",
+      "down": "{{label}} balance went down",
+      "upBy": "{{label}} balance went up by {{amount}}",
+      "downBy": "{{label}} balance went down by {{amount}}",
+      "moneyIn": "▲ Money in",
+      "moneyOut": "▼ Money out"
+    }
+  },
+  "categories": {
+    "food": "Food & drink",
+    "groceries": "Groceries",
+    "transport": "Transport",
+    "airtime_data": "Airtime & data",
+    "bills_utilities": "Bills & utilities",
+    "shopping": "Shopping",
+    "entertainment": "Entertainment",
+    "subscriptions": "Subscriptions",
+    "health": "Health",
+    "education": "Education",
+    "rent_housing": "Rent & housing",
+    "family": "Family",
+    "transfers": "Transfers",
+    "salary_income": "Salary & income",
+    "savings": "Savings",
+    "fees_charges": "Fees & charges",
+    "cash": "Cash",
+    "other": "Other"
+  },
+  "transactions": {
+    "confidence": {
+      "very": "Very sure",
+      "fairly": "Fairly sure",
+      "not": "Not sure",
+      "value": "{{words}} ({{pct}}%)"
+    },
+    "source": {
+      "user": "Set by you",
+      "smartWith": "Smart guess · {{confidence}}",
+      "smart": "Smart guess",
+      "merchant": "From the merchant list"
+    },
+    "groups": {
+      "transfers": "Transfers",
+      "card": "Card",
+      "bills": "Bills",
+      "fx": "Conversions",
+      "saving": "Savings & ajo",
+      "loans": "Loans",
+      "charges": "Fees & interest",
+      "refunds": "Reversals"
+    },
+    "status": {
+      "pending": "Pending",
+      "completed": "Completed",
+      "failed": "Failed",
+      "reversed": "Reversed"
+    },
+    "ranges": {
+      "d7": "Last 7 days",
+      "d30": "Last 30 days",
+      "d90": "Last 90 days",
+      "month": "This month"
+    },
+    "types": {
+      "transfer_in": "Money in",
+      "transfer_out": "Transfer",
+      "card_payment": "Card payment",
+      "card_refund": "Card refund",
+      "bill_payment": "Bill payment",
+      "fx_conversion": "Currency conversion",
+      "savings": "Savings",
+      "ajo": "Ajo",
+      "loan_disbursement": "Loan paid out",
+      "loan_repayment": "Loan repayment",
+      "interest": "Interest",
+      "fee": "Fee",
+      "levy": "Levy",
+      "reversal": "Reversal",
+      "deposit": "Deposit",
+      "dispute_refund": "Dispute refund"
+    },
+    "list": {
+      "title": "Transactions",
+      "filtersOn": "Filters, {{count}} on",
+      "filters": "Filters",
+      "search": "Search transactions",
+      "searchPlaceholder": "Name, narration or reference",
+      "clearSearch": "Clear search",
+      "noMatch": "No matching transactions",
+      "noMatchMessage": "Try another search or fewer filters.",
+      "clearFilters": "Clear filters",
+      "loadingMore": "Loading more",
+      "moreFailed": "We couldn't load more",
+      "failed": "We couldn't load your transactions",
+      "loading": "Loading transactions"
+    },
+    "filter": {
+      "title": "Filter transactions",
+      "type": "Type",
+      "currency": "Currency",
+      "status": "Status",
+      "date": "Date",
+      "clear": "Clear all",
+      "show": "Show results"
+    },
+    "detail": {
+      "thanks": "Thanks, Nem will remember",
+      "similarMoved": "Every {{name}} payment is now {{category}}",
+      "moved": "Moved to {{category}}",
+      "categoryFailed": "We couldn't change the category.",
+      "title": "Transaction",
+      "notFound": "We can't find that transaction",
+      "failed": "We couldn't load this transaction",
+      "loading": "Loading transaction",
+      "status": "Status",
+      "type": "Type",
+      "to": "To",
+      "from": "From",
+      "nemtag": "Nemtag",
+      "narration": "Narration",
+      "reference": "Reference",
+      "totalFees": "Total fees",
+      "balanceAfter": "Balance after",
+      "category": "Category",
+      "smartFeature": "Smart categories",
+      "smartExplanation": "Nem reads the merchant name and description, checks a list of known merchants, then a model trained on your corrections picks the most likely category. The percentage is how sure it is.",
+      "smartFallback": "A merchant list and simple rules. You can still change any category.",
+      "categoryLabel": "Category: {{category}}. {{source}}",
+      "changeCategory": "Change the category",
+      "unsure": "Not sure about this one. Is {{name}} really {{category}}?",
+      "yesRight": "Yes, that's right",
+      "change": "Change",
+      "shareReceipt": "Share receipt",
+      "whyPending": "Why is this pending?",
+      "sendAgain": "Send again",
+      "disputed": "You've reported a problem with this payment. We'll update you on the case.",
+      "trackDispute": "Track your dispute",
+      "report": "Report a problem",
+      "askSupport": "Ask support about this",
+      "choose": "Choose a category",
+      "always": "Always categorise {{name}} like this",
+      "alwaysNote": "Past and future payments with {{name}} change too, and smart categories learns from it.",
+      "onlyThis": "Only this payment changes.",
+      "current": "Current"
+    }
+  },
+  "receipt": {
+    "title": "Receipt",
+    "shareFailed": "We couldn't share the receipt. Try again.",
+    "failed": "We couldn't load the receipt",
+    "loading": "Loading receipt",
+    "bankReceipt": "Bank receipt",
+    "shareImage": "Share as image",
+    "sharePdf": "Share as PDF",
+    "savePdf": "Save as PDF",
+    "browserNote": "Your browser opens its print window. Choose \"Save as PDF\". Image sharing is in the app.",
+    "lines": {
+      "from": "From",
+      "to": "To",
+      "narration": "Narration",
+      "amount": "Amount",
+      "fee": "Fee",
+      "total": "Total",
+      "date": "Date",
+      "completed": "Completed",
+      "reference": "Reference",
+      "verificationCode": "Verification code"
+    },
+    "fileTitle": "Nem Bank receipt {{reference}}",
+    "note": "Nem Bank is a demo. This receipt shows simulated money and is not a real bank document. Quote the reference and verification code if you contact us about this payment."
+  },
+  "statements": {
+    "periods": {
+      "last_month": "Last month",
+      "m3": "Last 3 months",
+      "m6": "Last 6 months",
+      "m12": "Last 12 months",
+      "custom": "Choose dates"
+    },
+    "title": "{{currency}} statement, {{from}} to {{to}}",
+    "status": {
+      "generating": "Preparing",
+      "ready": "Ready",
+      "failed": "Failed"
+    },
+    "list": {
+      "title": "Statements",
+      "intro": "An official PDF for visas, rent or loans. Each one carries a code anyone can check.",
+      "wallet": "Wallet",
+      "from": "From",
+      "to": "To",
+      "badDates": "Use real dates in DD/MM/YYYY",
+      "get": "Get statement",
+      "startFailed": "We couldn't start the statement.",
+      "yours": "Your statements",
+      "none": "No statements yet",
+      "noneMessage": "The ones you request appear here.",
+      "failed": "We couldn't load your statements",
+      "loading": "Loading statements"
+    },
+    "detail": {
+      "title": "Statement",
+      "failed": "We couldn't load this statement",
+      "preparing": "Preparing your statement. This takes a few seconds.",
+      "preparingLabel": "Preparing statement",
+      "prepareFailed": "We couldn't prepare this statement",
+      "range": "{{from}} to {{to}}",
+      "opening": "Opening balance",
+      "closing": "Closing balance",
+      "summary_one": "{{count}} transaction · in {{moneyIn}} · out {{moneyOut}}",
+      "summary_other": "{{count}} transactions · in {{moneyIn}} · out {{moneyOut}}",
+      "qr": "QR code that opens the verification page",
+      "code": "Verification code",
+      "anyone": "Anyone can scan the code or open {{url}} to check this statement.",
+      "copyHash": "Copy hash",
+      "hash": "Hash",
+      "linesFailed": "We couldn't load the statement lines",
+      "share": "Share PDF",
+      "pdfFailed": "We couldn't make the PDF. Try again."
+    },
+    "pdf": {
+      "heading": "Account statement",
+      "moneyIn": "Money in",
+      "moneyOut": "Money out",
+      "date": "Date",
+      "description": "Description",
+      "amount": "Amount",
+      "balance": "Balance",
+      "empty": "No completed transactions in this period.",
+      "verifyAt": "Verify this statement at {{url}}",
+      "demo": "Nem Bank is a demo. Simulated money, not a real bank document."
+    }
+  },
+  "notifications": {
+    "categories": {
+      "transactions": {
+        "label": "Payments",
+        "hint": "Money in and out, transfers and bills"
+      },
+      "security": {
+        "label": "Security",
+        "hint": "Sign-ins, new devices and anything unusual"
+      },
+      "savings": {
+        "label": "Savings",
+        "hint": "Goals, locks and interest"
+      },
+      "ajo": {
+        "label": "Ajo",
+        "hint": "Contributions and payouts"
+      },
+      "credit": {
+        "label": "Credit",
+        "hint": "Repayments and offers you asked for"
+      },
+      "support": {
+        "label": "Support",
+        "hint": "Replies from our team"
+      },
+      "product": {
+        "label": "Product news",
+        "hint": "New features in Nem"
+      },
+      "marketing": {
+        "label": "Offers",
+        "hint": "Promotions from Nem and partners"
+      }
+    },
+    "channels": {
+      "in_app": "In the app",
+      "push": "Push",
+      "email": "Email"
+    },
+    "groups": {
+      "today": "Today",
+      "week": "This week",
+      "earlier": "Earlier"
+    },
+    "inbox": {
+      "title": "Notifications",
+      "markAll": "Mark all as read",
+      "allCaught": "All caught up",
+      "settings": "Notification settings",
+      "unreadPrefix": "Unread. ",
+      "unread": "Unread",
+      "unreadCount": "Unread ({{count}})",
+      "all": "All",
+      "failed": "We couldn't load your notifications",
+      "loading": "Loading your notifications",
+      "none": "No notifications",
+      "readAll": "You’ve read everything.",
+      "noneMessage": "Payments, security alerts and replies from support show up here."
+    },
+    "bell": {
+      "unread": "Notifications, {{count}} unread"
+    },
+    "prefs": {
+      "offline": "You're offline, so that didn't save.",
+      "failed": "We couldn't load your settings",
+      "loading": "Loading your settings",
+      "alwaysOn": "Always on, to keep you safe",
+      "intro": "Choose what we tell you about and where. Offers stay off unless you turn them on."
+    },
+    "phone": {
+      "stay": "Alerts stay in your inbox for now.",
+      "testTitle": "Nem test alert",
+      "testBody": "Alerts are working on this phone.",
+      "turnOn": "Turn on alerts",
+      "openSettings": "Open phone settings",
+      "test": "Send a test alert",
+      "none": {
+        "title": "Phone alerts need the app",
+        "detail": "In the browser, everything still arrives in your inbox."
+      },
+      "denied": {
+        "title": "Alerts are off for Nem on this phone",
+        "detail": "Turn on notifications for Nem in your phone settings."
+      },
+      "ask": {
+        "title": "Get alerts on this phone",
+        "detail": "Know the moment money moves or someone signs in."
+      },
+      "push": {
+        "title": "Alerts are on for this phone",
+        "detail": "Nem can reach you even when the app is closed."
+      },
+      "local": {
+        "title": "Alerts are on while Nem is running",
+        "detail": "Expo Go on Android can't receive alerts from a server, so Nem shows them itself while it is open or in the background."
+      }
+    }
   }
 }
