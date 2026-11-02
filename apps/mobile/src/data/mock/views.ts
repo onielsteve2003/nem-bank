@@ -8,6 +8,7 @@ import type { JournalEntry, LedgerAccount } from './ledger';
 import type { MockBank } from './runtime';
 import type { Person, TransferRecord } from './world';
 import { decoyBalance, inDuress } from './domains/duress';
+import { smartCategory } from './smartCategories';
 
 // Read models: what the API would return, computed from the ledger on each read so
 // a balance can never disagree with the postings behind it.
@@ -100,7 +101,7 @@ function fromEntry(
   const levy = BigInt(String(entry.metadata.levy ?? '0'));
   const amount = meta.direction === 'debit' ? gross - sendFee : gross;
   const fee = meta.direction === 'debit' ? sendFee : levy;
-  const override = bank.world.categoryOverrides[meta.id];
+  const category = smartCategory(bank, meta);
   return {
     id: meta.id,
     account_id: meta.accountId,
@@ -112,8 +113,7 @@ function fromEntry(
     balance_after: api(postings.at(-1)!.balanceAfter),
     narration: meta.narration,
     reference: entry.reference,
-    category: override ?? meta.category,
-    category_source: override ? 'user' : 'rules',
+    ...category,
     counterparty: meta.counterparty,
     transfer_id: meta.transferId ?? null,
     card_id: meta.cardId ?? null,

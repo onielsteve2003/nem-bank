@@ -4855,6 +4855,11 @@ export interface components {
       reference: string;
       category: components['schemas']['Category'];
       category_source: components['schemas']['CategorySource'];
+      /**
+       * @description How sure smart categories is, from 0 to 1. Set only when `category_source` is `model` (AI-3).
+       * @example 0.82
+       */
+      category_confidence?: number | null;
       counterparty: components['schemas']['Counterparty'];
       transfer_id?: components['schemas']['Uuid'] | null;
       card_id?: components['schemas']['Uuid'] | null;

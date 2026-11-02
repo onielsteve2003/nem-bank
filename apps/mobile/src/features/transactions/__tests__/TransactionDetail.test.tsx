@@ -99,10 +99,12 @@ it('shows a sent transfer in full, recategorises it and offers repeat and disput
   expect(screen.getAllByText(t.timeline.at(-1)!.label).length).toBeGreaterThan(0);
 
   await fireEvent.press(screen.getByRole('button', { name: /^Category/ }));
-  await fireEvent.press(await screen.findByRole('checkbox', { name: /Also for every payment/ }));
+  await fireEvent.press(await screen.findByRole('checkbox', { name: /Always categorise/ }));
   const target = t.category === 'shopping' ? 'Groceries' : 'Shopping';
   await fireEvent.press(screen.getByRole('button', { name: target }));
-  expect(await screen.findByText(new RegExp(`${target} · set by you`))).toBeTruthy();
+  expect(
+    await screen.findByRole('button', { name: `Category: ${target}. Set by you` }),
+  ).toBeTruthy();
 
   await fireEvent.press(screen.getByRole('button', { name: 'Send again' }));
   expect(mockPush).toHaveBeenCalledWith({ pathname: '/send', params: { repeat: t.transfer_id } });
@@ -141,4 +143,30 @@ it('shares the receipt as an image and as a PDF', async () => {
     'file:///r.pdf',
     expect.objectContaining({ mimeType: 'application/pdf' }),
   );
+}, 20_000);
+
+it('shows how sure a smart guess is and lets the customer confirm an unsure one', async () => {
+  const repos = createMockRepositories({
+    store: createMemoryStore(),
+    simulation: { latency: 'off' },
+  });
+  const cards = await repos.transactions.list({ query: { type: ['card_payment'], limit: 100 } });
+  const unsure = cards.data.find(
+    (c) => c.category_source === 'model' && (c.category_confidence ?? 1) < 0.65,
+  )!;
+  expect(unsure).toBeDefined();
+  mockId = unsure.id;
+  await renderDetail(repos);
+
+  expect(await screen.findByText(/Smart guess · Not sure \(\d+%\)/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'AI: Smart categories' })).toBeTruthy();
+  await fireEvent.press(screen.getByRole('button', { name: "Yes, that's right" }));
+  expect(await screen.findByText('Thanks, Nem will remember')).toBeTruthy();
+  expect(await screen.findByText('Set by you')).toBeTruthy();
+  expect(screen.queryByRole('button', { name: "Yes, that's right" })).toBeNull();
+
+  // The answer is a merchant rule: other payments there are now set by the customer too.
+  const after = await repos.transactions.list({ query: { type: ['card_payment'], limit: 100 } });
+  const same = after.data.filter((c) => c.counterparty.name === unsure.counterparty.name);
+  expect(same.every((c) => c.category_source === 'user')).toBe(true);
 }, 20_000);

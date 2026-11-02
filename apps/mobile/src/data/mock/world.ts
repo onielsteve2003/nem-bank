@@ -127,6 +127,8 @@ export interface World {
   /** Duress mode (SEC-5); `alerts` are the silent alerts staff see. Missing in older snapshots. */
   duress?: { active: boolean; triggeredAt: string | null; alerts: string[] };
   categoryOverrides: Record<string, Schema<'Category'>>;
+  /** "Always categorise this merchant as…" rules, by lower-cased name (AI-3). Missing in older snapshots. */
+  merchantCategories?: Record<string, Schema<'Category'>>;
   /** Idempotency for operations whose result is a record rather than one ledger entry. */
   idempotency: Record<string, { fingerprint: string; id: string }>;
   statements: Schema<'Statement'>[];

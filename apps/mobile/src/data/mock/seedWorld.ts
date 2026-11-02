@@ -248,6 +248,7 @@ export function startWorld({ ledger, newId, random, userId, ngn, usd }: StartInp
     selfLimits: { daily: null, single: null, pending: null },
     panic: { active: false, activatedAt: null, frozenCardIds: [] },
     categoryOverrides: {},
+    merchantCategories: {},
     idempotency: {},
     statements: [],
     beneficiaries,

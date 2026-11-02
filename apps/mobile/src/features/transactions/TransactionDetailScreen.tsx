@@ -16,6 +16,7 @@ import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
+  AIBadge,
   BottomSheet,
   Button,
   Card,
@@ -40,7 +41,7 @@ import { useRepoMutation, useRepoQuery } from '@/lib/query';
 import { usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
-import { CATEGORIES, type Category } from './categories';
+import { CATEGORIES, categorySourceText, isUnsure, type Category } from './categories';
 import { formatDateTime } from './format';
 import { ReceiptSheet } from './ReceiptSheet';
 import { transactionTitle } from './TransactionRow';
@@ -115,10 +116,20 @@ export function TransactionDetailScreen() {
 
   const recategorise = useRepoMutation('transactions', 'update', {
     invalidates: [['transactions'], ['insights']],
-    onSuccess: (t) => {
+    onSuccess: (t, vars) => {
       haptic('success');
       setPicking(false);
-      toast.show({ message: `Moved to ${CATEGORIES[t.category].label}`, tone: 'success' });
+      const label = CATEGORIES[t.category].label;
+      const previous = query.data?.category;
+      toast.show({
+        message:
+          previous === t.category
+            ? 'Thanks, Nem will remember'
+            : vars.body.apply_to_similar
+              ? `Every ${t.counterparty.name} payment is now ${label}`
+              : `Moved to ${label}`,
+        tone: 'success',
+      });
     },
     onError: (e) =>
       toast.show({
@@ -247,14 +258,58 @@ export function TransactionDetailScreen() {
         )}
       </Card>
 
-      <ListItem
-        leading={Tag}
-        title="Category"
-        subtitle={`${category.label}${t.category_source === 'user' ? ' · set by you' : ''}`}
-        accessibilityHint="Change the category"
-        showChevron
-        onPress={() => setPicking(true)}
-      />
+      <Card>
+        <View style={[styles.row, { gap: spacing[2] }]}>
+          <Text variant="label" color="textMuted" accessibilityRole="header" style={styles.flex}>
+            Category
+          </Text>
+          {t.category_source === 'model' && (
+            <AIBadge
+              feature="Smart categories"
+              explanation="Nem reads the merchant name and description, checks a list of known merchants, then a model trained on your corrections picks the most likely category. The percentage is how sure it is."
+              fallback="A merchant list and simple rules. You can still change any category."
+              onManage={() => router.push('/ai')}
+            />
+          )}
+        </View>
+        <ListItem
+          leading={category.icon}
+          title={category.label}
+          subtitle={categorySourceText(t)}
+          accessibilityLabel={`Category: ${category.label}. ${categorySourceText(t)}`}
+          accessibilityHint="Change the category"
+          showChevron
+          onPress={() => setPicking(true)}
+        />
+        {isUnsure(t) && (
+          <View style={{ gap: spacing[3] }}>
+            <Text color="textMuted">{`Not sure about this one. Is ${them.name} really ${category.label.toLowerCase()}?`}</Text>
+            <View style={[styles.row, { gap: spacing[3] }]}>
+              <View style={styles.flex}>
+                <Button
+                  label="Yes, that's right"
+                  variant="secondary"
+                  loading={recategorise.isPending}
+                  onPress={() =>
+                    recategorise.mutate({
+                      path: { transaction_id: t.id },
+                      body: { category: t.category, apply_to_similar: true },
+                    })
+                  }
+                />
+              </View>
+              <View style={styles.flex}>
+                <Button
+                  label="Change"
+                  variant="ghost"
+                  icon={Tag}
+                  onPress={() => setPicking(true)}
+                />
+              </View>
+            </View>
+          </View>
+        )}
+      </Card>
 
       <View style={{ gap: spacing[3] }}>
         <Button
@@ -323,10 +378,15 @@ export function TransactionDetailScreen() {
         <BottomSheet open onClose={() => setPicking(false)} title="Choose a category">
           <View style={{ gap: spacing[3] }}>
             <Checkbox
-              label={`Also for every payment with ${them.name}`}
+              label={`Always categorise ${them.name} like this`}
               checked={similar}
               onChange={setSimilar}
             />
+            <Text variant="caption" color="textMuted">
+              {similar
+                ? `Past and future payments with ${them.name} change too, and smart categories learns from it.`
+                : 'Only this payment changes.'}
+            </Text>
             <View>
               {(Object.keys(CATEGORIES) as Category[]).map((c) => (
                 <ListItem

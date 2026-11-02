@@ -6989,6 +6989,12 @@ components:
           $ref: '#/components/schemas/Category'
         category_source:
           $ref: '#/components/schemas/CategorySource'
+        category_confidence:
+          type: [number, 'null']
+          minimum: 0
+          maximum: 1
+          description: How sure smart categories is, from 0 to 1. Set only when `category_source` is `model` (AI-3).
+          examples: [0.82]
         counterparty:
           $ref: '#/components/schemas/Counterparty'
         transfer_id:

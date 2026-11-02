@@ -16,6 +16,7 @@ import { NEM_BANK } from '../directory';
 import { sha256Hex, textPdf } from '../documents';
 import type { MockBank } from '../runtime';
 import { accountName, accountView, customerTransactions, entryOf, transactionsFor } from '../views';
+import { merchantKey } from '../smartCategories';
 import { DECOY_MAX_TRANSACTION, inDuress } from './duress';
 
 const HOLD_LABELS: Record<Schema<'HoldReason'>, string> = {
@@ -167,10 +168,19 @@ export function transactionsRepo(bank: MockBank): TransactionsRepo {
     },
     async update({ path, body }) {
       const txn = detail(bank, path.transaction_id);
-      const targets = body.apply_to_similar
-        ? customerTransactions(bank).filter((t) => t.counterparty.name === txn.counterparty.name)
-        : [txn];
-      for (const t of targets) bank.world.categoryOverrides[t.id] = body.category;
+      if (body.apply_to_similar) {
+        // A merchant rule covers past payments and every future one with this name.
+        const name = merchantKey(txn.counterparty.name);
+        for (const t of customerTransactions(bank)) {
+          if (merchantKey(t.counterparty.name) === name) delete bank.world.categoryOverrides[t.id];
+        }
+        bank.world.merchantCategories = {
+          ...bank.world.merchantCategories,
+          [name]: body.category,
+        };
+      } else {
+        bank.world.categoryOverrides[txn.id] = body.category;
+      }
       return detail(bank, path.transaction_id);
     },
     async getReceipt({ path }) {
