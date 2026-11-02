@@ -5,6 +5,7 @@ import {
   Flag,
   Gauge,
   LayoutGrid,
+  LifeBuoy,
   LogOut,
   MonitorSmartphone,
   OctagonX,
@@ -156,6 +157,18 @@ export function MeScreen() {
             subtitle="Official PDFs with a verification code"
             leading={FileText}
             onPress={() => router.push('/statements')}
+          />
+        </Card>
+      </View>
+
+      <View style={{ gap: spacing[2] }}>
+        <SectionHeader title="Help" />
+        <Card padded={false}>
+          <ListItem
+            title="Help and support"
+            subtitle="Chat with our team"
+            leading={LifeBuoy}
+            onPress={() => router.push('/support')}
           />
         </Card>
       </View>

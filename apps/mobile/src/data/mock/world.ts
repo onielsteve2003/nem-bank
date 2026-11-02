@@ -169,6 +169,8 @@ export interface World {
   attachments: Schema<'Attachment'>[];
   conversations: Schema<'SupportConversation'>[];
   messages: Schema<'SupportMessage'>[];
+  /** Conversations where the agent is typing a reply (older saves have none). */
+  supportTyping?: string[];
   notifications: Schema<'Notification'>[];
   dependants: DependantRecord[];
   approvals: Schema<'FamilyApproval'>[];

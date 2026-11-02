@@ -2,7 +2,15 @@ import type { Schema } from '@nem/contracts';
 import { add, formatMoney, negate, zero, type Money } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Copy, Flag, ReceiptText, Repeat, Tag } from 'lucide-react-native';
+import {
+  ArrowLeft,
+  Copy,
+  Flag,
+  MessageCircle,
+  ReceiptText,
+  Repeat,
+  Tag,
+} from 'lucide-react-native';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
@@ -290,6 +298,12 @@ export function TransactionDetailScreen() {
             />
           )
         )}
+        <Button
+          label="Ask support about this"
+          icon={MessageCircle}
+          variant="ghost"
+          onPress={() => router.push({ pathname: '/support/new', params: { transaction: t.id } })}
+        />
       </View>
 
       {receipt && <ReceiptSheet transactionId={t.id} onClose={() => setReceipt(false)} />}

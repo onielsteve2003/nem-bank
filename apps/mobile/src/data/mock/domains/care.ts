@@ -12,6 +12,8 @@ import { customerTransactions } from '../views';
 const UNDER_REVIEW_MS = 20_000;
 const AUTO_REFUND_MS = 60_000;
 const AGENT_REPLY_MS = 5_000;
+/** The agent starts typing a little after your message lands, then replies. */
+const AGENT_TYPING_MS = 1_500;
 const AGENT = 'Ada (Nem Support)';
 /** Reasons the sandbox can settle without a person: the ledger shows the answer. */
 const AUTO_REFUND: ReadonlySet<Schema<'DisputeReason'>> = new Set([
@@ -121,13 +123,28 @@ const REPLIES: [RegExp, string][] = [
   ],
 ];
 
+/**
+ * The sandbox agent: starts typing a moment after your message lands, then
+ * replies. Typing is stored so it changes between ticks and becomes an event.
+ */
 export function processSupport(bank: MockBank): boolean {
-  const cutoff = new Date(bank.now().getTime() - AGENT_REPLY_MS).toISOString();
+  const now = bank.now().getTime();
+  const replyBy = new Date(now - AGENT_REPLY_MS).toISOString();
+  const typeBy = new Date(now - AGENT_TYPING_MS).toISOString();
+  const typing = new Set(bank.world.supportTyping);
   let changed = false;
   for (const c of bank.world.conversations) {
     if (c.status === 'resolved') continue;
     const last = bank.world.messages.filter((m) => m.conversation_id === c.id).at(-1);
-    if (!last || last.sender !== 'customer' || last.created_at > cutoff) continue;
+    if (!last || last.sender !== 'customer' || last.created_at > typeBy) continue;
+    if (last.created_at > replyBy) {
+      if (!typing.has(c.id)) {
+        typing.add(c.id);
+        changed = true;
+      }
+      continue;
+    }
+    typing.delete(c.id);
     const reply =
       REPLIES.find(([pattern]) => pattern.test(last.body))?.[1] ??
       'Thanks for reaching out. How can I help further?';
@@ -147,6 +164,7 @@ export function processSupport(bank: MockBank): boolean {
     c.last_message_at = bank.nowIso();
     changed = true;
   }
+  bank.world.supportTyping = [...typing];
   return changed;
 }
 

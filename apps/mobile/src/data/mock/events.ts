@@ -21,6 +21,8 @@ export interface BankFingerprint {
   approvals: Set<string>;
   disputes: Map<string, string>;
   messages: Set<string>;
+  /** Conversations where the agent is typing. */
+  typing: Set<string>;
   panic: boolean;
   fxAlerts: Map<string, string>;
 }
@@ -52,6 +54,7 @@ export function fingerprint(bank: MockBank): BankFingerprint {
     approvals: new Set(w.approvals.map((a) => a.id)),
     disputes: byId(w.disputes, (d) => d.status),
     messages: new Set(w.messages.map((m) => m.id)),
+    typing: new Set(w.supportTyping),
     panic: w.panic.active,
     fxAlerts: byId(w.fxAlerts, (a) => a.status),
   };
@@ -130,6 +133,12 @@ export function diffEvents(
     const message = w.messages.find((m) => m.id === id)!;
     // The customer's own messages come back in the send response, not as an event.
     if (message.sender !== 'customer') push('support.message', message);
+  }
+  for (const id of added(before.typing, after.typing)) {
+    push('support.typing', { conversation_id: id, sender: 'agent', typing: true });
+  }
+  for (const id of added(after.typing, before.typing)) {
+    push('support.typing', { conversation_id: id, sender: 'agent', typing: false });
   }
   if (before.panic !== after.panic) {
     const panic: Schema<'PanicState'> = {

@@ -96,6 +96,11 @@ const ROUTES: Route[] = [
     pattern: 'disputes/:id',
     to: ({ id = '' }) => ({ pathname: '/disputes/[id]', params: { id } }),
   },
+  { pattern: 'support', to: () => '/support' },
+  {
+    pattern: 'support/:id',
+    to: ({ id = '' }) => ({ pathname: '/support/[id]', params: { id } }),
+  },
   { pattern: 'demo-controls', to: () => '/demo-controls' },
   // Signed-out screens
   { pattern: 'welcome', to: () => '/welcome', public: true },
