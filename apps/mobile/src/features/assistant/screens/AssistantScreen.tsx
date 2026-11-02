@@ -10,6 +10,7 @@ import {
   X,
 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, TextInput, View } from 'react-native';
 
 import {
@@ -33,25 +34,30 @@ import { useTheme } from '@/theme';
 import {
   PROBLEM_MESSAGE,
   PROMPT_MAX,
-  SUGGESTIONS,
   assistantProblem,
+  suggestions,
   type AssistantMessage,
 } from '../assistant';
 import { AssistantBubble } from '../components/AssistantBubble';
 import { useAssistantChat } from '../useAssistantChat';
 
-const EXPLANATION =
-  'Answers questions about your money and prepares payments. It never moves money: you check and approve each one with your PIN or Face ID.';
-const FALLBACK = 'The shortcuts below: balance, spending, send money and card controls.';
-
 /** The non-AI way to everything the assistant does (AI-6 fallback). */
 function Shortcuts() {
   const router = useRouter();
+  const { t } = useTranslation();
   const rows = [
-    { title: 'See my balance', icon: Wallet, go: () => router.dismissTo('/') },
-    { title: 'My spending', icon: ChartPie, go: () => router.push('/insights') },
-    { title: 'Send money', icon: ArrowLeftRight, go: () => router.push('/send') },
-    { title: 'Card controls', icon: CreditCard, go: () => router.dismissTo('/cards') },
+    { title: t('assistant.shortcuts.balance'), icon: Wallet, go: () => router.dismissTo('/') },
+    {
+      title: t('assistant.shortcuts.spending'),
+      icon: ChartPie,
+      go: () => router.push('/insights'),
+    },
+    { title: t('assistant.shortcuts.send'), icon: ArrowLeftRight, go: () => router.push('/send') },
+    {
+      title: t('assistant.shortcuts.cards'),
+      icon: CreditCard,
+      go: () => router.dismissTo('/cards'),
+    },
   ];
   return (
     <Card padded={false}>
@@ -74,6 +80,7 @@ export function AssistantScreen() {
   const router = useRouter();
   const toast = useToast();
   const { colors, radius, spacing, type } = useTheme();
+  const { t } = useTranslation();
   const chat = useAssistantChat();
   const [text, setText] = useState('');
 
@@ -93,12 +100,12 @@ export function AssistantScreen() {
   const header = (
     <View style={[styles.row, { paddingHorizontal: spacing[4], gap: spacing[1] }]}>
       <Text variant="title" accessibilityRole="header" style={styles.flex}>
-        Nem Assistant
+        {t('assistant.name')}
       </Text>
       <AIBadge
-        feature="Nem Assistant"
-        explanation={EXPLANATION}
-        fallback={FALLBACK}
+        feature={t('assistant.name')}
+        explanation={t('assistant.explanation')}
+        fallback={t('assistant.fallback')}
         onManage={() =>
           router.push({ pathname: '/ai/[feature]', params: { feature: 'assistant' } })
         }
@@ -106,14 +113,14 @@ export function AssistantScreen() {
       <IconButton
         icon={SquarePen}
         variant="ghost"
-        accessibilityLabel="New chat"
+        accessibilityLabel={t('assistant.newChat')}
         disabled={!chat.messages || chat.send.isPending}
         onPress={chat.newChat}
       />
       <IconButton
         icon={X}
         variant="ghost"
-        accessibilityLabel="Close"
+        accessibilityLabel={t('common.close')}
         onPress={() => router.back()}
       />
     </View>
@@ -124,9 +131,9 @@ export function AssistantScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={Bot}
-          title="The assistant is off"
-          message="Turn it on in AI and your data, or use the shortcuts."
-          actionLabel="AI and your data"
+          title={t('assistant.offTitle')}
+          message={t('assistant.offMessage')}
+          actionLabel={t('ai.transparency.title')}
           onAction={() =>
             router.push({ pathname: '/ai/[feature]', params: { feature: 'assistant' } })
           }
@@ -153,7 +160,7 @@ export function AssistantScreen() {
   if (!chat.messages) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
-        <SkeletonGroup accessibilityLabel="Opening the assistant">
+        <SkeletonGroup accessibilityLabel={t('assistant.opening')}>
           <Skeleton height={64} />
           <Skeleton height={48} />
         </SkeletonGroup>
@@ -175,8 +182,11 @@ export function AssistantScreen() {
   const composer = (
     <View style={{ gap: spacing[2] }}>
       {!asked && (
-        <View style={[styles.wrap, { gap: spacing[2] }]} accessibilityLabel="Suggestions">
-          {SUGGESTIONS.map((s) => (
+        <View
+          style={[styles.wrap, { gap: spacing[2] }]}
+          accessibilityLabel={t('assistant.suggestionsLabel')}
+        >
+          {suggestions().map((s) => (
             <Chip key={s} label={s} onPress={() => ask(s)} />
           ))}
         </View>
@@ -185,8 +195,8 @@ export function AssistantScreen() {
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Ask about your money"
-          accessibilityLabel="Ask the assistant"
+          placeholder={t('assistant.placeholder')}
+          accessibilityLabel={t('assistant.inputLabel')}
           placeholderTextColor={colors.textMuted}
           selectionColor={colors.primaryText}
           maxLength={PROMPT_MAX}
@@ -206,13 +216,13 @@ export function AssistantScreen() {
         />
         <IconButton
           icon={Send}
-          accessibilityLabel="Ask"
+          accessibilityLabel={t('assistant.ask')}
           disabled={!text.trim() || chat.send.isPending}
           onPress={() => ask(text)}
         />
       </View>
       <Text variant="caption" color="textMuted" style={styles.center}>
-        Answers can be wrong. Nem never moves money without your PIN or Face ID.
+        {t('assistant.disclaimer')}
       </Text>
     </View>
   );
@@ -237,7 +247,7 @@ export function AssistantScreen() {
         contentContainerStyle={{ padding: spacing[4], gap: spacing[3] }}
         // Inverted, so the header sits under the newest message.
         ListHeaderComponent={
-          chat.send.isPending ? <TypingIndicator name="Nem Assistant" /> : undefined
+          chat.send.isPending ? <TypingIndicator name={t('assistant.name')} /> : undefined
         }
       />
     </Screen>

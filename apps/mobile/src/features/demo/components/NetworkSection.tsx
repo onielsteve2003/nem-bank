@@ -1,4 +1,5 @@
 import { RotateCcw } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 
 import { Button, Chip, Switch } from '@/components';
 import { useDemoStore } from '@/stores';
@@ -12,54 +13,57 @@ import { ChipRow, DemoSection } from './DemoSection';
  * whether it is reachable at all. Saved, so a demo set up flaky stays flaky.
  */
 export function NetworkSection() {
+  const { t } = useTranslation();
   const simulation = useDemoStore((s) => s.simulation);
   const setSimulation = useDemoStore((s) => s.setSimulation);
   const resetSimulation = useDemoStore((s) => s.resetSimulation);
 
   return (
-    <DemoSection
-      title="Network"
-      description="See every loading, error and offline state without a real outage."
-    >
-      <ChipRow label="Speed">
-        {LATENCIES.map(({ value, label }) => (
+    <DemoSection title={t('demo.network.title')} description={t('demo.network.description')}>
+      <ChipRow label={t('demo.network.speed')}>
+        {LATENCIES.map((l) => (
           <Chip
-            key={value}
-            label={label}
-            selected={simulation.latency === value}
-            onPress={() => setSimulation({ latency: value })}
+            key={l.value}
+            label={l.label}
+            selected={simulation.latency === l.value}
+            onPress={() => setSimulation({ latency: l.value })}
           />
         ))}
       </ChipRow>
-      <ChipRow label="Failed requests">
-        {ERROR_RATES.map(({ value, label }) => (
+      <ChipRow label={t('demo.network.failed')}>
+        {ERROR_RATES.map((r) => (
           <Chip
-            key={label}
-            label={label}
-            selected={simulation.errorRate === value}
-            onPress={() => setSimulation({ errorRate: value })}
+            key={r.value}
+            label={r.label}
+            selected={simulation.errorRate === r.value}
+            onPress={() => setSimulation({ errorRate: r.value })}
           />
         ))}
       </ChipRow>
       <Switch
-        label="Bank offline"
-        description="Saved balances stay readable; payments need a connection."
+        label={t('demo.network.offline')}
+        description={t('demo.network.offlineHelp')}
         value={simulation.offline}
         onValueChange={(offline) => setSimulation({ offline })}
       />
       <Switch
-        label="Lose some responses"
-        description="A payment goes through but the answer never arrives. Retrying must not pay twice."
+        label={t('demo.network.lose')}
+        description={t('demo.network.loseHelp')}
         value={simulation.failAfterCommit}
         onValueChange={(failAfterCommit) => setSimulation({ failAfterCommit })}
       />
       <Switch
-        label="Friends send money"
-        description="Small transfers arrive now and then, live."
+        label={t('demo.network.friends')}
+        description={t('demo.network.friendsHelp')}
         value={simulation.ambientActivity}
         onValueChange={(ambientActivity) => setSimulation({ ambientActivity })}
       />
-      <Button label="Reset network" icon={RotateCcw} variant="ghost" onPress={resetSimulation} />
+      <Button
+        label={t('demo.network.reset')}
+        icon={RotateCcw}
+        variant="ghost"
+        onPress={resetSimulation}
+      />
     </DemoSection>
   );
 }

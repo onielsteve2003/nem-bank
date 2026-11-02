@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { ArrowLeft, X, type LucideIcon } from 'lucide-react-native';
 import type { ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { EmptyState, IconButton, Screen, Text } from '@/components';
@@ -24,6 +25,7 @@ export type Props = {
 export function PlaceholderScreen({ title, icon, message, variant = 'tab', children }: Props) {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
 
   const header = (
     <View
@@ -35,7 +37,7 @@ export function PlaceholderScreen({ title, icon, message, variant = 'tab', child
       {variant === 'stack' && router.canGoBack() && (
         <IconButton
           icon={ArrowLeft}
-          accessibilityLabel="Back"
+          accessibilityLabel={t('common.back')}
           variant="ghost"
           onPress={() => router.back()}
         />
@@ -46,7 +48,7 @@ export function PlaceholderScreen({ title, icon, message, variant = 'tab', child
       {variant === 'modal' && (
         <IconButton
           icon={X}
-          accessibilityLabel="Close"
+          accessibilityLabel={t('common.close')}
           variant="ghost"
           onPress={() => router.back()}
         />

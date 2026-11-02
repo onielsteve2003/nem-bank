@@ -3,6 +3,7 @@ import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
 import { haptic } from '@/lib/haptics';
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { isDigit, type KeypadKey } from './entry';
@@ -76,7 +77,7 @@ export function PinPad({ title, subtitle, length = 4, onComplete, error, accesso
       </View>
       <Animated.View
         accessible
-        accessibilityLabel={`${pin.length} of ${length} digits entered`}
+        accessibilityLabel={i18n.t('components.pin.entered', { count: pin.length, length })}
         style={[styles.dots, { gap: spacing[4] }, shakeStyle]}
       >
         {Array.from({ length }, (_, i) => (

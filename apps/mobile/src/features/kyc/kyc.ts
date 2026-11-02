@@ -2,30 +2,30 @@ import type { Schema } from '@nem/contracts';
 import type { KycTier } from '@nem/shared';
 import type { Href } from 'expo-router';
 
+import i18n, { localized } from '@/lib/i18n';
+
 type Overview = Schema<'KycOverview'>;
 type Unlock = NonNullable<Schema<'TierInfo'>['unlocks']>[number];
 
 /** What a tier unlocks, in words. */
-export const UNLOCK_LABELS: Record<Unlock, string> = {
-  fx_wallets: 'Dollar, pound and euro wallets',
-  usd_cards: 'Dollar cards',
-  credit: 'Loans',
-  higher_limits: 'Higher limits',
-};
+export const UNLOCK_LABELS = localized<Unlock>({
+  fx_wallets: 'kyc.unlocks.fx_wallets',
+  usd_cards: 'kyc.unlocks.usd_cards',
+  credit: 'kyc.unlocks.credit',
+  higher_limits: 'kyc.unlocks.higher_limits',
+});
 
 /** Where you stand, in one sentence. */
 export function kycStatusText(overview: Overview): string {
   switch (overview.status) {
     case 'pending_review':
-      return 'Your documents are being reviewed. This usually takes a few minutes.';
+      return i18n.t('kyc.status.pending');
     case 'rejected':
-      return 'Your last upgrade wasn’t approved.';
+      return i18n.t('kyc.status.rejected');
     case 'resubmit':
-      return 'We need some documents again.';
+      return i18n.t('kyc.status.resubmit');
     default:
-      return overview.tier === 3
-        ? 'You’re fully verified.'
-        : 'Verify a little more to raise your limits.';
+      return i18n.t(overview.tier === 3 ? 'kyc.status.full' : 'kyc.status.more');
   }
 }
 
@@ -53,26 +53,30 @@ export function upgradeHref(overview: Overview): Href | null {
 export type IdType = Schema<'IdentityNumberRequest'>['type'];
 
 /** BVN and NIN, and how to find yours. */
-export const ID_TYPES: Record<IdType, { label: string; name: string; find: string }> = {
-  bvn: {
-    label: 'BVN',
-    name: 'Bank Verification Number',
-    find: 'Dial *565*0# from the phone number linked to your bank account.',
+const idType = (type: IdType) => ({
+  get label() {
+    return i18n.t(`kyc.idTypes.${type}.label`);
   },
-  nin: {
-    label: 'NIN',
-    name: 'National Identification Number',
-    find: 'Dial *346# from the phone number you registered with NIMC.',
+  get name() {
+    return i18n.t(`kyc.idTypes.${type}.name`);
   },
-};
+  get find() {
+    return i18n.t(`kyc.idTypes.${type}.find`);
+  },
+});
+
+/** Words are read in the current language on access. */
+export const ID_TYPES: Record<
+  IdType,
+  { readonly label: string; readonly name: string; readonly find: string }
+> = { bvn: idType('bvn'), nin: idType('nin') };
 
 /** Why a BVN or NIN check failed, in words, or undefined when it passed. */
 export function identityProblem(result: Schema<'IdentityVerification'>): string | undefined {
   if (result.verified) return undefined;
   const { label } = ID_TYPES[result.type];
-  if (result.date_of_birth_match === false)
-    return `That date of birth doesn’t match your ${label} record. Use the one you registered with.`;
-  return `We couldn’t find that ${label}. Check the 11 digits and try again.`;
+  if (result.date_of_birth_match === false) return i18n.t('kyc.identityProblem.dob', { label });
+  return i18n.t('kyc.identityProblem.notFound', { label });
 }
 
 /** An ISO date as the DD/MM/YYYY people type. */
@@ -80,18 +84,18 @@ export const displayDate = (iso: string) => iso.split('-').reverse().join('/');
 
 type QualityIssue = NonNullable<Schema<'KycDocument'>['quality_issues']>[number];
 
-const QUALITY_ISSUES: Record<QualityIssue, string> = {
-  blurry: 'That photo is blurry. Hold still and try again.',
-  glare: 'There’s glare on your ID. Tilt it away from the light.',
-  cropped: 'Part of your ID is cut off. Fit it all inside the frame.',
-  face_not_found: 'We couldn’t see your face. Face the camera in good light.',
-};
+const QUALITY_ISSUES = localized<QualityIssue>({
+  blurry: 'kyc.quality.blurry',
+  glare: 'kyc.quality.glare',
+  cropped: 'kyc.quality.cropped',
+  face_not_found: 'kyc.quality.face_not_found',
+});
 
 /** Why the bank turned a photo away, in words, or undefined when it is fine. */
 export function photoProblem(doc: Schema<'KycDocument'>): string | undefined {
   if (doc.status !== 'rejected') return undefined;
   const issue = doc.quality_issues?.[0];
-  return issue ? QUALITY_ISSUES[issue] : 'We couldn’t use that photo. Try another.';
+  return issue ? QUALITY_ISSUES[issue] : i18n.t('kyc.quality.other');
 }
 
 /**
@@ -103,56 +107,61 @@ export const SAMPLE_PHOTO = `data:image/jpeg;base64,${'/9j/'.padEnd(4_000, 'A')}
 export type IdDocument = Schema<'KycSubmissionRequest'>['id_type'];
 
 /** The government IDs accepted for Tier 3, and the shape of each number. */
-export const ID_DOCUMENTS: Record<IdDocument, { label: string; pattern: RegExp; hint: string }> = {
-  national_id: { label: 'National ID', pattern: /^\d{11}$/, hint: 'Your 11-digit NIN' },
-  drivers_licence: {
-    label: 'Driver’s licence',
-    pattern: /^[A-Z]{3}[A-Z0-9]{8,9}$/,
-    hint: 'Like ABC12345AA01',
+const idDocument = (type: IdDocument, pattern: RegExp) => ({
+  pattern,
+  get label() {
+    return i18n.t(`kyc.documents.${type}.label`);
   },
-  international_passport: {
-    label: 'International passport',
-    pattern: /^[A-Z]\d{8}$/,
-    hint: 'A letter and 8 digits, like A01234567',
+  get hint() {
+    return i18n.t(`kyc.documents.${type}.hint`);
   },
-  voters_card: {
-    label: 'Voter’s card',
-    pattern: /^[A-Z0-9]{19}$/,
-    hint: 'The 19 characters on your PVC',
-  },
+});
+
+/** Words are read in the current language on access. */
+export const ID_DOCUMENTS: Record<
+  IdDocument,
+  { readonly label: string; readonly pattern: RegExp; readonly hint: string }
+> = {
+  national_id: idDocument('national_id', /^\d{11}$/),
+  drivers_licence: idDocument('drivers_licence', /^[A-Z]{3}[A-Z0-9]{8,9}$/),
+  international_passport: idDocument('international_passport', /^[A-Z]\d{8}$/),
+  voters_card: idDocument('voters_card', /^[A-Z0-9]{19}$/),
 };
 
 /** Why an ID number can't be used, or undefined. Empty is just incomplete. */
 export function idNumberProblem(type: IdDocument, number: string): string | undefined {
   const n = number.trim().toUpperCase();
   if (!n || ID_DOCUMENTS[type].pattern.test(n)) return undefined;
-  return `That doesn’t look like a ${ID_DOCUMENTS[type].label.toLowerCase()} number. ${ID_DOCUMENTS[type].hint}.`;
+  return i18n.t('kyc.idNumberProblem', {
+    type: ID_DOCUMENTS[type].label.toLowerCase(),
+    hint: ID_DOCUMENTS[type].hint,
+  });
 }
 
 /** Why an ID expiry date can't be used, or undefined. An ID must not have expired. */
 export function expiryProblem(iso: string | null, typed: string, today: Date): string | undefined {
   if (!typed) return undefined;
-  if (!iso) return typed.length === 10 ? 'Enter a real date as DD/MM/YYYY' : undefined;
-  return iso <= today.toISOString().slice(0, 10)
-    ? 'This ID has expired. Use one that hasn’t.'
-    : undefined;
+  if (!iso) return typed.length === 10 ? i18n.t('common.dateInvalid') : undefined;
+  return iso <= today.toISOString().slice(0, 10) ? i18n.t('kyc.expired') : undefined;
 }
 
 type Submission = Schema<'KycSubmission'>;
 
-const DOCUMENT_NAMES: Record<Schema<'KycDocumentKind'>, string> = {
-  id_front: 'a new photo of your ID',
-  id_back: 'a photo of the back of your ID',
-  selfie: 'a new selfie',
-  proof_of_address: 'proof of your address',
-};
+const DOCUMENT_NAMES = localized<Schema<'KycDocumentKind'>>({
+  id_front: 'kyc.documentNames.id_front',
+  id_back: 'kyc.documentNames.id_back',
+  selfie: 'kyc.documentNames.selfie',
+  proof_of_address: 'kyc.documentNames.proof_of_address',
+});
 
 /** The documents a reviewer asked for again, as one phrase ("a new selfie"). */
 export function resubmitWhat(submission: Submission): string {
   const kinds = submission.resubmit_documents ?? [];
-  if (!kinds.length) return 'your documents again';
+  if (!kinds.length) return i18n.t('kyc.documentsAgain');
   const names = kinds.map((k) => DOCUMENT_NAMES[k]);
-  return names.length === 1 ? names[0]! : `${names.slice(0, -1).join(', ')} and ${names.at(-1)}`;
+  return names.length === 1
+    ? names[0]!
+    : i18n.t('kyc.listAnd', { list: names.slice(0, -1).join(', '), last: names.at(-1) });
 }
 
 /**
@@ -169,22 +178,22 @@ export function reviewState(submission: Submission | null | undefined): {
     case 'pending_review':
       return {
         status: 'pending',
-        title: 'We’re checking your documents',
-        message: 'This usually takes a few minutes. We’ll tell you when it’s done.',
+        title: i18n.t('kyc.review.pendingTitle'),
+        message: i18n.t('kyc.review.pendingMessage'),
       };
     case 'rejected':
       return {
         status: 'rejected',
-        title: 'Not approved',
-        message: submission.rejection_reason ?? 'We couldn’t approve these documents.',
-        action: 'Try again',
+        title: i18n.t('kyc.review.rejectedTitle'),
+        message: submission.rejection_reason ?? i18n.t('kyc.review.rejectedMessage'),
+        action: i18n.t('common.tryAgain'),
       };
     case 'resubmit':
       return {
         status: 'resubmit',
-        title: `We need ${resubmitWhat(submission)}`,
-        message: submission.rejection_reason ?? 'One of your photos couldn’t be used.',
-        action: 'Send again',
+        title: i18n.t('kyc.review.resubmitTitle', { what: resubmitWhat(submission) }),
+        message: submission.rejection_reason ?? i18n.t('kyc.review.resubmitMessage'),
+        action: i18n.t('kyc.review.sendAgain'),
       };
     default:
       return null;

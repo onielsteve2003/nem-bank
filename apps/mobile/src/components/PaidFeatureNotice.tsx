@@ -1,7 +1,9 @@
 import { LockKeyhole } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { BottomSheet } from './BottomSheet';
@@ -9,74 +11,30 @@ import { Button } from './Button';
 import { Icon } from './Icon';
 import { Text } from './Text';
 
-export type PaidFeature =
-  | 'smsOtp'
-  | 'ussd'
-  | 'internationalTransfer'
-  | 'physicalCard'
-  | 'identityVerification'
-  | 'realMoney';
+/** The features PRD §11 gates. */
+export const PAID_FEATURES = [
+  'smsOtp',
+  'ussd',
+  'internationalTransfer',
+  'physicalCard',
+  'identityVerification',
+  'realMoney',
+] as const;
+export type PaidFeature = (typeof PAID_FEATURES)[number];
 
-/** The features PRD §11 gates, with the partner each needs and how the hookup would work. */
-export const PAID_FEATURES: Record<
-  PaidFeature,
-  { name: string; partner: string; steps: readonly string[] }
-> = {
-  smsOtp: {
-    name: 'SMS one-time codes',
-    partner: 'a paid SMS gateway',
-    steps: [
-      'The Mailer interface gains an SMS adapter for a Nigerian SMS gateway.',
-      'Codes are sent from a registered sender ID, with delivery receipts tracked.',
-      'Until then, codes go by email and trusted devices sign in with device keys.',
-    ],
-  },
-  ussd: {
-    name: 'USSD banking',
-    partner: 'a licensed USSD aggregator and a shortcode',
-    steps: [
-      'A USSD aggregator forwards each session to a Nem Bank menu service.',
-      'The menu calls the same transfer and balance APIs as the app.',
-      'Every money action still needs the account PIN.',
-    ],
-  },
-  internationalTransfer: {
-    name: 'International transfers',
-    partner: 'a licensed remittance partner',
-    steps: [
-      'The BankPartner interface gains an adapter for a remittance provider.',
-      'Quotes come from the partner, and the FX leg books through the same ledger.',
-      'Compliance checks run on the partner side before money leaves.',
-    ],
-  },
-  physicalCard: {
-    name: 'Physical cards',
-    partner: 'a card issuer and a card printing bureau',
-    steps: [
-      'The CardProcessor interface gains an adapter for a licensed issuer.',
-      'The card is printed, posted and activated in the app with the PIN.',
-      'Virtual cards already use the same freeze, limit and channel controls.',
-    ],
-  },
-  identityVerification: {
-    name: 'Real BVN and NIN checks',
-    partner: 'a licensed identity verification provider',
-    steps: [
-      'The IdentityVerifier interface gains an adapter for a provider with NIBSS and NIMC access.',
-      'The number, name and date of birth are checked live, and the number is stored encrypted.',
-      'Until then, the bank accepts sandbox test numbers only.',
-    ],
-  },
-  realMoney: {
-    name: 'Real money accounts',
-    partner: 'a licensed banking-as-a-service partner',
-    steps: [
-      'A BaaS partner holds the real accounts; Nem Bank keeps its own ledger in sync.',
-      'KYC moves from sandbox test numbers to live BVN and NIN checks.',
-      'The switch is a console feature flag, so no app code changes.',
-    ],
-  },
-};
+/** A gated feature, the partner it needs and how the hookup would work, in the current language. */
+export function paidFeature(feature: PaidFeature): {
+  name: string;
+  partner: string;
+  steps: readonly string[];
+} {
+  const key = `components.paid.features.${feature}` as const;
+  return {
+    name: i18n.t(`${key}.name`),
+    partner: i18n.t(`${key}.partner`),
+    steps: i18n.t(`${key}.steps`, { returnObjects: true }),
+  };
+}
 
 export type Props = {
   open: boolean;
@@ -87,8 +45,9 @@ export type Props = {
 /** The bottom sheet every paid feature opens instead of failing silently (PRD §11, ADR-7). */
 export function PaidFeatureNotice({ open, onClose, feature }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const [explaining, setExplaining] = useState(false);
-  const { name, partner, steps } = PAID_FEATURES[feature];
+  const { name, partner, steps } = paidFeature(feature);
 
   // Every opening starts on the notice, not on the explainer left from last time.
   const close = () => {
@@ -100,7 +59,7 @@ export function PaidFeatureNotice({ open, onClose, feature }: Props) {
     <BottomSheet
       open={open}
       onClose={close}
-      title={explaining ? 'How it would work' : 'This feature needs a paid partner service'}
+      title={t(explaining ? 'components.paid.howTitle' : 'components.paid.title')}
     >
       {explaining ? (
         <View accessibilityRole="list" style={{ gap: spacing[3] }}>
@@ -109,7 +68,10 @@ export function PaidFeatureNotice({ open, onClose, feature }: Props) {
               <View
                 style={[styles.step, { backgroundColor: colors.raised, borderRadius: radius.pill }]}
               >
-                <Text variant="caption" accessibilityLabel={`Step ${i + 1}`}>
+                <Text
+                  variant="caption"
+                  accessibilityLabel={t('components.paid.step', { n: i + 1 })}
+                >
                   {i + 1}
                 </Text>
               </View>
@@ -123,18 +85,21 @@ export function PaidFeatureNotice({ open, onClose, feature }: Props) {
         <View style={[styles.row, { gap: spacing[3] }]}>
           <Icon icon={LockKeyhole} color="warning" />
           <Text variant="body" style={styles.flex}>
-            {name} requires {partner}. Nem Bank is a portfolio project running on simulated money,
-            so this connection is fully designed but switched off. It will be enabled once there is
-            funding for the service.
+            {t('components.paid.body', { name, partner })}
           </Text>
         </View>
       )}
-      <Button label="Got it" fullWidth onPress={close} />
+      <Button label={t('components.paid.gotIt')} fullWidth onPress={close} />
       {explaining ? (
-        <Button label="Back" variant="ghost" fullWidth onPress={() => setExplaining(false)} />
+        <Button
+          label={t('common.back')}
+          variant="ghost"
+          fullWidth
+          onPress={() => setExplaining(false)}
+        />
       ) : (
         <Button
-          label="See how it would work"
+          label={t('components.paid.seeHow')}
           variant="secondary"
           fullWidth
           onPress={() => setExplaining(true)}

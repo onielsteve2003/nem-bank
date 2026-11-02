@@ -1,4 +1,5 @@
 import { FlaskConical } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/theme';
@@ -12,17 +13,15 @@ export type Props = {
 };
 
 const COPY = {
-  demo: { label: 'Demo money', spoken: 'Demo money. These balances are simulated.' },
-  sandbox: {
-    label: 'Sandbox',
-    spoken: 'Sandbox. This runs on a test environment, not real money.',
-  },
+  demo: { label: 'components.demoBadge.demo', spoken: 'components.demoBadge.demoSpoken' },
+  sandbox: { label: 'components.demoBadge.sandbox', spoken: 'components.demoBadge.sandboxSpoken' },
 } as const;
 
 /** Shown wherever balances appear, so simulated money is never mistaken for real (DEMO-2). */
 export function DemoMoneyBadge({ mode = 'demo' }: Props) {
   const { colors, radius, spacing } = useTheme();
-  const copy = COPY[mode];
+  const { t } = useTranslation();
+  const copy = { label: t(COPY[mode].label), spoken: t(COPY[mode].spoken) };
 
   return (
     <View

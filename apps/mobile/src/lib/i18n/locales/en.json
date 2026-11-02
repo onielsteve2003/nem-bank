@@ -90,7 +90,38 @@
     "repayAutomaticallyHelp": "Each payment is taken from your naira account on its due date.",
     "months_one": "{{count}} month",
     "months_other": "{{count}} months",
-    "amountHidden": "amount hidden"
+    "amountHidden": "amount hidden",
+    "somethingWrong": "Something went wrong. Try again.",
+    "noLimit": "No limit",
+    "turnOff": "Turn off",
+    "change": "Change",
+    "clear": "Clear",
+    "paste": "Paste",
+    "manage": "Manage",
+    "openSettings": "Open Settings",
+    "dateInvalid": "Enter a real date as DD/MM/YYYY",
+    "datePlaceholder": "DD/MM/YYYY",
+    "dateOfBirth": "Date of birth",
+    "problem": "Problem",
+    "profileFailed": "We couldn't load your profile",
+    "photoTooBig": "That photo is over 5 MB. Try another.",
+    "removePhotoN": "Remove photo {{n}}",
+    "photoN": "Photo {{n}}",
+    "takePhoto": "Take photo",
+    "choosePhoto": "Choose photo",
+    "send": "Send",
+    "firstName": "First name",
+    "lastName": "Last name",
+    "name": "Name",
+    "approve": "Approve",
+    "decline": "Decline",
+    "weekly": "Weekly",
+    "monthly": "Monthly",
+    "kidMode": "Kid mode",
+    "yearsOld": "{{count}} years old",
+    "confirm": "Confirm",
+    "view": "View",
+    "reset": "Reset"
   },
   "tabs": {
     "home": "Home",
@@ -2697,6 +2728,1254 @@
       "cardEnding": "{{name}} ending {{last4}}",
       "closed": "This card is closed, so the next charge will be declined.",
       "frozen": "This card is frozen, so the next charge will be declined."
+    }
+  },
+  "security": {
+    "title": "Security",
+    "limitSheet": {
+      "daily": "Daily limit",
+      "single": "Single transfer limit",
+      "capOnly": "Only your KYC cap of {{cap}} a day applies.",
+      "help": "Up to {{cap}}, your KYC cap",
+      "raise": "Raising a limit needs your PIN and starts in 24 hours, so nobody can raise it and spend at once.",
+      "lower": "Lowering a limit applies straight away.",
+      "same": "This is your limit now.",
+      "raiseButton": "Raise in 24 hours"
+    },
+    "score": {
+      "label": "Security score {{score}} out of 100. {{band}}.",
+      "outOf": "out of 100",
+      "strong": "Strong",
+      "good": "Good, could be better",
+      "weak": "Needs attention"
+    },
+    "question": {
+      "saveFailed": "We couldn't save it. Try again.",
+      "answerTitle": "Your answer",
+      "pickTitle": "Pick a question",
+      "pickAnother": "Pick another question",
+      "answer": "Answer",
+      "answerHelp": "Not case-sensitive. Pick something you won't forget, and don't share it.",
+      "tooShort": "Use {{min}} characters or more",
+      "save": "Save security question",
+      "saved": "Security question saved",
+      "list": [
+        "What was the name of your first primary school?",
+        "What was the name of your childhood best friend?",
+        "In which town did your parents meet?",
+        "What was the first thing you ever bought with your own money?"
+      ]
+    },
+    "alerts": {
+      "title": "Login and payment alerts",
+      "loginOffTitle": "Turn off login alerts?",
+      "loginOffMessage": "You won't hear from us when someone logs in to your account, even if it isn't you.",
+      "deviceOffTitle": "Turn off new device alerts?",
+      "deviceOffMessage": "You won't hear from us when a new phone or browser is added to your account.",
+      "failed": "We couldn't load your alerts",
+      "loading": "Loading your alerts",
+      "signIns": "Sign-ins",
+      "login": "Login alerts",
+      "loginHelp": "Every time someone logs in to your account",
+      "newDevice": "New device alerts",
+      "coolingOff": "Stays on while {{name}} is new to your account, until {{until}}",
+      "newDeviceHelp": "When a new phone or browser is added",
+      "scoreNote": "Keeping both on counts towards your security score.",
+      "payments": "Payments",
+      "leavesFor": "Alert me when money leaves for",
+      "every": "You get an alert for every payment, card payment and bill.",
+      "smaller": "Smaller payments still show in your activity, just without an alert.",
+      "everyPayment": "Every payment",
+      "orMore": "{{amount}} or more"
+    },
+    "devices": {
+      "title": "Devices and sessions",
+      "removed": "{{name}} removed",
+      "signedOut": "Signed out {{name}}",
+      "signedOutAll": "Signed out everywhere else",
+      "failed": "We couldn't load your devices",
+      "loading": "Loading your devices",
+      "devices": "Devices",
+      "intro": "These can approve payments with their own key. Remove any you don’t recognise.",
+      "lastUsed": "{{status}} · last used {{when}}",
+      "thisDevice": "This device",
+      "deviceLabel": "{{name}}. {{status}}. Last used {{when}}.",
+      "deviceLabelCurrent": "{{name}}. {{status}}. Last used {{when}}. This device.",
+      "signedIn": "Signed in",
+      "active": "active {{when}}",
+      "youreHere": "You’re here",
+      "signOut": "Sign out",
+      "sessionLabel": "{{name}}. {{where}}{{when}}.",
+      "sessionLabelCurrent": "{{name}}. {{where}}{{when}}. This session.",
+      "signOutAll": "Sign out everywhere else",
+      "removeTitle": "Remove {{name}}?",
+      "removeMessage": "It will be signed out and can no longer approve payments. Signing in on it again counts as a new device, with lower limits for 24 hours.",
+      "removeConfirm": "Remove device",
+      "signOutTitle": "Sign out {{name}}?",
+      "signOutMessage": "That sign-in ends now. The device stays trusted for next time.",
+      "signOutConfirm": "Sign out now",
+      "signOutAllTitle": "Sign out everywhere else?",
+      "signOutAllMessage_one": "This ends {{count}} other sign-in. You stay signed in here.",
+      "signOutAllMessage_other": "This ends {{count}} other sign-ins. You stay signed in here.",
+      "signOutAllConfirm": "Sign out all",
+      "status": {
+        "new": "New device, lower limits for now",
+        "untrusted": "Not trusted yet",
+        "hardware": "Trusted, key in secure hardware",
+        "trusted": "Trusted"
+      }
+    },
+    "duress": {
+      "title": "Duress PIN",
+      "mismatch": "The PINs didn't match. Choose your duress PIN again.",
+      "choose": "Choose a duress PIN",
+      "chooseHelp": "4 digits, different from your real PIN",
+      "again": "Enter it again",
+      "againHelp": "The same 4 digits",
+      "set": "Your duress PIN is set",
+      "removed": "Your duress PIN is removed",
+      "removeStep": "Remove your duress PIN",
+      "saveStep": "Save your duress PIN",
+      "failed": "We couldn't check your duress PIN",
+      "loading": "Checking your duress PIN",
+      "on": "On",
+      "isOn": "Your duress PIN is on",
+      "secret": "Only you know it. Don’t write it down next to your real PIN.",
+      "intro": "If someone ever forces you to open Nem Bank or approve a payment, enter this PIN instead of your real one.",
+      "setButton": "Set a duress PIN",
+      "whatHappens": "What happens when it’s used",
+      "opens": "The app opens as normal",
+      "opensHelp": "Nothing on screen gives it away",
+      "small": "They see a small balance",
+      "smallHelp": "Your real balances and bigger payments stay hidden",
+      "fake": "Payments look sent, but no money moves",
+      "fakeHelp": "They show as on their way",
+      "alerted": "We’re alerted quietly",
+      "alertedHelp": "Our security team sees it straight away",
+      "ends": "Your real PIN ends it",
+      "endsHelp": "Unlock with it later and everything is back; those payments show as stopped",
+      "removeTitle": "Remove your duress PIN?",
+      "removeMessage": "You can set a new one at any time. You'll confirm with your PIN or Face ID."
+    },
+    "limits": {
+      "title": "Your limits",
+      "saveFailed": "We couldn’t save your limit. Try again.",
+      "failed": "We couldn't load your limits",
+      "loading": "Loading your limits",
+      "lowered": "Limit lowered. It applies now.",
+      "startsAt": "Your new limit starts {{when}}",
+      "saved": "Limit saved",
+      "cancelled": "Increase cancelled",
+      "cap": "Your KYC cap",
+      "capPerDay": "{{amount}} a day",
+      "capHelp": "Set your own limits below it. If someone gets into your account, they can’t send more than you allow.",
+      "waiting": "Waiting",
+      "higherFrom": "Higher limits start {{when}}",
+      "pending": "Daily: {{daily}}. Single transfer: {{single}}. Until then your current limits apply. Lowering a limit cancels this.",
+      "keep": "Keep my current limits",
+      "daily": "Daily limit",
+      "dailyHelp": "Total you can send in a day",
+      "dailyUnset": "Not set: your KYC cap applies",
+      "dailyLabel": "Daily limit, {{amount}}. Change",
+      "single": "Single transfer",
+      "singleHelp": "Most you can send at once",
+      "singleUnset": "Not set",
+      "singleLabel": "Single transfer limit, {{amount}}. Change",
+      "raiseStep": "Raise your limit. It starts in 24 hours.",
+      "aboveCapDaily": "Your daily limit can't be above your KYC cap of {{cap}}",
+      "aboveCapSingle": "A single transfer can't be above your KYC cap of {{cap}}",
+      "singleAboveDaily": "A single transfer can't be above your daily limit"
+    },
+    "panic": {
+      "title": "Panic button",
+      "off": "Panic mode is off",
+      "failed": "We couldn't check panic mode",
+      "loading": "Checking panic mode",
+      "onLabel": "Panic mode on",
+      "isOn": "Panic mode is on",
+      "since": "Since {{when}}. {{summary}}",
+      "stillIn": "Money can still come in. Turning panic mode off unfreezes the cards it froze and lets money go out again.",
+      "turnOff": "Turn off panic mode",
+      "whileSafe": "While you’re safe",
+      "reviewDevices": "Review your devices",
+      "reviewDevicesHelp": "Remove any you don’t recognise",
+      "intro": "Lost your phone, card or think someone is in your account? One tap stops everything.",
+      "freeze": "Freeze everything",
+      "freezeHint": "Freezes every card and blocks money going out",
+      "whatHappens": "What happens",
+      "cards": "Every card is frozen",
+      "cardsHelp": "No card payments",
+      "noLeave": "No money can leave",
+      "noLeaveHelp": "Transfers, bills and conversions stop",
+      "comeIn": "Money can still come in",
+      "comeInHelp": "Salary and transfers to you still arrive",
+      "needsPin": "Turning it off needs your PIN or Face ID.",
+      "confirmTitle": "Freeze everything?",
+      "confirmMessage": "Every card is frozen and no money can leave your account until you turn this off with your PIN.",
+      "summaryOff": "Panic mode is off.",
+      "noCards": "No cards needed freezing",
+      "cardsFrozen_one": "{{count}} card frozen",
+      "cardsFrozen_other": "{{count}} cards frozen",
+      "summary": "{{cards}}.",
+      "summaryBlocked": "{{cards}} and no money can leave your account."
+    },
+    "scam": {
+      "title": "Scam checker",
+      "kinds": {
+        "message": "Message",
+        "link": "Link",
+        "account_number": "Account number"
+      },
+      "placeholders": {
+        "message": "Paste the SMS, WhatsApp or email text",
+        "link": "Paste the link, e.g. bit.ly/…",
+        "account_number": "The 10-digit account they want you to pay"
+      },
+      "rulesOnly": "Rules only: known Nigerian scam phrases, link tricks and accounts other customers reported.",
+      "onPhone": "Checked on this phone with Nem's scam rules, because the bank couldn't be reached.",
+      "tooMany": "You’ve checked a lot just now. Try again in a minute.",
+      "verdictLabel": "{{verdict}}. {{advice}}",
+      "reported": "Other customers have reported this account.",
+      "notReported": "No one has reported this account to us.",
+      "noticed": "What we noticed",
+      "offlineNote": "Checked on this phone while you’re offline. Reported accounts need the bank.",
+      "aiOff": "AI scam checker is off · rules only",
+      "empty": "Paste or type what you want checked",
+      "badAccount": "Enter a 10-digit account number",
+      "check": "Check it",
+      "intro": "Got a message asking for money, a code or a click? Check it before you do anything.",
+      "field": "What do you want checked?",
+      "privacy": "We check it and throw it away. It’s never stored or sent to a chatbot.",
+      "verdicts": {
+        "likely_scam": "Likely a scam",
+        "suspicious": "Be careful",
+        "safe": "No warning signs found"
+      }
+    },
+    "center": {
+      "tools": {
+        "panic": {
+          "title": "Panic button",
+          "subtitle": "Freeze every card and stop money going out"
+        },
+        "devices": {
+          "title": "Devices and sessions",
+          "subtitle": "See where you’re signed in"
+        },
+        "limits": {
+          "title": "Your limits",
+          "subtitle": "Set a daily limit below your KYC cap"
+        },
+        "duress": {
+          "title": "Duress PIN",
+          "subtitle": "A PIN that opens a decoy if you’re forced"
+        },
+        "scam": {
+          "title": "Scam checker",
+          "subtitle": "Paste a message, link or account number"
+        },
+        "alerts": {
+          "title": "Login and payment alerts",
+          "subtitle": "Choose what we tell you about"
+        }
+      },
+      "done": "Done",
+      "toDo": "To do",
+      "fix": "Fix this",
+      "fixSoon": "You can fix this soon",
+      "failed": "We couldn't run your checkup",
+      "loading": "Running your security checkup",
+      "allDone": "Everything on the checkup is done. Nice.",
+      "left_one": "{{count}} thing left, worth {{points}} points.",
+      "left_other": "{{count}} things left, worth {{points}} points.",
+      "doNext": "Do next",
+      "panicHint": "Panic mode",
+      "tools_title": "Tools"
+    }
+  },
+  "kyc": {
+    "title": "Verify identity",
+    "photo": {
+      "id_front": {
+        "guide": "Fit the front of your ID inside the frame, flat and in good light.",
+        "take": "Take photo",
+        "sample": "Use a sample ID",
+        "added": "ID photo added"
+      },
+      "selfie": {
+        "guide": "Fit your face inside the oval. Take off glasses and hats.",
+        "take": "Take selfie",
+        "sample": "Use a sample selfie",
+        "added": "Selfie added"
+      },
+      "uploadFailed": "That didn’t upload. Try again.",
+      "cameraFailed": "The camera couldn’t take that. Try again.",
+      "retake": "Retake",
+      "noCamera": "No camera here",
+      "noCameraMessage": "Use the sample below to carry on.",
+      "takeSelfie": "Take a selfie",
+      "photographId": "Photograph your ID",
+      "cameraWhy": "Nem needs your camera for this. The photo only goes to our review team.",
+      "allowCamera": "Allow camera",
+      "cameraOff": "Camera is off for Nem",
+      "cameraOffMessage": "Turn it on in Settings, or use the sample below.",
+      "cameraLabel": "Camera. {{guide}}",
+      "keep": "Keep the one I added"
+    },
+    "unlocks": {
+      "fx_wallets": "Dollar, pound and euro wallets",
+      "usd_cards": "Dollar cards",
+      "credit": "Loans",
+      "higher_limits": "Higher limits"
+    },
+    "status": {
+      "pending": "Your documents are being reviewed. This usually takes a few minutes.",
+      "rejected": "Your last upgrade wasn’t approved.",
+      "resubmit": "We need some documents again.",
+      "full": "You’re fully verified.",
+      "more": "Verify a little more to raise your limits."
+    },
+    "idTypes": {
+      "bvn": {
+        "label": "BVN",
+        "name": "Bank Verification Number",
+        "find": "Dial *565*0# from the phone number linked to your bank account."
+      },
+      "nin": {
+        "label": "NIN",
+        "name": "National Identification Number",
+        "find": "Dial *346# from the phone number you registered with NIMC."
+      }
+    },
+    "identityProblem": {
+      "dob": "That date of birth doesn’t match your {{label}} record. Use the one you registered with.",
+      "notFound": "We couldn’t find that {{label}}. Check the 11 digits and try again."
+    },
+    "quality": {
+      "blurry": "That photo is blurry. Hold still and try again.",
+      "glare": "There’s glare on your ID. Tilt it away from the light.",
+      "cropped": "Part of your ID is cut off. Fit it all inside the frame.",
+      "face_not_found": "We couldn’t see your face. Face the camera in good light.",
+      "other": "We couldn’t use that photo. Try another."
+    },
+    "documents": {
+      "national_id": {
+        "label": "National ID",
+        "hint": "Your 11-digit NIN"
+      },
+      "drivers_licence": {
+        "label": "Driver’s licence",
+        "hint": "Like ABC12345AA01"
+      },
+      "international_passport": {
+        "label": "International passport",
+        "hint": "A letter and 8 digits, like A01234567"
+      },
+      "voters_card": {
+        "label": "Voter’s card",
+        "hint": "The 19 characters on your PVC"
+      }
+    },
+    "idNumberProblem": "That doesn’t look like a {{type}} number. {{hint}}.",
+    "expired": "This ID has expired. Use one that hasn’t.",
+    "documentNames": {
+      "id_front": "a new photo of your ID",
+      "id_back": "a photo of the back of your ID",
+      "selfie": "a new selfie",
+      "proof_of_address": "proof of your address"
+    },
+    "documentsAgain": "your documents again",
+    "listAnd": "{{list}} and {{last}}",
+    "review": {
+      "pendingTitle": "We’re checking your documents",
+      "pendingMessage": "This usually takes a few minutes. We’ll tell you when it’s done.",
+      "rejectedTitle": "Not approved",
+      "rejectedMessage": "We couldn’t approve these documents.",
+      "resubmitTitle": "We need {{what}}",
+      "resubmitMessage": "One of your photos couldn’t be used.",
+      "sendAgain": "Send again"
+    },
+    "tier3": {
+      "title": "Tier 3",
+      "steps": ["Your ID", "Selfie", "ID details", "Address"],
+      "sendFailed": "We couldn’t send that. Try again.",
+      "failed": "We couldn't load your verification",
+      "sentMessage": "This usually takes a few minutes. We’ll tell you as soon as you’re on Tier 3.",
+      "needTier2": "Verify your BVN or NIN first",
+      "needTier2Message": "Tier 3 builds on Tier 2.",
+      "verifyId": "Verify BVN or NIN",
+      "send": "Send for review",
+      "step": "Step {{step}} of {{count}}",
+      "toFix": "To fix",
+      "fillTitle": "Fill from your ID photo",
+      "prefillFeature": "ID prefill",
+      "prefillExplanation": "Reads the type, number and expiry date from the photo of your ID. Nothing is sent until you agree, and you check every field before it goes.",
+      "prefillFallback": "Type the details yourself.",
+      "consent": "Let Nem read my ID photo to fill these in",
+      "fill": "Fill from photo",
+      "idNumber": "ID number",
+      "expiry": "Expiry date",
+      "addressNote": "Where you live now. It doesn’t have to match your ID."
+    },
+    "tier2": {
+      "title": "BVN or NIN",
+      "checkFailed": "We couldn’t check that number. Try again.",
+      "onTier": "You’re on Tier {{tier}}",
+      "verified": "Your {{label}} is verified and the name matches your account.",
+      "nowHave": " You now have {{unlocks}}.",
+      "verify": "Verify {{label}}",
+      "real": "Real verification",
+      "intro": "Verify one of these to reach Tier 2. We check it once and never show it again.",
+      "digits": "11 digits",
+      "dobHelp": "As it is on your {{label}} record.",
+      "sandbox": "Sandbox numbers only",
+      "sandboxHelp": "Any 11 digits work except 00000000000, which is never found.",
+      "sandboxDob": " Your sandbox record has the date of birth {{date}}.",
+      "encrypted": "Your number is encrypted and only used to confirm who you are."
+    },
+    "tiers": {
+      "waiting": "Waiting",
+      "notApproved": "Not approved",
+      "needsDocument": "Needs a document",
+      "failed": "We couldn't load your verification",
+      "loading": "Loading your verification",
+      "youreOn": "You’re on",
+      "tier": "Tier {{tier}}",
+      "full": "Fully verified",
+      "canSend": "You can send",
+      "perDay": "{{amount}} a day",
+      "canHold": "You can hold",
+      "approved": "Approved",
+      "upgradeTo": "Upgrade to Tier {{tier}}",
+      "youNeed": "You’ll need: {{requirements}}. You’ll get {{amount}} a day.",
+      "youNeedUnlocks": "You’ll need: {{requirements}}. You’ll get {{amount}} a day and {{unlocks}}.",
+      "sent": "Sent {{when}}",
+      "soon": "Soon",
+      "tiersAndLimits": "Tiers and limits",
+      "yourTier": "Your tier",
+      "dailyLimit": "Daily limit",
+      "mostHold": "Most you can hold",
+      "needs": "Needs",
+      "adds": "Adds",
+      "unlocksLabel": "Unlocks",
+      "demo": "Demo limits based on public CBN guidance. The bank can change them.",
+      "fact": "{{label}}: {{value}}"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "nemtagLocked": "You can change it again on {{date}}",
+    "nemtagRule": "You can change it once every 30 days",
+    "saveFailed": "We couldn’t save that. Try again.",
+    "loading": "Loading your profile",
+    "photoUpdated": "Photo updated",
+    "photoRemoved": "Photo removed",
+    "photoTooLarge": "That photo is too large. Try another.",
+    "nameSaved": "Name saved",
+    "takePhoto": "Take a photo",
+    "choosePhoto": "Choose a photo",
+    "removePhoto": "Remove photo",
+    "cameraDenied": "Nem needs the camera to take your photo. You can choose one instead.",
+    "nameSection": "The name people see",
+    "preferred": "Preferred name",
+    "preferredHelp": "Shown in the app and to people you pay. Leave it empty to use {{name}}.",
+    "saveName": "Save name",
+    "nemtag": "@nemtag",
+    "chooseNemtag": "Choose a @nemtag",
+    "details": "Details the bank holds",
+    "legalName": "Legal name",
+    "email": "Email",
+    "phone": "Phone",
+    "legalNote": "Your legal name and date of birth come from your ID, so they change only through identity verification.",
+    "verify": "Verify your identity",
+    "kycTier": "KYC Tier {{tier}}",
+    "change": {
+      "title": "Change @nemtag",
+      "rules": [
+        "You can change your @nemtag once every 30 days.",
+        "Your old @nemtag stays reserved for you for 30 days, so nobody else can take it. You can switch back to it in that time.",
+        "People who saved your old @nemtag will need the new one to pay you."
+      ],
+      "yoursForNow": "@{{tag}} is yours for now",
+      "lockedMessage": "{{rule}}. A @nemtag can change once every 30 days.",
+      "done": "You're @{{tag}} now",
+      "taken": "Someone just took @{{tag}}. Try another.",
+      "failed": "We couldn't change your @nemtag. Try again.",
+      "changeTo": "Change to @{{tag}}",
+      "button": "Change @nemtag",
+      "current": "Your @nemtag now",
+      "new": "New @nemtag",
+      "tryThese": "Try one of these",
+      "confirmTitle": "Change to @{{tag}}?",
+      "confirmReserved": "You won’t be able to change it again for 30 days. @{{tag}} stays reserved for you until then.",
+      "confirmFirst": "Friends can pay you with it straight away."
+    }
+  },
+  "disputes": {
+    "title": "Disputes",
+    "evidence": {
+      "label": "Evidence photo {{n}}",
+      "full": "That’s the most you can add ({{max}}).",
+      "help": "Receipts, chats or screenshots help. Up to 5 photos, 5 MB each.",
+      "cameraDenied": "Nem can’t use the camera. Allow it in Settings, or choose a photo instead."
+    },
+    "reasons": {
+      "failed_but_debited": {
+        "label": "It failed but I was charged",
+        "hint": "The payment didn’t go through"
+      },
+      "duplicate_charge": {
+        "label": "I was charged twice",
+        "hint": "The same payment shows more than once"
+      },
+      "wrong_amount": {
+        "label": "Wrong amount",
+        "hint": "I was charged more than I agreed"
+      },
+      "not_received": {
+        "label": "They didn’t get the money",
+        "hint": "The person or business says nothing arrived"
+      },
+      "goods_not_received": {
+        "label": "I didn’t get what I paid for",
+        "hint": "Goods or a service never came"
+      },
+      "unauthorised": {
+        "label": "I didn’t make this payment",
+        "hint": "Someone else may have used my account"
+      },
+      "other": {
+        "label": "Something else",
+        "hint": "Tell us in your own words"
+      }
+    },
+    "status": {
+      "submitted": "Received",
+      "under_review": "Under review",
+      "awaiting_customer": "Needs you",
+      "resolved_refunded": "Refunded",
+      "resolved_declined": "Declined",
+      "withdrawn": "Withdrawn"
+    },
+    "descriptionShort_one": "Tell us a little more ({{count}} more character)",
+    "descriptionShort_other": "Tell us a little more ({{count}} more characters)",
+    "descriptionLong": "Keep it under {{max}} characters",
+    "next": {
+      "submitted": "A specialist will pick it up shortly",
+      "under_review": "We’ll tell you as soon as we decide, usually within 10 working days",
+      "awaiting_customer": "Add the evidence we asked for to keep it moving"
+    },
+    "one": {
+      "title": "Dispute",
+      "withdrawn": "Dispute withdrawn",
+      "evidenceAdded": "Evidence added",
+      "failed": "We couldn't load this dispute",
+      "loading": "Loading your dispute",
+      "reported": "{{reason}} · reported {{when}}",
+      "refunded": "Refunded to your account",
+      "progress": "Progress",
+      "payment": "The payment",
+      "openPayment": "Open the payment",
+      "told": "What you told us",
+      "addEvidence": "Add evidence",
+      "addPhotos_one": "Add {{count}} photo",
+      "addPhotos_other": "Add {{count}} photos",
+      "withdraw": "Withdraw dispute",
+      "withdrawTitle": "Withdraw this dispute?",
+      "withdrawMessage": "We’ll stop looking into it. You can report the payment again later if you need to.",
+      "withdrawConfirm": "Withdraw"
+    },
+    "list": {
+      "failed": "We couldn't load your disputes",
+      "loading": "Loading your disputes",
+      "emptyTitle": "No disputes",
+      "emptyMessage": "If something's wrong with a payment, open it from your transactions and tap Report a problem.",
+      "rowLabel": "{{case}}, {{reason}}, {{status}}",
+      "open": "Open",
+      "closed": "Closed"
+    },
+    "new": {
+      "title": "Report a problem",
+      "track": "Track your dispute",
+      "gotIt": "We’ve got it",
+      "caseIs": "Your case number is",
+      "caseLabel": "Case number {{case}}",
+      "updates": "We’ll send you an update at every step. Any refund goes straight back to your account.",
+      "missed_one": "{{count}} photo didn’t upload. Add it from the case.",
+      "missed_other": "{{count}} photos didn’t upload. Add them from the case.",
+      "send": "Send report",
+      "whatWrong": "What went wrong?",
+      "tellMore": "Tell us more",
+      "whatHappened": "What happened",
+      "placeholder": "When it happened, who you paid and what you expected",
+      "evidence": "Evidence (optional)"
+    }
+  },
+  "family": {
+    "title": "Family",
+    "age": {
+      "future": "That date is in the future",
+      "young": "Children need to be at least {{min}}",
+      "old": "At 18 they can open their own Nem account"
+    },
+    "controls": {
+      "daily": "Spends up to {{amount}} a day",
+      "approval": "Asks you before sending more than {{amount}}",
+      "banks": "Can send to other banks",
+      "nemOnly": "Can pay Nem users only"
+    },
+    "weekdays": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+    "allowanceWeekly": "{{amount}} every {{day}}",
+    "allowanceMonthly": "{{amount}} on the {{day}} of each month",
+    "approvalStatus": {
+      "pending": "Waiting for you",
+      "approved": "Approved",
+      "declined": "Declined",
+      "expired": "Expired"
+    },
+    "add": {
+      "title": "Add a child",
+      "steps": ["About your child", "Their @nemtag", "What they can do", "Check and confirm"],
+      "taken": "Someone just took @{{tag}}. Choose another.",
+      "onNem": "{{name}} is on Nem",
+      "kidMode": "Their account is open in kid mode. Use this code on their phone to set up their own login.",
+      "setupCode": "Setup code",
+      "codeLabel": "Setup code {{code}}",
+      "shownOnce": "Shown once. It works until {{when}}.",
+      "share": "Share code",
+      "shareMessage": "Your Nem setup code is {{code}}. It works until {{when}}.",
+      "onlyChild": "Only share it with your child. Nem will never ask you for it.",
+      "addName": "Add {{name}}",
+      "child": "child",
+      "ageHelp": "Children on Nem are 6 to 17",
+      "tagIntro": "Friends and family can send {{name}} money with it. 3 to 20 letters, numbers or _, starting with a letter.",
+      "theirTag": "Their @nemtag",
+      "safeStart": "A safe start. You can change these any time.",
+      "mostPerDay": "Most they can spend in a day",
+      "askBefore": "Ask me before they send more than",
+      "letBanks": "Let them send to other banks",
+      "letBanksHelp": "Off means they can pay Nem users only.",
+      "next": "What happens next",
+      "nextBody": "{{name}} gets a naira account and kid mode: a simpler app with goals. You see their activity and approve bigger payments. You’ll get a one-time code to set up their login on their phone.",
+      "confirm": "Add {{name}} to your family"
+    },
+    "approvals": {
+      "title": "Approvals",
+      "declined": "Declined {{name}}'s request",
+      "failed": "We couldn't load approvals",
+      "loading": "Loading approvals",
+      "sent": "Sent {{amount}} for {{name}}",
+      "expires": "Expires {{when}}",
+      "emptyTitle": "Nothing to approve",
+      "emptyMessage": "When your child tries to send more than their limit, it waits here for you.",
+      "earlier": "Earlier",
+      "confirm": "Let {{child}} send {{amount}} to {{recipient}}",
+      "waiting": "Approvals ({{count}} waiting)"
+    },
+    "child": {
+      "title": "Child",
+      "allowanceSet": "Allowance set",
+      "allowanceStopped": "Allowance stopped",
+      "failed": "We couldn't load this child",
+      "seeKid": "See {{name}}'s kid mode",
+      "limits": "Limits",
+      "dailyLimit": "Daily spend limit",
+      "askBefore": "Ask me before sending more than",
+      "banks": "Send to other banks",
+      "banksHelp": "Off means {{name}} can pay Nem users only",
+      "pause": "Pause spending",
+      "pauseHelp": "{{name}} can still receive money",
+      "kidModeHelp": "A simpler app with goals",
+      "allowance": "Allowance",
+      "nextOn": "Next on {{when}}",
+      "stop": "Stop allowance",
+      "allowanceIntro": "Send {{name}} money automatically from your naira account.",
+      "day": "Day {{day}}",
+      "setAllowance": "Set allowance",
+      "activity": "Activity",
+      "activityFailed": "We couldn't load their activity",
+      "nothing": "Nothing yet",
+      "nothingMessage": "What {{name}} spends and receives shows here."
+    },
+    "hub": {
+      "failed": "We couldn't load your family",
+      "loading": "Loading your family",
+      "emptyTitle": "Add your child",
+      "emptyMessage": "They get their own login, a simpler kid mode and a naira account. You set what they can spend and approve bigger payments.",
+      "rowLabel": "{{name}}: limits, allowance and activity",
+      "paused": "Spending is paused"
+    },
+    "kid": {
+      "failed": "We couldn't load kid mode",
+      "loading": "Loading kid mode",
+      "sees": "This is what {{name}} sees on their phone.",
+      "hi": "Hi {{name}} 👋",
+      "youHave": "You have",
+      "paused": "Spending is paused. Ask your parent.",
+      "left": "{{amount}} left to spend today",
+      "savingFor": "Saving for",
+      "enough": "You have enough! 🎉",
+      "pctOf": "{{pct}}% of {{amount}}",
+      "progress": "{{name}} progress",
+      "goalName": "What are you saving for?",
+      "saveGoal": "Save goal",
+      "addAnother": "Add another goal",
+      "addGoal": "Add a goal",
+      "recently": "Recently",
+      "paymentsFailed": "We couldn't load your payments",
+      "gotMoney": "Got money: {{title}}",
+      "spent": "Spent: {{title}}",
+      "noPayments": "No payments yet",
+      "noPaymentsMessage": "When you get or spend money, it shows here."
+    }
+  },
+  "support": {
+    "title": "Help and support",
+    "status": {
+      "open": "With us",
+      "waiting_on_customer": "Replied",
+      "resolved": "Closed"
+    },
+    "topics": {
+      "transfer": "A transfer",
+      "card": "My card",
+      "verification": "Verification",
+      "bills": "Bills or airtime",
+      "account": "My account",
+      "other": "Something else"
+    },
+    "sentPhotos_one": "Sent a photo",
+    "sentPhotos_other": "Sent {{count}} photos",
+    "article": {
+      "title": "Help",
+      "moved": "This article has moved",
+      "failed": "We couldn't load this article",
+      "loading": "Loading the article",
+      "chat": "Didn’t help? Chat with us",
+      "updated": "Updated {{date}}"
+    },
+    "chat": {
+      "title": "Chat",
+      "support": "Support",
+      "bubble": "{{who}}: {{body}}. {{when}}",
+      "failed": "We couldn't load this chat",
+      "loading": "Loading your chat",
+      "closed": "This chat was closed. Send a message to open it again.",
+      "cameraDenied": "Nem can’t use the camera. Allow it in Settings.",
+      "photoToSend": "Photo {{n}} to send",
+      "takePhoto": "Take a photo",
+      "addPhoto": "Add a photo",
+      "message": "Message",
+      "send": "Send message",
+      "neverAsk": "Nem staff will never ask for your PIN, password or a code."
+    },
+    "help": {
+      "title": "Help center",
+      "failed": "We couldn't load help",
+      "loading": "Loading answers",
+      "noneTitle": "No answers found",
+      "noneQuery": "Nothing matches “{{q}}”. Try other words, or ask us in a chat.",
+      "none": "Nothing here yet. Ask us in a chat.",
+      "answers_one": "{{count}} answer",
+      "answers_other": "{{count}} answers",
+      "stuck": "Still stuck? Chat with us",
+      "search": "Search help",
+      "placeholder": "e.g. transfer pending, freeze card",
+      "rowLabel": "{{title}}, {{category}}"
+    },
+    "new": {
+      "title": "New chat",
+      "about": "What's it about?",
+      "subject": "Subject",
+      "subjectPlaceholder": "A few words",
+      "yourMessage": "Your message",
+      "placeholder": "Tell us what happened. Never share your PIN or password.",
+      "attach": "We’ll attach the payment you came from.",
+      "replies": "Our team replies here, usually within minutes. Nem staff will never ask for your PIN, password or a code."
+    },
+    "hub": {
+      "start": "Start a chat",
+      "rowLabel": "{{subject}}, {{status}}",
+      "rowLabelNew": "{{subject}}, {{status}}, {{count}} new",
+      "waiting": "Waiting for an agent",
+      "failed": "We couldn't load your chats",
+      "loading": "Loading your chats",
+      "emptyTitle": "No chats yet",
+      "emptyMessage": "Start a chat and someone from our team will reply here, usually within minutes.",
+      "yourChats": "Your chats",
+      "helpHint": "Search answers to common questions"
+    }
+  },
+  "ai": {
+    "features": {
+      "assistant": {
+        "name": "Nem Assistant",
+        "summary": "Answers questions about your money and prepares payments for you to approve.",
+        "uses": ["Your question", "Totals and categories it looks up through bank tools"],
+        "neverUses": [
+          "Your name, BVN, phone, email or full account numbers (removed before any model call)",
+          "Your PIN or card details"
+        ],
+        "runsOn": "Nem servers, then a free-tier language model (Gemini, with Groq as backup)",
+        "fallback": "Search, shortcuts and the help center. Payments never need the assistant.",
+        "card": {
+          "approach": "A large language model that can only call typed bank tools. It prepares a payment; you approve it with your PIN or Face ID.",
+          "data": ["General-purpose model from the provider; Nem does not train it"],
+          "baseline": "Scripted answers for the most common questions",
+          "limitations": [
+            "It can be wrong. Amounts it shows come from the bank, not the model.",
+            "Free-tier providers may learn from what they receive, which is why personal details are removed first.",
+            "It cannot move money on its own."
+          ]
+        }
+      },
+      "fraud": {
+        "name": "Fraud protection",
+        "summary": "Scores every payment for signs of fraud and holds the risky ones, with the reasons.",
+        "uses": [
+          "Amount, time and recipient history",
+          "Device and sign-in signals",
+          "Payment speed"
+        ],
+        "neverUses": ["Messages you send", "Your contacts"],
+        "runsOn": "Nem servers, in under 10 ms per payment",
+        "fallback": "Fixed rules (new recipient, large amount, new device) if the model is unavailable.",
+        "card": {
+          "approach": "Rules plus a gradient-boosted tree model (LightGBM), scored natively in Go.",
+          "data": [
+            "PaySim synthetic mobile-money transactions (Kaggle, CC BY-SA 4.0)",
+            "Synthetic Nigerian fraud patterns generated by Nem"
+          ],
+          "baseline": "The rules alone, on the same held-out payments",
+          "limitations": [
+            "Trained on synthetic data, so real fraud will differ.",
+            "It always runs: switching it off would leave payments unprotected."
+          ]
+        }
+      },
+      "scam-checker": {
+        "name": "Scam checker",
+        "summary": "Checks a message, link or account number for signs of a scam.",
+        "uses": ["Only the text you paste in"],
+        "neverUses": ["Your messages or clipboard unless you paste them", "Your account data"],
+        "runsOn": "Rules on your phone, then a text classifier on Nem servers",
+        "fallback": "Rules only: known Nigerian scam phrases, link tricks and reported accounts.",
+        "card": {
+          "approach": "On-device rules plus a text classifier for what the rules miss.",
+          "data": [
+            "UCI SMS Spam Collection (CC BY 4.0)",
+            "Nigerian scam phrases collected by Nem from public warnings"
+          ],
+          "baseline": "The on-device rules alone",
+          "limitations": [
+            "Scammers change their wording; a clean result is not a guarantee.",
+            "English and Pidgin only."
+          ]
+        }
+      },
+      "smart-categories": {
+        "name": "Smart categories",
+        "summary": "Sorts your spending into categories and finds your subscriptions.",
+        "uses": ["Merchant names and payment descriptions", "Categories you correct"],
+        "neverUses": ["Who you send money to by name"],
+        "runsOn": "Nem servers",
+        "fallback": "A merchant list and simple rules; you can still change any category.",
+        "card": {
+          "approach": "Rules, a merchant dictionary, then a TF-IDF logistic regression that learns from your corrections.",
+          "data": ["Synthetic Nigerian transactions generated by Nem"],
+          "baseline": "The merchant dictionary alone",
+          "limitations": ["New or local merchants may land in \"Other\" until you correct one."]
+        }
+      },
+      "forecast": {
+        "name": "Cash-flow forecast",
+        "summary": "Estimates your balance before payday and warns you if it may run out.",
+        "uses": ["Your last six months of money in and out"],
+        "neverUses": ["Anything outside Nem"],
+        "runsOn": "Nem servers",
+        "fallback": "A simple average of your recent months.",
+        "card": {
+          "approach": "Recurrence detection plus exponential smoothing: explainable statistics, not a black box.",
+          "data": ["Your own history only; nothing is pooled across customers"],
+          "baseline": "A simple monthly average",
+          "limitations": ["One-off spending and irregular income make the range wider."]
+        }
+      },
+      "credit": {
+        "name": "Credit scoring",
+        "summary": "Decides how much you can borrow, and tells you why.",
+        "uses": ["Income into Nem", "Repayment history", "Balance patterns", "Verification tier"],
+        "neverUses": ["Gender, religion, ethnicity or where you live", "Your contacts"],
+        "runsOn": "Nem servers",
+        "fallback": "Standard rules based on your tier and income.",
+        "card": {
+          "approach": "Logistic regression with reason codes, because every credit decision must be explainable.",
+          "data": ["Synthetic borrower data generated by Nem"],
+          "baseline": "The standard tier-and-income rules",
+          "limitations": ["Synthetic training data: limits in the demo are illustrative."]
+        }
+      },
+      "id-prefill": {
+        "name": "ID prefill",
+        "summary": "Reads the number and expiry date from an ID photo so you type less.",
+        "uses": ["The ID photo you choose, only after you agree"],
+        "neverUses": ["Your selfie", "Any photo you did not pick"],
+        "runsOn": "A free-tier vision model, with sample IDs only in the demo",
+        "fallback": "You type the details yourself.",
+        "card": {
+          "approach": "A vision language model reads the fields; you always check them before sending.",
+          "data": ["General-purpose model from the provider; Nem does not train it"],
+          "baseline": "Typing the details by hand",
+          "limitations": [
+            "Off until you turn it on.",
+            "Glare or a cropped photo can misread a digit."
+          ]
+        }
+      }
+    },
+    "principles": [
+      "AI never moves money. You approve every payment with your PIN or Face ID.",
+      "Personal details are removed before anything reaches a language model.",
+      "Every feature works without AI, and every decision comes with reasons."
+    ],
+    "transparency": {
+      "title": "AI and your data",
+      "features": "Features",
+      "hint": "Opens what it uses and its model card",
+      "useAi": "Use AI",
+      "useAiFor": "Use AI for {{name}}",
+      "off": "Off · {{fallback}}",
+      "alwaysOn": "Always on, to protect every payment"
+    },
+    "card": {
+      "title": "AI feature",
+      "notFound": "We can't find that feature",
+      "notFoundMessage": "Go back to see them all.",
+      "unavailable": "If the model is unavailable",
+      "instead": "What you get instead",
+      "uses": "What it uses",
+      "neverUses": "What it never uses",
+      "modelCard": "Model card",
+      "runsOn": "Where it runs",
+      "approach": "How it works",
+      "data": "Training data",
+      "baseline": "Must beat",
+      "results": "Measured results",
+      "resultsValue": "Published here with held-out metrics when the model ships with the live backend. The demo runs the fallback rules, so it claims no accuracy.",
+      "limitations": "Limitations"
+    }
+  },
+  "assistant": {
+    "name": "Nem Assistant",
+    "suggestions": [
+      "What's my balance?",
+      "How much did I spend this month?",
+      "Show my recent transactions",
+      "Send ₦5,000 to @amaka_o",
+      "Freeze my card"
+    ],
+    "problems": {
+      "off": "The assistant is off.",
+      "unavailable": "The assistant isn't available right now. These shortcuts still work.",
+      "busy": "You've asked a lot just now. Try again in a minute.",
+      "offline": "You're offline. Reconnect and try again.",
+      "gone": "That chat has ended. Start a new one.",
+      "other": "That didn't go through. Try again."
+    },
+    "expiresSoon": "Expires in under a minute",
+    "expiresIn": "Expires in {{count}} min",
+    "statusLine": {
+      "confirmed": "Done",
+      "discarded": "Cancelled. Nothing was sent.",
+      "expired": "This expired, so nothing was sent. Ask again to start over.",
+      "failed": "This didn't go through. Nothing was sent."
+    },
+    "action": {
+      "prepared": "Prepared: {{summary}}",
+      "total": "Total from your account",
+      "nothingMoves": "{{expires}} · Nothing moves until you confirm.",
+      "confirmHint": "Asks for your PIN or Face ID"
+    },
+    "chartEmpty": "{{title}}: nothing to show yet.",
+    "noTransactions": "No transactions to show.",
+    "explanation": "Answers questions about your money and prepares payments. It never moves money: you check and approve each one with your PIN or Face ID.",
+    "fallback": "The shortcuts below: balance, spending, send money and card controls.",
+    "shortcuts": {
+      "balance": "See my balance",
+      "spending": "My spending",
+      "send": "Send money",
+      "cards": "Card controls"
+    },
+    "newChat": "New chat",
+    "offTitle": "The assistant is off",
+    "offMessage": "Turn it on in AI and your data, or use the shortcuts.",
+    "opening": "Opening the assistant",
+    "suggestionsLabel": "Suggestions",
+    "placeholder": "Ask about your money",
+    "inputLabel": "Ask the assistant",
+    "ask": "Ask",
+    "disclaimer": "Answers can be wrong. Nem never moves money without your PIN or Face ID."
+  },
+  "demo": {
+    "title": "Demo Controls",
+    "money": {
+      "title": "Money in",
+      "description": "Add demo money, or have someone send you a transfer. Both post through the ledger, like the real thing.",
+      "walletBalance": "{{currency}} wallet balance",
+      "wallet": "Wallet",
+      "amount": "Amount",
+      "add": "Add demo money",
+      "added": "{{amount}} added to your {{currency}} wallet",
+      "receive": "Receive from {{name}}",
+      "received": "{{name}} sent you {{amount}}"
+    },
+    "network": {
+      "title": "Network",
+      "description": "See every loading, error and offline state without a real outage.",
+      "speed": "Speed",
+      "latency": {
+        "off": "Instant",
+        "fast": "Fast",
+        "realistic": "Realistic",
+        "slow": "Slow 3G"
+      },
+      "failed": "Failed requests",
+      "none": "None",
+      "all": "All",
+      "offline": "Bank offline",
+      "offlineHelp": "Saved balances stay readable; payments need a connection.",
+      "lose": "Lose some responses",
+      "loseHelp": "A payment goes through but the answer never arrives. Retrying must not pay twice.",
+      "friends": "Friends send money",
+      "friendsHelp": "Small transfers arrive now and then, live.",
+      "reset": "Reset network"
+    },
+    "reset": {
+      "done": "Demo data reset",
+      "failed": "Could not reset the demo. Try again.",
+      "title": "Start over",
+      "description": "Re-creates the demo account with its original history and balances.",
+      "button": "Reset demo data",
+      "confirmTitle": "Reset the demo?",
+      "confirmMessage": "Everything you did in the demo is wiped: transfers, cards, savings and ajo groups."
+    },
+    "scenarios": {
+      "title": "Scenarios",
+      "description": "Rehearse what is hard to make happen on purpose.",
+      "review": {
+        "approve": {
+          "label": "Approve",
+          "toast": "The next Tier 3 review will be approved."
+        },
+        "reject": {
+          "label": "Reject",
+          "toast": "The next Tier 3 review will be rejected."
+        },
+        "resubmit": {
+          "label": "Ask for a new selfie",
+          "toast": "The next Tier 3 review will ask for a new selfie."
+        }
+      },
+      "tierNow": "You're on KYC Tier {{tier}} now",
+      "failNextDone": "Your next bank transfer will fail at the partner bank and be reversed.",
+      "now": "It is now {{date}}",
+      "failNext": "Fail my next bank transfer",
+      "timeTravel": "Time travel",
+      "days_one": "{{count}} day",
+      "days_other": "{{count}} days",
+      "wouldEarn": "Your savings goals would earn about {{amount}} in interest. Ajo turns, auto-saves and locks that fall due run too.",
+      "demoDate": "Demo date {{date}}, {{count}} days ahead",
+      "jump_one": "Jump {{count}} day ahead",
+      "jump_other": "Jump {{count}} days ahead",
+      "tier": "KYC tier",
+      "tierN": "Tier {{tier}}",
+      "tierHelp": "Drop to a lower tier to walk the verification flows again.",
+      "nextReview": "Next Tier 3 review",
+      "reviewHelp": "The sandbox reviewer decides about 10 seconds after you send your documents.",
+      "endSession": "End my session",
+      "endSessionHint": "Signs you out as if the session had expired"
+    },
+    "travel": {
+      "interest": "{{amount}} interest earned",
+      "locks_one": "{{count}} lock matured",
+      "locks_other": "{{count}} locks matured",
+      "payouts_one": "{{count}} ajo payout made",
+      "payouts_other": "{{count}} ajo payouts made",
+      "nothing": "No savings or ajo activity was due."
+    },
+    "onlyDemo": "Only for the demo account",
+    "onlyDemoMessage": "Demo Controls move simulated money. Sign in with “Try the demo” to use them.",
+    "walletsFailed": "We couldn’t load your wallets."
+  },
+  "components": {
+    "aiBadge": {
+      "label": "AI: {{feature}}",
+      "hint": "Explains how this AI feature works",
+      "how": "How it works",
+      "without": "Without AI",
+      "note": "AI can be wrong. It never moves money: you always confirm with your PIN or biometrics.",
+      "manage": "Manage in Settings"
+    },
+    "amount": "Amount",
+    "bankCard": {
+      "virtualName": "Virtual {{network}} card ending {{last4}}",
+      "physicalName": "Physical {{network}} card ending {{last4}}",
+      "label": "{{name}}, {{holder}}, expires {{expiry}}",
+      "labelFrozen": "{{name}}, {{holder}}, expires {{expiry}}, frozen",
+      "showFront": "Shows the front of the card",
+      "showBack": "Shows the back of the card",
+      "virtual": "VIRTUAL",
+      "debit": "DEBIT",
+      "holder": "Card holder",
+      "expires": "Expires",
+      "number": "Card number",
+      "cvv": "CVV",
+      "hiddenAgain": "Hidden again when you leave",
+      "unlock": "Unlock to see details",
+      "frozen": "Frozen"
+    },
+    "sheet": {
+      "close": "Close sheet"
+    },
+    "chart": {
+      "noData": "No data yet.",
+      "trend": {
+        "up": "up",
+        "down": "down",
+        "flat": "flat"
+      },
+      "valueOn": "{{value}} on {{label}}",
+      "line": "{{title}}. {{count}} points from {{first}} to {{last}}, {{trend}} overall. Low {{low}}, high {{high}}, latest {{latest}}.",
+      "bar": "{{title}}. Highest {{highest}}. {{all}}."
+    },
+    "demoBadge": {
+      "demo": "Demo money",
+      "demoSpoken": "Demo money. These balances are simulated.",
+      "sandbox": "Sandbox",
+      "sandboxSpoken": "Sandbox. This runs on a test environment, not real money."
+    },
+    "optional": " (optional)",
+    "money": {
+      "minus": "minus {{amount}}",
+      "labelled": "{{label}}, {{amount}}"
+    },
+    "keypad": {
+      "decimal": "Decimal point",
+      "delete": "Delete",
+      "deleteHint": "Hold to clear everything"
+    },
+    "otp": "Verification code",
+    "paid": {
+      "features": {
+        "smsOtp": {
+          "name": "SMS one-time codes",
+          "partner": "a paid SMS gateway",
+          "steps": [
+            "The Mailer interface gains an SMS adapter for a Nigerian SMS gateway.",
+            "Codes are sent from a registered sender ID, with delivery receipts tracked.",
+            "Until then, codes go by email and trusted devices sign in with device keys."
+          ]
+        },
+        "ussd": {
+          "name": "USSD banking",
+          "partner": "a licensed USSD aggregator and a shortcode",
+          "steps": [
+            "A USSD aggregator forwards each session to a Nem Bank menu service.",
+            "The menu calls the same transfer and balance APIs as the app.",
+            "Every money action still needs the account PIN."
+          ]
+        },
+        "internationalTransfer": {
+          "name": "International transfers",
+          "partner": "a licensed remittance partner",
+          "steps": [
+            "The BankPartner interface gains an adapter for a remittance provider.",
+            "Quotes come from the partner, and the FX leg books through the same ledger.",
+            "Compliance checks run on the partner side before money leaves."
+          ]
+        },
+        "physicalCard": {
+          "name": "Physical cards",
+          "partner": "a card issuer and a card printing bureau",
+          "steps": [
+            "The CardProcessor interface gains an adapter for a licensed issuer.",
+            "The card is printed, posted and activated in the app with the PIN.",
+            "Virtual cards already use the same freeze, limit and channel controls."
+          ]
+        },
+        "identityVerification": {
+          "name": "Real BVN and NIN checks",
+          "partner": "a licensed identity verification provider",
+          "steps": [
+            "The IdentityVerifier interface gains an adapter for a provider with NIBSS and NIMC access.",
+            "The number, name and date of birth are checked live, and the number is stored encrypted.",
+            "Until then, the bank accepts sandbox test numbers only."
+          ]
+        },
+        "realMoney": {
+          "name": "Real money accounts",
+          "partner": "a licensed banking-as-a-service partner",
+          "steps": [
+            "A BaaS partner holds the real accounts; Nem Bank keeps its own ledger in sync.",
+            "KYC moves from sandbox test numbers to live BVN and NIN checks.",
+            "The switch is a console feature flag, so no app code changes."
+          ]
+        }
+      },
+      "howTitle": "How it would work",
+      "title": "This feature needs a paid partner service",
+      "step": "Step {{n}}",
+      "body": "{{name}} requires {{partner}}. Nem Bank is a portfolio project running on simulated money, so this connection is fully designed but switched off. It will be enabled once there is funding for the service.",
+      "gotIt": "Got it",
+      "seeHow": "See how it would work"
+    },
+    "pin": {
+      "entered": "{{count}} of {{length}} digits entered"
+    },
+    "risk": {
+      "high": "High",
+      "medium": "Medium",
+      "low": "Low",
+      "title": "Why this was flagged",
+      "none": "No risk signals found."
+    },
+    "select": {
+      "placeholder": "Select",
+      "label": "{{label}}, {{value}}",
+      "notSelected": "not selected",
+      "hint": "Opens a list of options"
+    },
+    "loading": "Loading",
+    "status": {
+      "pending": "Pending",
+      "processing": "Processing",
+      "completed": "Completed",
+      "failed": "Failed",
+      "reversed": "Reversed",
+      "held": "On hold"
+    },
+    "textField": {
+      "show": "Show {{label}}",
+      "hide": "Hide {{label}}"
+    },
+    "typing": {
+      "support": "Support",
+      "label": "{{name}} is typing"
+    }
+  },
+  "shell": {
+    "sessionEnded": "Your session ended. Sign in again to continue.",
+    "web": {
+      "eyebrow": "Web demo",
+      "intro": "A digital bank running on a simulated ledger inside this page. No real money moves, and nothing you enter leaves your browser.",
+      "inBrowser": "In the browser",
+      "noBiometrics": "No Face ID or fingerprint: the app unlocks with your PIN.",
+      "noKeychain": "No secure keychain: your session is kept for this tab only and ends when you close it.",
+      "camera": "QR scanning asks to use your browser camera.",
+      "noCamera": "No camera found: pay links still work.",
+      "noHaptics": "No haptics, and screenshots of card details cannot be blocked.",
+      "fullExperience": "For the full experience, open it on a phone with Expo Go.",
+      "source": "Source on GitHub"
     }
   }
 }

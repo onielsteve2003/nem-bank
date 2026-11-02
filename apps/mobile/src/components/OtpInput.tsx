@@ -1,4 +1,5 @@
 import { useState, type Ref, type ComponentRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, TextInput, View } from 'react-native';
 
 import { useTheme } from '@/theme';
@@ -36,13 +37,15 @@ export function OtpInput({
   onBlur,
   onComplete,
   length = 6,
-  label = 'Verification code',
+  label: labelProp,
   error,
   help,
   autoFocus,
   ref,
 }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
+  const label = labelProp ?? t('components.otp');
   const [focused, setFocused] = useState(false);
 
   const handleChange = (text: string) => {

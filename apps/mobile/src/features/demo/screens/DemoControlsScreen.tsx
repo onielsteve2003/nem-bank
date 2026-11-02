@@ -1,5 +1,6 @@
 import { useRouter } from 'expo-router';
 import { SlidersHorizontal, X } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -29,6 +30,7 @@ import { ScenarioSection } from '../components/ScenarioSection';
 export function DemoControlsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const isDemo = useSessionStore((s) => s.session?.isDemo ?? false);
   // Only the mock bank has a network to simulate; the real API has no such switch.
   const simulation = useSimulation();
@@ -37,12 +39,12 @@ export function DemoControlsScreen() {
   const header = (
     <View style={[styles.header, { paddingHorizontal: spacing[4], paddingTop: spacing[2] }]}>
       <View style={[styles.title, { gap: spacing[1] }]}>
-        <Text variant="h2">Demo Controls</Text>
+        <Text variant="h2">{t('demo.title')}</Text>
         <DemoMoneyBadge />
       </View>
       <IconButton
         icon={X}
-        accessibilityLabel="Close"
+        accessibilityLabel={t('common.close')}
         variant="ghost"
         onPress={() => router.back()}
       />
@@ -54,8 +56,8 @@ export function DemoControlsScreen() {
       <Screen header={header}>
         <EmptyState
           icon={SlidersHorizontal}
-          title="Only for the demo account"
-          message="Demo Controls move simulated money. Sign in with “Try the demo” to use them."
+          title={t('demo.onlyDemo')}
+          message={t('demo.onlyDemoMessage')}
         />
       </Screen>
     );
@@ -64,15 +66,13 @@ export function DemoControlsScreen() {
   let money;
   if (accounts.isPending) {
     money = (
-      <SkeletonGroup accessibilityLabel="Loading wallets">
+      <SkeletonGroup accessibilityLabel={t('common.loadingWallets')}>
         <SkeletonListItem />
         <SkeletonListItem />
       </SkeletonGroup>
     );
   } else if (accounts.isError) {
-    money = (
-      <ErrorState message="We couldn’t load your wallets." onRetry={() => accounts.refetch()} />
-    );
+    money = <ErrorState message={t('demo.walletsFailed')} onRetry={() => accounts.refetch()} />;
   } else {
     money = <MoneySection accounts={accounts.data.data} />;
   }

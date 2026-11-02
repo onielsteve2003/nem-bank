@@ -1,5 +1,6 @@
 import { Camera, ImagePlus, X } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, Linking, StyleSheet, View } from 'react-native';
 
 import { Button, IconButton, Text } from '@/components';
@@ -18,6 +19,7 @@ type Props = {
 /** Up to five photos of a receipt, a chat or a screen, from the camera or library (DSP-1). */
 export function EvidencePicker({ photos, onChange, existing = 0, disabled = false }: Props) {
   const { radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const [error, setError] = useState<string>();
   const [cameraDenied, setCameraDenied] = useState(false);
   const full = existing + photos.length >= MAX_EVIDENCE;
@@ -27,7 +29,7 @@ export function EvidencePicker({ photos, onChange, existing = 0, disabled = fals
     const picked = await pickEvidence(source);
     if (picked.kind === 'photo') onChange([...photos, picked.uri]);
     else if (picked.kind === 'denied') setCameraDenied(true);
-    else if (picked.kind === 'too_large') setError('That photo is over 5 MB. Try another.');
+    else if (picked.kind === 'too_large') setError(t('common.photoTooBig'));
   };
 
   return (
@@ -39,13 +41,13 @@ export function EvidencePicker({ photos, onChange, existing = 0, disabled = fals
               <Image
                 source={{ uri }}
                 style={[styles.thumb, { borderRadius: radius.md }]}
-                accessibilityLabel={`Evidence photo ${i + 1}`}
+                accessibilityLabel={t('disputes.evidence.label', { n: i + 1 })}
               />
               <View style={styles.remove}>
                 <IconButton
                   icon={X}
                   size="sm"
-                  accessibilityLabel={`Remove photo ${i + 1}`}
+                  accessibilityLabel={t('common.removePhotoN', { n: i + 1 })}
                   disabled={disabled}
                   onPress={() => onChange(photos.filter((_, j) => j !== i))}
                 />
@@ -57,7 +59,7 @@ export function EvidencePicker({ photos, onChange, existing = 0, disabled = fals
       <View style={[styles.row, { gap: spacing[2] }]}>
         <View style={styles.flex}>
           <Button
-            label="Take photo"
+            label={t('common.takePhoto')}
             icon={Camera}
             variant="secondary"
             size="sm"
@@ -68,7 +70,7 @@ export function EvidencePicker({ photos, onChange, existing = 0, disabled = fals
         </View>
         <View style={styles.flex}>
           <Button
-            label="Choose photo"
+            label={t('common.choosePhoto')}
             icon={ImagePlus}
             variant="secondary"
             size="sm"
@@ -79,9 +81,7 @@ export function EvidencePicker({ photos, onChange, existing = 0, disabled = fals
         </View>
       </View>
       <Text variant="caption" color="textMuted">
-        {full
-          ? `That’s the most you can add (${MAX_EVIDENCE}).`
-          : 'Receipts, chats or screenshots help. Up to 5 photos, 5 MB each.'}
+        {full ? t('disputes.evidence.full', { max: MAX_EVIDENCE }) : t('disputes.evidence.help')}
       </Text>
       {error && (
         <Text variant="bodySmall" color="danger">
@@ -91,10 +91,10 @@ export function EvidencePicker({ photos, onChange, existing = 0, disabled = fals
       {cameraDenied && (
         <View style={{ gap: spacing[2] }}>
           <Text variant="bodySmall" color="warning">
-            Nem can’t use the camera. Allow it in Settings, or choose a photo instead.
+            {t('disputes.evidence.cameraDenied')}
           </Text>
           <Button
-            label="Open Settings"
+            label={t('common.openSettings')}
             variant="ghost"
             size="sm"
             onPress={() => void Linking.openSettings()}

@@ -19,6 +19,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import { withLabel } from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { Icon } from './Icon';
@@ -33,12 +34,12 @@ export const STATUS_META: Record<
   TransactionStatus,
   { label: string; tone: Tone; icon: LucideIcon }
 > = {
-  pending: { label: 'Pending', tone: 'warning', icon: Clock },
-  processing: { label: 'Processing', tone: 'info', icon: LoaderCircle },
-  completed: { label: 'Completed', tone: 'success', icon: CircleCheck },
-  failed: { label: 'Failed', tone: 'danger', icon: CircleX },
-  reversed: { label: 'Reversed', tone: 'neutral', icon: Undo2 },
-  held: { label: 'On hold', tone: 'warning', icon: ShieldAlert },
+  pending: withLabel('components.status.pending', { tone: 'warning', icon: Clock }),
+  processing: withLabel('components.status.processing', { tone: 'info', icon: LoaderCircle }),
+  completed: withLabel('components.status.completed', { tone: 'success', icon: CircleCheck }),
+  failed: withLabel('components.status.failed', { tone: 'danger', icon: CircleX }),
+  reversed: withLabel('components.status.reversed', { tone: 'neutral', icon: Undo2 }),
+  held: withLabel('components.status.held', { tone: 'warning', icon: ShieldAlert }),
 };
 
 const SPIN_MS = 1000;

@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, MoneyText, Text } from '@/components';
@@ -74,6 +75,7 @@ export function ActionCard({ action: initial }: Props) {
   const router = useRouter();
   const client = useQueryClient();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   // What the bank answered when this card confirmed or cancelled it; until then, the chat's copy.
   const [answered, setAction] = useState<PreparedAction | null>(null);
@@ -123,7 +125,7 @@ export function ActionCard({ action: initial }: Props) {
           gap: spacing[2],
         },
       ]}
-      accessibilityLabel={`Prepared: ${action.summary}`}
+      accessibilityLabel={t('assistant.action.prepared', { summary: action.summary })}
     >
       <View style={[styles.head, { gap: spacing[2] }]}>
         <Icon icon={KIND_ICON[action.kind]} color="primaryText" />
@@ -132,17 +134,17 @@ export function ActionCard({ action: initial }: Props) {
         </Text>
       </View>
       {amount && (
-        <Row label="Amount">
+        <Row label={t('common.amount')}>
           <MoneyText value={amount} variant="bodyStrong" masked={hidden} />
         </Row>
       )}
       {fee && (
-        <Row label="Fee">
+        <Row label={t('common.fee')}>
           <MoneyText value={fee} variant="bodyStrong" masked={hidden} />
         </Row>
       )}
       {total && (
-        <Row label="Total from your account">
+        <Row label={t('assistant.action.total')}>
           <MoneyText value={total} variant="bodyStrong" masked={hidden} />
         </Row>
       )}
@@ -150,7 +152,7 @@ export function ActionCard({ action: initial }: Props) {
       {status === 'prepared' ? (
         <>
           <Text variant="caption" color="textMuted">
-            {expiresIn(action)} · Nothing moves until you confirm.
+            {t('assistant.action.nothingMoves', { expires: expiresIn(action) })}
           </Text>
           {error && !confirming && (
             <Text variant="bodySmall" color="danger" accessibilityLiveRegion="assertive">
@@ -159,16 +161,16 @@ export function ActionCard({ action: initial }: Props) {
           )}
           <View style={[styles.head, { gap: spacing[2] }]}>
             <Button
-              label="Confirm"
+              label={t('common.confirm')}
               icon={Lock}
               size="sm"
               style={styles.flex}
-              accessibilityHint="Asks for your PIN or Face ID"
+              accessibilityHint={t('assistant.action.confirmHint')}
               loading={confirm.isPending}
               onPress={() => setConfirming(true)}
             />
             <Button
-              label="Cancel"
+              label={t('common.cancel')}
               variant="secondary"
               size="sm"
               style={styles.flex}
@@ -190,7 +192,7 @@ export function ActionCard({ action: initial }: Props) {
           </Text>
           {status === 'confirmed' && action.result && (
             <Button
-              label="View"
+              label={t('common.view')}
               variant="ghost"
               size="sm"
               onPress={() => router.push(resultRoute(action.result!))}

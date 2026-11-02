@@ -2,6 +2,7 @@ import { X, type LucideIcon } from 'lucide-react-native';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { touchSlop } from './Button';
@@ -66,7 +67,7 @@ export function Chip({
       {onRemove && (
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel={`Remove ${label}`}
+          accessibilityLabel={i18n.t('common.removeName', { name: label })}
           hitSlop={touchSlop(REMOVE_SIZE)}
           disabled={disabled}
           onPress={() => {

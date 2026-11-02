@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { equals, money } from '@nem/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -18,6 +19,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { formatDateTime } from '@/features/transactions/format';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
@@ -29,23 +31,23 @@ import { ALERT_THRESHOLDS, alertThresholdLabel, coolingOffDevice } from '../secu
 type Prefs = Schema<'AlertPreferences'>;
 type SignInAlert = 'login_alerts' | 'new_device_alerts';
 
-const TURN_OFF: Record<SignInAlert, { title: string; message: string }> = {
+const TURN_OFF = {
   login_alerts: {
-    title: 'Turn off login alerts?',
-    message: "You won't hear from us when someone logs in to your account, even if it isn't you.",
+    title: 'security.alerts.loginOffTitle',
+    message: 'security.alerts.loginOffMessage',
   },
   new_device_alerts: {
-    title: 'Turn off new device alerts?',
-    message: "You won't hear from us when a new phone or browser is added to your account.",
+    title: 'security.alerts.deviceOffTitle',
+    message: 'security.alerts.deviceOffMessage',
   },
-};
+} as const satisfies Record<SignInAlert, { title: string; message: string }>;
 
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : "We couldn't save that. Try again.";
+    : i18n.t('common.saveFailedGeneric');
 
 /**
  * Login and payment alerts (SEC-7). Each change saves at once. Turning a
@@ -55,6 +57,7 @@ const message = (e: unknown) =>
 export function AlertsScreen() {
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const q = useRepoQuery('security', 'getAlerts');
   const devices = useRepoQuery('devices', 'list');
   const save = useRepoMutation('security', 'setAlerts');
@@ -85,10 +88,10 @@ export function AlertsScreen() {
 
   let body;
   if (q.isError && !prefs) {
-    body = <ErrorState title="We couldn't load your alerts" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('security.alerts.failed')} onRetry={() => q.refetch()} />;
   } else if (!prefs) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your alerts">
+      <SkeletonGroup accessibilityLabel={t('security.alerts.loading')}>
         <Skeleton height={150} />
         <Skeleton height={120} />
       </SkeletonGroup>
@@ -100,21 +103,24 @@ export function AlertsScreen() {
     body = (
       <>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Sign-ins" />
+          <SectionHeader title={t('security.alerts.signIns')} />
           <Card>
             <Switch
-              label="Login alerts"
-              description="Every time someone logs in to your account"
+              label={t('security.alerts.login')}
+              description={t('security.alerts.loginHelp')}
               value={prefs.login_alerts}
               onValueChange={(on) => toggle('login_alerts', on)}
             />
             <Divider />
             <Switch
-              label="New device alerts"
+              label={t('security.alerts.newDevice')}
               description={
                 cooling
-                  ? `Stays on while ${cooling.name} is new to your account, until ${formatDateTime(cooling.cool_off_until!)}`
-                  : 'When a new phone or browser is added'
+                  ? t('security.alerts.coolingOff', {
+                      name: cooling.name,
+                      until: formatDateTime(cooling.cool_off_until!),
+                    })
+                  : t('security.alerts.newDeviceHelp')
               }
               value={prefs.new_device_alerts || Boolean(cooling)}
               disabled={Boolean(cooling)}
@@ -122,14 +128,14 @@ export function AlertsScreen() {
             />
           </Card>
           <Text variant="bodySmall" color="textMuted">
-            Keeping both on counts towards your security score.
+            {t('security.alerts.scoreNote')}
           </Text>
         </View>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Payments" />
+          <SectionHeader title={t('security.alerts.payments')} />
           <Card>
             <View style={{ gap: spacing[3] }}>
-              <Text variant="bodyStrong">Alert me when money leaves for</Text>
+              <Text variant="bodyStrong">{t('security.alerts.leavesFor')}</Text>
               <View style={[styles.chips, { gap: spacing[2] }]}>
                 {options.map((m) => (
                   <Chip
@@ -142,8 +148,8 @@ export function AlertsScreen() {
               </View>
               <Text variant="bodySmall" color="textMuted">
                 {threshold.amount === 0n
-                  ? 'You get an alert for every payment, card payment and bill.'
-                  : `Smaller payments still show in your activity, just without an alert.`}
+                  ? t('security.alerts.every')
+                  : t('security.alerts.smaller')}
               </Text>
             </View>
           </Card>
@@ -155,7 +161,7 @@ export function AlertsScreen() {
   const asking = turningOff ? TURN_OFF[turningOff] : null;
   return (
     <Screen
-      header={<SendHeader title="Login and payment alerts" />}
+      header={<SendHeader title={t('security.alerts.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => {
         setChosen(undefined);
@@ -166,9 +172,9 @@ export function AlertsScreen() {
       {body}
       <Dialog
         open={asking !== null}
-        title={asking?.title ?? ''}
-        message={asking?.message ?? ''}
-        confirmLabel="Turn off"
+        title={asking ? t(asking.title) : ''}
+        message={asking ? t(asking.message) : ''}
+        confirmLabel={t('common.turnOff')}
         destructive
         onConfirm={() => {
           if (turningOff) update({ [turningOff]: false });

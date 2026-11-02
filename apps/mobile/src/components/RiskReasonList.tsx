@@ -7,6 +7,9 @@ import {
 } from 'lucide-react-native';
 import { StyleSheet, View } from 'react-native';
 
+import { useTranslation } from 'react-i18next';
+
+import { withLabel } from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { Icon } from './Icon';
@@ -27,9 +30,9 @@ export const SEVERITY_META: Record<
   RiskSeverity,
   { label: string; icon: LucideIcon; color: TextColor; rank: number }
 > = {
-  high: { label: 'High', icon: TriangleAlert, color: 'danger', rank: 0 },
-  medium: { label: 'Medium', icon: CircleAlert, color: 'warning', rank: 1 },
-  low: { label: 'Low', icon: Info, color: 'info', rank: 2 },
+  high: withLabel('components.risk.high', { icon: TriangleAlert, color: 'danger', rank: 0 }),
+  medium: withLabel('components.risk.medium', { icon: CircleAlert, color: 'warning', rank: 1 }),
+  low: withLabel('components.risk.low', { icon: Info, color: 'info', rank: 2 }),
 };
 
 /** Most severe first; ties keep the scorer's order. */
@@ -45,15 +48,16 @@ export type Props = {
 };
 
 /** The "why" behind a risk decision (AI-1, ADM-5): each reason code with its severity. */
-export function RiskReasonList({ reasons, title = 'Why this was flagged' }: Props) {
+export function RiskReasonList({ reasons, title }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
 
   if (reasons.length === 0) {
     return (
       <View accessible style={[styles.row, { gap: spacing[2] }]}>
         <Icon icon={ShieldCheck} size="sm" color="success" />
         <Text variant="bodySmall" color="textMuted">
-          No risk signals found.
+          {t('components.risk.none')}
         </Text>
       </View>
     );
@@ -62,7 +66,7 @@ export function RiskReasonList({ reasons, title = 'Why this was flagged' }: Prop
   return (
     <View style={{ gap: spacing[2] }}>
       <Text variant="label" color="textMuted" accessibilityRole="header">
-        {title}
+        {title ?? t('components.risk.title')}
       </Text>
       <View accessibilityRole="list" style={{ gap: spacing[2] }}>
         {sortReasons(reasons).map((reason) => {

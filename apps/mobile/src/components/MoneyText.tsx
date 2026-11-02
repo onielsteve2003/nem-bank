@@ -3,6 +3,8 @@ import { useEffect, useRef, useState } from 'react';
 import type { TextStyle } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
 
+import i18n from '@/lib/i18n';
+
 import { easeOutCubic, interpolateMoney } from './moneyTween';
 import { Text, type TextColor } from './Text';
 
@@ -30,7 +32,7 @@ export type Props = {
 
 /** Screen readers say "minus" for a leading hyphen inconsistently, so spell it out. */
 export function spokenMoney(text: string): string {
-  return text.startsWith('-') ? `minus ${text.slice(1)}` : text;
+  return text.startsWith('-') ? i18n.t('components.money.minus', { amount: text.slice(1) }) : text;
 }
 
 export function MoneyText({
@@ -78,7 +80,7 @@ export function MoneyText({
   const text = masked
     ? `${CURRENCIES[value.currency].symbol}${MASK}`
     : formatMoney(tween ? shown : value, options);
-  const spoken = masked ? 'hidden' : spokenMoney(finalText);
+  const spoken = masked ? i18n.t('common.hidden') : spokenMoney(finalText);
   const tint: TextColor = colorBySign
     ? value.amount > 0n
       ? 'success'

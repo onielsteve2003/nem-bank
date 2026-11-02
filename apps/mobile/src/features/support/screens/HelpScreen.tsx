@@ -3,6 +3,7 @@ import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
 import { MessageCircle, Search, SearchX } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -28,6 +29,7 @@ type Summary = Schema<'HelpArticleList'>['data'][number];
 export function HelpScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [category, setCategory] = useState<string>();
   const q = useDebounced(text.trim(), 250);
@@ -45,7 +47,7 @@ export function HelpScreen() {
     <Card
       key={a.slug}
       onPress={() => router.push({ pathname: '/support/help/[slug]', params: { slug: a.slug } })}
-      accessibilityLabel={`${a.title}, ${a.category}`}
+      accessibilityLabel={t('support.help.rowLabel', { title: a.title, category: a.category })}
     >
       <View style={{ gap: spacing[1] }}>
         <Text variant="caption" color="textMuted">
@@ -62,9 +64,9 @@ export function HelpScreen() {
   let body;
   if (!results.data) {
     body = results.isError ? (
-      <ErrorState title="We couldn't load help" onRetry={() => results.refetch()} />
+      <ErrorState title={t('support.help.failed')} onRetry={() => results.refetch()} />
     ) : (
-      <SkeletonGroup accessibilityLabel="Loading answers">
+      <SkeletonGroup accessibilityLabel={t('support.help.loading')}>
         <Skeleton height={88} />
         <Skeleton height={88} />
         <Skeleton height={88} />
@@ -74,19 +76,15 @@ export function HelpScreen() {
     body = (
       <EmptyState
         icon={SearchX}
-        title="No answers found"
-        message={
-          q
-            ? `Nothing matches “${q}”. Try other words, or ask us in a chat.`
-            : 'Nothing here yet. Ask us in a chat.'
-        }
+        title={t('support.help.noneTitle')}
+        message={q ? t('support.help.noneQuery', { q }) : t('support.help.none')}
       />
     );
   } else {
     body = (
       <View style={{ gap: spacing[3] }}>
         <Text variant="caption" color="textMuted" accessibilityLiveRegion="polite">
-          {results.data.data.length === 1 ? '1 answer' : `${results.data.data.length} answers`}
+          {t('support.help.answers', { count: results.data.data.length })}
         </Text>
         {results.data.data.map(row)}
       </View>
@@ -95,10 +93,10 @@ export function HelpScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Help center" />}
+      header={<SendHeader title={t('support.help.title')} />}
       footer={
         <Button
-          label="Still stuck? Chat with us"
+          label={t('support.help.stuck')}
           icon={MessageCircle}
           variant="secondary"
           onPress={() => router.push('/support/new')}
@@ -107,18 +105,22 @@ export function HelpScreen() {
       edges={['top', 'bottom']}
     >
       <TextField
-        label="Search help"
+        label={t('support.help.search')}
         value={text}
         onChangeText={setText}
         leadingIcon={Search}
-        placeholder="e.g. transfer pending, freeze card"
+        placeholder={t('support.help.placeholder')}
         returnKeyType="search"
         autoCorrect={false}
         maxLength={100}
       />
       {categories.length > 0 && (
         <View style={[styles.wrap, { gap: spacing[2] }]}>
-          <Chip label="All" selected={!category} onPress={() => setCategory(undefined)} />
+          <Chip
+            label={t('common.all')}
+            selected={!category}
+            onPress={() => setCategory(undefined)}
+          />
           {categories.map((c) => (
             <Chip
               key={c}

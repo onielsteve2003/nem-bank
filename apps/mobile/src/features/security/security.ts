@@ -9,6 +9,8 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 
+import i18n from '@/lib/i18n';
+
 type Item = Schema<'CheckupItem'>;
 
 export type Band = {
@@ -19,9 +21,11 @@ export type Band = {
 
 /** The score in words, so it never relies on the ring's colour alone. */
 export function scoreBand(score: number): Band {
-  if (score >= 80) return { label: 'Strong', icon: ShieldCheck, color: 'success' };
-  if (score >= 50) return { label: 'Good, could be better', icon: ShieldHalf, color: 'warning' };
-  return { label: 'Needs attention', icon: ShieldAlert, color: 'danger' };
+  if (score >= 80)
+    return { label: i18n.t('security.score.strong'), icon: ShieldCheck, color: 'success' };
+  if (score >= 50)
+    return { label: i18n.t('security.score.good'), icon: ShieldHalf, color: 'warning' };
+  return { label: i18n.t('security.score.weak'), icon: ShieldAlert, color: 'danger' };
 }
 
 /** What still needs doing, biggest gain first, then what is already done. */
@@ -59,19 +63,19 @@ export function checkupAction(id: Item['id']): CheckupAction {
 }
 
 /** Questions people can answer the same way for years, and a stranger can't look up. */
-export const SECURITY_QUESTIONS = [
-  'What was the name of your first primary school?',
-  'What was the name of your childhood best friend?',
-  'In which town did your parents meet?',
-  'What was the first thing you ever bought with your own money?',
-] as const;
+export const securityQuestions = (): readonly string[] =>
+  i18n.t('security.question.list', { returnObjects: true });
 
 /** A device's trust in words: a new device has lower limits until its cool-off ends (AUTH-8). */
 export function deviceStatus(d: Schema<'Device'>, now: Date = new Date()): { label: string } {
   if (d.cool_off_until && new Date(d.cool_off_until) > now)
-    return { label: 'New device, lower limits for now' };
-  if (!d.trusted) return { label: 'Not trusted yet' };
-  return { label: d.hardware_backed ? 'Trusted, key in secure hardware' : 'Trusted' };
+    return { label: i18n.t('security.devices.status.new') };
+  if (!d.trusted) return { label: i18n.t('security.devices.status.untrusted') };
+  return {
+    label: i18n.t(
+      d.hardware_backed ? 'security.devices.status.hardware' : 'security.devices.status.trusted',
+    ),
+  };
 }
 
 /** Sign-ins that can be ended from here: everything except this one. */
@@ -80,12 +84,14 @@ export const otherSessions = (sessions: readonly Schema<'Session'>[]) =>
 
 /** What panic mode did, in words. */
 export function panicSummary(p: Schema<'PanicState'>): string {
-  if (!p.active) return 'Panic mode is off.';
+  if (!p.active) return i18n.t('security.panic.summaryOff');
   const cards =
     p.cards_frozen === 0
-      ? 'No cards needed freezing'
-      : `${p.cards_frozen} ${p.cards_frozen === 1 ? 'card' : 'cards'} frozen`;
-  return `${cards}${p.outgoing_blocked ? ' and no money can leave your account' : ''}.`;
+      ? i18n.t('security.panic.noCards')
+      : i18n.t('security.panic.cardsFrozen', { count: p.cards_frozen });
+  return i18n.t(p.outgoing_blocked ? 'security.panic.summaryBlocked' : 'security.panic.summary', {
+    cards,
+  });
 }
 
 /** A self-set limit; `null` means none, so only the KYC cap applies. */
@@ -105,11 +111,15 @@ export function limitChange(current: Limit, next: Limit): 'lower' | 'raise' | 's
 /** Why a pair of limits can't be saved, or undefined. The bank checks the same rules. */
 export function limitsProblem(daily: Limit, single: Limit, cap: Money): string | undefined {
   if (daily && compare(daily, cap) > 0)
-    return `Your daily limit can't be above your KYC cap of ${formatMoney(cap, { trimZeroMinor: true })}`;
+    return i18n.t('security.limits.aboveCapDaily', {
+      cap: formatMoney(cap, { trimZeroMinor: true }),
+    });
   if (single && compare(single, cap) > 0)
-    return `A single transfer can't be above your KYC cap of ${formatMoney(cap, { trimZeroMinor: true })}`;
+    return i18n.t('security.limits.aboveCapSingle', {
+      cap: formatMoney(cap, { trimZeroMinor: true }),
+    });
   if (daily && single && compare(single, daily) > 0)
-    return "A single transfer can't be above your daily limit";
+    return i18n.t('security.limits.singleAboveDaily');
   return undefined;
 }
 
@@ -130,11 +140,19 @@ export function guessScamKind(text: string): ScamKind {
 export function scamVerdict(v: Schema<'ScamCheckResult'>['verdict']): Band {
   switch (v) {
     case 'likely_scam':
-      return { label: 'Likely a scam', icon: ShieldX, color: 'danger' };
+      return {
+        label: i18n.t('security.scam.verdicts.likely_scam'),
+        icon: ShieldX,
+        color: 'danger',
+      };
     case 'suspicious':
-      return { label: 'Be careful', icon: ShieldAlert, color: 'warning' };
+      return {
+        label: i18n.t('security.scam.verdicts.suspicious'),
+        icon: ShieldAlert,
+        color: 'warning',
+      };
     default:
-      return { label: 'No warning signs found', icon: ShieldCheck, color: 'success' };
+      return { label: i18n.t('security.scam.verdicts.safe'), icon: ShieldCheck, color: 'success' };
   }
 }
 
@@ -143,8 +161,10 @@ export const ALERT_THRESHOLDS = [0, 1_000, 5_000, 20_000, 100_000] as const;
 
 /** A payment alert threshold in words. */
 export function alertThresholdLabel(threshold: Money): string {
-  if (threshold.amount === 0n) return 'Every payment';
-  return `${formatMoney(threshold, { trimZeroMinor: true })} or more`;
+  if (threshold.amount === 0n) return i18n.t('security.alerts.everyPayment');
+  return i18n.t('security.alerts.orMore', {
+    amount: formatMoney(threshold, { trimZeroMinor: true }),
+  });
 }
 
 /** The device whose cool-off keeps new-device alerts on, if any (AUTH-8). */

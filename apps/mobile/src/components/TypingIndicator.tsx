@@ -10,6 +10,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { Text } from './Text';
@@ -35,12 +36,12 @@ function Dot({ index }: { index: number }) {
 /** Three bouncing dots while the agent writes (SUP-1); still dots with reduce motion. */
 export function TypingIndicator({ name }: { name: string | null }) {
   const { colors, radius, spacing } = useTheme();
-  const who = name ?? 'Support';
+  const who = name ?? i18n.t('components.typing.support');
   return (
     <View
       accessible
       accessibilityLiveRegion="polite"
-      accessibilityLabel={`${who} is typing`}
+      accessibilityLabel={i18n.t('components.typing.label', { name: who })}
       style={[styles.row, { gap: spacing[2] }]}
     >
       <View

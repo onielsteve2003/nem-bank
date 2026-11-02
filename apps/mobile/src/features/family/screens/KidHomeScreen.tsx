@@ -2,6 +2,7 @@ import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams } from 'expo-router';
 import { Eye, Plus, Receipt, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -44,6 +45,7 @@ const NO_GOALS: KidGoal[] = [];
 export function KidHomeScreen() {
   const { id = '' } = useLocalSearchParams<{ id: string }>();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const path = { dependant_id: id };
   const q = useRepoQuery('family', 'getDependant', { path });
   const activity = useRepoQuery('family', 'listActivity', { path, query: { limit: 20 } });
@@ -56,14 +58,14 @@ export function KidHomeScreen() {
   const [emoji, setEmoji] = useState(KID_GOAL_EMOJIS[0]!);
   const [target, setTarget] = useState(KID_GOAL_PRESETS[1]!);
 
-  const header = <SendHeader title="Kid mode" />;
+  const header = <SendHeader title={t('common.kidMode')} />;
   if (!q.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {q.isError ? (
-          <ErrorState title="We couldn't load kid mode" onRetry={() => q.refetch()} />
+          <ErrorState title={t('family.kid.failed')} onRetry={() => q.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading kid mode">
+          <SkeletonGroup accessibilityLabel={t('family.kid.loading')}>
             <Skeleton height={180} />
             <Skeleton height={120} />
           </SkeletonGroup>
@@ -95,26 +97,28 @@ export function KidHomeScreen() {
       >
         <Eye size={16} color={colors.textMuted} />
         <Text variant="bodySmall" color="textMuted" style={styles.flex}>
-          {`This is what ${first} sees on their phone.`}
+          {t('family.kid.sees', { name: first })}
         </Text>
       </View>
 
       <Card>
         <View style={[styles.center, { gap: spacing[2] }]}>
-          <Text variant="h2" accessibilityRole="header">{`Hi ${first} 👋`}</Text>
+          <Text variant="h2" accessibilityRole="header">
+            {t('family.kid.hi', { name: first })}
+          </Text>
           <Text variant="bodySmall" color="textMuted">
-            You have
+            {t('family.kid.youHave')}
           </Text>
           <MoneyText value={balance} variant="amountLarge" trimZeroMinor />
           <Text variant="body" color={child.controls.paused ? 'warning' : 'textMuted'}>
             {child.controls.paused
-              ? 'Spending is paused. Ask your parent.'
-              : `${formatMoney(left, { trimZeroMinor: true })} left to spend today`}
+              ? t('family.kid.paused')
+              : t('family.kid.left', { amount: formatMoney(left, { trimZeroMinor: true }) })}
           </Text>
         </View>
       </Card>
 
-      <SectionHeader title="Saving for" />
+      <SectionHeader title={t('family.kid.savingFor')} />
       {goals.map((g) => {
         const targetMoney = { amount_minor: g.targetMinor, currency: 'NGN' as const };
         const pct = goalPercent(balance.amount, BigInt(g.targetMinor));
@@ -126,18 +130,20 @@ export function KidHomeScreen() {
                 <View style={styles.flex}>
                   <Text variant="bodyStrong">{g.name}</Text>
                   <Text variant="bodySmall" color="textMuted">
-                    {pct >= 100 ? 'You have enough! 🎉' : `${pct}% of ${nairaText(targetMoney)}`}
+                    {pct >= 100
+                      ? t('family.kid.enough')
+                      : t('family.kid.pctOf', { pct, amount: nairaText(targetMoney) })}
                   </Text>
                 </View>
                 <IconButton
                   icon={Trash2}
-                  accessibilityLabel={`Remove ${g.name}`}
+                  accessibilityLabel={t('common.removeName', { name: g.name })}
                   onPress={() => removeGoal(id, g.id)}
                 />
               </View>
               <View
                 accessibilityRole="progressbar"
-                accessibilityLabel={`${g.name} progress`}
+                accessibilityLabel={t('family.kid.progress', { name: g.name })}
                 accessibilityValue={{ min: 0, max: 100, now: pct }}
                 style={[
                   styles.track,
@@ -163,7 +169,7 @@ export function KidHomeScreen() {
         <Card>
           <View style={{ gap: spacing[3] }}>
             <TextField
-              label="What are you saving for?"
+              label={t('family.kid.goalName')}
               value={name}
               onChangeText={setName}
               maxLength={30}
@@ -183,12 +189,12 @@ export function KidHomeScreen() {
                 />
               ))}
             </View>
-            <Button label="Save goal" disabled={!name.trim()} onPress={save} />
+            <Button label={t('family.kid.saveGoal')} disabled={!name.trim()} onPress={save} />
           </View>
         </Card>
       ) : (
         <Button
-          label={goals.length ? 'Add another goal' : 'Add a goal'}
+          label={t(goals.length ? 'family.kid.addAnother' : 'family.kid.addGoal')}
           icon={Plus}
           variant="secondary"
           fullWidth
@@ -196,23 +202,23 @@ export function KidHomeScreen() {
         />
       )}
 
-      <SectionHeader title="Recently" />
+      <SectionHeader title={t('family.kid.recently')} />
       {activity.isError ? (
-        <ErrorState title="We couldn't load your payments" onRetry={() => activity.refetch()} />
+        <ErrorState title={t('family.kid.paymentsFailed')} onRetry={() => activity.refetch()} />
       ) : !activity.data ? (
         <Skeleton height={120} />
       ) : transactions.length ? (
         <Card>
           <View style={{ gap: spacing[3] }}>
-            {transactions.slice(0, 5).map((t) => (
-              <View key={t.id} style={[styles.row, { gap: spacing[3] }]}>
-                <Text variant="h3">{t.direction === 'credit' ? '💰' : '🛍️'}</Text>
+            {transactions.slice(0, 5).map((tx) => (
+              <View key={tx.id} style={[styles.row, { gap: spacing[3] }]}>
+                <Text variant="h3">{tx.direction === 'credit' ? '💰' : '🛍️'}</Text>
                 <Text variant="body" style={styles.flex}>
-                  {t.direction === 'credit'
-                    ? `Got money: ${transactionTitle(t)}`
-                    : `Spent: ${transactionTitle(t)}`}
+                  {t(tx.direction === 'credit' ? 'family.kid.gotMoney' : 'family.kid.spent', {
+                    title: transactionTitle(tx),
+                  })}
                 </Text>
-                <MoneyText value={fromApiMoney(t.amount)} variant="bodyStrong" trimZeroMinor />
+                <MoneyText value={fromApiMoney(tx.amount)} variant="bodyStrong" trimZeroMinor />
               </View>
             ))}
           </View>
@@ -220,8 +226,8 @@ export function KidHomeScreen() {
       ) : (
         <EmptyState
           icon={Receipt}
-          title="No payments yet"
-          message="When you get or spend money, it shows here."
+          title={t('family.kid.noPayments')}
+          message={t('family.kid.noPaymentsMessage')}
         />
       )}
     </Screen>

@@ -24,7 +24,12 @@ export { COUNT_UP_MS, MoneyText, spokenMoney } from './MoneyText';
 export { easeOutCubic, interpolateMoney } from './moneyTween';
 export { NumericKeypad, type KeypadAccessory } from './NumericKeypad';
 export { OtpInput } from './OtpInput';
-export { PAID_FEATURES, PaidFeatureNotice, type PaidFeature } from './PaidFeatureNotice';
+export {
+  PAID_FEATURES,
+  paidFeature,
+  PaidFeatureNotice,
+  type PaidFeature,
+} from './PaidFeatureNotice';
 export { PinPad } from './PinPad';
 export { PressableScale } from './PressableScale';
 export {

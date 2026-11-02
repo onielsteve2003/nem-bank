@@ -10,6 +10,7 @@ import {
   type ViewStyle,
 } from 'react-native';
 
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { FormField } from './FormField';
@@ -101,7 +102,10 @@ export function TextField({
         {secureTextEntry && (
           <IconButton
             icon={revealed ? EyeOff : Eye}
-            accessibilityLabel={revealed ? `Hide ${label}` : `Show ${label}`}
+            accessibilityLabel={i18n.t(
+              revealed ? 'components.textField.hide' : 'components.textField.show',
+              { label },
+            )}
             variant="ghost"
             size="sm"
             haptic="selection"

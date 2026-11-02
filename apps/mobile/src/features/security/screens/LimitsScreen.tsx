@@ -1,6 +1,7 @@
 import { formatMoney } from '@nem/shared';
 import { CalendarClock, Gauge, Send } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -18,6 +19,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import {
   StepUpCancelled,
   StepUpNeedsPin,
@@ -37,11 +39,12 @@ import { limitChange, type Limit } from '../security';
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'We couldn’t save your limit. Try again.';
+    : i18n.t('security.limits.saveFailed');
 
-const shown = (l: Limit) => (l ? formatMoney(l, { trimZeroMinor: true }) : 'No limit');
+const shown = (l: Limit) =>
+  l ? formatMoney(l, { trimZeroMinor: true }) : i18n.t('common.noLimit');
 const toApi = (l: Limit) => (l ? toApiMoney(l) : null);
 
 /**
@@ -51,6 +54,7 @@ const toApi = (l: Limit) => (l ? toApiMoney(l) : null);
 export function LimitsScreen() {
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const stepUp = useStepUp();
   const q = useRepoQuery('security', 'getLimits');
   const set = useRepoMutation('security', 'setLimits');
@@ -61,11 +65,11 @@ export function LimitsScreen() {
 
   if (!limits) {
     return (
-      <Screen header={<SendHeader title="Your limits" />} edges={['top', 'bottom']}>
+      <Screen header={<SendHeader title={t('security.limits.title')} />} edges={['top', 'bottom']}>
         {q.isError ? (
-          <ErrorState title="We couldn't load your limits" onRetry={() => q.refetch()} />
+          <ErrorState title={t('security.limits.failed')} onRetry={() => q.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading your limits">
+          <SkeletonGroup accessibilityLabel={t('security.limits.loading')}>
             <Skeleton height={120} />
             <Skeleton height={140} />
           </SkeletonGroup>
@@ -93,7 +97,7 @@ export function LimitsScreen() {
       {
         onSuccess: () => {
           setEditing(null);
-          toast.show({ message: 'Limit lowered. It applies now.', tone: 'success' });
+          toast.show({ message: t('security.limits.lowered'), tone: 'success' });
         },
         onError: (e) => toast.show({ message: message(e), tone: 'error' }),
       },
@@ -111,17 +115,15 @@ export function LimitsScreen() {
       setRaise(null);
       const at = result.pending_increase?.effective_at;
       toast.show({
-        message: at ? `Your new limit starts ${formatDateTime(at)}` : 'Limit saved',
+        message: at
+          ? t('security.limits.startsAt', { when: formatDateTime(at) })
+          : t('security.limits.saved'),
         tone: 'success',
       });
       return true;
     } catch (e) {
       if (e instanceof StepUpCancelled) return false;
-      setStepUpError(
-        e instanceof StepUpNeedsPin
-          ? 'Face ID isn’t set up for this here. Enter your PIN.'
-          : message(e),
-      );
+      setStepUpError(e instanceof StepUpNeedsPin ? t('common.faceIdUsePin') : message(e));
       return false;
     }
   };
@@ -130,14 +132,14 @@ export function LimitsScreen() {
     set.mutate(
       { body: { daily_limit: toApi(daily), single_limit: toApi(single) } },
       {
-        onSuccess: () => toast.show({ message: 'Increase cancelled', tone: 'success' }),
+        onSuccess: () => toast.show({ message: t('security.limits.cancelled'), tone: 'success' }),
         onError: (e) => toast.show({ message: message(e), tone: 'error' }),
       },
     );
 
   return (
     <Screen
-      header={<SendHeader title="Your limits" />}
+      header={<SendHeader title={t('security.limits.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
@@ -145,12 +147,13 @@ export function LimitsScreen() {
       <Card>
         <View style={{ gap: spacing[1] }}>
           <Text variant="bodySmall" color="textMuted">
-            Your KYC cap
+            {t('security.limits.cap')}
           </Text>
-          <Text variant="h2">{`${formatMoney(cap, { trimZeroMinor: true })} a day`}</Text>
+          <Text variant="h2">
+            {t('security.limits.capPerDay', { amount: formatMoney(cap, { trimZeroMinor: true }) })}
+          </Text>
           <Text variant="bodySmall" color="textMuted">
-            Set your own limits below it. If someone gets into your account, they can’t send more
-            than you allow.
+            {t('security.limits.capHelp')}
           </Text>
         </View>
       </Card>
@@ -158,14 +161,23 @@ export function LimitsScreen() {
         <Card>
           <View style={{ gap: spacing[3] }}>
             <View style={{ flexDirection: 'row', gap: spacing[2], alignItems: 'center' }}>
-              <Icon icon={CalendarClock} color="warning" accessibilityLabel="Waiting" />
-              <Text variant="bodyStrong">{`Higher limits start ${formatDateTime(pending.effective_at)}`}</Text>
+              <Icon
+                icon={CalendarClock}
+                color="warning"
+                accessibilityLabel={t('security.limits.waiting')}
+              />
+              <Text variant="bodyStrong">
+                {t('security.limits.higherFrom', { when: formatDateTime(pending.effective_at) })}
+              </Text>
             </View>
             <Text variant="bodySmall" color="textMuted">
-              {`Daily: ${shown(pending.daily_limit && fromApiMoney(pending.daily_limit))}. Single transfer: ${shown(pending.single_limit && fromApiMoney(pending.single_limit))}. Until then your current limits apply. Lowering a limit cancels this.`}
+              {t('security.limits.pending', {
+                daily: shown(pending.daily_limit && fromApiMoney(pending.daily_limit)),
+                single: shown(pending.single_limit && fromApiMoney(pending.single_limit)),
+              })}
             </Text>
             <Button
-              label="Keep my current limits"
+              label={t('security.limits.keep')}
               variant="secondary"
               size="sm"
               loading={set.isPending}
@@ -175,24 +187,24 @@ export function LimitsScreen() {
         </Card>
       )}
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Your limits" />
+        <SectionHeader title={t('security.limits.title')} />
         <Card padded={false}>
           <ListItem
-            title="Daily limit"
-            subtitle={daily ? 'Total you can send in a day' : 'Not set: your KYC cap applies'}
+            title={t('security.limits.daily')}
+            subtitle={t(daily ? 'security.limits.dailyHelp' : 'security.limits.dailyUnset')}
             leading={Gauge}
             trailing={shown(daily)}
             onPress={() => setEditing('daily')}
-            accessibilityLabel={`Daily limit, ${shown(daily)}. Change`}
+            accessibilityLabel={t('security.limits.dailyLabel', { amount: shown(daily) })}
           />
           <Divider />
           <ListItem
-            title="Single transfer"
-            subtitle={single ? 'Most you can send at once' : 'Not set'}
+            title={t('security.limits.single')}
+            subtitle={t(single ? 'security.limits.singleHelp' : 'security.limits.singleUnset')}
             leading={Send}
             trailing={shown(single)}
             onPress={() => setEditing('single')}
-            accessibilityLabel={`Single transfer limit, ${shown(single)}. Change`}
+            accessibilityLabel={t('security.limits.singleLabel', { amount: shown(single) })}
           />
         </Card>
       </View>
@@ -212,7 +224,7 @@ export function LimitsScreen() {
       <ConfirmSheet
         open={raise !== null}
         onClose={() => setRaise(null)}
-        subtitle="Raise your limit. It starts in 24 hours."
+        subtitle={t('security.limits.raiseStep')}
         error={stepUpError}
         onApproved={(pin) => (pin ? raiseWith({ pin }) : Promise.resolve(false))}
         approveWithBiometrics={(label) => raiseWith({ biometric: label })}

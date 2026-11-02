@@ -8,6 +8,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, useState, type ReactNode, type ComponentRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, useWindowDimensions, View } from 'react-native';
 
 import { Button, Icon, Text } from '@/components';
@@ -106,6 +107,7 @@ export function PhoneFrameLayout({
 /** What a recruiter on a laptop should know: it is a demo, and what the browser cannot do. */
 function DemoPanel() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [camera, setCamera] = useState<CameraSupport | null>(null);
 
   useEffect(() => {
@@ -119,43 +121,27 @@ function DemoPanel() {
   return (
     <View style={[styles.panel, { gap: spacing[3] }]} role="complementary">
       <Text variant="label" color="primaryText" style={styles.eyebrow}>
-        Web demo
+        {t('shell.web.eyebrow')}
       </Text>
       <Text variant="display">Nem Bank</Text>
-      <Text color="textMuted">
-        A digital bank running on a simulated ledger inside this page. No real money moves, and
-        nothing you enter leaves your browser.
-      </Text>
+      <Text color="textMuted">{t('shell.web.intro')}</Text>
       <View style={{ gap: spacing[3], marginTop: spacing[4] }}>
-        <Text variant="bodyStrong">In the browser</Text>
-        <Limit
-          icon={Fingerprint}
-          text="No Face ID or fingerprint: the app unlocks with your PIN."
-        />
-        <Limit
-          icon={KeyRound}
-          text="No secure keychain: your session is kept for this tab only and ends when you close it."
-        />
+        <Text variant="bodyStrong">{t('shell.web.inBrowser')}</Text>
+        <Limit icon={Fingerprint} text={t('shell.web.noBiometrics')} />
+        <Limit icon={KeyRound} text={t('shell.web.noKeychain')} />
         {camera && (
           <Limit
             icon={camera === 'browser' ? Camera : CameraOff}
-            text={
-              camera === 'browser'
-                ? 'QR scanning asks to use your browser camera.'
-                : 'No camera found: pay links still work.'
-            }
+            text={camera === 'browser' ? t('shell.web.camera') : t('shell.web.noCamera')}
           />
         )}
-        <Limit
-          icon={Vibrate}
-          text="No haptics, and screenshots of card details cannot be blocked."
-        />
+        <Limit icon={Vibrate} text={t('shell.web.noHaptics')} />
       </View>
       <Text variant="bodySmall" color="textMuted" style={{ marginTop: spacing[4] }}>
-        For the full experience, open it on a phone with Expo Go.
+        {t('shell.web.fullExperience')}
       </Text>
       <Button
-        label="Source on GitHub"
+        label={t('shell.web.source')}
         variant="secondary"
         size="sm"
         icon={Code}

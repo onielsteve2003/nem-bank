@@ -5,7 +5,7 @@ import { ThemeProvider } from '@/theme';
 
 import { AIBadge } from './AIBadge';
 import { DemoMoneyBadge } from './DemoMoneyBadge';
-import { PAID_FEATURES, PaidFeatureNotice } from './PaidFeatureNotice';
+import { paidFeature, PaidFeatureNotice } from './PaidFeatureNotice';
 import { RiskReasonList, sortReasons, type RiskReason } from './RiskReasonList';
 
 jest.mock('@/lib/haptics', () => ({ haptic: jest.fn() }));
@@ -38,7 +38,7 @@ describe('PaidFeatureNotice', () => {
     await renderThemed(<PaidFeatureNotice open onClose={jest.fn()} feature="ussd" />);
     await fireEvent.press(screen.getByRole('button', { name: 'See how it would work' }));
     expect(screen.getByText('How it would work')).toBeOnTheScreen();
-    for (const step of PAID_FEATURES.ussd.steps) expect(screen.getByText(step)).toBeOnTheScreen();
+    for (const step of paidFeature('ussd').steps) expect(screen.getByText(step)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByRole('button', { name: 'Back' }));
     expect(screen.getByText('This feature needs a paid partner service')).toBeOnTheScreen();

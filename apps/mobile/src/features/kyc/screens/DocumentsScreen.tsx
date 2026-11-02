@@ -3,6 +3,7 @@ import { parseDisplayDate } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { Clock, RotateCcw, ScanText, ShieldAlert } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -22,6 +23,7 @@ import {
   TextField,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { formatDateEntry } from '@/features/auth/signupForm';
 import { addressComplete, toApiAddress, type DeliveryAddress } from '@/features/cards/cards';
 import { AddressFields } from '@/features/cards/components/AddressFields';
@@ -43,14 +45,14 @@ import {
 } from '../kyc';
 
 type Doc = Schema<'KycDocument'>;
-const STEPS = ['Your ID', 'Selfie', 'ID details', 'Address'] as const;
+const STEP_COUNT = 4;
 
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'We couldn’t send that. Try again.';
+    : i18n.t('kyc.tier3.sendFailed');
 
 const usable = (d: Doc | undefined): d is Doc => Boolean(d && !photoProblem(d));
 
@@ -62,6 +64,7 @@ const usable = (d: Doc | undefined): d is Doc => Boolean(d && !photoProblem(d));
 export function DocumentsScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const overview = useRepoQuery('kyc', 'getOverview');
   const prefillOn = usePreferencesStore((s) => s.ai.idPrefill);
   const setAiFeature = usePreferencesStore((s) => s.setAiFeature);
@@ -85,17 +88,14 @@ export function DocumentsScreen() {
   const [error, setError] = useState<string>();
   const [sent, setSent] = useState(false);
 
-  const header = <SendHeader title="Tier 3" />;
+  const header = <SendHeader title={t('kyc.tier3.title')} />;
   if (!overview.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {overview.isError ? (
-          <ErrorState
-            title="We couldn't load your verification"
-            onRetry={() => overview.refetch()}
-          />
+          <ErrorState title={t('kyc.tier3.failed')} onRetry={() => overview.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading">
+          <SkeletonGroup accessibilityLabel={t('common.loading')}>
             <Skeleton height={320} />
           </SkeletonGroup>
         )}
@@ -108,10 +108,10 @@ export function DocumentsScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={Clock}
-          title="We’re checking your documents"
-          message="This usually takes a few minutes. We’ll tell you as soon as you’re on Tier 3."
+          title={t('kyc.review.pendingTitle')}
+          message={t('kyc.tier3.sentMessage')}
         />
-        <Button label="Done" fullWidth onPress={() => router.back()} />
+        <Button label={t('common.done')} fullWidth onPress={() => router.back()} />
       </Screen>
     );
   }
@@ -121,9 +121,9 @@ export function DocumentsScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={ShieldAlert}
-          title="Verify your BVN or NIN first"
-          message="Tier 3 builds on Tier 2."
-          actionLabel="Verify BVN or NIN"
+          title={t('kyc.tier3.needTier2')}
+          message={t('kyc.tier3.needTier2Message')}
+          actionLabel={t('kyc.tier3.verifyId')}
           onAction={() => router.replace('/kyc/identity')}
         />
       </Screen>
@@ -182,7 +182,7 @@ export function DocumentsScreen() {
     review.status !== 'pending' &&
     (step === 0 || stepsToFix(overview.data.latest_submission).includes(step));
 
-  const last = step === STEPS.length - 1;
+  const last = step === STEP_COUNT - 1;
   const footer = (
     <View style={{ gap: spacing[2] }}>
       {error && (
@@ -191,7 +191,7 @@ export function DocumentsScreen() {
         </Text>
       )}
       <Button
-        label={last ? 'Send for review' : 'Continue'}
+        label={t(last ? 'kyc.tier3.send' : 'common.continue')}
         fullWidth
         disabled={!ready}
         loading={submit.isPending}
@@ -202,7 +202,12 @@ export function DocumentsScreen() {
         }}
       />
       {step > 0 && (
-        <Button label="Back" variant="ghost" fullWidth onPress={() => setStep(step - 1)} />
+        <Button
+          label={t('common.back')}
+          variant="ghost"
+          fullWidth
+          onPress={() => setStep(step - 1)}
+        />
       )}
     </View>
   );
@@ -210,16 +215,18 @@ export function DocumentsScreen() {
   return (
     <Screen header={header} edges={['top', 'bottom']} footer={footer}>
       <View style={{ gap: spacing[1] }}>
-        <Text variant="caption" color="textMuted">{`Step ${step + 1} of ${STEPS.length}`}</Text>
+        <Text variant="caption" color="textMuted">
+          {t('kyc.tier3.step', { step: step + 1, count: STEP_COUNT })}
+        </Text>
         <Text variant="h2" accessibilityRole="header">
-          {STEPS[step]}
+          {t('kyc.tier3.steps', { returnObjects: true })[step]}
         </Text>
       </View>
 
       {fixHere && (
         <Card variant="outline">
           <View style={[styles.fix, { gap: spacing[3] }]} accessible>
-            <Icon icon={RotateCcw} color="warning" accessibilityLabel="To fix" />
+            <Icon icon={RotateCcw} color="warning" accessibilityLabel={t('kyc.tier3.toFix')} />
             <View style={[styles.flex, { gap: spacing[1] }]}>
               <Text variant="bodyStrong">{review.title}</Text>
               <Text variant="bodySmall" color="textMuted">
@@ -233,12 +240,12 @@ export function DocumentsScreen() {
       {step === 0 && (
         <>
           <View style={[styles.wrap, { gap: spacing[2] }]}>
-            {(Object.keys(ID_DOCUMENTS) as IdDocument[]).map((t) => (
+            {(Object.keys(ID_DOCUMENTS) as IdDocument[]).map((doc) => (
               <Chip
-                key={t}
-                label={ID_DOCUMENTS[t].label}
-                selected={t === idType}
-                onPress={() => setIdType(t)}
+                key={doc}
+                label={ID_DOCUMENTS[doc].label}
+                selected={doc === idType}
+                onPress={() => setIdType(doc)}
               />
             ))}
           </View>
@@ -253,11 +260,11 @@ export function DocumentsScreen() {
           <Card>
             <View style={{ gap: spacing[3] }}>
               <View style={styles.between}>
-                <Text variant="bodyStrong">Fill from your ID photo</Text>
+                <Text variant="bodyStrong">{t('kyc.tier3.fillTitle')}</Text>
                 <AIBadge
-                  feature="ID prefill"
-                  explanation="Reads the type, number and expiry date from the photo of your ID. Nothing is sent until you agree, and you check every field before it goes."
-                  fallback="Type the details yourself."
+                  feature={t('kyc.tier3.prefillFeature')}
+                  explanation={t('kyc.tier3.prefillExplanation')}
+                  fallback={t('kyc.tier3.prefillFallback')}
                 />
               </View>
               {prefilled ? (
@@ -267,12 +274,12 @@ export function DocumentsScreen() {
               ) : (
                 <>
                   <Checkbox
-                    label="Let Nem read my ID photo to fill these in"
+                    label={t('kyc.tier3.consent')}
                     checked={prefillOn}
                     onChange={(on) => setAiFeature('idPrefill', on)}
                   />
                   <Button
-                    label="Fill from photo"
+                    label={t('kyc.tier3.fill')}
                     icon={ScanText}
                     variant="secondary"
                     disabled={!prefillOn}
@@ -286,7 +293,7 @@ export function DocumentsScreen() {
           <SectionHeader title={ID_DOCUMENTS[idType].label} />
           <View style={{ gap: spacing[3] }}>
             <TextField
-              label="ID number"
+              label={t('kyc.tier3.idNumber')}
               help={ID_DOCUMENTS[idType].hint}
               value={idNumber}
               onChangeText={setIdNumber}
@@ -295,9 +302,9 @@ export function DocumentsScreen() {
               error={numberProblem}
             />
             <TextField
-              label="Expiry date"
+              label={t('kyc.tier3.expiry')}
               optional
-              placeholder="DD/MM/YYYY"
+              placeholder={t('common.datePlaceholder')}
               keyboardType="number-pad"
               maxLength={10}
               value={expiry}
@@ -310,7 +317,7 @@ export function DocumentsScreen() {
 
       {step === 3 && (
         <>
-          <Text color="textMuted">Where you live now. It doesn’t have to match your ID.</Text>
+          <Text color="textMuted">{t('kyc.tier3.addressNote')}</Text>
           <AddressFields value={address} onChange={setAddress} />
         </>
       )}

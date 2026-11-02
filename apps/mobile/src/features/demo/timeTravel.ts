@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
 
 import type { Repositories } from '@/data';
+import i18n from '@/lib/i18n';
 import { fromApiMoney } from '@/lib/money';
 
 /** The savings and ajo numbers a jump in time moves, read before and after it. */
@@ -27,17 +28,17 @@ export async function snapshot(repos: Repositories): Promise<Snapshot> {
   };
 }
 
-const plural = (n: number, one: string, many: string) => `${n} ${n === 1 ? one : many}`;
-
 /** "₦1,234.56 interest earned · 1 lock matured · 2 ajo payouts made". */
 export function describeTravel(before: Snapshot, after: Snapshot): string {
   const interest = after.interest - before.interest;
   const matured = after.matured - before.matured;
   const turns = after.turns - before.turns;
   const parts = [
-    interest > 0n ? `${formatMoney(money(interest, 'NGN'))} interest earned` : null,
-    matured > 0 ? `${plural(matured, 'lock', 'locks')} matured` : null,
-    turns > 0 ? `${plural(turns, 'ajo payout', 'ajo payouts')} made` : null,
+    interest > 0n
+      ? i18n.t('demo.travel.interest', { amount: formatMoney(money(interest, 'NGN')) })
+      : null,
+    matured > 0 ? i18n.t('demo.travel.locks', { count: matured }) : null,
+    turns > 0 ? i18n.t('demo.travel.payouts', { count: turns }) : null,
   ].filter(Boolean);
-  return parts.length ? parts.join(' · ') : 'No savings or ajo activity was due.';
+  return parts.length ? parts.join(' · ') : i18n.t('demo.travel.nothing');
 }

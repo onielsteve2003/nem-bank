@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { useLocalSearchParams } from 'expo-router';
 import { Camera, ImagePlus, Send, X } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { FlatList, Image, Linking, StyleSheet, TextInput, View } from 'react-native';
 
 import {
@@ -16,6 +17,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { pickEvidence } from '@/features/disputes/disputes';
 import { formatDateTime } from '@/features/transactions/format';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
@@ -27,12 +29,13 @@ import { MAX_ATTACHMENTS, MESSAGE_MAX, messageBody, useAgentTyping } from '../su
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'Something went wrong. Try again.';
+    : i18n.t('common.somethingWrong');
 
 function Bubble({ m }: { m: Schema<'SupportMessage'> }) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const mine = m.sender === 'customer';
   if (m.sender === 'system') {
     return (
@@ -41,11 +44,15 @@ function Bubble({ m }: { m: Schema<'SupportMessage'> }) {
       </Text>
     );
   }
-  const who = mine ? 'You' : (m.sender_name ?? 'Support');
+  const who = mine ? t('common.you') : (m.sender_name ?? t('support.chat.support'));
   return (
     <View
       accessible
-      accessibilityLabel={`${who}: ${m.body}. ${formatDateTime(m.created_at)}`}
+      accessibilityLabel={t('support.chat.bubble', {
+        who,
+        body: m.body,
+        when: formatDateTime(m.created_at),
+      })}
       style={[styles.bubbleRow, mine && styles.mine]}
     >
       <View
@@ -104,6 +111,7 @@ export function ChatScreen() {
   const { id = '' } = useLocalSearchParams<{ id: string }>();
   const toast = useToast();
   const { colors, radius, spacing, type } = useTheme();
+  const { t } = useTranslation();
   const path = { conversation_id: id };
   const conversation = useRepoQuery('support', 'getConversation', { path });
   const messages = useRepoQuery('support', 'listMessages', { path, query: { limit: 100 } });
@@ -117,14 +125,14 @@ export function ChatScreen() {
   const [sending, setSending] = useState(false);
   const [cameraDenied, setCameraDenied] = useState(false);
 
-  const header = <SendHeader title={conversation.data?.subject ?? 'Chat'} />;
+  const header = <SendHeader title={conversation.data?.subject ?? t('support.chat.title')} />;
   if (!messages.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {messages.isError ? (
-          <ErrorState title="We couldn't load this chat" onRetry={() => messages.refetch()} />
+          <ErrorState title={t('support.chat.failed')} onRetry={() => messages.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading your chat">
+          <SkeletonGroup accessibilityLabel={t('support.chat.loading')}>
             <Skeleton height={64} />
             <Skeleton height={64} />
           </SkeletonGroup>
@@ -141,7 +149,7 @@ export function ChatScreen() {
     if (picked.kind === 'photo') setPhotos((p) => [...p, picked.uri]);
     else if (picked.kind === 'denied') setCameraDenied(true);
     else if (picked.kind === 'too_large')
-      toast.show({ message: 'That photo is over 5 MB. Try another.', tone: 'error' });
+      toast.show({ message: t('common.photoTooBig'), tone: 'error' });
   };
 
   const submit = async () => {
@@ -150,7 +158,9 @@ export function ChatScreen() {
     try {
       const ids: string[] = [];
       for (const [i, file] of photos.entries()) {
-        const a = await upload.mutateAsync({ body: { file, caption: `Photo ${i + 1}` } });
+        const a = await upload.mutateAsync({
+          body: { file, caption: t('common.photoN', { n: i + 1 }) },
+        });
         ids.push(a.id);
       }
       await send.mutateAsync({
@@ -172,16 +182,16 @@ export function ChatScreen() {
     <View style={{ gap: spacing[2] }}>
       {closed && (
         <Text variant="caption" color="textMuted">
-          This chat was closed. Send a message to open it again.
+          {t('support.chat.closed')}
         </Text>
       )}
       {cameraDenied && (
         <View style={[styles.row, { gap: spacing[2] }]}>
           <Text variant="bodySmall" color="warning" style={styles.flex}>
-            Nem can’t use the camera. Allow it in Settings.
+            {t('support.chat.cameraDenied')}
           </Text>
           <Button
-            label="Open Settings"
+            label={t('common.openSettings')}
             variant="ghost"
             size="sm"
             onPress={() => void Linking.openSettings()}
@@ -194,14 +204,14 @@ export function ChatScreen() {
             <View key={`${i}-${uri.length}`}>
               <Image
                 source={{ uri }}
-                accessibilityLabel={`Photo ${i + 1} to send`}
+                accessibilityLabel={t('support.chat.photoToSend', { n: i + 1 })}
                 style={[styles.thumb, { borderRadius: radius.md }]}
               />
               <View style={styles.remove}>
                 <IconButton
                   icon={X}
                   size="sm"
-                  accessibilityLabel={`Remove photo ${i + 1}`}
+                  accessibilityLabel={t('common.removePhotoN', { n: i + 1 })}
                   disabled={sending}
                   onPress={() => setPhotos((p) => p.filter((_, j) => j !== i))}
                 />
@@ -214,22 +224,22 @@ export function ChatScreen() {
         <IconButton
           icon={Camera}
           variant="ghost"
-          accessibilityLabel="Take a photo"
+          accessibilityLabel={t('support.chat.takePhoto')}
           disabled={full || sending}
           onPress={() => void attach('camera')}
         />
         <IconButton
           icon={ImagePlus}
           variant="ghost"
-          accessibilityLabel="Add a photo"
+          accessibilityLabel={t('support.chat.addPhoto')}
           disabled={full || sending}
           onPress={() => void attach('library')}
         />
         <TextInput
           value={text}
           onChangeText={setText}
-          placeholder="Message"
-          accessibilityLabel="Message"
+          placeholder={t('support.chat.message')}
+          accessibilityLabel={t('support.chat.message')}
           placeholderTextColor={colors.textMuted}
           selectionColor={colors.primaryText}
           maxLength={MESSAGE_MAX}
@@ -250,7 +260,7 @@ export function ChatScreen() {
         />
         <IconButton
           icon={Send}
-          accessibilityLabel="Send message"
+          accessibilityLabel={t('support.chat.send')}
           disabled={!body || sending}
           haptic="success"
           onPress={() => void submit()}
@@ -280,7 +290,7 @@ export function ChatScreen() {
         ListHeaderComponent={typing ? <TypingIndicator name={agent} /> : undefined}
         ListFooterComponent={
           <Text variant="caption" color="textMuted" style={styles.system}>
-            Nem staff will never ask for your PIN, password or a code.
+            {t('support.chat.neverAsk')}
           </Text>
         }
       />

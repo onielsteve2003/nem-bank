@@ -1,6 +1,7 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { CircleCheck } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {
@@ -16,6 +17,7 @@ import {
   TextField,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { transactionTitle } from '@/features/transactions/TransactionRow';
 import { formatDateTime } from '@/features/transactions/format';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
@@ -29,9 +31,9 @@ import { DESCRIPTION_MAX, descriptionProblem, REASONS, type Reason } from '../di
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'Something went wrong. Try again.';
+    : i18n.t('common.somethingWrong');
 
 /**
  * Reporting a problem with a payment (DSP-1): what went wrong, in your words,
@@ -42,6 +44,7 @@ export function NewDisputeScreen() {
   const { transaction = '' } = useLocalSearchParams<{ transaction: string }>();
   const router = useRouter();
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const txn = useRepoQuery('transactions', 'get', { path: { transaction_id: transaction } });
   const create = useRepoMutation('disputes', 'create', {
     invalidates: [queryKeys.domain('disputes'), ['transactions']],
@@ -56,7 +59,7 @@ export function NewDisputeScreen() {
   const [sending, setSending] = useState(false);
   const [created, setCreated] = useState<{ id: string; case: string; missed: number }>();
 
-  const header = <SendHeader title="Report a problem" />;
+  const header = <SendHeader title={t('disputes.new.title')} />;
   const problem = descriptionProblem(description);
 
   if (created) {
@@ -66,7 +69,7 @@ export function NewDisputeScreen() {
         edges={['top', 'bottom']}
         footer={
           <Button
-            label="Track your dispute"
+            label={t('disputes.new.track')}
             fullWidth
             onPress={() =>
               router.replace({ pathname: '/disputes/[id]', params: { id: created.id } })
@@ -77,20 +80,24 @@ export function NewDisputeScreen() {
         <View style={[styles.center, { gap: spacing[3], paddingTop: spacing[8] }]}>
           <Icon icon={CircleCheck} size="xl" color="success" />
           <Text variant="h2" accessibilityRole="header">
-            We’ve got it
+            {t('disputes.new.gotIt')}
           </Text>
           <Text variant="body" color="textMuted" style={styles.centerText}>
-            Your case number is
+            {t('disputes.new.caseIs')}
           </Text>
-          <Text variant="h3" selectable accessibilityLabel={`Case number ${created.case}`}>
+          <Text
+            variant="h3"
+            selectable
+            accessibilityLabel={t('disputes.new.caseLabel', { case: created.case })}
+          >
             {created.case}
           </Text>
           <Text variant="bodySmall" color="textMuted" style={styles.centerText}>
-            We’ll send you an update at every step. Any refund goes straight back to your account.
+            {t('disputes.new.updates')}
           </Text>
           {created.missed > 0 && (
             <Text variant="bodySmall" color="warning" style={styles.centerText}>
-              {`${created.missed} photo${created.missed > 1 ? 's' : ''} didn’t upload. Add ${created.missed > 1 ? 'them' : 'it'} from the case.`}
+              {t('disputes.new.missed', { count: created.missed })}
             </Text>
           )}
         </View>
@@ -111,7 +118,7 @@ export function NewDisputeScreen() {
         try {
           await addEvidence.mutateAsync({
             path: { dispute_id: dispute.id },
-            body: { file, caption: `Photo ${i + 1}` },
+            body: { file, caption: t('common.photoN', { n: i + 1 }) },
           });
         } catch {
           missed += 1;
@@ -133,7 +140,7 @@ export function NewDisputeScreen() {
         </Text>
       )}
       <Button
-        label="Send report"
+        label={t('disputes.new.send')}
         fullWidth
         loading={sending}
         disabled={!reason || Boolean(problem)}
@@ -145,7 +152,7 @@ export function NewDisputeScreen() {
   return (
     <Screen header={header} edges={['top', 'bottom']} footer={footer}>
       {txn.isError ? (
-        <ErrorState title="We couldn't load this payment" onRetry={() => txn.refetch()} />
+        <ErrorState title={t('common.paymentFailed')} onRetry={() => txn.refetch()} />
       ) : !txn.data ? (
         <Skeleton height={72} />
       ) : (
@@ -162,7 +169,7 @@ export function NewDisputeScreen() {
         </Card>
       )}
 
-      <SectionHeader title="What went wrong?" />
+      <SectionHeader title={t('disputes.new.whatWrong')} />
       <View accessibilityRole="radiogroup" style={{ gap: spacing[2] }}>
         {REASONS.map((r) => {
           const selected = reason === r.value;
@@ -194,20 +201,20 @@ export function NewDisputeScreen() {
         })}
       </View>
 
-      <SectionHeader title="Tell us more" />
+      <SectionHeader title={t('disputes.new.tellMore')} />
       <TextField
-        label="What happened"
+        label={t('disputes.new.whatHappened')}
         value={description}
         onChangeText={setDescription}
         onBlur={() => setTouched(true)}
         multiline
         maxLength={DESCRIPTION_MAX}
-        placeholder="When it happened, who you paid and what you expected"
+        placeholder={t('disputes.new.placeholder')}
         error={touched ? problem : undefined}
         help={`${description.trim().length} / ${DESCRIPTION_MAX}`}
       />
 
-      <SectionHeader title="Evidence (optional)" />
+      <SectionHeader title={t('disputes.new.evidence')} />
       <EvidencePicker photos={photos} onChange={setPhotos} disabled={sending} />
     </Screen>
   );

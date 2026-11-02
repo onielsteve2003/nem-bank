@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { AtSign, BadgeCheck, Camera, ImagePlus, Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Linking, Platform, StyleSheet, View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { displayDate } from '@/features/kyc/kyc';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { queryKeys, useRepoMutation, useRepoQuery } from '@/lib/query';
@@ -31,13 +33,17 @@ const PREFERRED_NAME_MAX = 50;
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'We couldn’t save that. Try again.';
+    : i18n.t('profile.saveFailed');
 
 function Detail({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.between} accessible accessibilityLabel={`${label}: ${value}`}>
+    <View
+      style={styles.between}
+      accessible
+      accessibilityLabel={i18n.t('kyc.tiers.fact', { label, value })}
+    >
       <Text variant="bodySmall" color="textMuted">
         {label}
       </Text>
@@ -56,6 +62,7 @@ export function ProfileScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const me = useRepoQuery('users', 'getMe');
   const update = useRepoMutation('users', 'updateMe', {
     invalidates: [queryKeys.domain('users')],
@@ -65,14 +72,14 @@ export function ProfileScreen() {
   const [cameraDenied, setCameraDenied] = useState(false);
   const user = me.data;
 
-  const header = <SendHeader title="Profile" first />;
+  const header = <SendHeader title={t('profile.title')} first />;
   if (!user) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {me.isError ? (
-          <ErrorState title="We couldn't load your profile" onRetry={() => me.refetch()} />
+          <ErrorState title={t('common.profileFailed')} onRetry={() => me.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading your profile">
+          <SkeletonGroup accessibilityLabel={t('profile.loading')}>
             <Skeleton height={140} />
             <Skeleton height={120} />
             <Skeleton height={160} />
@@ -94,7 +101,10 @@ export function ProfileScreen() {
       { body: { avatar_url } },
       {
         onSuccess: () =>
-          toast.show({ message: avatar_url ? 'Photo updated' : 'Photo removed', tone: 'success' }),
+          toast.show({
+            message: t(avatar_url ? 'profile.photoUpdated' : 'profile.photoRemoved'),
+            tone: 'success',
+          }),
         onError: (e) => setPhotoError(message(e)),
       },
     );
@@ -105,14 +115,14 @@ export function ProfileScreen() {
     const picked = await pickProfilePhoto(source);
     if (picked.kind === 'photo') savePhoto(picked.uri);
     else if (picked.kind === 'denied') setCameraDenied(true);
-    else if (picked.kind === 'too_large') setPhotoError('That photo is too large. Try another.');
+    else if (picked.kind === 'too_large') setPhotoError(t('profile.photoTooLarge'));
   };
 
   const saveName = () =>
     update.mutate(
       { body: { preferred_name: typed || null } },
       {
-        onSuccess: () => toast.show({ message: 'Name saved', tone: 'success' }),
+        onSuccess: () => toast.show({ message: t('profile.nameSaved'), tone: 'success' }),
         onError: (e) => toast.show({ message: message(e), tone: 'error' }),
       },
     );
@@ -134,7 +144,7 @@ export function ProfileScreen() {
           <View style={[styles.actions, { gap: spacing[2] }]}>
             {Platform.OS !== 'web' && (
               <Button
-                label="Take a photo"
+                label={t('profile.takePhoto')}
                 icon={Camera}
                 variant="secondary"
                 size="sm"
@@ -143,7 +153,7 @@ export function ProfileScreen() {
               />
             )}
             <Button
-              label="Choose a photo"
+              label={t('profile.choosePhoto')}
               icon={ImagePlus}
               variant="secondary"
               size="sm"
@@ -152,7 +162,7 @@ export function ProfileScreen() {
             />
             {user.avatar_url && (
               <Button
-                label="Remove photo"
+                label={t('profile.removePhoto')}
                 icon={Trash2}
                 variant="ghost"
                 size="sm"
@@ -169,10 +179,10 @@ export function ProfileScreen() {
           {cameraDenied && (
             <View style={[styles.center, { gap: spacing[1] }]}>
               <Text variant="bodySmall" color="textMuted" style={styles.centerText}>
-                Nem needs the camera to take your photo. You can choose one instead.
+                {t('profile.cameraDenied')}
               </Text>
               <Button
-                label="Open Settings"
+                label={t('common.openSettings')}
                 variant="ghost"
                 size="sm"
                 onPress={() => void Linking.openSettings()}
@@ -183,13 +193,13 @@ export function ProfileScreen() {
       </Card>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="The name people see" />
+        <SectionHeader title={t('profile.nameSection')} />
         <Card>
           <View style={{ gap: spacing[3] }}>
             <TextField
-              label="Preferred name"
+              label={t('profile.preferred')}
               optional
-              help={`Shown in the app and to people you pay. Leave it empty to use ${user.first_name}.`}
+              help={t('profile.preferredHelp', { name: user.first_name })}
               value={field}
               onChangeText={setPreferred}
               maxLength={PREFERRED_NAME_MAX}
@@ -199,7 +209,7 @@ export function ProfileScreen() {
               onSubmitEditing={() => nameChanged && saveName()}
             />
             <Button
-              label="Save name"
+              label={t('profile.saveName')}
               disabled={!nameChanged}
               loading={update.isPending && nameChanged}
               onPress={saveName}
@@ -209,10 +219,10 @@ export function ProfileScreen() {
       </View>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="@nemtag" />
+        <SectionHeader title={t('profile.nemtag')} />
         <Card padded={false}>
           <ListItem
-            title={user.nemtag ? `@${user.nemtag}` : 'Choose a @nemtag'}
+            title={user.nemtag ? `@${user.nemtag}` : t('profile.chooseNemtag')}
             subtitle={nemtagRuleText(user, new Date())}
             leading={AtSign}
             onPress={() => router.push('/profile/nemtag')}
@@ -221,24 +231,23 @@ export function ProfileScreen() {
       </View>
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Details the bank holds" />
+        <SectionHeader title={t('profile.details')} />
         <Card>
           <View style={{ gap: spacing[2] }}>
-            <Detail label="Legal name" value={legalName} />
-            <Detail label="Date of birth" value={displayDate(user.date_of_birth)} />
+            <Detail label={t('profile.legalName')} value={legalName} />
+            <Detail label={t('common.dateOfBirth')} value={displayDate(user.date_of_birth)} />
             <Divider />
-            <Detail label="Email" value={user.email} />
-            <Detail label="Phone" value={user.phone} />
+            <Detail label={t('profile.email')} value={user.email} />
+            <Detail label={t('profile.phone')} value={user.phone} />
           </View>
         </Card>
         <Text variant="caption" color="textMuted">
-          Your legal name and date of birth come from your ID, so they change only through identity
-          verification.
+          {t('profile.legalNote')}
         </Text>
         <Card padded={false}>
           <ListItem
-            title="Verify your identity"
-            subtitle={`KYC Tier ${user.kyc_tier}`}
+            title={t('profile.verify')}
+            subtitle={t('profile.kycTier', { tier: user.kyc_tier })}
             leading={BadgeCheck}
             onPress={() => router.push('/kyc')}
           />

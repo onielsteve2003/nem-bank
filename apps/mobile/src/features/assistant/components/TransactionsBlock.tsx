@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Divider, Text } from '@/components';
@@ -12,23 +13,24 @@ type Props = { block: Schema<'AssistantTransactionsBlock'> };
 export function TransactionsBlock({ block }: Props) {
   const router = useRouter();
   const { colors, radius } = useTheme();
+  const { t } = useTranslation();
 
   if (block.transactions.length === 0) {
     return (
       <Text variant="bodySmall" color="textMuted">
-        No transactions to show.
+        {t('assistant.noTransactions')}
       </Text>
     );
   }
 
   return (
     <View style={[styles.box, { borderColor: colors.border, borderRadius: radius.md }]}>
-      {block.transactions.map((t, i) => (
-        <View key={t.id}>
+      {block.transactions.map((tx, i) => (
+        <View key={tx.id}>
           {i > 0 && <Divider />}
           <TransactionRow
-            transaction={t}
-            onPress={() => router.push({ pathname: '/transactions/[id]', params: { id: t.id } })}
+            transaction={tx}
+            onPress={() => router.push({ pathname: '/transactions/[id]', params: { id: tx.id } })}
           />
         </View>
       ))}

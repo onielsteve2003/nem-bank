@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { useEffect, useState } from 'react';
 
 import { useRealtime } from '@/data';
+import i18n, { withLabel } from '@/lib/i18n';
 
 export type ConversationStatus = Schema<'SupportConversation'>['status'];
 
@@ -9,13 +10,14 @@ export const CONVERSATION_STATUS: Record<
   ConversationStatus,
   { label: string; tone: 'info' | 'success' | 'neutral' }
 > = {
-  open: { label: 'With us', tone: 'info' },
-  waiting_on_customer: { label: 'Replied', tone: 'success' },
-  resolved: { label: 'Closed', tone: 'neutral' },
+  open: withLabel('support.status.open', { tone: 'info' }),
+  waiting_on_customer: withLabel('support.status.waiting_on_customer', { tone: 'success' }),
+  resolved: withLabel('support.status.resolved', { tone: 'neutral' }),
 };
 
-/** Quick subjects for a new chat; "Something else" lets you write your own. */
-export const TOPICS = ['A transfer', 'My card', 'Verification', 'Bills or airtime', 'My account'];
+/** Quick subjects for a new chat; `other` lets you write your own. Words in support.topics. */
+export const TOPICS = ['transfer', 'card', 'verification', 'bills', 'account', 'other'] as const;
+export type Topic = (typeof TOPICS)[number];
 
 export const SUBJECT_MAX = 80;
 export const MESSAGE_MAX = 2000;
@@ -29,7 +31,7 @@ export function messageBody(text: string, photos: number): string {
   const trimmed = text.trim();
   if (trimmed) return trimmed;
   if (photos === 0) return '';
-  return photos === 1 ? 'Sent a photo' : `Sent ${photos} photos`;
+  return i18n.t('support.sentPhotos', { count: photos });
 }
 
 /** A typing event that is never followed by a reply stops showing after this. */

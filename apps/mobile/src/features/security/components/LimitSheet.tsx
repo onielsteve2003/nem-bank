@@ -1,5 +1,6 @@
 import { compare, formatMoney, money, type Money } from '@nem/shared';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { AmountInput, BottomSheet, Button, Chip, Text } from '@/components';
@@ -25,6 +26,7 @@ const short = (m: Money) => formatMoney(m, { trimZeroMinor: true });
 /** Edit one self-set limit (SEC-3): presets under the KYC cap, any amount, or no limit. */
 export function LimitSheet({ which, daily, single, cap, saving, onClose, onSave }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const current = which === 'daily' ? daily : single;
   const [none, setNone] = useState(current === null);
   const [typed, setTyped] = useState(current ? typedFromKobo(current.amount) : '');
@@ -33,7 +35,7 @@ export function LimitSheet({ which, daily, single, cap, saving, onClose, onSave 
   const problem =
     which === 'daily' ? limitsProblem(next, single, cap) : limitsProblem(daily, next, cap);
   const change = limitChange(current, next);
-  const label = which === 'daily' ? 'Daily limit' : 'Single transfer limit';
+  const label = t(which === 'daily' ? 'security.limitSheet.daily' : 'security.limitSheet.single');
 
   return (
     <BottomSheet open onClose={onClose} title={label}>
@@ -50,11 +52,11 @@ export function LimitSheet({ which, daily, single, cap, saving, onClose, onSave 
               }}
             />
           ))}
-          <Chip label="No limit" selected={none} onPress={() => setNone(true)} />
+          <Chip label={t('common.noLimit')} selected={none} onPress={() => setNone(true)} />
         </View>
         {none ? (
           <Text variant="bodySmall" color="textMuted">
-            {`Only your KYC cap of ${short(cap)} a day applies.`}
+            {t('security.limitSheet.capOnly', { cap: short(cap) })}
           </Text>
         ) : (
           <AmountInput
@@ -63,19 +65,19 @@ export function LimitSheet({ which, daily, single, cap, saving, onClose, onSave 
             onChangeValue={setTyped}
             label={label}
             maxWholeDigits={9}
-            help={`Up to ${short(cap)}, your KYC cap`}
+            help={t('security.limitSheet.help', { cap: short(cap) })}
             error={problem}
           />
         )}
         <Text variant="bodySmall" color="textMuted">
           {change === 'raise'
-            ? 'Raising a limit needs your PIN and starts in 24 hours, so nobody can raise it and spend at once.'
+            ? t('security.limitSheet.raise')
             : change === 'lower'
-              ? 'Lowering a limit applies straight away.'
-              : 'This is your limit now.'}
+              ? t('security.limitSheet.lower')
+              : t('security.limitSheet.same')}
         </Text>
         <Button
-          label={change === 'raise' ? 'Raise in 24 hours' : 'Save'}
+          label={change === 'raise' ? t('security.limitSheet.raiseButton') : t('common.save')}
           disabled={change === 'same' || (!none && next === null) || problem !== undefined}
           loading={saving}
           onPress={() => onSave(next)}

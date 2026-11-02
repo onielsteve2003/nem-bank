@@ -1,4 +1,5 @@
 import { CURRENCIES, type CurrencyCode } from '@nem/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
@@ -31,13 +32,15 @@ export function AmountInput({
   currency,
   value,
   onChangeValue,
-  label = 'Amount',
+  label: labelProp,
   error,
   help,
   maxWholeDigits = MAX_WHOLE_DIGITS,
   disabled = false,
 }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
+  const label = labelProp ?? t('components.amount');
   const { symbol, minorDigits, name } = CURRENCIES[currency];
   const { style: shakeStyle, shake } = useShake();
   const shown = formatAmountEntry(value);

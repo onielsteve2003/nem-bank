@@ -73,7 +73,7 @@ const disputable = async (repos: Repositories) => {
 
 describe('dispute rules', () => {
   it('asks for at least 10 characters', () => {
-    expect(descriptionProblem('too short')).toBe('Tell us a little more (1 more characters)');
+    expect(descriptionProblem('too short')).toBe('Tell us a little more (1 more character)');
     expect(descriptionProblem('This was charged twice today')).toBeUndefined();
   });
 

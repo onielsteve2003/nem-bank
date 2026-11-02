@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { ListChecks } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import {
   StepUpCancelled,
   StepUpNeedsPin,
@@ -37,7 +39,7 @@ import { APPROVAL_STATUS, nairaText } from '../family';
 type Approval = Schema<'FamilyApproval'>;
 
 const message = (e: unknown) =>
-  isApiError(e) ? (e.problem.detail ?? e.problem.title) : 'Something went wrong. Try again.';
+  isApiError(e) ? (e.problem.detail ?? e.problem.title) : i18n.t('common.somethingWrong');
 
 /**
  * The parent's approvals queue (FAM-2): a child's transfer above their
@@ -45,25 +47,27 @@ const message = (e: unknown) =>
  */
 export function ApprovalsScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const toast = useToast();
   const stepUp = useStepUp();
   const q = useRepoQuery('family', 'listApprovals', {});
   const approve = useMoneyMutation('family', 'approve', { invalidates: [['family']] });
   const decline = useRepoMutation('family', 'decline', {
-    onSuccess: (a) => toast.show({ message: `Declined ${a.dependant.name}'s request` }),
+    onSuccess: (a) =>
+      toast.show({ message: t('family.approvals.declined', { name: a.dependant.name }) }),
     onError: (e) => toast.show({ message: message(e), tone: 'error' }),
   });
   const [confirming, setConfirming] = useState<Approval>();
   const [error, setError] = useState<string>();
 
-  const header = <SendHeader title="Approvals" />;
+  const header = <SendHeader title={t('family.approvals.title')} />;
   if (!q.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {q.isError ? (
-          <ErrorState title="We couldn't load approvals" onRetry={() => q.refetch()} />
+          <ErrorState title={t('family.approvals.failed')} onRetry={() => q.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading approvals">
+          <SkeletonGroup accessibilityLabel={t('family.approvals.loading')}>
             <Skeleton height={140} />
             <Skeleton height={140} />
           </SkeletonGroup>
@@ -79,18 +83,17 @@ export function ApprovalsScreen() {
       await stepUp('transfer', confirming.id, proof);
       const a = await approve.mutateAsync({ path: { approval_id: confirming.id } });
       toast.show({
-        message: `Sent ${nairaText(a.amount)} for ${a.dependant.name}`,
+        message: t('family.approvals.sent', {
+          amount: nairaText(a.amount),
+          name: a.dependant.name,
+        }),
         tone: 'success',
       });
       setConfirming(undefined);
       return true;
     } catch (e) {
       if (e instanceof StepUpCancelled) return false;
-      setError(
-        e instanceof StepUpNeedsPin
-          ? 'Face ID isn’t set up for this here. Enter your PIN.'
-          : message(e),
-      );
+      setError(e instanceof StepUpNeedsPin ? t('common.faceIdUsePin') : message(e));
       return false;
     }
   };
@@ -116,12 +119,12 @@ export function ApprovalsScreen() {
           {a.status === 'pending' ? (
             <>
               <Text variant="caption" color="textMuted">
-                {`Expires ${formatDateTime(a.expires_at)}`}
+                {t('family.approvals.expires', { when: formatDateTime(a.expires_at) })}
               </Text>
               <View style={[styles.row, { gap: spacing[2] }]}>
                 <View style={styles.flex}>
                   <Button
-                    label="Decline"
+                    label={t('common.decline')}
                     variant="secondary"
                     fullWidth
                     loading={decline.isPending && decline.variables?.path.approval_id === a.id}
@@ -130,7 +133,7 @@ export function ApprovalsScreen() {
                 </View>
                 <View style={styles.flex}>
                   <Button
-                    label="Approve"
+                    label={t('common.approve')}
                     fullWidth
                     onPress={() => {
                       setError(undefined);
@@ -160,13 +163,13 @@ export function ApprovalsScreen() {
       ) : (
         <EmptyState
           icon={ListChecks}
-          title="Nothing to approve"
-          message="When your child tries to send more than their limit, it waits here for you."
+          title={t('family.approvals.emptyTitle')}
+          message={t('family.approvals.emptyMessage')}
         />
       )}
       {past.length > 0 && (
         <>
-          <SectionHeader title="Earlier" />
+          <SectionHeader title={t('family.approvals.earlier')} />
           {past.map(card)}
         </>
       )}
@@ -175,7 +178,11 @@ export function ApprovalsScreen() {
         onClose={() => setConfirming(undefined)}
         subtitle={
           confirming
-            ? `Let ${confirming.dependant.name} send ${nairaText(confirming.amount)} to ${confirming.recipient.name}`
+            ? t('family.approvals.confirm', {
+                child: confirming.dependant.name,
+                amount: nairaText(confirming.amount),
+                recipient: confirming.recipient.name,
+              })
             : ''
         }
         error={error}

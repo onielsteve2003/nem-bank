@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { Globe, Monitor, Smartphone } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError, type ApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { formatDateTime } from '@/features/transactions/format';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
@@ -36,9 +38,9 @@ const PLATFORM_ICON = { ios: Smartphone, android: Smartphone, web: Globe } as co
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'Something went wrong. Try again.';
+    : i18n.t('common.somethingWrong');
 
 /**
  * Devices and sessions (SEC-2). Devices hold a signing key and can approve
@@ -48,6 +50,7 @@ const message = (e: unknown) =>
 export function DevicesScreen() {
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const devices = useRepoQuery('devices', 'list');
   const sessions = useRepoQuery('security', 'listSessions');
   const [pending, setPending] = useState<Pending>(null);
@@ -66,13 +69,19 @@ export function DevicesScreen() {
     try {
       if (pending.kind === 'device') {
         await removeDevice.mutateAsync({ path: { device_id: pending.item.id } });
-        toast.show({ message: `${pending.item.name} removed`, tone: 'success' });
+        toast.show({
+          message: t('security.devices.removed', { name: pending.item.name }),
+          tone: 'success',
+        });
       } else if (pending.kind === 'session') {
         await endSession.mutateAsync({ path: { session_id: pending.item.id } });
-        toast.show({ message: `Signed out ${pending.item.device_name}`, tone: 'success' });
+        toast.show({
+          message: t('security.devices.signedOut', { name: pending.item.device_name }),
+          tone: 'success',
+        });
       } else {
         for (const s of others) await endSession.mutateAsync({ path: { session_id: s.id } });
-        toast.show({ message: 'Signed out everywhere else', tone: 'success' });
+        toast.show({ message: t('security.devices.signedOutAll'), tone: 'success' });
       }
     } catch {
       // onError already told the user.
@@ -85,7 +94,7 @@ export function DevicesScreen() {
   if (failed) {
     body = (
       <ErrorState
-        title="We couldn't load your devices"
+        title={t('security.devices.failed')}
         onRetry={() => {
           void devices.refetch();
           void sessions.refetch();
@@ -94,7 +103,7 @@ export function DevicesScreen() {
     );
   } else if (!devices.data || !sessions.data) {
     body = (
-      <SkeletonGroup accessibilityLabel="Loading your devices">
+      <SkeletonGroup accessibilityLabel={t('security.devices.loading')}>
         <Skeleton height={160} />
         <Skeleton height={160} />
       </SkeletonGroup>
@@ -103,9 +112,9 @@ export function DevicesScreen() {
     body = (
       <>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Devices" />
+          <SectionHeader title={t('security.devices.devices')} />
           <Text variant="bodySmall" color="textMuted">
-            These can approve payments with their own key. Remove any you don’t recognise.
+            {t('security.devices.intro')}
           </Text>
           <Card padded={false}>
             <View accessibilityRole="list">
@@ -116,14 +125,17 @@ export function DevicesScreen() {
                     {i > 0 && <Divider />}
                     <ListItem
                       title={d.name}
-                      subtitle={`${status.label} · last used ${formatDateTime(d.last_seen_at)}`}
+                      subtitle={t('security.devices.lastUsed', {
+                        status: status.label,
+                        when: formatDateTime(d.last_seen_at),
+                      })}
                       leading={PLATFORM_ICON[d.platform]}
                       trailing={
                         d.current ? (
-                          <Badge label="This device" tone="primary" />
+                          <Badge label={t('security.devices.thisDevice')} tone="primary" />
                         ) : (
                           <Button
-                            label="Remove"
+                            label={t('common.remove')}
                             size="sm"
                             variant="secondary"
                             onPress={() => setPending({ kind: 'device', item: d })}
@@ -131,7 +143,16 @@ export function DevicesScreen() {
                           />
                         )
                       }
-                      accessibilityLabel={`${d.name}. ${status.label}. Last used ${formatDateTime(d.last_seen_at)}.${d.current ? ' This device.' : ''}`}
+                      accessibilityLabel={t(
+                        d.current
+                          ? 'security.devices.deviceLabelCurrent'
+                          : 'security.devices.deviceLabel',
+                        {
+                          name: d.name,
+                          status: status.label,
+                          when: formatDateTime(d.last_seen_at),
+                        },
+                      )}
                     />
                   </View>
                 );
@@ -140,12 +161,14 @@ export function DevicesScreen() {
           </Card>
         </View>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="Signed in" />
+          <SectionHeader title={t('security.devices.signedIn')} />
           <Card padded={false}>
             <View accessibilityRole="list">
               {sessions.data.data.map((s, i) => {
                 const where = s.ip_location ? `${s.ip_location} · ` : '';
-                const when = `active ${formatDateTime(s.last_active_at)}`;
+                const when = t('security.devices.active', {
+                  when: formatDateTime(s.last_active_at),
+                });
                 return (
                   <View key={s.id}>
                     {i > 0 && <Divider />}
@@ -155,10 +178,10 @@ export function DevicesScreen() {
                       leading={platformOf(s.device_id)}
                       trailing={
                         s.current ? (
-                          <Badge label="You’re here" tone="primary" />
+                          <Badge label={t('security.devices.youreHere')} tone="primary" />
                         ) : (
                           <Button
-                            label="Sign out"
+                            label={t('security.devices.signOut')}
                             size="sm"
                             variant="secondary"
                             onPress={() => setPending({ kind: 'session', item: s })}
@@ -166,7 +189,12 @@ export function DevicesScreen() {
                           />
                         )
                       }
-                      accessibilityLabel={`${s.device_name}. ${where}${when}.${s.current ? ' This session.' : ''}`}
+                      accessibilityLabel={t(
+                        s.current
+                          ? 'security.devices.sessionLabelCurrent'
+                          : 'security.devices.sessionLabel',
+                        { name: s.device_name, where, when },
+                      )}
                     />
                   </View>
                 );
@@ -175,7 +203,7 @@ export function DevicesScreen() {
           </Card>
           {others.length > 1 && (
             <Button
-              label="Sign out everywhere else"
+              label={t('security.devices.signOutAll')}
               variant="secondary"
               onPress={() => setPending({ kind: 'all' })}
             />
@@ -188,26 +216,25 @@ export function DevicesScreen() {
   const dialog =
     pending?.kind === 'device'
       ? {
-          title: `Remove ${pending.item.name}?`,
-          message:
-            'It will be signed out and can no longer approve payments. Signing in on it again counts as a new device, with lower limits for 24 hours.',
-          confirmLabel: 'Remove device',
+          title: t('security.devices.removeTitle', { name: pending.item.name }),
+          message: t('security.devices.removeMessage'),
+          confirmLabel: t('security.devices.removeConfirm'),
         }
       : pending?.kind === 'session'
         ? {
-            title: `Sign out ${pending.item.device_name}?`,
-            message: 'That sign-in ends now. The device stays trusted for next time.',
-            confirmLabel: 'Sign out now',
+            title: t('security.devices.signOutTitle', { name: pending.item.device_name }),
+            message: t('security.devices.signOutMessage'),
+            confirmLabel: t('security.devices.signOutConfirm'),
           }
         : {
-            title: 'Sign out everywhere else?',
-            message: `This ends ${others.length} other sign-ins. You stay signed in here.`,
-            confirmLabel: 'Sign out all',
+            title: t('security.devices.signOutAllTitle'),
+            message: t('security.devices.signOutAllMessage', { count: others.length }),
+            confirmLabel: t('security.devices.signOutAllConfirm'),
           };
 
   return (
     <Screen
-      header={<SendHeader title="Devices and sessions" />}
+      header={<SendHeader title={t('security.devices.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => {
         void devices.refetch();

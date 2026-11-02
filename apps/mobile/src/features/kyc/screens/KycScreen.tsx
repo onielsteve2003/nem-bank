@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { BadgeCheck, CircleX, Clock, RotateCcw } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -18,6 +19,7 @@ import {
   Text,
 } from '@/components';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
+import i18n from '@/lib/i18n';
 import { fromApiMoney } from '@/lib/money';
 import { useRepoQuery } from '@/lib/query';
 import { useTheme } from '@/theme';
@@ -25,9 +27,9 @@ import { useTheme } from '@/theme';
 import { kycStatusText, nextTier, reviewState, UNLOCK_LABELS, upgradeHref } from '../kyc';
 
 const REVIEW_ICONS = {
-  pending: { icon: Clock, color: 'warning', label: 'Waiting' },
-  rejected: { icon: CircleX, color: 'danger', label: 'Not approved' },
-  resubmit: { icon: RotateCcw, color: 'warning', label: 'Needs a document' },
+  pending: { icon: Clock, color: 'warning', label: 'kyc.tiers.waiting' },
+  rejected: { icon: CircleX, color: 'danger', label: 'kyc.tiers.notApproved' },
+  resubmit: { icon: RotateCcw, color: 'warning', label: 'kyc.tiers.needsDocument' },
 } as const;
 
 const sentAt = new Intl.DateTimeFormat('en-NG', {
@@ -38,11 +40,16 @@ const sentAt = new Intl.DateTimeFormat('en-NG', {
 });
 
 const naira = (m: Schema<'Money'>) => formatMoney(fromApiMoney(m), { trimZeroMinor: true });
-const maxBalance = (t: Schema<'TierInfo'>) => (t.max_balance ? naira(t.max_balance) : 'No limit');
+const maxBalance = (tier: Schema<'TierInfo'>) =>
+  tier.max_balance ? naira(tier.max_balance) : i18n.t('common.noLimit');
 
 function Fact({ label, value }: { label: string; value: string }) {
   return (
-    <View style={styles.between} accessible accessibilityLabel={`${label}: ${value}`}>
+    <View
+      style={styles.between}
+      accessible
+      accessibilityLabel={i18n.t('kyc.tiers.fact', { label, value })}
+    >
       <Text variant="bodySmall" color="textMuted">
         {label}
       </Text>
@@ -57,17 +64,18 @@ function Fact({ label, value }: { label: string; value: string }) {
 export function KycScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const q = useRepoQuery('kyc', 'getOverview');
-  const header = <SendHeader title="Verify identity" first />;
+  const header = <SendHeader title={t('kyc.title')} first />;
   const overview = q.data;
 
   if (!overview) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {q.isError ? (
-          <ErrorState title="We couldn't load your verification" onRetry={() => q.refetch()} />
+          <ErrorState title={t('kyc.tiers.failed')} onRetry={() => q.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading your verification">
+          <SkeletonGroup accessibilityLabel={t('kyc.tiers.loading')}>
             <Skeleton height={140} />
             <Skeleton height={120} />
             <Skeleton height={220} />
@@ -94,12 +102,12 @@ export function KycScreen() {
         <View style={{ gap: spacing[3] }}>
           <View style={{ gap: spacing[1] }}>
             <Text variant="bodySmall" color="textMuted">
-              You’re on
+              {t('kyc.tiers.youreOn')}
             </Text>
             <View style={[styles.row, { gap: spacing[2] }]}>
-              <Text variant="h2">{`Tier ${overview.tier}`}</Text>
+              <Text variant="h2">{t('kyc.tiers.tier', { tier: overview.tier })}</Text>
               {overview.tier === 3 && (
-                <Icon icon={BadgeCheck} color="success" accessibilityLabel="Fully verified" />
+                <Icon icon={BadgeCheck} color="success" accessibilityLabel={t('kyc.tiers.full')} />
               )}
             </View>
             <Text variant="bodySmall" color="textMuted">
@@ -108,12 +116,15 @@ export function KycScreen() {
           </View>
           {current && (
             <View style={{ gap: spacing[2] }}>
-              <Fact label="You can send" value={`${naira(current.daily_limit)} a day`} />
-              <Fact label="You can hold" value={maxBalance(current)} />
+              <Fact
+                label={t('kyc.tiers.canSend')}
+                value={t('kyc.tiers.perDay', { amount: naira(current.daily_limit) })}
+              />
+              <Fact label={t('kyc.tiers.canHold')} value={maxBalance(current)} />
               {overview.latest_submission?.status === 'approved' &&
                 overview.latest_submission.reviewed_at && (
                   <Fact
-                    label="Approved"
+                    label={t('kyc.tiers.approved')}
                     value={sentAt.format(new Date(overview.latest_submission.reviewed_at))}
                   />
                 )}
@@ -125,13 +136,18 @@ export function KycScreen() {
       {nextInfo && (
         <Card>
           <View style={{ gap: spacing[3] }}>
-            <Text variant="bodyStrong">{`Upgrade to Tier ${nextInfo.tier}`}</Text>
+            <Text variant="bodyStrong">{t('kyc.tiers.upgradeTo', { tier: nextInfo.tier })}</Text>
             <Text variant="bodySmall" color="textMuted">
-              {`You’ll need: ${nextInfo.requirements.join(', ')}. You’ll get ${naira(nextInfo.daily_limit)} a day${
-                nextInfo.unlocks?.length
-                  ? ` and ${nextInfo.unlocks.map((u) => UNLOCK_LABELS[u].toLowerCase()).join(', ')}`
-                  : ''
-              }.`}
+              {nextInfo.unlocks?.length
+                ? t('kyc.tiers.youNeedUnlocks', {
+                    requirements: nextInfo.requirements.join(', '),
+                    amount: naira(nextInfo.daily_limit),
+                    unlocks: nextInfo.unlocks.map((u) => UNLOCK_LABELS[u].toLowerCase()).join(', '),
+                  })
+                : t('kyc.tiers.youNeed', {
+                    requirements: nextInfo.requirements.join(', '),
+                    amount: naira(nextInfo.daily_limit),
+                  })}
             </Text>
             {review && overview.latest_submission && (
               <View
@@ -142,7 +158,7 @@ export function KycScreen() {
                 <Icon
                   icon={REVIEW_ICONS[review.status].icon}
                   color={REVIEW_ICONS[review.status].color}
-                  accessibilityLabel={REVIEW_ICONS[review.status].label}
+                  accessibilityLabel={t(REVIEW_ICONS[review.status].label)}
                 />
                 <View style={[styles.flex, { gap: spacing[1] }]}>
                   <Text variant="bodyStrong">{review.title}</Text>
@@ -150,14 +166,19 @@ export function KycScreen() {
                     {review.message}
                   </Text>
                   <Text variant="caption" color="textMuted">
-                    {`Sent ${sentAt.format(new Date(overview.latest_submission.submitted_at))}`}
+                    {t('kyc.tiers.sent', {
+                      when: sentAt.format(new Date(overview.latest_submission.submitted_at)),
+                    })}
                   </Text>
                 </View>
               </View>
             )}
             {review?.status !== 'pending' && (
               <Button
-                label={review?.action ?? (href ? `Upgrade to Tier ${nextInfo.tier}` : 'Soon')}
+                label={
+                  review?.action ??
+                  (href ? t('kyc.tiers.upgradeTo', { tier: nextInfo.tier }) : t('kyc.tiers.soon'))
+                }
                 disabled={!href}
                 onPress={() => href && router.push(href)}
               />
@@ -167,20 +188,28 @@ export function KycScreen() {
       )}
 
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Tiers and limits" />
-        {overview.tiers.map((t) => (
-          <Card key={t.tier}>
+        <SectionHeader title={t('kyc.tiers.tiersAndLimits')} />
+        {overview.tiers.map((tier) => (
+          <Card key={tier.tier}>
             <View style={{ gap: spacing[2] }}>
               <View style={styles.between}>
-                <Text variant="bodyStrong" accessibilityRole="header">{`Tier ${t.tier}`}</Text>
-                {t.current && <Badge label="Your tier" tone="primary" />}
+                <Text variant="bodyStrong" accessibilityRole="header">
+                  {t('kyc.tiers.tier', { tier: tier.tier })}
+                </Text>
+                {tier.current && <Badge label={t('kyc.tiers.yourTier')} tone="primary" />}
               </View>
-              <Fact label="Daily limit" value={naira(t.daily_limit)} />
-              <Fact label="Most you can hold" value={maxBalance(t)} />
+              <Fact label={t('kyc.tiers.dailyLimit')} value={naira(tier.daily_limit)} />
+              <Fact label={t('kyc.tiers.mostHold')} value={maxBalance(tier)} />
               <Divider />
-              <Fact label={t.tier === 1 ? 'Needs' : 'Adds'} value={t.requirements.join(', ')} />
-              {!!t.unlocks?.length && (
-                <Fact label="Unlocks" value={t.unlocks.map((u) => UNLOCK_LABELS[u]).join(', ')} />
+              <Fact
+                label={t(tier.tier === 1 ? 'kyc.tiers.needs' : 'kyc.tiers.adds')}
+                value={tier.requirements.join(', ')}
+              />
+              {!!tier.unlocks?.length && (
+                <Fact
+                  label={t('kyc.tiers.unlocksLabel')}
+                  value={tier.unlocks.map((u) => UNLOCK_LABELS[u]).join(', ')}
+                />
               )}
             </View>
           </Card>
@@ -189,7 +218,7 @@ export function KycScreen() {
 
       {overview.demo_limits && (
         <Text variant="caption" color="textMuted">
-          Demo limits based on public CBN guidance. The bank can change them.
+          {t('kyc.tiers.demo')}
         </Text>
       )}
     </Screen>

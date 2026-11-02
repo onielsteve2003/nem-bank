@@ -1,5 +1,6 @@
 import { Check, ChevronDown, X, type LucideIcon } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -45,7 +46,7 @@ export function SelectSheet<T extends string>({
   value,
   onChange,
   onBlur,
-  placeholder = 'Select',
+  placeholder,
   help,
   error,
   optional,
@@ -53,6 +54,7 @@ export function SelectSheet<T extends string>({
   title = label,
 }: Props<T>) {
   const { colors, radius, spacing, motion } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const frameStyle = useModalFrameStyle();
   const [open, setOpen] = useState(false);
@@ -73,8 +75,11 @@ export function SelectSheet<T extends string>({
     <FormField label={label} optional={optional} error={error} help={help}>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`${label}, ${selected?.label ?? 'not selected'}`}
-        accessibilityHint={error ?? 'Opens a list of options'}
+        accessibilityLabel={t('components.select.label', {
+          label,
+          value: selected?.label ?? t('components.select.notSelected'),
+        })}
+        accessibilityHint={error ?? t('components.select.hint')}
         accessibilityState={{ disabled, expanded: open }}
         disabled={disabled}
         onPress={() => setOpen(true)}
@@ -93,7 +98,7 @@ export function SelectSheet<T extends string>({
       >
         {selected?.icon && <Icon icon={selected.icon} color="textMuted" />}
         <Text color={selected ? 'text' : 'textMuted'} style={styles.flex} numberOfLines={1}>
-          {selected?.label ?? placeholder}
+          {selected?.label ?? placeholder ?? t('components.select.placeholder')}
         </Text>
         <Icon icon={ChevronDown} color="textMuted" />
       </Pressable>
@@ -102,7 +107,7 @@ export function SelectSheet<T extends string>({
         <View style={[styles.backdrop, { backgroundColor: colors.overlay }, frameStyle]}>
           <Pressable
             accessibilityRole="button"
-            accessibilityLabel="Close"
+            accessibilityLabel={t('common.close')}
             style={StyleSheet.absoluteFill}
             onPress={close}
           />
@@ -121,7 +126,12 @@ export function SelectSheet<T extends string>({
           >
             <View style={[styles.header, { padding: spacing[4] }]}>
               <Text variant="h3">{title}</Text>
-              <IconButton icon={X} accessibilityLabel="Close" variant="ghost" onPress={close} />
+              <IconButton
+                icon={X}
+                accessibilityLabel={t('common.close')}
+                variant="ghost"
+                onPress={close}
+              />
             </View>
             <ScrollView contentContainerStyle={{ paddingHorizontal: spacing[2] }}>
               {options.map((option) => {

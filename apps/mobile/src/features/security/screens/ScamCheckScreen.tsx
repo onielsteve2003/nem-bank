@@ -3,6 +3,7 @@ import { checkScamText } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
 import { ClipboardPaste, Lock } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -17,6 +18,7 @@ import {
   TextField,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { useRepoMutation } from '@/lib/query';
 import { usePreferencesStore } from '@/stores';
@@ -24,20 +26,7 @@ import { useTheme } from '@/theme';
 
 import { guessScamKind, scamVerdict, type ScamKind } from '../security';
 
-const KINDS: { kind: ScamKind; label: string }[] = [
-  { kind: 'message', label: 'Message' },
-  { kind: 'link', label: 'Link' },
-  { kind: 'account_number', label: 'Account number' },
-];
-
-const PLACEHOLDER: Record<ScamKind, string> = {
-  message: 'Paste the SMS, WhatsApp or email text',
-  link: 'Paste the link, e.g. bit.ly/…',
-  account_number: 'The 10-digit account they want you to pay',
-};
-
-const RULES_ONLY =
-  'Rules only: known Nigerian scam phrases, link tricks and accounts other customers reported.';
+const KINDS: readonly ScamKind[] = ['message', 'link', 'account_number'];
 const MAX_LENGTH = 2000;
 
 /** The bank could not answer, so this phone's own rules can (messages and links only). */
@@ -51,22 +40,22 @@ function checkOnPhone(content: string): Schema<'ScamCheckResult'> {
     ai: {
       feature: 'scam_checker',
       model_version: 'rules-on-device-1',
-      explanation:
-        "Checked on this phone with Nem's scam rules, because the bank couldn't be reached.",
+      explanation: i18n.t('security.scam.onPhone'),
       fallback_used: true,
     },
   };
 }
 
 const message = (e: unknown) => {
-  if (!isApiError(e)) return 'Something went wrong. Try again.';
-  if (e.problem.code === 'offline') return "You're offline. Reconnect and try again.";
-  if (e.problem.status === 429) return 'You’ve checked a lot just now. Try again in a minute.';
+  if (!isApiError(e)) return i18n.t('common.somethingWrong');
+  if (e.problem.code === 'offline') return i18n.t('common.offline');
+  if (e.problem.status === 429) return i18n.t('security.scam.tooMany');
   return e.problem.detail ?? e.problem.title;
 };
 
 function Verdict({ result }: { result: Schema<'ScamCheckResult'> }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const aiOn = usePreferencesStore((s) => s.ai.scamChecker);
   const v = scamVerdict(result.verdict);
   return (
@@ -76,7 +65,10 @@ function Verdict({ result }: { result: Schema<'ScamCheckResult'> }) {
           accessible
           accessibilityRole="alert"
           style={[styles.row, { gap: spacing[2] }]}
-          accessibilityLabel={`${v.label}. ${result.advice}`}
+          accessibilityLabel={t('security.scam.verdictLabel', {
+            verdict: v.label,
+            advice: result.advice,
+          })}
         >
           <Icon icon={v.icon} color={v.color} size="lg" />
           <Text variant="h3" style={styles.flex}>
@@ -86,16 +78,16 @@ function Verdict({ result }: { result: Schema<'ScamCheckResult'> }) {
         <Text variant="body">{result.advice}</Text>
         {result.reported_account === true && (
           <Text variant="bodyStrong" color="danger">
-            Other customers have reported this account.
+            {t('security.scam.reported')}
           </Text>
         )}
         {result.reported_account === false && (
           <Text variant="bodySmall" color="textMuted">
-            No one has reported this account to us.
+            {t('security.scam.notReported')}
           </Text>
         )}
         <RiskReasonList
-          title="What we noticed"
+          title={t('security.scam.noticed')}
           reasons={result.reasons.map((r) => ({
             code: r.code,
             label: r.message,
@@ -104,20 +96,20 @@ function Verdict({ result }: { result: Schema<'ScamCheckResult'> }) {
         />
         {result.ai.model_version === 'rules-on-device-1' && (
           <Text variant="caption" color="textMuted">
-            Checked on this phone while you’re offline. Reported accounts need the bank.
+            {t('security.scam.offlineNote')}
           </Text>
         )}
         {aiOn ? (
           <View style={styles.start}>
             <AIBadge
-              feature="Scam checker"
+              feature={t('security.scam.title')}
               explanation={result.ai.explanation}
-              fallback={RULES_ONLY}
+              fallback={t('security.scam.rulesOnly')}
             />
           </View>
         ) : (
           <Text variant="caption" color="textMuted">
-            AI scam checker is off · rules only
+            {t('security.scam.aiOff')}
           </Text>
         )}
       </View>
@@ -132,6 +124,7 @@ function Verdict({ result }: { result: Schema<'ScamCheckResult'> }) {
  */
 export function ScamCheckScreen() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const [text, setText] = useState('');
   const [kind, setKind] = useState<ScamKind>('message');
   /** Once the customer picks a kind, stop guessing it from the text. */
@@ -160,11 +153,11 @@ export function ScamCheckScreen() {
   const run = () => {
     const content = text.trim();
     if (!content) {
-      setError('Paste or type what you want checked');
+      setError(t('security.scam.empty'));
       return;
     }
     if (kind === 'account_number' && content.replace(/\D/g, '').length !== 10) {
-      setError('Enter a 10-digit account number');
+      setError(t('security.scam.badAccount'));
       return;
     }
     setOnPhone(null);
@@ -181,11 +174,11 @@ export function ScamCheckScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Scam checker" />}
+      header={<SendHeader title={t('security.scam.title')} />}
       edges={['top', 'bottom']}
       footer={
         <Button
-          label="Check it"
+          label={t('security.scam.check')}
           size="lg"
           loading={check.isPending}
           disabled={!text.trim()}
@@ -194,17 +187,17 @@ export function ScamCheckScreen() {
       }
     >
       <Text variant="bodySmall" color="textMuted">
-        Got a message asking for money, a code or a click? Check it before you do anything.
+        {t('security.scam.intro')}
       </Text>
       <View style={[styles.chips, { gap: spacing[2] }]}>
         {KINDS.map((k) => (
           <Chip
-            key={k.kind}
-            label={k.label}
-            selected={kind === k.kind}
+            key={k}
+            label={t(`security.scam.kinds.${k}`)}
+            selected={kind === k}
             onPress={() => {
               setPicked(true);
-              setKind(k.kind);
+              setKind(k);
               setError(undefined);
               reset();
             }}
@@ -212,8 +205,8 @@ export function ScamCheckScreen() {
         ))}
       </View>
       <TextField
-        label="What do you want checked?"
-        placeholder={PLACEHOLDER[kind]}
+        label={t('security.scam.field')}
+        placeholder={t(`security.scam.placeholders.${kind}`)}
         value={text}
         onChangeText={change}
         multiline={kind === 'message'}
@@ -224,16 +217,22 @@ export function ScamCheckScreen() {
         error={error}
       />
       <View style={[styles.row, { gap: spacing[2] }]}>
-        <Button label="Paste" icon={ClipboardPaste} variant="secondary" size="sm" onPress={paste} />
+        <Button
+          label={t('common.paste')}
+          icon={ClipboardPaste}
+          variant="secondary"
+          size="sm"
+          onPress={paste}
+        />
         {text.length > 0 && (
-          <Button label="Clear" variant="ghost" size="sm" onPress={() => change('')} />
+          <Button label={t('common.clear')} variant="ghost" size="sm" onPress={() => change('')} />
         )}
       </View>
       {result && <Verdict result={result} />}
       <View style={[styles.row, { gap: spacing[2] }]}>
         <Icon icon={Lock} size="sm" color="textMuted" />
         <Text variant="caption" color="textMuted" style={styles.flex}>
-          We check it and throw it away. It’s never stored or sent to a chatbot.
+          {t('security.scam.privacy')}
         </Text>
       </View>
     </Screen>

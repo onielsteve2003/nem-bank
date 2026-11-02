@@ -6,6 +6,7 @@ import {
 } from '@gorhom/bottom-sheet';
 import { X } from 'lucide-react-native';
 import { useCallback, useEffect, useRef, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -50,6 +51,7 @@ function GorhomSheet({
   const ref = useRef<BottomSheetModal>(null);
   const presented = useRef(false);
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
 
   // Only dismiss a sheet that was presented: dismissing one that never opened
@@ -73,10 +75,10 @@ function GorhomSheet({
         pressBehavior="close"
         opacity={1}
         style={[props.style, { backgroundColor: colors.overlay }]}
-        accessibilityLabel="Close sheet"
+        accessibilityLabel={t('components.sheet.close')}
       />
     ),
-    [colors.overlay],
+    [colors.overlay, t],
   );
 
   return (
@@ -113,7 +115,7 @@ function GorhomSheet({
             {!hideCloseButton && (
               <IconButton
                 icon={X}
-                accessibilityLabel="Close"
+                accessibilityLabel={t('common.close')}
                 variant="ghost"
                 onPress={() => ref.current?.dismiss()}
               />

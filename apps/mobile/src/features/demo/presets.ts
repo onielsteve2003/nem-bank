@@ -1,6 +1,7 @@
 import { money, type CurrencyCode, type Money } from '@nem/shared';
 
 import type { LatencyProfile } from '@/data/mock/simulation';
+import { withLabel } from '@/lib/i18n';
 
 // Demo Controls offers fixed choices rather than free entry: one tap sets up a
 // scenario, and every amount is one a Nigerian user would recognise.
@@ -26,16 +27,13 @@ export const SENDERS: Record<CurrencyCode, { name: string; bank: string; narrati
 
 export const TIME_TRAVEL_DAYS = [1, 7, 30] as const;
 
-export const LATENCIES: { value: LatencyProfile; label: string }[] = [
-  { value: 'off', label: 'Instant' },
-  { value: 'fast', label: 'Fast' },
-  { value: 'realistic', label: 'Realistic' },
-  { value: 'slow', label: 'Slow 3G' },
-];
+export const LATENCIES = (
+  ['off', 'fast', 'realistic', 'slow'] as const satisfies LatencyProfile[]
+).map((value) => withLabel(`demo.network.latency.${value}`, { value }));
 
-export const ERROR_RATES: { value: number; label: string }[] = [
-  { value: 0, label: 'None' },
+export const ERROR_RATES: { readonly value: number; readonly label: string }[] = [
+  withLabel('demo.network.none', { value: 0 }),
   { value: 0.1, label: '10%' },
   { value: 0.3, label: '30%' },
-  { value: 1, label: 'All' },
+  withLabel('demo.network.all', { value: 1 }),
 ];

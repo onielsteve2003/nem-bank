@@ -2,6 +2,8 @@
 // Values here are plotting magnitudes (pixels need floats). Labels never come from them:
 // each chart formats its numbers through `formatValue`, so money text stays exact.
 
+import i18n from '@/lib/i18n';
+
 export type Datum = { label: string; value: number };
 export type Point = { x: number; y: number };
 export type Bar = { x: number; y: number; width: number; height: number };
@@ -107,35 +109,42 @@ function extremes(data: readonly Datum[]) {
   return { lo, hi };
 }
 
-const NO_DATA = 'No data yet.';
+const noData = () => i18n.t('components.chart.noData');
 
 export function lineSummary(title: string, data: readonly Datum[], format: ValueFormatter) {
-  if (data.length === 0) return `${title}. ${NO_DATA}`;
+  if (data.length === 0) return `${title}. ${noData()}`;
   const { lo, hi } = extremes(data);
   const last = data.length - 1;
-  const fmt = (i: number) => `${format(data[i]!.value, i)} on ${data[i]!.label}`;
+  const fmt = (i: number) =>
+    i18n.t('components.chart.valueOn', { value: format(data[i]!.value, i), label: data[i]!.label });
   const trend =
     data[last]!.value > data[0]!.value
       ? 'up'
       : data[last]!.value < data[0]!.value
         ? 'down'
         : 'flat';
-  return (
-    `${title}. ${data.length} points from ${data[0]!.label} to ${data[last]!.label}, ${trend} overall. ` +
-    `Low ${fmt(lo)}, high ${fmt(hi)}, latest ${format(data[last]!.value, last)}.`
-  );
+  return i18n.t('components.chart.line', {
+    title,
+    count: data.length,
+    first: data[0]!.label,
+    last: data[last]!.label,
+    trend: i18n.t(`components.chart.trend.${trend}`),
+    low: fmt(lo),
+    high: fmt(hi),
+    latest: format(data[last]!.value, last),
+  });
 }
 
 export function barSummary(title: string, data: readonly Datum[], format: ValueFormatter) {
-  if (data.length === 0) return `${title}. ${NO_DATA}`;
+  if (data.length === 0) return `${title}. ${noData()}`;
   const { hi } = extremes(data);
   const all = data.map((d, i) => `${d.label} ${format(d.value, i)}`).join(', ');
-  return `${title}. Highest ${data[hi]!.label}. ${all}.`;
+  return i18n.t('components.chart.bar', { title, highest: data[hi]!.label, all });
 }
 
 export function donutSummary(title: string, data: readonly Datum[], format: ValueFormatter) {
   const percents = wholePercents(donutSlices(data).map((s) => s.fraction));
-  if (percents.every((p) => p === 0)) return `${title}. ${NO_DATA}`;
+  if (percents.every((p) => p === 0)) return `${title}. ${noData()}`;
   const parts = data.map((d, i) => `${d.label} ${percents[i]}%, ${format(d.value, i)}`);
   return `${title}. ${parts.join('; ')}.`;
 }

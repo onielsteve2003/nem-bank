@@ -9,6 +9,7 @@ import {
   View,
   type DimensionValue,
 } from 'react-native';
+import { useTranslation } from 'react-i18next';
 import Animated, { SlideInDown } from 'react-native-reanimated';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -33,6 +34,7 @@ export function CoreSheet({
   hideCloseButton = false,
 }: BottomSheetProps) {
   const { colors, radius, spacing, motion } = useTheme();
+  const { t } = useTranslation();
   const insets = useSafeAreaInsets();
   const frameStyle = useModalFrameStyle();
   // The tallest snap point sets a fixed height (a long list); otherwise the sheet fits its content.
@@ -47,7 +49,7 @@ export function CoreSheet({
       >
         <Pressable
           accessibilityRole="button"
-          accessibilityLabel="Close sheet"
+          accessibilityLabel={t('components.sheet.close')}
           style={StyleSheet.absoluteFill}
           onPress={onClose}
         />
@@ -88,7 +90,7 @@ export function CoreSheet({
                 {!hideCloseButton && (
                   <IconButton
                     icon={X}
-                    accessibilityLabel="Close"
+                    accessibilityLabel={t('common.close')}
                     variant="ghost"
                     onPress={onClose}
                   />

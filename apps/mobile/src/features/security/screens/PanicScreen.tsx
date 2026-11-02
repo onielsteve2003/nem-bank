@@ -1,6 +1,7 @@
 import { useRouter } from 'expo-router';
 import { ArrowDownLeft, Ban, CreditCard, MonitorSmartphone, OctagonX } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import {
   StepUpCancelled,
   StepUpNeedsPin,
@@ -37,9 +39,9 @@ import { panicSummary } from '../security';
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'Something went wrong. Try again.';
+    : i18n.t('common.somethingWrong');
 
 /**
  * Panic button (SEC-4). One confirmed tap freezes every card and blocks money
@@ -50,6 +52,7 @@ export function PanicScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const stepUp = useStepUp();
   const q = useRepoQuery('security', 'getPanic');
   const invalidates = [['security'], ['cards']];
@@ -79,24 +82,20 @@ export function PanicScreen() {
       await release.mutateAsync({ stepUpToken });
     } catch (e) {
       if (e instanceof StepUpCancelled) return false;
-      setStepUpError(
-        e instanceof StepUpNeedsPin
-          ? 'Face ID isn’t set up for this here. Enter your PIN.'
-          : message(e),
-      );
+      setStepUpError(e instanceof StepUpNeedsPin ? t('common.faceIdUsePin') : message(e));
       return false;
     }
     setReleasing(false);
-    toast.show({ message: 'Panic mode is off', tone: 'success' });
+    toast.show({ message: t('security.panic.off'), tone: 'success' });
     return true;
   };
 
   let body;
   if (q.isError && !panic) {
-    body = <ErrorState title="We couldn't check panic mode" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('security.panic.failed')} onRetry={() => q.refetch()} />;
   } else if (!panic) {
     body = (
-      <SkeletonGroup accessibilityLabel="Checking panic mode">
+      <SkeletonGroup accessibilityLabel={t('security.panic.loading')}>
         <Skeleton height={200} />
       </SkeletonGroup>
     );
@@ -106,20 +105,26 @@ export function PanicScreen() {
         <Card>
           <View style={{ gap: spacing[3] }} accessibilityRole="alert">
             <View style={[styles.row, { gap: spacing[2] }]}>
-              <Icon icon={OctagonX} color="danger" accessibilityLabel="Panic mode on" />
-              <Text variant="h3">Panic mode is on</Text>
+              <Icon
+                icon={OctagonX}
+                color="danger"
+                accessibilityLabel={t('security.panic.onLabel')}
+              />
+              <Text variant="h3">{t('security.panic.isOn')}</Text>
             </View>
             <Text variant="bodySmall" color="textMuted">
               {panic.activated_at
-                ? `Since ${formatDateTime(panic.activated_at)}. ${panicSummary(panic)}`
+                ? t('security.panic.since', {
+                    when: formatDateTime(panic.activated_at),
+                    summary: panicSummary(panic),
+                  })
                 : panicSummary(panic)}
             </Text>
             <Text variant="bodySmall" color="textMuted">
-              Money can still come in. Turning panic mode off unfreezes the cards it froze and lets
-              money go out again.
+              {t('security.panic.stillIn')}
             </Text>
             <Button
-              label="Turn off panic mode"
+              label={t('security.panic.turnOff')}
               variant="secondary"
               onPress={() => {
                 setStepUpError(undefined);
@@ -129,11 +134,11 @@ export function PanicScreen() {
           </View>
         </Card>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="While you’re safe" />
+          <SectionHeader title={t('security.panic.whileSafe')} />
           <Card padded={false}>
             <ListItem
-              title="Review your devices"
-              subtitle="Remove any you don’t recognise"
+              title={t('security.panic.reviewDevices')}
+              subtitle={t('security.panic.reviewDevicesHelp')}
               leading={MonitorSmartphone}
               onPress={() => router.push('/security/devices')}
             />
@@ -147,40 +152,40 @@ export function PanicScreen() {
         <Card>
           <View style={{ gap: spacing[4] }}>
             <Text variant="bodySmall" color="textMuted">
-              Lost your phone, card or think someone is in your account? One tap stops everything.
+              {t('security.panic.intro')}
             </Text>
             <Button
-              label="Freeze everything"
+              label={t('security.panic.freeze')}
               variant="danger"
               size="lg"
               onPress={() => setAsking(true)}
-              accessibilityHint="Freezes every card and blocks money going out"
+              accessibilityHint={t('security.panic.freezeHint')}
             />
           </View>
         </Card>
         <View style={{ gap: spacing[2] }}>
-          <SectionHeader title="What happens" />
+          <SectionHeader title={t('security.panic.whatHappens')} />
           <Card padded={false}>
             <ListItem
-              title="Every card is frozen"
-              subtitle="No card payments"
+              title={t('security.panic.cards')}
+              subtitle={t('security.panic.cardsHelp')}
               leading={CreditCard}
             />
             <Divider />
             <ListItem
-              title="No money can leave"
-              subtitle="Transfers, bills and conversions stop"
+              title={t('security.panic.noLeave')}
+              subtitle={t('security.panic.noLeaveHelp')}
               leading={Ban}
             />
             <Divider />
             <ListItem
-              title="Money can still come in"
-              subtitle="Salary and transfers to you still arrive"
+              title={t('security.panic.comeIn')}
+              subtitle={t('security.panic.comeInHelp')}
               leading={ArrowDownLeft}
             />
           </Card>
           <Text variant="bodySmall" color="textMuted">
-            Turning it off needs your PIN or Face ID.
+            {t('security.panic.needsPin')}
           </Text>
         </View>
       </>
@@ -189,7 +194,7 @@ export function PanicScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Panic button" />}
+      header={<SendHeader title={t('security.panic.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
@@ -197,9 +202,9 @@ export function PanicScreen() {
       {body}
       <Dialog
         open={asking}
-        title="Freeze everything?"
-        message="Every card is frozen and no money can leave your account until you turn this off with your PIN."
-        confirmLabel="Freeze everything"
+        title={t('security.panic.confirmTitle')}
+        message={t('security.panic.confirmMessage')}
+        confirmLabel={t('security.panic.freeze')}
         destructive
         loading={activate.isPending}
         onConfirm={pressPanic}
@@ -208,7 +213,7 @@ export function PanicScreen() {
       <ConfirmSheet
         open={releasing}
         onClose={() => setReleasing(false)}
-        subtitle="Turn off panic mode"
+        subtitle={t('security.panic.turnOff')}
         error={stepUpError}
         onApproved={(pin) => (pin ? releaseWith({ pin }) : Promise.resolve(false))}
         approveWithBiometrics={(label) => releaseWith({ biometric: label })}

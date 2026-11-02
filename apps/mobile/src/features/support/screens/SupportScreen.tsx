@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
 import { BookOpen, MessageCircle, Plus } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -27,10 +28,15 @@ import { CONVERSATION_STATUS } from '../support';
 export function SupportScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const q = useRepoQuery('support', 'listConversations');
-  const header = <SendHeader title="Help and support" first />;
+  const header = <SendHeader title={t('support.title')} first />;
   const footer = (
-    <Button label="Start a chat" icon={Plus} onPress={() => router.push('/support/new')} />
+    <Button
+      label={t('support.hub.start')}
+      icon={Plus}
+      onPress={() => router.push('/support/new')}
+    />
   );
 
   const row = (c: Schema<'SupportConversation'>) => {
@@ -39,7 +45,15 @@ export function SupportScreen() {
       <Card
         key={c.id}
         onPress={() => router.push({ pathname: '/support/[id]', params: { id: c.id } })}
-        accessibilityLabel={`${c.subject}, ${status.label}${c.unread_count ? `, ${c.unread_count} new` : ''}`}
+        accessibilityLabel={
+          c.unread_count
+            ? t('support.hub.rowLabelNew', {
+                subject: c.subject,
+                status: status.label,
+                count: c.unread_count,
+              })
+            : t('support.hub.rowLabel', { subject: c.subject, status: status.label })
+        }
       >
         <View style={{ gap: spacing[1] }}>
           <View style={{ flexDirection: 'row', justifyContent: 'space-between', gap: spacing[2] }}>
@@ -50,7 +64,7 @@ export function SupportScreen() {
             <Badge label={status.label} tone={status.tone} />
           </View>
           <Text variant="bodySmall" color="textMuted">
-            {`${c.assigned_agent ?? 'Waiting for an agent'} · ${formatDateTime(c.last_message_at)}`}
+            {`${c.assigned_agent ?? t('support.hub.waiting')} · ${formatDateTime(c.last_message_at)}`}
           </Text>
         </View>
       </Card>
@@ -60,9 +74,9 @@ export function SupportScreen() {
   let body;
   if (!q.data) {
     body = q.isError ? (
-      <ErrorState title="We couldn't load your chats" onRetry={() => q.refetch()} />
+      <ErrorState title={t('support.hub.failed')} onRetry={() => q.refetch()} />
     ) : (
-      <SkeletonGroup accessibilityLabel="Loading your chats">
+      <SkeletonGroup accessibilityLabel={t('support.hub.loading')}>
         <Skeleton height={72} />
         <Skeleton height={72} />
       </SkeletonGroup>
@@ -71,14 +85,14 @@ export function SupportScreen() {
     body = (
       <EmptyState
         icon={MessageCircle}
-        title="No chats yet"
-        message="Start a chat and someone from our team will reply here, usually within minutes."
+        title={t('support.hub.emptyTitle')}
+        message={t('support.hub.emptyMessage')}
       />
     );
   } else {
     body = (
       <>
-        <SectionHeader title="Your chats" />
+        <SectionHeader title={t('support.hub.yourChats')} />
         {q.data.data.map(row)}
       </>
     );
@@ -94,8 +108,8 @@ export function SupportScreen() {
     >
       <Card padded={false}>
         <ListItem
-          title="Help center"
-          subtitle="Search answers to common questions"
+          title={t('support.help.title')}
+          subtitle={t('support.hub.helpHint')}
           leading={BookOpen}
           onPress={() => router.push('/support/help')}
         />

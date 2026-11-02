@@ -2,6 +2,7 @@ import { CircleAlert } from 'lucide-react-native';
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { Icon } from './Icon';
@@ -58,7 +59,7 @@ export function FormField({ label, optional, error, help, children, style }: Pro
       {label && (
         <Text variant="label" color="textMuted">
           {label}
-          {optional && ' (optional)'}
+          {optional && i18n.t('components.optional')}
         </Text>
       )}
       {children}

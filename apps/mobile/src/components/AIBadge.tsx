@@ -1,5 +1,6 @@
 import { Sparkles } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { useTheme } from '@/theme';
@@ -28,14 +29,15 @@ export type Props = {
  */
 export function AIBadge({ feature, explanation, fallback, onManage }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const [open, setOpen] = useState(false);
 
   return (
     <>
       <Pressable
         accessibilityRole="button"
-        accessibilityLabel={`AI: ${feature}`}
-        accessibilityHint="Explains how this AI feature works"
+        accessibilityLabel={t('components.aiBadge.label', { feature })}
+        accessibilityHint={t('components.aiBadge.hint')}
         hitSlop={touchSlop(HEIGHT)}
         onPress={() => setOpen(true)}
         style={({ pressed }) => [
@@ -56,14 +58,14 @@ export function AIBadge({ feature, explanation, fallback, onManage }: Props) {
       </Pressable>
 
       <BottomSheet open={open} onClose={() => setOpen(false)} title={feature}>
-        <Section heading="How it works" body={explanation} />
-        <Section heading="Without AI" body={fallback} />
+        <Section heading={t('components.aiBadge.how')} body={explanation} />
+        <Section heading={t('components.aiBadge.without')} body={fallback} />
         <Text variant="bodySmall" color="textMuted">
-          AI can be wrong. It never moves money: you always confirm with your PIN or biometrics.
+          {t('components.aiBadge.note')}
         </Text>
         {onManage && (
           <Button
-            label="Manage in Settings"
+            label={t('components.aiBadge.manage')}
             variant="secondary"
             fullWidth
             onPress={() => {

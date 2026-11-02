@@ -1,6 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money, type Money } from '@nem/shared';
 
+import i18n, { withLabel } from '@/lib/i18n';
 import { fromApiMoney, toApiMoney } from '@/lib/money';
 
 /** Children on Nem are 6 to 17; at 18 they open their own account. */
@@ -19,9 +20,9 @@ export function ageOn(dateOfBirth: string, now: Date): number {
 /** Why a child's date of birth can't be used, or undefined. */
 export function dependantAgeProblem(dateOfBirth: string, now: Date): string | undefined {
   const age = ageOn(dateOfBirth, now);
-  if (age < 0) return 'That date is in the future';
-  if (age < DEPENDANT_MIN_AGE) return `Children need to be at least ${DEPENDANT_MIN_AGE}`;
-  if (age > DEPENDANT_MAX_AGE) return 'At 18 they can open their own Nem account';
+  if (age < 0) return i18n.t('family.age.future');
+  if (age < DEPENDANT_MIN_AGE) return i18n.t('family.age.young', { min: DEPENDANT_MIN_AGE });
+  if (age > DEPENDANT_MAX_AGE) return i18n.t('family.age.old');
   return undefined;
 }
 
@@ -48,9 +49,9 @@ export const nairaText = (m: Schema<'Money'>) =>
 /** A child's controls in one line each, the way a parent reads them. */
 export function controlsSummary(c: Controls): string[] {
   return [
-    `Spends up to ${nairaText(c.daily_spend_limit)} a day`,
-    `Asks you before sending more than ${nairaText(c.approval_threshold)}`,
-    c.can_send_to_banks ? 'Can send to other banks' : 'Can pay Nem users only',
+    i18n.t('family.controls.daily', { amount: nairaText(c.daily_spend_limit) }),
+    i18n.t('family.controls.approval', { amount: nairaText(c.approval_threshold) }),
+    i18n.t(c.can_send_to_banks ? 'family.controls.banks' : 'family.controls.nemOnly'),
   ];
 }
 
@@ -61,15 +62,7 @@ export const formatSetupCode = (code: string) => code.replace(/^(\d{4})(\d{4})$/
 export const ALLOWANCE_PRESETS = [1_000, 2_000, 5_000, 10_000].map(naira);
 
 /** Monday = 1 … Sunday = 7, the way the contract numbers weekdays. */
-export const WEEKDAYS = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-];
+export const weekdays = (): readonly string[] => i18n.t('family.weekdays', { returnObjects: true });
 /** Days of the month an allowance can land on; 28 so every month has it. */
 export const MONTH_DAYS = [1, 7, 14, 21, 28];
 
@@ -82,18 +75,18 @@ const ordinal = (n: number) => {
 export function allowanceSummary(a: Schema<'Allowance'>): string {
   const amount = nairaText(a.amount);
   return a.frequency === 'weekly'
-    ? `${amount} every ${WEEKDAYS[(a.day ?? 5) - 1]}`
-    : `${amount} on the ${ordinal(a.day ?? 1)} of each month`;
+    ? i18n.t('family.allowanceWeekly', { amount, day: weekdays()[(a.day ?? 5) - 1] })
+    : i18n.t('family.allowanceMonthly', { amount, day: ordinal(a.day ?? 1) });
 }
 
 export const APPROVAL_STATUS: Record<
   Schema<'ApprovalStatus'>,
   { label: string; tone: 'warning' | 'success' | 'danger' | 'neutral' }
 > = {
-  pending: { label: 'Waiting for you', tone: 'warning' },
-  approved: { label: 'Approved', tone: 'success' },
-  declined: { label: 'Declined', tone: 'danger' },
-  expired: { label: 'Expired', tone: 'neutral' },
+  pending: withLabel('family.approvalStatus.pending', { tone: 'warning' }),
+  approved: withLabel('family.approvalStatus.approved', { tone: 'success' }),
+  declined: withLabel('family.approvalStatus.declined', { tone: 'danger' }),
+  expired: withLabel('family.approvalStatus.expired', { tone: 'neutral' }),
 };
 
 /** Goal targets a child picks from, in naira. */

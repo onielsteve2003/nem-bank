@@ -3,6 +3,7 @@ import { parseDisplayDate } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { BadgeCheck, FlaskConical, LockKeyhole } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -18,6 +19,7 @@ import {
   TextField,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { formatDateEntry } from '@/features/auth/signupForm';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
 import { useRepoMutation, useRepoQuery } from '@/lib/query';
@@ -28,9 +30,9 @@ import { displayDate, ID_TYPES, identityProblem, UNLOCK_LABELS, type IdType } fr
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'We couldn’t check that number. Try again.';
+    : i18n.t('kyc.tier2.checkFailed');
 
 /**
  * Tier 2 (KYC-2): a BVN or NIN and the date of birth on its record, checked
@@ -39,6 +41,7 @@ const message = (e: unknown) =>
 export function IdentityScreen() {
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const me = useRepoQuery('users', 'getMe');
   const overview = useRepoQuery('kyc', 'getOverview');
   // The tier changes what the whole app allows: limits, wallets, the checkup.
@@ -52,7 +55,7 @@ export function IdentityScreen() {
 
   const id = ID_TYPES[type];
   const isoDob = parseDisplayDate(dob);
-  const dobError = dob.length === 10 && !isoDob ? 'Enter a real date as DD/MM/YYYY' : undefined;
+  const dobError = dob.length === 10 && !isoDob ? t('common.dateInvalid') : undefined;
   const ready = number.length === 11 && Boolean(isoDob);
 
   const submit = () => {
@@ -77,33 +80,36 @@ export function IdentityScreen() {
       <Screen header={<SendHeader title={id.label} />} edges={['top', 'bottom']}>
         <EmptyState
           icon={BadgeCheck}
-          title={`You’re on Tier ${verified.tier}`}
-          message={`Your ${ID_TYPES[verified.type].label} is verified and the name matches your account.${
-            unlocks.length
-              ? ` You now have ${unlocks.map((u) => UNLOCK_LABELS[u].toLowerCase()).join(', ')}.`
-              : ''
-          }`}
+          title={t('kyc.tier2.onTier', { tier: verified.tier })}
+          message={
+            t('kyc.tier2.verified', { label: ID_TYPES[verified.type].label }) +
+            (unlocks.length
+              ? t('kyc.tier2.nowHave', {
+                  unlocks: unlocks.map((u) => UNLOCK_LABELS[u].toLowerCase()).join(', '),
+                })
+              : '')
+          }
         />
-        <Button label="Done" fullWidth onPress={() => router.back()} />
+        <Button label={t('common.done')} fullWidth onPress={() => router.back()} />
       </Screen>
     );
   }
 
   return (
     <Screen
-      header={<SendHeader title="BVN or NIN" />}
+      header={<SendHeader title={t('kyc.tier2.title')} />}
       edges={['top', 'bottom']}
       footer={
         <View style={{ gap: spacing[2] }}>
           <Button
-            label={`Verify ${id.label}`}
+            label={t('kyc.tier2.verify', { label: id.label })}
             fullWidth
             disabled={!ready}
             loading={verify.isPending}
             onPress={submit}
           />
           <Button
-            label="Real verification"
+            label={t('kyc.tier2.real')}
             variant="ghost"
             fullWidth
             onPress={() => setNoticeOpen(true)}
@@ -111,17 +117,15 @@ export function IdentityScreen() {
         </View>
       }
     >
-      <Text color="textMuted">
-        Verify one of these to reach Tier 2. We check it once and never show it again.
-      </Text>
+      <Text color="textMuted">{t('kyc.tier2.intro')}</Text>
       <View style={[styles.row, { gap: spacing[2] }]} accessibilityRole="radiogroup">
-        {(Object.keys(ID_TYPES) as IdType[]).map((t) => (
+        {(Object.keys(ID_TYPES) as IdType[]).map((option) => (
           <Chip
-            key={t}
-            label={ID_TYPES[t].label}
-            selected={t === type}
+            key={option}
+            label={ID_TYPES[option].label}
+            selected={option === type}
             onPress={() => {
-              setType(t);
+              setType(option);
               setError(undefined);
             }}
           />
@@ -132,7 +136,7 @@ export function IdentityScreen() {
         <TextField
           label={id.name}
           help={id.find}
-          placeholder="11 digits"
+          placeholder={t('kyc.tier2.digits')}
           keyboardType="number-pad"
           maxLength={11}
           value={number}
@@ -143,9 +147,9 @@ export function IdentityScreen() {
           autoComplete="off"
         />
         <TextField
-          label="Date of birth"
-          help={`As it is on your ${id.label} record.`}
-          placeholder="DD/MM/YYYY"
+          label={t('common.dateOfBirth')}
+          help={t('kyc.tier2.dobHelp', { label: id.label })}
+          placeholder={t('common.datePlaceholder')}
           keyboardType="number-pad"
           maxLength={10}
           value={dob}
@@ -163,13 +167,12 @@ export function IdentityScreen() {
         <View style={[styles.top, { gap: spacing[3] }]}>
           <Icon icon={FlaskConical} color="info" />
           <View style={[styles.flex, { gap: spacing[1] }]}>
-            <Text variant="bodyStrong">Sandbox numbers only</Text>
+            <Text variant="bodyStrong">{t('kyc.tier2.sandbox')}</Text>
             <Text variant="bodySmall" color="textMuted">
-              {`Any 11 digits work except 00000000000, which is never found.${
-                me.data?.date_of_birth
-                  ? ` Your sandbox record has the date of birth ${displayDate(me.data.date_of_birth)}.`
-                  : ''
-              }`}
+              {t('kyc.tier2.sandboxHelp') +
+                (me.data?.date_of_birth
+                  ? t('kyc.tier2.sandboxDob', { date: displayDate(me.data.date_of_birth) })
+                  : '')}
             </Text>
           </View>
         </View>
@@ -177,7 +180,7 @@ export function IdentityScreen() {
       <View style={[styles.top, { gap: spacing[2] }]}>
         <Icon icon={LockKeyhole} color="textMuted" size="sm" />
         <Text variant="caption" color="textMuted" style={styles.flex}>
-          Your number is encrypted and only used to confirm who you are.
+          {t('kyc.tier2.encrypted')}
         </Text>
       </View>
 

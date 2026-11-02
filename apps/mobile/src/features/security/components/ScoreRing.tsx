@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Svg, { Circle } from 'react-native-svg';
 
@@ -16,6 +17,7 @@ export type Props = { score: number };
 /** The checkup score as a ring, with the number and its band in words (SEC-1). */
 export function ScoreRing({ score }: Props) {
   const { colors, spacing } = useTheme();
+  const { t } = useTranslation();
   const band = scoreBand(score);
   const clamped = Math.max(0, Math.min(100, score));
 
@@ -24,7 +26,7 @@ export function ScoreRing({ score }: Props) {
       style={[styles.center, { gap: spacing[3] }]}
       accessible
       accessibilityRole="progressbar"
-      accessibilityLabel={`Security score ${clamped} out of 100. ${band.label}.`}
+      accessibilityLabel={t('security.score.label', { score: clamped, band: band.label })}
       accessibilityValue={{ min: 0, max: 100, now: clamped }}
     >
       <View style={styles.ring}>
@@ -54,7 +56,7 @@ export function ScoreRing({ score }: Props) {
         <View style={[StyleSheet.absoluteFill, styles.center]}>
           <Text variant="h1">{clamped}</Text>
           <Text variant="caption" color="textMuted">
-            out of 100
+            {t('security.score.outOf')}
           </Text>
         </View>
       </View>

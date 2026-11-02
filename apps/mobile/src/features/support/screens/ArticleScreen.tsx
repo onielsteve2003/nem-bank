@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { MessageCircle } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import {
@@ -23,8 +24,9 @@ export function ArticleScreen() {
   const { slug = '' } = useLocalSearchParams<{ slug: string }>();
   const router = useRouter();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const q = useRepoQuery('support', 'getArticle', { path: { slug } });
-  const header = <SendHeader title="Help" />;
+  const header = <SendHeader title={t('support.article.title')} />;
 
   if (!q.data) {
     return (
@@ -33,13 +35,13 @@ export function ArticleScreen() {
           <ErrorState
             title={
               isApiError(q.error) && q.error.status === 404
-                ? 'This article has moved'
-                : "We couldn't load this article"
+                ? t('support.article.moved')
+                : t('support.article.failed')
             }
             onRetry={() => q.refetch()}
           />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading the article">
+          <SkeletonGroup accessibilityLabel={t('support.article.loading')}>
             <Skeleton height={32} />
             <Skeleton height={120} />
           </SkeletonGroup>
@@ -54,7 +56,7 @@ export function ArticleScreen() {
       header={header}
       footer={
         <Button
-          label="Didn’t help? Chat with us"
+          label={t('support.article.chat')}
           icon={MessageCircle}
           variant="secondary"
           onPress={() => router.push('/support/new')}
@@ -68,7 +70,7 @@ export function ArticleScreen() {
           {a.title}
         </Text>
         <Text variant="caption" color="textMuted">
-          {`Updated ${formatDate(a.updated_at)}`}
+          {t('support.article.updated', { date: formatDate(a.updated_at) })}
         </Text>
       </View>
       <Card>

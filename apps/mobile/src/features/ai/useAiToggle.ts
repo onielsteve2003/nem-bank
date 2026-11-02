@@ -1,4 +1,5 @@
 import { useToast } from '@/components';
+import i18n from '@/lib/i18n';
 import { useRepoMutation } from '@/lib/query';
 import { toApiPreferences, usePreferencesStore, usePrivacyStore, type AiFeature } from '@/stores';
 
@@ -20,7 +21,7 @@ export function useAiToggle() {
       {
         onError: () => {
           setAiFeature(feature, !on);
-          toast.show({ message: "That didn't save. Try again.", tone: 'error' });
+          toast.show({ message: i18n.t('common.saveFailed'), tone: 'error' });
         },
       },
     );

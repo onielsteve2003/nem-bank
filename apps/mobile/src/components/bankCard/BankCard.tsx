@@ -1,6 +1,7 @@
 import { COLORS, DURATION, EASING } from '@nem/shared';
 import { Nfc, Snowflake } from 'lucide-react-native';
 import { useState, type ReactNode } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type TextStyle } from 'react-native';
 import Animated, {
   Easing,
@@ -79,6 +80,7 @@ export function BankCard({
   onFlip,
 }: Props) {
   const { radius } = useTheme();
+  const { t } = useTranslation();
   const reduceMotion = useReducedMotion();
   const [own, setOwn] = useState(false);
   const flipped = controlled ?? own;
@@ -110,7 +112,13 @@ export function BankCard({
   const frontStyle = useAnimatedStyle(() => faceStyle(0));
   const backStyle = useAnimatedStyle(() => faceStyle(1));
 
-  const name = `${kind === 'virtual' ? 'Virtual' : 'Physical'} ${NETWORK_NAME[network]} card ending ${last4}`;
+  const name = t(
+    kind === 'virtual' ? 'components.bankCard.virtualName' : 'components.bankCard.physicalName',
+    {
+      network: NETWORK_NAME[network],
+      last4,
+    },
+  );
   const toggle = () => {
     haptic('tap');
     setOwn(!flipped);
@@ -122,8 +130,17 @@ export function BankCard({
   return (
     <PressableScale
       accessibilityRole="button"
-      accessibilityLabel={`${name}, ${holder}, expires ${expiry}${frozen ? ', frozen' : ''}`}
-      accessibilityHint={flipped ? 'Shows the front of the card' : 'Shows the back of the card'}
+      accessibilityLabel={t(
+        frozen ? 'components.bankCard.labelFrozen' : 'components.bankCard.label',
+        {
+          name,
+          holder,
+          expiry,
+        },
+      )}
+      accessibilityHint={t(
+        flipped ? 'components.bankCard.showFront' : 'components.bankCard.showBack',
+      )}
       accessibilityState={{ expanded: flipped }}
       onPress={toggle}
       style={styles.card}
@@ -139,7 +156,7 @@ export function BankCard({
             nem
           </Text>
           <Text variant="caption" style={ink('textMuted')}>
-            {kind === 'virtual' ? 'VIRTUAL' : 'DEBIT'}
+            {t(kind === 'virtual' ? 'components.bankCard.virtual' : 'components.bankCard.debit')}
           </Text>
         </View>
         <View style={[styles.row, styles.chipRow]}>
@@ -150,8 +167,8 @@ export function BankCard({
           •••• •••• •••• {last4}
         </Text>
         <View style={styles.row}>
-          <Labelled label="Card holder" value={holder.toUpperCase()} />
-          <Labelled label="Expires" value={expiry} />
+          <Labelled label={t('components.bankCard.holder')} value={holder.toUpperCase()} />
+          <Labelled label={t('components.bankCard.expires')} value={expiry} />
           <Text variant="title" style={[ink('text'), styles.network]}>
             {NETWORK_NAME[network]}
           </Text>
@@ -168,14 +185,17 @@ export function BankCard({
         <View style={[styles.strip, { backgroundColor: INK.background }]} />
         <View style={styles.backBody}>
           <Labelled
-            label="Card number"
+            label={t('components.bankCard.number')}
             value={revealed ? groupPan(revealed.number) : `•••• •••• •••• ${last4}`}
           />
           <View style={styles.row}>
-            <Labelled label="Expires" value={expiry} />
-            <Labelled label="CVV" value={revealed ? revealed.cvv : '•••'} />
+            <Labelled label={t('components.bankCard.expires')} value={expiry} />
+            <Labelled
+              label={t('components.bankCard.cvv')}
+              value={revealed ? revealed.cvv : '•••'}
+            />
             <Text variant="caption" style={ink('textMuted')}>
-              {revealed ? 'Hidden again when you leave' : 'Unlock to see details'}
+              {t(revealed ? 'components.bankCard.hiddenAgain' : 'components.bankCard.unlock')}
             </Text>
           </View>
         </View>
@@ -231,11 +251,12 @@ function CardArt({ design }: { design: CardDesign }) {
 }
 
 function FrozenVeil() {
+  const { t } = useTranslation();
   return (
     <View style={[StyleSheet.absoluteFill, styles.veil, { backgroundColor: INK.overlay }]}>
       <Snowflake size={28} color={INK.info} aria-hidden />
       <Text variant="bodyStrong" style={ink('text')}>
-        Frozen
+        {t('components.bankCard.frozen')}
       </Text>
     </View>
   );

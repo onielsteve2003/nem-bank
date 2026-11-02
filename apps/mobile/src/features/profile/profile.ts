@@ -1,6 +1,8 @@
 import type { Schema } from '@nem/contracts';
 import * as ImagePicker from 'expo-image-picker';
 
+import i18n from '@/lib/i18n';
+
 type User = Schema<'User'>;
 
 /** The largest profile photo the bank keeps, as a data URI (1 MB). */
@@ -22,8 +24,8 @@ export function nemtagLockedUntil(user: User, now: Date): Date | null {
 export function nemtagRuleText(user: User, now: Date): string {
   const until = nemtagLockedUntil(user, now);
   return until
-    ? `You can change it again on ${dayFormat.format(until)}`
-    : 'You can change it once every 30 days';
+    ? i18n.t('profile.nemtagLocked', { date: dayFormat.format(until) })
+    : i18n.t('profile.nemtagRule');
 }
 
 export type PhotoSource = 'camera' | 'library';

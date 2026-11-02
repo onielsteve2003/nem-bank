@@ -1,6 +1,7 @@
 import { useQueryClient } from '@tanstack/react-query';
 import { Trash2 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 
 import { Button, Dialog, useToast } from '@/components';
 import { useRepositories } from '@/data';
@@ -12,6 +13,7 @@ export function ResetSection() {
   const repos = useRepositories();
   const client = useQueryClient();
   const toast = useToast();
+  const { t } = useTranslation();
   const [confirming, setConfirming] = useState(false);
   const [resetting, setResetting] = useState(false);
 
@@ -22,30 +24,27 @@ export function ResetSection() {
       // Every cached read describes the old world.
       await client.resetQueries();
       setConfirming(false);
-      toast.show({ message: 'Demo data reset', tone: 'success' });
+      toast.show({ message: t('demo.reset.done'), tone: 'success' });
     } catch {
-      toast.show({ message: 'Could not reset the demo. Try again.', tone: 'error' });
+      toast.show({ message: t('demo.reset.failed'), tone: 'error' });
     } finally {
       setResetting(false);
     }
   };
 
   return (
-    <DemoSection
-      title="Start over"
-      description="Re-creates the demo account with its original history and balances."
-    >
+    <DemoSection title={t('demo.reset.title')} description={t('demo.reset.description')}>
       <Button
-        label="Reset demo data"
+        label={t('demo.reset.button')}
         icon={Trash2}
         variant="danger"
         onPress={() => setConfirming(true)}
       />
       <Dialog
         open={confirming}
-        title="Reset the demo?"
-        message="Everything you did in the demo is wiped: transfers, cards, savings and ajo groups."
-        confirmLabel="Reset"
+        title={t('demo.reset.confirmTitle')}
+        message={t('demo.reset.confirmMessage')}
+        confirmLabel={t('common.reset')}
         destructive
         loading={resetting}
         onConfirm={() => void reset()}

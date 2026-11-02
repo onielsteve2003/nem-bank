@@ -1,4 +1,5 @@
 import { Delete, type LucideIcon } from 'lucide-react-native';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { haptic } from '@/lib/haptics';
@@ -34,6 +35,7 @@ export type Props = {
 /** An on-screen number pad. Money and PIN entry use it instead of the system keyboard. */
 export function NumericKeypad({ onKey, decimal = false, accessory, disabled = false }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
 
   const press = (key: KeypadKey) => {
     haptic('tap');
@@ -48,7 +50,7 @@ export function NumericKeypad({ onKey, decimal = false, accessory, disabled = fa
       <PressableScale
         {...keyProps}
         accessibilityRole="button"
-        accessibilityLabel="Decimal point"
+        accessibilityLabel={t('components.keypad.decimal')}
         onPress={() => press('.')}
       >
         <Text variant="h2">.</Text>
@@ -100,8 +102,8 @@ export function NumericKeypad({ onKey, decimal = false, accessory, disabled = fa
         <PressableScale
           {...keyProps}
           accessibilityRole="button"
-          accessibilityLabel="Delete"
-          accessibilityHint="Hold to clear everything"
+          accessibilityLabel={t('components.keypad.delete')}
+          accessibilityHint={t('components.keypad.deleteHint')}
           onPress={() => press('backspace')}
           onLongPress={() => {
             haptic('warning');

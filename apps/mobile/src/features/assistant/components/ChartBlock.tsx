@@ -1,5 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES, formatMoney } from '@nem/shared';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { BarChart, DonutChart, LineChart, Text } from '@/components';
@@ -13,6 +14,7 @@ type Props = { block: Schema<'AssistantChartBlock'> };
 /** A chart the assistant drew from your data; amounts follow Hide balances. */
 export function ChartBlock({ block }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const hidden = usePrivacyStore((s) => s.balancesHidden);
   const amounts = block.series.map((d) => fromApiMoney(d.amount));
   // Charts take plain numbers; minor units stay exact for any real balance.
@@ -25,7 +27,7 @@ export function ChartBlock({ block }: Props) {
   if (data.length === 0) {
     return (
       <Text variant="bodySmall" color="textMuted">
-        {block.title}: nothing to show yet.
+        {t('assistant.chartEmpty', { title: block.title })}
       </Text>
     );
   }

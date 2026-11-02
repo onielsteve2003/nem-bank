@@ -10,10 +10,10 @@ import { QueryProvider } from '@/lib/query';
 import { ThemeProvider } from '@/theme';
 
 import {
-  SUGGESTIONS,
   actionStatus,
   assistantProblem,
   expiresIn,
+  suggestions,
   revealed,
   useAssistantStore,
   type PreparedAction,
@@ -103,7 +103,7 @@ describe('AssistantScreen', () => {
     const repos = bank();
     const first = await render(wrap(repos));
     expect(await screen.findByText(/What can I help with\?/)).toBeOnTheScreen();
-    for (const s of SUGGESTIONS) expect(screen.getByText(s)).toBeOnTheScreen();
+    for (const s of suggestions()) expect(screen.getByText(s)).toBeOnTheScreen();
 
     await fireEvent.press(screen.getByText("What's my balance?"));
     expect(await screen.findByLabelText(/You have ₦[\d,.]+ available/)).toBeOnTheScreen();

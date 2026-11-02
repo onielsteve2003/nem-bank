@@ -2,6 +2,7 @@ import { NEMTAG_MAX_LENGTH } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import { AtSign, CalendarClock } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -26,17 +27,12 @@ import { useTheme } from '@/theme';
 
 import { nemtagLockedUntil, nemtagRuleText } from '../profile';
 
-const RULES = [
-  'You can change your @nemtag once every 30 days.',
-  'Your old @nemtag stays reserved for you for 30 days, so nobody else can take it. You can switch back to it in that time.',
-  'People who saved your old @nemtag will need the new one to pay you.',
-];
-
 /** Changing your @nemtag (AUTH-10), with the rules that keep payments safe. */
 export function NemtagChangeScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const me = useRepoQuery('users', 'getMe');
   const [input, setInput] = useState('');
   const [confirming, setConfirming] = useState(false);
@@ -45,14 +41,14 @@ export function NemtagChangeScreen() {
   const { tag, available, checking, suggestions, status } = useNemtagCheck(input, user?.nemtag);
   const save = useRepoMutation('users', 'setNemtag', { invalidates: [queryKeys.domain('users')] });
 
-  const header = <SendHeader title="Change @nemtag" />;
+  const header = <SendHeader title={t('profile.change.title')} />;
   if (!user) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {me.isError ? (
-          <ErrorState title="We couldn't load your profile" onRetry={() => me.refetch()} />
+          <ErrorState title={t('common.profileFailed')} onRetry={() => me.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading">
+          <SkeletonGroup accessibilityLabel={t('common.loading')}>
             <Skeleton height={200} />
           </SkeletonGroup>
         )}
@@ -66,9 +62,9 @@ export function NemtagChangeScreen() {
       <Screen header={header} edges={['top', 'bottom']}>
         <EmptyState
           icon={CalendarClock}
-          title={`@${user.nemtag} is yours for now`}
-          message={`${nemtagRuleText(user, now)}. A @nemtag can change once every 30 days.`}
-          actionLabel="Done"
+          title={t('profile.change.yoursForNow', { tag: user.nemtag })}
+          message={t('profile.change.lockedMessage', { rule: nemtagRuleText(user, now) })}
+          actionLabel={t('common.done')}
           onAction={() => router.back()}
         />
       </Screen>
@@ -86,18 +82,18 @@ export function NemtagChangeScreen() {
       { body: { nemtag: tag } },
       {
         onSuccess: () => {
-          toast.show({ message: `You're @${tag} now`, tone: 'success' });
+          toast.show({ message: t('profile.change.done', { tag }), tone: 'success' });
           router.back();
         },
         onError: (e) =>
           setError(
             isApiError(e) && e.problem.code === 'nemtag_taken'
-              ? `Someone just took @${tag}. Try another.`
+              ? t('profile.change.taken', { tag })
               : isApiError(e) && e.problem.code === 'offline'
-                ? "You're offline. Reconnect and try again."
+                ? t('common.offline')
                 : isApiError(e)
                   ? (e.problem.detail ?? e.problem.title)
-                  : "We couldn't change your @nemtag. Try again.",
+                  : t('profile.change.failed'),
           ),
       },
     );
@@ -111,7 +107,7 @@ export function NemtagChangeScreen() {
         </Text>
       )}
       <Button
-        label={available ? `Change to @${tag}` : 'Change @nemtag'}
+        label={available ? t('profile.change.changeTo', { tag }) : t('profile.change.button')}
         fullWidth
         disabled={!available}
         loading={save.isPending}
@@ -125,7 +121,7 @@ export function NemtagChangeScreen() {
       {user.nemtag && (
         <View style={{ gap: spacing[1] }}>
           <Text variant="bodySmall" color="textMuted">
-            Your @nemtag now
+            {t('profile.change.current')}
           </Text>
           <Text variant="h2">{`@${user.nemtag}`}</Text>
         </View>
@@ -133,7 +129,7 @@ export function NemtagChangeScreen() {
 
       <Card variant="outline">
         <View style={{ gap: spacing[2] }}>
-          {RULES.map((rule) => (
+          {t('profile.change.rules', { returnObjects: true }).map((rule) => (
             <Text key={rule} variant="bodySmall" color="textMuted">
               {`• ${rule}`}
             </Text>
@@ -143,7 +139,7 @@ export function NemtagChangeScreen() {
 
       <View style={{ gap: spacing[3] }}>
         <TextField
-          label="New @nemtag"
+          label={t('profile.change.new')}
           leadingIcon={AtSign}
           value={input}
           onChangeText={choose}
@@ -159,7 +155,7 @@ export function NemtagChangeScreen() {
         {suggestions.length > 0 && (
           <View style={{ gap: spacing[2] }}>
             <Text variant="label" color="textMuted">
-              Try one of these
+              {t('profile.change.tryThese')}
             </Text>
             <View style={[styles.chips, { gap: spacing[2] }]}>
               {suggestions.map((idea) => (
@@ -178,13 +174,13 @@ export function NemtagChangeScreen() {
 
       <Dialog
         open={confirming}
-        title={`Change to @${tag}?`}
+        title={t('profile.change.confirmTitle', { tag })}
         message={
           user.nemtag
-            ? `You won’t be able to change it again for 30 days. @${user.nemtag} stays reserved for you until then.`
-            : 'Friends can pay you with it straight away.'
+            ? t('profile.change.confirmReserved', { tag: user.nemtag })
+            : t('profile.change.confirmFirst')
         }
-        confirmLabel="Change"
+        confirmLabel={t('common.change')}
         onConfirm={change}
         onCancel={() => setConfirming(false)}
       />

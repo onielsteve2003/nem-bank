@@ -7,6 +7,7 @@ import {
   Card,
   DemoMoneyBadge,
   PAID_FEATURES,
+  paidFeature,
   PaidFeatureNotice,
   RiskReasonList,
   Text,
@@ -24,7 +25,7 @@ const REASONS: RiskReason[] = [
   { code: 'NIGHT_TIME', label: 'Sent between 1am and 4am', severity: 'low' },
 ];
 
-const FEATURES = Object.keys(PAID_FEATURES) as PaidFeature[];
+const FEATURES: readonly PaidFeature[] = PAID_FEATURES;
 
 export function SpecialSection() {
   const { spacing } = useTheme();
@@ -54,7 +55,7 @@ export function SpecialSection() {
       {FEATURES.map((f) => (
         <Button
           key={f}
-          label={PAID_FEATURES[f].name}
+          label={paidFeature(f).name}
           variant="secondary"
           size="sm"
           onPress={() => {

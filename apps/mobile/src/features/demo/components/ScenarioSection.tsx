@@ -1,5 +1,6 @@
 import { CalendarClock, LogOut, OctagonX } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { formatMoney } from '@nem/shared';
@@ -16,15 +17,8 @@ import { describeTravel, snapshot } from '../timeTravel';
 
 import { ChipRow, DemoSection } from './DemoSection';
 
-const REVIEW_OUTCOMES = [
-  { outcome: 'approve', label: 'Approve', toast: 'The next Tier 3 review will be approved.' },
-  { outcome: 'reject', label: 'Reject', toast: 'The next Tier 3 review will be rejected.' },
-  {
-    outcome: 'resubmit',
-    label: 'Ask for a new selfie',
-    toast: 'The next Tier 3 review will ask for a new selfie.',
-  },
-] as const;
+/** Words in demo.scenarios.review.<outcome>. */
+const REVIEW_OUTCOMES = ['approve', 'reject', 'resubmit'] as const;
 
 const dateFormat = new Intl.DateTimeFormat('en-NG', {
   day: 'numeric',
@@ -35,6 +29,7 @@ const dateFormat = new Intl.DateTimeFormat('en-NG', {
 /** Scenarios that are hard to reach by hand: a failed bank transfer, the future, an ended session. */
 export function ScenarioSection() {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const toast = useToast();
   const [days, setDays] = useState<number>(TIME_TRAVEL_DAYS[1]);
   const [clock, setClock] = useState<{ now: string; offset_days: number } | null>(null);
@@ -50,16 +45,16 @@ export function ScenarioSection() {
     invalidates: [[]],
     onError,
     onSuccess: (_, { body }) =>
-      toast.show({ message: `You're on KYC Tier ${body.tier} now`, tone: 'success' }),
+      toast.show({ message: t('demo.scenarios.tierNow', { tier: body.tier }), tone: 'success' }),
   });
-  const [review, setReview] = useState<(typeof REVIEW_OUTCOMES)[number]['outcome']>('approve');
+  const [review, setReview] = useState<(typeof REVIEW_OUTCOMES)[number]>('approve');
   const setKycReview = useRepoMutation('demo', 'setKycReview', {
     invalidates: [],
     onError,
     onSuccess: (_, { body }) => {
       setReview(body.outcome);
       toast.show({
-        message: REVIEW_OUTCOMES.find((o) => o.outcome === body.outcome)!.toast,
+        message: t(`demo.scenarios.review.${body.outcome}.toast`),
         tone: 'info',
       });
     },
@@ -69,7 +64,7 @@ export function ScenarioSection() {
     onError,
     onSuccess: () =>
       toast.show({
-        message: 'Your next bank transfer will fail at the partner bank and be reversed.',
+        message: t('demo.scenarios.failNextDone'),
         tone: 'info',
       }),
   });
@@ -87,26 +82,26 @@ export function ScenarioSection() {
     setClock(result);
     setOutcome(describeTravel(before, await snapshot(repos)));
     toast.show({
-      message: `It is now ${dateFormat.format(new Date(result.now))}`,
+      message: t('demo.scenarios.now', { date: dateFormat.format(new Date(result.now)) }),
       tone: 'success',
     });
   };
 
   return (
-    <DemoSection title="Scenarios" description="Rehearse what is hard to make happen on purpose.">
+    <DemoSection title={t('demo.scenarios.title')} description={t('demo.scenarios.description')}>
       <Button
-        label="Fail my next bank transfer"
+        label={t('demo.scenarios.failNext')}
         icon={OctagonX}
         variant="secondary"
         loading={failNext.isPending}
         onPress={() => failNext.mutate(undefined)}
       />
       <View style={{ gap: spacing[3] }}>
-        <ChipRow label="Time travel">
+        <ChipRow label={t('demo.scenarios.timeTravel')}>
           {TIME_TRAVEL_DAYS.map((d) => (
             <Chip
               key={d}
-              label={d === 1 ? '1 day' : `${d} days`}
+              label={t('demo.scenarios.days', { count: d })}
               selected={d === days}
               onPress={() => setDays(d)}
             />
@@ -114,20 +109,22 @@ export function ScenarioSection() {
         </ChipRow>
         {projected && projected.amount > 0n && (
           <Text variant="bodySmall" color="textMuted">
-            Your savings goals would earn about {formatMoney(projected)} in interest. Ajo turns,
-            auto-saves and locks that fall due run too.
+            {t('demo.scenarios.wouldEarn', { amount: formatMoney(projected) })}
           </Text>
         )}
         {clock && (
           <View style={{ gap: spacing[1] }} accessibilityLiveRegion="polite">
             <Text variant="bodySmall" color="textMuted">
-              Demo date {dateFormat.format(new Date(clock.now))}, {clock.offset_days} days ahead
+              {t('demo.scenarios.demoDate', {
+                date: dateFormat.format(new Date(clock.now)),
+                count: clock.offset_days,
+              })}
             </Text>
             {outcome && <Text variant="bodySmall">{outcome}</Text>}
           </View>
         )}
         <Button
-          label={`Jump ${days === 1 ? '1 day' : `${days} days`} ahead`}
+          label={t('demo.scenarios.jump', { count: days })}
           icon={CalendarClock}
           variant="secondary"
           loading={travel.isPending}
@@ -135,11 +132,11 @@ export function ScenarioSection() {
         />
       </View>
       <View style={{ gap: spacing[2] }}>
-        <ChipRow label="KYC tier">
+        <ChipRow label={t('demo.scenarios.tier')}>
           {([1, 2, 3] as const).map((tier) => (
             <Chip
               key={tier}
-              label={`Tier ${tier}`}
+              label={t('demo.scenarios.tierN', { tier })}
               selected={me.data?.kyc_tier === tier}
               disabled={setTier.isPending}
               onPress={() => setTier.mutate({ body: { tier } })}
@@ -147,15 +144,15 @@ export function ScenarioSection() {
           ))}
         </ChipRow>
         <Text variant="bodySmall" color="textMuted">
-          Drop to a lower tier to walk the verification flows again.
+          {t('demo.scenarios.tierHelp')}
         </Text>
       </View>
       <View style={{ gap: spacing[2] }}>
-        <ChipRow label="Next Tier 3 review">
-          {REVIEW_OUTCOMES.map(({ outcome, label }) => (
+        <ChipRow label={t('demo.scenarios.nextReview')}>
+          {REVIEW_OUTCOMES.map((outcome) => (
             <Chip
               key={outcome}
-              label={label}
+              label={t(`demo.scenarios.review.${outcome}.label`)}
               selected={review === outcome}
               disabled={setKycReview.isPending}
               onPress={() => setKycReview.mutate({ body: { outcome } })}
@@ -163,14 +160,14 @@ export function ScenarioSection() {
           ))}
         </ChipRow>
         <Text variant="bodySmall" color="textMuted">
-          The sandbox reviewer decides about 10 seconds after you send your documents.
+          {t('demo.scenarios.reviewHelp')}
         </Text>
       </View>
       <Button
-        label="End my session"
+        label={t('demo.scenarios.endSession')}
         icon={LogOut}
         variant="ghost"
-        accessibilityHint="Signs you out as if the session had expired"
+        accessibilityHint={t('demo.scenarios.endSessionHint')}
         onPress={() => useSessionStore.getState().expire()}
       />
     </DemoSection>

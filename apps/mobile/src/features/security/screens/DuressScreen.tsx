@@ -1,5 +1,6 @@
 import { Ban, EyeOff, KeyRound, Siren, UserX, Wallet } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { weakPinMessage } from '@/features/auth/screens/CreatePinScreen';
 import {
   StepUpCancelled,
@@ -35,9 +37,9 @@ import { useTheme } from '@/theme';
 const message = (e: unknown) =>
   isApiError(e)
     ? e.problem.code === 'offline'
-      ? "You're offline. Reconnect and try again."
+      ? i18n.t('common.offline')
       : (e.problem.detail ?? e.problem.title)
-    : 'Something went wrong. Try again.';
+    : i18n.t('common.somethingWrong');
 
 /** The bank refused the PIN itself (weak, or the same as the real PIN): choose again. */
 const isPinRefused = (e: unknown) =>
@@ -57,6 +59,7 @@ function DuressPinEntry({
   onChosen: (pin: string) => void;
   onCancel: () => void;
 }) {
+  const { t } = useTranslation();
   const [first, setFirst] = useState<string | null>(null);
   useSecureScreen();
 
@@ -71,7 +74,7 @@ function DuressPinEntry({
   const confirm = async (pin: string) => {
     if (pin !== first) {
       setFirst(null);
-      onError("The PINs didn't match. Choose your duress PIN again.");
+      onError(t('security.duress.mismatch'));
       return false;
     }
     onError(undefined);
@@ -84,21 +87,21 @@ function DuressPinEntry({
       {first === null ? (
         <PinPad
           key="choose"
-          title="Choose a duress PIN"
-          subtitle="4 digits, different from your real PIN"
+          title={t('security.duress.choose')}
+          subtitle={t('security.duress.chooseHelp')}
           error={error}
           onComplete={choose}
         />
       ) : (
         <PinPad
           key="confirm"
-          title="Enter it again"
-          subtitle="The same 4 digits"
+          title={t('security.duress.again')}
+          subtitle={t('security.duress.againHelp')}
           error={error}
           onComplete={confirm}
         />
       )}
-      <Button label="Cancel" variant="ghost" onPress={onCancel} />
+      <Button label={t('common.cancel')} variant="ghost" onPress={onCancel} />
     </View>
   );
 }
@@ -112,6 +115,7 @@ function DuressPinEntry({
 export function DuressScreen() {
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const stepUp = useStepUp();
   const q = useRepoQuery('security', 'getCheckup');
   const invalidates = [['security']];
@@ -140,14 +144,10 @@ export function DuressScreen() {
         setEntering(true);
         return true;
       }
-      setStepUpError(
-        e instanceof StepUpNeedsPin
-          ? 'Face ID isn’t set up for this here. Enter your PIN.'
-          : message(e),
-      );
+      setStepUpError(e instanceof StepUpNeedsPin ? t('common.faceIdUsePin') : message(e));
       return false;
     }
-    const done = pending.action === 'set' ? 'Your duress PIN is set' : 'Your duress PIN is removed';
+    const done = t(pending.action === 'set' ? 'security.duress.set' : 'security.duress.removed');
     setPending(null);
     toast.show({ message: done, tone: 'success' });
     return true;
@@ -157,7 +157,9 @@ export function DuressScreen() {
     <ConfirmSheet
       open={pending !== null}
       onClose={() => setPending(null)}
-      subtitle={pending?.action === 'remove' ? 'Remove your duress PIN' : 'Save your duress PIN'}
+      subtitle={t(
+        pending?.action === 'remove' ? 'security.duress.removeStep' : 'security.duress.saveStep',
+      )}
       error={stepUpError}
       onApproved={(pin) => (pin ? approve({ pin }) : Promise.resolve(false))}
       approveWithBiometrics={(label) => approve({ biometric: label })}
@@ -166,7 +168,11 @@ export function DuressScreen() {
 
   if (entering) {
     return (
-      <Screen header={<SendHeader title="Duress PIN" />} scroll={false} edges={['top', 'bottom']}>
+      <Screen
+        header={<SendHeader title={t('security.duress.title')} />}
+        scroll={false}
+        edges={['top', 'bottom']}
+      >
         <DuressPinEntry
           error={entryError}
           onError={setEntryError}
@@ -192,10 +198,10 @@ export function DuressScreen() {
 
   let status;
   if (q.isError && !q.data) {
-    status = <ErrorState title="We couldn't check your duress PIN" onRetry={() => q.refetch()} />;
+    status = <ErrorState title={t('security.duress.failed')} onRetry={() => q.refetch()} />;
   } else if (isSet === undefined) {
     status = (
-      <SkeletonGroup accessibilityLabel="Checking your duress PIN">
+      <SkeletonGroup accessibilityLabel={t('security.duress.loading')}>
         <Skeleton height={140} />
       </SkeletonGroup>
     );
@@ -204,18 +210,18 @@ export function DuressScreen() {
       <Card>
         <View style={{ gap: spacing[3] }}>
           <View style={[styles.row, { gap: spacing[2] }]}>
-            <Icon icon={KeyRound} color="success" accessibilityLabel="On" />
-            <Text variant="h3">Your duress PIN is on</Text>
+            <Icon icon={KeyRound} color="success" accessibilityLabel={t('security.duress.on')} />
+            <Text variant="h3">{t('security.duress.isOn')}</Text>
           </View>
           <Text variant="bodySmall" color="textMuted">
-            Only you know it. Don’t write it down next to your real PIN.
+            {t('security.duress.secret')}
           </Text>
           <View style={[styles.row, { gap: spacing[2] }]}>
             <View style={styles.flex}>
-              <Button label="Change" variant="secondary" onPress={startEntry} />
+              <Button label={t('common.change')} variant="secondary" onPress={startEntry} />
             </View>
             <View style={styles.flex}>
-              <Button label="Remove" variant="ghost" onPress={() => setAsking(true)} />
+              <Button label={t('common.remove')} variant="ghost" onPress={() => setAsking(true)} />
             </View>
           </View>
         </View>
@@ -226,10 +232,9 @@ export function DuressScreen() {
       <Card>
         <View style={{ gap: spacing[4] }}>
           <Text variant="bodySmall" color="textMuted">
-            If someone ever forces you to open Nem Bank or approve a payment, enter this PIN instead
-            of your real one.
+            {t('security.duress.intro')}
           </Text>
-          <Button label="Set a duress PIN" size="lg" onPress={startEntry} />
+          <Button label={t('security.duress.setButton')} size="lg" onPress={startEntry} />
         </View>
       </Card>
     );
@@ -237,51 +242,51 @@ export function DuressScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Duress PIN" />}
+      header={<SendHeader title={t('security.duress.title')} />}
       edges={['top', 'bottom']}
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
     >
       {status}
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="What happens when it’s used" />
+        <SectionHeader title={t('security.duress.whatHappens')} />
         <Card padded={false}>
           <ListItem
-            title="The app opens as normal"
-            subtitle="Nothing on screen gives it away"
+            title={t('security.duress.opens')}
+            subtitle={t('security.duress.opensHelp')}
             leading={EyeOff}
           />
           <Divider />
           <ListItem
-            title="They see a small balance"
-            subtitle="Your real balances and bigger payments stay hidden"
+            title={t('security.duress.small')}
+            subtitle={t('security.duress.smallHelp')}
             leading={Wallet}
           />
           <Divider />
           <ListItem
-            title="Payments look sent, but no money moves"
-            subtitle="They show as on their way"
+            title={t('security.duress.fake')}
+            subtitle={t('security.duress.fakeHelp')}
             leading={Ban}
           />
           <Divider />
           <ListItem
-            title="We’re alerted quietly"
-            subtitle="Our security team sees it straight away"
+            title={t('security.duress.alerted')}
+            subtitle={t('security.duress.alertedHelp')}
             leading={Siren}
           />
           <Divider />
           <ListItem
-            title="Your real PIN ends it"
-            subtitle="Unlock with it later and everything is back; those payments show as stopped"
+            title={t('security.duress.ends')}
+            subtitle={t('security.duress.endsHelp')}
             leading={UserX}
           />
         </Card>
       </View>
       <Dialog
         open={asking}
-        title="Remove your duress PIN?"
-        message="You can set a new one at any time. You'll confirm with your PIN or Face ID."
-        confirmLabel="Remove"
+        title={t('security.duress.removeTitle')}
+        message={t('security.duress.removeMessage')}
+        confirmLabel={t('common.remove')}
         destructive
         onConfirm={() => {
           setAsking(false);

@@ -9,6 +9,7 @@ import Animated, {
   withTiming,
 } from 'react-native-reanimated';
 
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 const PULSE_MS = 900;
@@ -63,7 +64,10 @@ export type GroupProps = {
   accessibilityLabel?: string;
 };
 
-export function SkeletonGroup({ children, accessibilityLabel = 'Loading' }: GroupProps) {
+export function SkeletonGroup({
+  children,
+  accessibilityLabel = i18n.t('components.loading'),
+}: GroupProps) {
   const { spacing } = useTheme();
   return (
     <View

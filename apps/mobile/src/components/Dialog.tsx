@@ -1,6 +1,7 @@
 import { Modal, Pressable, StyleSheet, View } from 'react-native';
 import Animated, { FadeIn, ZoomIn } from 'react-native-reanimated';
 
+import i18n from '@/lib/i18n';
 import { useTheme } from '@/theme';
 
 import { Button } from './Button';
@@ -30,7 +31,7 @@ export function Dialog({
   confirmLabel,
   onConfirm,
   onCancel,
-  cancelLabel = 'Cancel',
+  cancelLabel,
   destructive = false,
   loading = false,
 }: Props) {
@@ -85,7 +86,7 @@ export function Dialog({
               onPress={onConfirm}
             />
             <Button
-              label={cancelLabel}
+              label={cancelLabel ?? i18n.t('common.cancel')}
               variant="ghost"
               disabled={loading}
               fullWidth

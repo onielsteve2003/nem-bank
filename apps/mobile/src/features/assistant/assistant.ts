@@ -4,6 +4,7 @@ import { create } from 'zustand';
 import { createJSONStorage, persist } from 'zustand/middleware';
 
 import { isApiError } from '@/data';
+import i18n, { localized } from '@/lib/i18n';
 
 // Nem Assistant (AI-6). The bank keeps the chat; this phone only remembers
 // which conversation is open, so history is there when the assistant reopens.
@@ -14,13 +15,8 @@ export type AssistantBlock = Schema<'AssistantBlock'>;
 export const PROMPT_MAX = 1000;
 
 /** Starters shown before the first question; each is one the scripted bank understands. */
-export const SUGGESTIONS = [
-  "What's my balance?",
-  'How much did I spend this month?',
-  'Show my recent transactions',
-  'Send ₦5,000 to @amaka_o',
-  'Freeze my card',
-];
+export const suggestions = (): readonly string[] =>
+  i18n.t('assistant.suggestions', { returnObjects: true });
 
 export interface AssistantState {
   conversationId: string | null;
@@ -59,14 +55,14 @@ export function assistantProblem(e: unknown): AssistantProblem {
   return 'other';
 }
 
-export const PROBLEM_MESSAGE: Record<AssistantProblem, string> = {
-  off: 'The assistant is off.',
-  unavailable: "The assistant isn't available right now. These shortcuts still work.",
-  busy: "You've asked a lot just now. Try again in a minute.",
-  offline: "You're offline. Reconnect and try again.",
-  gone: 'That chat has ended. Start a new one.',
-  other: "That didn't go through. Try again.",
-};
+export const PROBLEM_MESSAGE = localized<AssistantProblem>({
+  off: 'assistant.problems.off',
+  unavailable: 'assistant.problems.unavailable',
+  busy: 'assistant.problems.busy',
+  offline: 'assistant.problems.offline',
+  gone: 'assistant.problems.gone',
+  other: 'assistant.problems.other',
+});
 
 /** The words of a reply, for streaming and for screen readers. */
 export const replyText = (m: AssistantMessage) =>
@@ -97,16 +93,18 @@ export const actionStatus = (a: PreparedAction, now: Date = new Date()): ActionS
 /** "Expires in 4 min" while it can still be confirmed. */
 export function expiresIn(a: PreparedAction, now: Date = new Date()): string {
   const minutes = Math.ceil((new Date(a.expires_at).getTime() - now.getTime()) / 60_000);
-  return minutes <= 1 ? 'Expires in under a minute' : `Expires in ${minutes} min`;
+  return minutes <= 1
+    ? i18n.t('assistant.expiresSoon')
+    : i18n.t('assistant.expiresIn', { count: minutes });
 }
 
 /** What the card says once the action is no longer waiting. */
-export const STATUS_LINE: Record<Exclude<ActionStatus, 'prepared'>, string> = {
-  confirmed: 'Done',
-  discarded: 'Cancelled. Nothing was sent.',
-  expired: 'This expired, so nothing was sent. Ask again to start over.',
-  failed: "This didn't go through. Nothing was sent.",
-};
+export const STATUS_LINE = localized<Exclude<ActionStatus, 'prepared'>>({
+  confirmed: 'assistant.statusLine.confirmed',
+  discarded: 'assistant.statusLine.discarded',
+  expired: 'assistant.statusLine.expired',
+  failed: 'assistant.statusLine.failed',
+});
 
 /** Where to see what a confirmed action made. */
 export function resultRoute(result: NonNullable<PreparedAction['result']>) {

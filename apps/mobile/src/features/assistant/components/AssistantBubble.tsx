@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import { Text } from '@/components';
@@ -31,6 +32,7 @@ type Props = {
 /** One message in the assistant chat. */
 export function AssistantBubble({ message, stream = false }: Props) {
   const { colors, radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const mine = message.role === 'user';
   const fg = mine ? { color: colors.onPrimary } : undefined;
 
@@ -50,7 +52,7 @@ export function AssistantBubble({ message, stream = false }: Props) {
       >
         {!mine && (
           <Text variant="caption" color="textMuted">
-            Nem Assistant
+            {t('assistant.name')}
           </Text>
         )}
         {message.blocks.map((b, i) => {

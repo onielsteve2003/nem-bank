@@ -3,10 +3,11 @@ import { useEffect } from 'react';
 import { AppState } from 'react-native';
 
 import { useToast } from '@/components';
+import i18n from '@/lib/i18n';
 import { canRefresh, useSessionStore } from '@/stores';
 
 const announceExpiry = (toast: ReturnType<typeof useToast>) =>
-  toast.show({ message: 'Your session ended. Sign in again to continue.', tone: 'info' });
+  toast.show({ message: i18n.t('shell.sessionEnded'), tone: 'info' });
 
 /** setTimeout stores its delay in 32 bits; longer waits are re-armed when they fire. */
 const MAX_TIMER_MS = 2 ** 31 - 1;

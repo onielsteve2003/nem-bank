@@ -1,5 +1,6 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Image, StyleSheet, View } from 'react-native';
 
 import {
@@ -19,6 +20,7 @@ import {
   useToast,
 } from '@/components';
 import { isApiError } from '@/data';
+import i18n from '@/lib/i18n';
 import { transactionTitle } from '@/features/transactions/TransactionRow';
 import { formatDateTime } from '@/features/transactions/format';
 import { SendHeader } from '@/features/transfers/components/SendHeader';
@@ -33,7 +35,7 @@ import { DISPUTE_STATUS, isOpen, nextStep, reasonLabel } from '../disputes';
 const OPEN_REFRESH_MS = 10_000;
 
 const message = (e: unknown) =>
-  isApiError(e) ? (e.problem.detail ?? e.problem.title) : 'Something went wrong. Try again.';
+  isApiError(e) ? (e.problem.detail ?? e.problem.title) : i18n.t('common.somethingWrong');
 
 /**
  * One dispute (DSP-2): its case number, where it is on the timeline, the
@@ -45,6 +47,7 @@ export function DisputeScreen() {
   const router = useRouter();
   const toast = useToast();
   const { radius, spacing } = useTheme();
+  const { t } = useTranslation();
   const path = { dispute_id: id };
   const q = useRepoQuery(
     'disputes',
@@ -63,7 +66,7 @@ export function DisputeScreen() {
   const addEvidence = useRepoMutation('disputes', 'addEvidence', { invalidates });
   const withdraw = useRepoMutation('disputes', 'withdraw', {
     invalidates,
-    onSuccess: () => toast.show({ message: 'Dispute withdrawn' }),
+    onSuccess: () => toast.show({ message: t('disputes.one.withdrawn') }),
     onError: (e) => toast.show({ message: message(e), tone: 'error' }),
   });
   const [photos, setPhotos] = useState<string[]>([]);
@@ -71,14 +74,14 @@ export function DisputeScreen() {
   const [uploadError, setUploadError] = useState<string>();
   const [confirming, setConfirming] = useState(false);
 
-  const header = <SendHeader title={q.data?.case_number ?? 'Dispute'} />;
+  const header = <SendHeader title={q.data?.case_number ?? t('disputes.one.title')} />;
   if (!q.data) {
     return (
       <Screen header={header} edges={['top', 'bottom']}>
         {q.isError ? (
-          <ErrorState title="We couldn't load this dispute" onRetry={() => q.refetch()} />
+          <ErrorState title={t('disputes.one.failed')} onRetry={() => q.refetch()} />
         ) : (
-          <SkeletonGroup accessibilityLabel="Loading your dispute">
+          <SkeletonGroup accessibilityLabel={t('disputes.one.loading')}>
             <Skeleton height={100} />
             <Skeleton height={200} />
           </SkeletonGroup>
@@ -100,7 +103,7 @@ export function DisputeScreen() {
       try {
         await addEvidence.mutateAsync({
           path,
-          body: { file, caption: `Photo ${d.evidence.length + i + 1}` },
+          body: { file, caption: t('common.photoN', { n: d.evidence.length + i + 1 }) },
         });
       } catch (e) {
         failed.push(file);
@@ -109,7 +112,7 @@ export function DisputeScreen() {
     }
     setPhotos(failed);
     setUploading(false);
-    if (!failed.length) toast.show({ message: 'Evidence added', tone: 'success' });
+    if (!failed.length) toast.show({ message: t('disputes.one.evidenceAdded'), tone: 'success' });
   };
 
   return (
@@ -128,12 +131,15 @@ export function DisputeScreen() {
             <Badge label={status.label} tone={status.tone} />
           </View>
           <Text variant="bodySmall" color="textMuted">
-            {`${reasonLabel(d.reason)} · reported ${formatDateTime(d.created_at)}`}
+            {t('disputes.one.reported', {
+              reason: reasonLabel(d.reason),
+              when: formatDateTime(d.created_at),
+            })}
           </Text>
           {d.refund && (
             <View style={[styles.between, { gap: spacing[2] }]}>
               <Text variant="bodyStrong" color="success">
-                Refunded to your account
+                {t('disputes.one.refunded')}
               </Text>
               <MoneyText value={fromApiMoney(d.refund)} variant="bodyStrong" />
             </View>
@@ -142,17 +148,17 @@ export function DisputeScreen() {
         </View>
       </Card>
 
-      <SectionHeader title="Progress" />
+      <SectionHeader title={t('disputes.one.progress')} />
       <Card>
         <StatusTimeline steps={d.timeline} formatAt={formatDateTime} next={next} />
       </Card>
 
-      <SectionHeader title="The payment" />
+      <SectionHeader title={t('disputes.one.payment')} />
       <Card
         onPress={() =>
           router.push({ pathname: '/transactions/[id]', params: { id: d.transaction_id } })
         }
-        accessibilityLabel="Open the payment"
+        accessibilityLabel={t('disputes.one.openPayment')}
       >
         {txn.data ? (
           <View style={[styles.between, { gap: spacing[3] }]}>
@@ -169,7 +175,7 @@ export function DisputeScreen() {
         )}
       </Card>
 
-      <SectionHeader title="What you told us" />
+      <SectionHeader title={t('disputes.one.told')} />
       <Card>
         <View style={{ gap: spacing[3] }}>
           <Text variant="body">{d.description}</Text>
@@ -197,7 +203,7 @@ export function DisputeScreen() {
 
       {open && (
         <>
-          <SectionHeader title="Add evidence" />
+          <SectionHeader title={t('disputes.one.addEvidence')} />
           <EvidencePicker
             photos={photos}
             onChange={setPhotos}
@@ -211,13 +217,13 @@ export function DisputeScreen() {
           )}
           {photos.length > 0 && (
             <Button
-              label={`Add ${photos.length} photo${photos.length > 1 ? 's' : ''}`}
+              label={t('disputes.one.addPhotos', { count: photos.length })}
               loading={uploading}
               onPress={() => void upload()}
             />
           )}
           <Button
-            label="Withdraw dispute"
+            label={t('disputes.one.withdraw')}
             variant="ghost"
             loading={withdraw.isPending}
             onPress={() => setConfirming(true)}
@@ -227,9 +233,9 @@ export function DisputeScreen() {
 
       <Dialog
         open={confirming}
-        title="Withdraw this dispute?"
-        message="We’ll stop looking into it. You can report the payment again later if you need to."
-        confirmLabel="Withdraw"
+        title={t('disputes.one.withdrawTitle')}
+        message={t('disputes.one.withdrawMessage')}
+        confirmLabel={t('disputes.one.withdrawConfirm')}
         onConfirm={() => {
           setConfirming(false);
           withdraw.mutate({ path });

@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { ArrowDownLeft, Plus } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 
 import { Button, Chip, ListItem, MoneyText, useToast } from '@/components';
@@ -19,6 +20,7 @@ export type Props = { accounts: Schema<'Account'>[] };
 /** Fund a wallet, or receive a transfer into it (DEMO-1). Both post through the mock ledger. */
 export function MoneySection({ accounts }: Props) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const toast = useToast();
   const [accountId, setAccountId] = useState(accounts[0]?.id);
   const [amountIndex, setAmountIndex] = useState(1);
@@ -39,27 +41,24 @@ export function MoneySection({ accounts }: Props) {
   });
 
   return (
-    <DemoSection
-      title="Money in"
-      description="Add demo money, or have someone send you a transfer. Both post through the ledger, like the real thing."
-    >
+    <DemoSection title={t('demo.money.title')} description={t('demo.money.description')}>
       <View>
         {accounts.map((a) => (
           <ListItem
             key={a.id}
-            title={`${a.currency} wallet`}
+            title={t('common.walletName', { name: a.currency })}
             trailing={
               <MoneyText
                 value={fromApiMoney(a.available_balance)}
                 variant="label"
-                label={`${a.currency} wallet balance`}
+                label={t('demo.money.walletBalance', { currency: a.currency })}
               />
             }
           />
         ))}
       </View>
       {accounts.length > 1 && (
-        <ChipRow label="Wallet">
+        <ChipRow label={t('demo.money.wallet')}>
           {accounts.map((a) => (
             <Chip
               key={a.id}
@@ -70,7 +69,7 @@ export function MoneySection({ accounts }: Props) {
           ))}
         </ChipRow>
       )}
-      <ChipRow label="Amount">
+      <ChipRow label={t('demo.money.amount')}>
         {amounts.map((m, i) => (
           <Chip
             key={m.amount.toString()}
@@ -82,19 +81,24 @@ export function MoneySection({ accounts }: Props) {
       </ChipRow>
       <View style={{ gap: spacing[2] }}>
         <Button
-          label="Add demo money"
+          label={t('demo.money.add')}
           icon={Plus}
           loading={fund.isPending}
           disabled={busy}
           onPress={() =>
             fund.mutate(
               { body },
-              done(`${formatMoney(amount)} added to your ${account.currency} wallet`),
+              done(
+                t('demo.money.added', {
+                  amount: formatMoney(amount),
+                  currency: account.currency,
+                }),
+              ),
             )
           }
         />
         <Button
-          label={`Receive from ${sender.name}`}
+          label={t('demo.money.receive', { name: sender.name })}
           icon={ArrowDownLeft}
           variant="secondary"
           loading={inbound.isPending}
@@ -109,7 +113,7 @@ export function MoneySection({ accounts }: Props) {
                   narration: sender.narration,
                 },
               },
-              done(`${sender.name} sent you ${formatMoney(amount)}`),
+              done(t('demo.money.received', { name: sender.name, amount: formatMoney(amount) })),
             )
           }
         />

@@ -12,6 +12,7 @@ import {
   type LucideIcon,
 } from 'lucide-react-native';
 import { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -38,53 +39,28 @@ import { SecurityQuestionSheet } from '../components/SecurityQuestionSheet';
 import { checkupAction, panicSummary, splitCheckup } from '../security';
 
 /** The security tools, each with its own screen. */
-const TOOLS: { title: string; subtitle: string; icon: LucideIcon; href: Href }[] = [
-  {
-    title: 'Panic button',
-    subtitle: 'Freeze every card and stop money going out',
-    icon: OctagonX,
-    href: '/security/panic',
-  },
-  {
-    title: 'Devices and sessions',
-    subtitle: 'See where you’re signed in',
-    icon: MonitorSmartphone,
-    href: '/security/devices',
-  },
-  {
-    title: 'Your limits',
-    subtitle: 'Set a daily limit below your KYC cap',
-    icon: Gauge,
-    href: '/security/limits',
-  },
-  {
-    title: 'Duress PIN',
-    subtitle: 'A PIN that opens a decoy if you’re forced',
-    icon: UserX,
-    href: '/security/duress',
-  },
-  {
-    title: 'Scam checker',
-    subtitle: 'Paste a message, link or account number',
-    icon: ScanSearch,
-    href: '/security/scam',
-  },
-  {
-    title: 'Login and payment alerts',
-    subtitle: 'Choose what we tell you about',
-    icon: Bell,
-    href: '/security/alerts',
-  },
+const TOOLS: {
+  key: 'panic' | 'devices' | 'limits' | 'duress' | 'scam' | 'alerts';
+  icon: LucideIcon;
+  href: Href;
+}[] = [
+  { key: 'panic', icon: OctagonX, href: '/security/panic' },
+  { key: 'devices', icon: MonitorSmartphone, href: '/security/devices' },
+  { key: 'limits', icon: Gauge, href: '/security/limits' },
+  { key: 'duress', icon: UserX, href: '/security/duress' },
+  { key: 'scam', icon: ScanSearch, href: '/security/scam' },
+  { key: 'alerts', icon: Bell, href: '/security/alerts' },
 ];
 
 function CheckupRow({ item, onFix }: { item: Schema<'CheckupItem'>; onFix?: () => void }) {
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   return (
     <View style={[styles.row, { gap: spacing[3], padding: spacing[4] }]}>
       <Icon
         icon={item.done ? CircleCheck : Circle}
         color={item.done ? 'success' : 'textMuted'}
-        accessibilityLabel={item.done ? 'Done' : 'To do'}
+        accessibilityLabel={t(item.done ? 'security.center.done' : 'security.center.toDo')}
       />
       <View style={[styles.flex, { gap: spacing[1] }]}>
         <Text variant="bodyStrong">{item.title}</Text>
@@ -94,7 +70,7 @@ function CheckupRow({ item, onFix }: { item: Schema<'CheckupItem'>; onFix?: () =
         {!item.done && onFix && (
           <View style={styles.start}>
             <Button
-              label="Fix this"
+              label={t('security.center.fix')}
               size="sm"
               variant="secondary"
               onPress={onFix}
@@ -104,7 +80,7 @@ function CheckupRow({ item, onFix }: { item: Schema<'CheckupItem'>; onFix?: () =
         )}
         {!item.done && !onFix && (
           <Text variant="caption" color="textMuted">
-            You can fix this soon
+            {t('security.center.fixSoon')}
           </Text>
         )}
       </View>
@@ -121,6 +97,7 @@ export function SecurityScreen() {
   const router = useRouter();
   const toast = useToast();
   const { spacing } = useTheme();
+  const { t } = useTranslation();
   const q = useRepoQuery('security', 'getCheckup');
   const panic = useRepoQuery('security', 'getPanic');
   const [asking, setAsking] = useState(false);
@@ -128,10 +105,10 @@ export function SecurityScreen() {
 
   let body;
   if (q.isError && !checkup) {
-    body = <ErrorState title="We couldn't run your checkup" onRetry={() => q.refetch()} />;
+    body = <ErrorState title={t('security.center.failed')} onRetry={() => q.refetch()} />;
   } else if (!checkup) {
     body = (
-      <SkeletonGroup accessibilityLabel="Running your security checkup">
+      <SkeletonGroup accessibilityLabel={t('security.center.loading')}>
         <Skeleton height={190} />
         <Skeleton height={260} />
       </SkeletonGroup>
@@ -150,14 +127,17 @@ export function SecurityScreen() {
             <ScoreRing score={checkup.score} />
             <Text variant="bodySmall" color="textMuted" align="center">
               {todo.length === 0
-                ? 'Everything on the checkup is done. Nice.'
-                : `${todo.length} ${todo.length === 1 ? 'thing' : 'things'} left, worth ${todo.reduce((s, i) => s + i.points, 0)} points.`}
+                ? t('security.center.allDone')
+                : t('security.center.left', {
+                    count: todo.length,
+                    points: todo.reduce((s, i) => s + i.points, 0),
+                  })}
             </Text>
           </View>
         </Card>
         {todo.length > 0 && (
           <View style={{ gap: spacing[2] }}>
-            <SectionHeader title="Do next" />
+            <SectionHeader title={t('security.center.doNext')} />
             <Card padded={false}>
               <View accessibilityRole="list">
                 {todo.map((item, i) => (
@@ -172,7 +152,7 @@ export function SecurityScreen() {
         )}
         {done.length > 0 && (
           <View style={{ gap: spacing[2] }}>
-            <SectionHeader title="Done" />
+            <SectionHeader title={t('security.center.done')} />
             <Card padded={false}>
               <View accessibilityRole="list">
                 {done.map((item, i) => (
@@ -191,7 +171,7 @@ export function SecurityScreen() {
 
   return (
     <Screen
-      header={<SendHeader title="Security" first />}
+      header={<SendHeader title={t('security.title')} first />}
       edges={['top', 'bottom']}
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
@@ -200,19 +180,23 @@ export function SecurityScreen() {
         <Card>
           <View style={{ gap: spacing[3] }} accessibilityRole="alert">
             <View style={[styles.row, { gap: spacing[2], alignItems: 'center' }]}>
-              <Icon icon={OctagonX} color="danger" accessibilityLabel="Panic mode on" />
-              <Text variant="bodyStrong">Panic mode is on</Text>
+              <Icon
+                icon={OctagonX}
+                color="danger"
+                accessibilityLabel={t('security.panic.onLabel')}
+              />
+              <Text variant="bodyStrong">{t('security.panic.isOn')}</Text>
             </View>
             <Text variant="bodySmall" color="textMuted">
               {panicSummary(panic.data)}
             </Text>
             <View style={styles.start}>
               <Button
-                label="Manage"
+                label={t('common.manage')}
                 size="sm"
                 variant="secondary"
                 onPress={() => router.push('/security/panic')}
-                accessibilityHint="Panic mode"
+                accessibilityHint={t('security.center.panicHint')}
               />
             </View>
           </View>
@@ -220,15 +204,15 @@ export function SecurityScreen() {
       )}
       {body}
       <View style={{ gap: spacing[2] }}>
-        <SectionHeader title="Tools" />
+        <SectionHeader title={t('security.center.tools_title')} />
         <Card padded={false}>
-          {TOOLS.map(({ href, ...t }) => (
+          {TOOLS.map((tool) => (
             <ListItem
-              key={t.title}
-              title={t.title}
-              subtitle={t.subtitle}
-              leading={t.icon}
-              onPress={() => router.push(href)}
+              key={tool.key}
+              title={t(`security.center.tools.${tool.key}.title`)}
+              subtitle={t(`security.center.tools.${tool.key}.subtitle`)}
+              leading={tool.icon}
+              onPress={() => router.push(tool.href)}
             />
           ))}
         </Card>
@@ -238,7 +222,7 @@ export function SecurityScreen() {
           onClose={() => setAsking(false)}
           onSaved={() => {
             setAsking(false);
-            toast.show({ message: 'Security question saved', tone: 'success' });
+            toast.show({ message: t('security.question.saved'), tone: 'success' });
           }}
         />
       )}

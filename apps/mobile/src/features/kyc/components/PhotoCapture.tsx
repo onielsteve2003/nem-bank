@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { CameraView, useCameraPermissions } from 'expo-camera';
 import { Camera, CameraOff, CircleAlert, CircleCheck, Image, Settings } from 'lucide-react-native';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
+import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, View } from 'react-native';
 
 import { Button, EmptyState, Icon, Text } from '@/components';
@@ -13,21 +14,6 @@ import { useTheme } from '@/theme';
 import { photoProblem, SAMPLE_PHOTO } from '../kyc';
 
 type Kind = Extract<Schema<'KycDocumentKind'>, 'id_front' | 'selfie'>;
-
-const COPY: Record<Kind, { guide: string; take: string; sample: string; added: string }> = {
-  id_front: {
-    guide: 'Fit the front of your ID inside the frame, flat and in good light.',
-    take: 'Take photo',
-    sample: 'Use a sample ID',
-    added: 'ID photo added',
-  },
-  selfie: {
-    guide: 'Fit your face inside the oval. Take off glasses and hats.',
-    take: 'Take selfie',
-    sample: 'Use a sample selfie',
-    added: 'Selfie added',
-  },
-};
 
 interface Props {
   kind: Kind;
@@ -42,13 +28,19 @@ interface Props {
  */
 export function PhotoCapture({ kind, document, onUploaded }: Props) {
   const { colors, spacing, radius } = useTheme();
+  const { t } = useTranslation();
   const [permission, requestPermission] = useCameraPermissions();
   const [support, setSupport] = useState<CameraSupport | null>(null);
   const [retaking, setRetaking] = useState(false);
   const [error, setError] = useState<string>();
   const camera = useRef<ComponentRef<typeof CameraView>>(null);
   const upload = useRepoMutation('kyc', 'uploadDocument', { invalidates: [] });
-  const copy = COPY[kind];
+  const copy = {
+    guide: t(`kyc.photo.${kind}.guide`),
+    take: t(`kyc.photo.${kind}.take`),
+    sample: t(`kyc.photo.${kind}.sample`),
+    added: t(`kyc.photo.${kind}.added`),
+  };
   const selfie = kind === 'selfie';
 
   useEffect(() => {
@@ -66,9 +58,7 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
         },
         onError: (e) =>
           setError(
-            isApiError(e)
-              ? (e.problem.detail ?? e.problem.title)
-              : 'That didn’t upload. Try again.',
+            isApiError(e) ? (e.problem.detail ?? e.problem.title) : t('kyc.photo.uploadFailed'),
           ),
       },
     );
@@ -79,7 +69,7 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
       const photo = await camera.current?.takePictureAsync({ base64: true, quality: 0.5 });
       if (photo?.base64) send(`data:image/jpeg;base64,${photo.base64}`);
     } catch {
-      setError('The camera couldn’t take that. Try again.');
+      setError(t('kyc.photo.cameraFailed'));
     }
   };
 
@@ -91,14 +81,14 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
           <Icon
             icon={problem ? CircleAlert : CircleCheck}
             color={problem ? 'danger' : 'success'}
-            accessibilityLabel={problem ? 'Problem' : 'Done'}
+            accessibilityLabel={t(problem ? 'common.problem' : 'common.done')}
           />
           <Text variant="bodyStrong" style={styles.flex}>
             {problem ?? copy.added}
           </Text>
         </View>
         <Button
-          label={problem ? 'Try again' : 'Retake'}
+          label={t(problem ? 'common.tryAgain' : 'kyc.photo.retake')}
           variant="secondary"
           onPress={() => setRetaking(true)}
         />
@@ -111,8 +101,8 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
     view = (
       <EmptyState
         icon={CameraOff}
-        title="No camera here"
-        message="Use the sample below to carry on."
+        title={t('kyc.photo.noCamera')}
+        message={t('kyc.photo.noCameraMessage')}
       />
     );
   } else if (!permission || support === null) {
@@ -123,20 +113,20 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
     view = permission.canAskAgain ? (
       <EmptyState
         icon={Camera}
-        title={selfie ? 'Take a selfie' : 'Photograph your ID'}
-        message="Nem needs your camera for this. The photo only goes to our review team."
-        actionLabel="Allow camera"
+        title={t(selfie ? 'kyc.photo.takeSelfie' : 'kyc.photo.photographId')}
+        message={t('kyc.photo.cameraWhy')}
+        actionLabel={t('kyc.photo.allowCamera')}
         onAction={() => void requestPermission()}
       />
     ) : (
       <View style={{ gap: spacing[3] }}>
         <EmptyState
           icon={CameraOff}
-          title="Camera is off for Nem"
-          message="Turn it on in Settings, or use the sample below."
+          title={t('kyc.photo.cameraOff')}
+          message={t('kyc.photo.cameraOffMessage')}
         />
         <Button
-          label="Open Settings"
+          label={t('common.openSettings')}
           icon={Settings}
           variant="secondary"
           onPress={() => void Linking.openSettings()}
@@ -148,7 +138,7 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
       <View style={{ gap: spacing[3] }}>
         <View
           style={[styles.frame, { borderRadius: radius.xl, overflow: 'hidden' }]}
-          accessibilityLabel={`Camera. ${copy.guide}`}
+          accessibilityLabel={t('kyc.photo.cameraLabel', { guide: copy.guide })}
         >
           <CameraView
             ref={camera}
@@ -190,7 +180,7 @@ export function PhotoCapture({ kind, document, onUploaded }: Props) {
         onPress={() => send(SAMPLE_PHOTO)}
       />
       {retaking && (
-        <Button label="Keep the one I added" variant="ghost" onPress={() => setRetaking(false)} />
+        <Button label={t('kyc.photo.keep')} variant="ghost" onPress={() => setRetaking(false)} />
       )}
     </View>
   );
