@@ -1,6 +1,7 @@
 import { Link, Outlet, useRouter } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
+import { canCall } from '@/features/auth/access';
 import { isActive, useSession } from '@/features/auth/session';
 
 import { StaffMenu } from './StaffMenu';
@@ -8,6 +9,7 @@ import { ThemeSelect } from './ThemeSelect';
 
 export function Shell() {
   const session = useSession((s) => s.session);
+  const roles = session?.staff.roles ?? [];
   const router = useRouter();
 
   // Signed out elsewhere (a 401, sign out, expiry): go to login and come back here after.
@@ -41,6 +43,11 @@ export function Shell() {
           <Link to="/customers" search={{ q: '' }} className="nav-link">
             Customers
           </Link>
+          {canCall(roles, 'listKycReviews') && (
+            <Link to="/kyc" search={{ status: 'pending_review' }} className="nav-link">
+              KYC reviews
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>

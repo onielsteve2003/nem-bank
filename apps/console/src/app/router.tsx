@@ -17,6 +17,9 @@ import { isActive, useSession } from '@/features/auth/session';
 import { CustomerPage } from '@/features/customers/CustomerPage';
 import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { KycQueuePage } from '@/features/kyc/KycQueuePage';
+import { KycReviewPage } from '@/features/kyc/KycReviewPage';
+import type { KycQueueStatus } from '@/features/kyc/useKyc';
 import { OverviewPage } from '@/features/overview/OverviewPage';
 
 export interface RouterContext {
@@ -77,6 +80,36 @@ const customerRoute = createRoute({
   },
 });
 
+const KYC_STATUSES: readonly KycQueueStatus[] = [
+  'pending_review',
+  'approved',
+  'rejected',
+  'resubmit',
+];
+
+const kycQueueRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/kyc',
+  validateSearch: (search: Record<string, unknown>): { status: KycQueueStatus } => ({
+    status: KYC_STATUSES.find((s) => s === search.status) ?? 'pending_review',
+  }),
+  beforeLoad: requireAccess('listKycReviews'),
+  component: function KycQueueRoute() {
+    const { status } = kycQueueRoute.useSearch();
+    return <KycQueuePage status={status} />;
+  },
+});
+
+const kycReviewRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/kyc/$submissionId',
+  beforeLoad: requireAccess('getKycReview'),
+  component: function KycReviewRoute() {
+    const { submissionId } = kycReviewRoute.useParams();
+    return <KycReviewPage submissionId={submissionId} />;
+  },
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -85,7 +118,14 @@ const myAccessRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  staffRoute.addChildren([dashboardRoute, customersRoute, customerRoute, myAccessRoute]),
+  staffRoute.addChildren([
+    dashboardRoute,
+    customersRoute,
+    customerRoute,
+    kycQueueRoute,
+    kycReviewRoute,
+    myAccessRoute,
+  ]),
 ]);
 
 export function createAppRouter(context: RouterContext, history?: RouterHistory) {

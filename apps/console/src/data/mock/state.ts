@@ -1,6 +1,7 @@
 import type { Schema, Staff } from '@nem/contracts';
 
 import { seedCustomers, type CustomerRecord } from './customerSeed';
+import { seedKyc, type KycRecord } from './kycSeed';
 
 // The console's mock back office: staff accounts, login challenges and sessions. Data
 // the pages show (customers, queues, ledger) is added by the task that builds each page.
@@ -28,6 +29,8 @@ export interface MockState {
   /** access token → staff id */
   sessions: Map<string, string>;
   customers: Map<string, CustomerRecord>;
+  /** KYC submissions by submission ID. */
+  kyc: Map<string, KycRecord>;
   /** Maker-checker requests (ADM-10), newest last. */
   approvals: Map<string, Schema<'ApprovalRequest'>>;
   now: () => number;
@@ -60,11 +63,13 @@ export function createMockState(now: () => number = Date.now): MockState {
     // Never signed in: the first login walks through authenticator enrolment.
     account('4', 'Chidi Eze', 'support', 'ONXXK4DPOJ2CA43VNEMSPRT5', false),
   ];
+  const customers = seedCustomers();
   return {
     accounts: new Map(accounts.map((a) => [a.staff.id, a])),
     challenges: new Map(),
     sessions: new Map(),
-    customers: seedCustomers(),
+    customers,
+    kyc: seedKyc(customers),
     approvals: new Map(),
     now,
   };

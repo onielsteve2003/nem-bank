@@ -696,6 +696,93 @@ a {
   border-top: 1px solid var(--color-border);
 }
 
+.segmented {
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+}
+
+.segment {
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border: none;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: var(--color-text-muted);
+  font: inherit;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.segment[aria-pressed='true'] {
+  background: var(--color-raised);
+  color: var(--color-text);
+  box-shadow: inset 0 -2px 0 var(--color-primary);
+}
+
+.choices {
+  border: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.choice {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+}
+
+.choice input {
+  margin-top: 4px;
+  accent-color: var(--color-primary);
+}
+
+/* ---------- KYC review ---------- */
+
+.review-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(320px, 2fr);
+  gap: var(--space-4);
+  align-items: start;
+}
+
+.doc-stage {
+  display: grid;
+  place-items: center;
+  min-height: 320px;
+  max-height: 560px;
+  overflow: auto;
+  border-radius: var(--radius-sm);
+  background: var(--color-raised);
+}
+
+.doc-stage img {
+  max-width: 100%;
+  transition: transform var(--duration-base);
+}
+
+.doc-stage[data-zoomed='true'] {
+  place-items: start;
+}
+
+.doc-stage[data-zoomed='true'] img {
+  max-width: none;
+  width: 200%;
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,
@@ -707,7 +794,8 @@ a {
 
 @media (max-width: 860px) {
   .chart-grid,
-  .detail-grid {
+  .detail-grid,
+  .review-grid {
     grid-template-columns: 1fr;
   }
 
