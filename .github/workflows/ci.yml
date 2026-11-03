@@ -45,6 +45,26 @@ jobs:
       - name: Test
         run: pnpm test
 
+  console:
+    name: Console build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+
+      - uses: pnpm/action-setup@v6
+
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # The same command Vercel runs (apps/console/vercel.json): typecheck + Vite build.
+      - name: Build
+        run: pnpm --filter console build
+
   secrets:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest
