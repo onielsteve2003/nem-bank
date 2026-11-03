@@ -2,8 +2,9 @@ import { describe, expect, it } from 'vitest';
 
 import { base32Decode, hotp, otpauthUri, totp, totpSecondsLeft, verifyTotp } from './totp';
 
-// RFC 6238 Appendix B secret "12345678901234567890" in base32.
-const RFC_SECRET = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ';
+// RFC 6238 Appendix B secret "12345678901234567890" in base32: a published test
+// vector, not a credential.
+const RFC_SECRET = 'GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ'; // gitleaks:allow
 
 describe('totp', () => {
   it('decodes base32', () => {

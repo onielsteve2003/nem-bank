@@ -1,0 +1,2 @@
+# Public RFC 6238 test vector in the TOTP tests, not a credential (allowed inline since).
+b99e74540422d692e093e2298ff75de2aacde2e0:apps/console/src/lib/totp.test.ts:generic-api-key:6
