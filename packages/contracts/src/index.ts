@@ -48,6 +48,8 @@ export type RealtimeClientMessage = Schemas['RealtimeClientMessage'];
 // Staff console and developer platform.
 export type Staff = Schemas['Staff'];
 export type StaffRole = Schemas['StaffRole'];
+export type StaffSession = Schemas['StaffSession'];
+export type StaffLoginChallenge = Schemas['StaffLoginChallenge'];
 export type ApprovalRequest = Schemas['ApprovalRequest'];
 export type TrialBalance = Schemas['TrialBalance'];
 export type JournalEntry = Schemas['JournalEntry'];

@@ -18,11 +18,13 @@
     "@fontsource/space-grotesk": "^5.3.0",
     "@nem/contracts": "workspace:*",
     "@nem/shared": "workspace:*",
+    "@noble/hashes": "^2.4.0",
     "@tanstack/react-query": "^5.104.4",
     "@tanstack/react-router": "^1.170.46",
     "qrcode-generator": "^2.0.4",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "zustand": "^5.0.15"
   },
   "devDependencies": {
     "@eslint/js": "^9.39.5",

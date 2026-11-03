@@ -1,8 +1,29 @@
-import { Link, Outlet } from '@tanstack/react-router';
+import { Link, Outlet, useRouter } from '@tanstack/react-router';
+import { useEffect } from 'react';
 
+import { isActive, useSession } from '@/features/auth/session';
+
+import { StaffMenu } from './StaffMenu';
 import { ThemeSelect } from './ThemeSelect';
 
 export function Shell() {
+  const session = useSession((s) => s.session);
+  const router = useRouter();
+
+  // Signed out elsewhere (a 401, sign out, expiry): go to login and come back here after.
+  useEffect(() => {
+    if (!isActive(session)) {
+      // Read the location now rather than subscribing to it, or every step of this
+      // navigation would re-run the effect and redirect again.
+      void router.navigate({ to: '/login', search: { redirect: router.state.location.href } });
+      return;
+    }
+    if (!session) return;
+    const msLeft = Date.parse(session.expires_at) - Date.now();
+    const timer = setTimeout(() => useSession.getState().signOut(), Math.max(msLeft, 0));
+    return () => clearTimeout(timer);
+  }, [session, router]);
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -24,9 +45,9 @@ export function Shell() {
           Demo console: simulated bank data, no real customers or money.
         </p>
         <header className="topbar">
-          <span className="muted">Staff back office</span>
+          <ThemeSelect />
           <div className="topbar-actions">
-            <ThemeSelect />
+            <StaffMenu />
           </div>
         </header>
         <main className="content">

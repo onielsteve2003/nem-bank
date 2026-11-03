@@ -307,6 +307,99 @@ a {
   }
 }
 
+/* ---------- auth ---------- */
+
+.login {
+  min-height: 100%;
+  display: grid;
+  place-items: center;
+  padding: var(--space-8) var(--space-4);
+}
+
+.login-panel {
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.otp-input {
+  font-size: 24px;
+  letter-spacing: 0.3em;
+}
+
+.otp-code {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--color-primary-text);
+}
+
+.demo-auth {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  border-style: dashed;
+}
+
+.qr {
+  width: 200px;
+  height: 200px;
+  padding: var(--space-2);
+  border-radius: var(--radius-sm);
+  /* QR codes need dark modules on a light ground to scan, whatever the theme. */
+  background: var(--qr-light, white);
+  color: var(--qr-dark, black);
+}
+
+.qr svg {
+  width: 100%;
+  height: 100%;
+}
+
+.demo-list,
+.access-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+}
+
+.demo-pick {
+  width: 100%;
+  justify-content: space-between;
+  text-align: left;
+  font-weight: 400;
+  flex-wrap: wrap;
+}
+
+.access-list li {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 44px;
+  padding: var(--space-2) 0;
+  border-bottom: 1px solid var(--color-border);
+}
+
+.access-list li[data-allowed='true'] .badge {
+  color: var(--color-success);
+}
+
+.access-list li[data-allowed='false'] {
+  color: var(--color-text-muted);
+}
+
+.staff-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
 @media (prefers-reduced-motion: reduce) {
   *,
   *::before,

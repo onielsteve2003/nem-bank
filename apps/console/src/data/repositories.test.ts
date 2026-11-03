@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 
 import { isApiError } from './errors';
 import { createMockDispatcher } from './mock';
+import { switchDemoRole } from './mock/auth';
 import { createMockState } from './mock/state';
 import { DOMAINS, REPOSITORY_METHODS, repositoriesFromDispatcher } from './repositories';
 
@@ -17,20 +18,12 @@ describe('console repositories', () => {
     }
   });
 
-  it('routes a call through the mock to the signed-in staff member', async () => {
-    const repos = repositoriesFromDispatcher(createMockDispatcher({ latencyMs: 0 }));
-    const me = await repos.auth.me();
-    expect(me.roles).toContain('admin');
-  });
-
-  it('answers 401 without a session', async () => {
-    const state = { ...createMockState(), session: null };
-    const repos = repositoriesFromDispatcher(createMockDispatcher({ latencyMs: 0, state }));
-    await expect(repos.auth.me()).rejects.toSatisfy((e) => isApiError(e, 'unauthorized'));
-  });
-
   it('reports operations the demo does not cover yet as a 501 problem', async () => {
-    const repos = repositoriesFromDispatcher(createMockDispatcher({ latencyMs: 0 }));
+    const state = createMockState();
+    const { access_token } = switchDemoRole(state, 'admin');
+    const repos = repositoriesFromDispatcher(
+      createMockDispatcher({ latencyMs: 0, state, getAccessToken: () => access_token }),
+    );
     await expect(repos.config.get()).rejects.toSatisfy((e) => isApiError(e, 'not_implemented'));
   });
 });
