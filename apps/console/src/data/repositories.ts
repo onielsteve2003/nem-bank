@@ -63,6 +63,21 @@ export const REPOSITORY_METHODS = {
     getBankPartner: 'getBankPartnerSimulator',
     setBankPartner: 'setBankPartnerSimulator',
   },
+  // The developer portal: business customers' own keys and webhooks, not staff operations.
+  developer: {
+    listKeys: 'listApiKeys',
+    createKey: 'createApiKey',
+    revokeKey: 'revokeApiKey',
+    listEndpoints: 'listWebhookEndpoints',
+    createEndpoint: 'createWebhookEndpoint',
+    getEndpoint: 'getWebhookEndpoint',
+    updateEndpoint: 'updateWebhookEndpoint',
+    deleteEndpoint: 'deleteWebhookEndpoint',
+    rotateSecret: 'rotateWebhookSecret',
+    sendTest: 'sendTestWebhook',
+    listDeliveries: 'listWebhookDeliveries',
+    replay: 'replayWebhookDelivery',
+  },
 } as const satisfies Readonly<Record<string, MethodMap>>;
 
 type Methods = typeof REPOSITORY_METHODS;

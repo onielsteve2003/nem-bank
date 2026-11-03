@@ -4,6 +4,7 @@ import type { AuditEntry } from './audit';
 import { seedApprovals, seedAudit } from './auditSeed';
 import { seedConfig, seedFlags, type BankConfig, type FeatureFlag } from './configSeed';
 import { seedCustomers, type CustomerRecord } from './customerSeed';
+import { seedDeveloper, type DeveloperState } from './developer';
 import { seedDisputes, type AdminDispute } from './disputeSeed';
 import { seedFraud, type FraudCase } from './fraudSeed';
 import { seedKyc, type KycRecord } from './kycSeed';
@@ -70,6 +71,8 @@ export interface MockState {
     charges: Map<string, SimCharge>;
     bankPartner: BankPartnerSettings;
   };
+  /** The demo business customer's API keys and webhooks (developer portal). */
+  developer: DeveloperState;
   now: () => number;
 }
 
@@ -121,6 +124,7 @@ export function createMockState(now: () => number = Date.now): MockState {
       charges: new Map(),
       bankPartner: structuredClone(DEFAULT_BANK_PARTNER),
     },
+    developer: seedDeveloper(now()),
     now,
   };
 }

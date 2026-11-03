@@ -22,6 +22,10 @@ import { isActive, useSession } from '@/features/auth/session';
 import { ConfigPage } from '@/features/config/ConfigPage';
 import { FeatureFlagsPage } from '@/features/config/FeatureFlagsPage';
 import { CustomerPage } from '@/features/customers/CustomerPage';
+import { ApiKeysPage } from '@/features/developer/ApiKeysPage';
+import { DeveloperShell } from '@/features/developer/DeveloperShell';
+import { EndpointPage } from '@/features/developer/EndpointPage';
+import { WebhooksPage } from '@/features/developer/WebhooksPage';
 import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { DisputePage } from '@/features/disputes/DisputePage';
@@ -72,6 +76,35 @@ const staffRoute = createRoute({
   beforeLoad: requireSession,
   component: Shell,
   errorComponent: RouteError,
+});
+
+/** The developer portal: a business customer's sandbox, outside the staff login. */
+const developersRoute = createRoute({
+  getParentRoute: () => rootRoute,
+  path: '/developers',
+  component: DeveloperShell,
+  errorComponent: RouteError,
+});
+
+const apiKeysRoute = createRoute({
+  getParentRoute: () => developersRoute,
+  path: '/',
+  component: ApiKeysPage,
+});
+
+const webhooksRoute = createRoute({
+  getParentRoute: () => developersRoute,
+  path: '/webhooks',
+  component: WebhooksPage,
+});
+
+const endpointRoute = createRoute({
+  getParentRoute: () => developersRoute,
+  path: '/webhooks/$endpointId',
+  component: function EndpointRoute() {
+    const { endpointId } = endpointRoute.useParams();
+    return <EndpointPage key={endpointId} endpointId={endpointId} />;
+  },
 });
 
 const dashboardRoute = createRoute({
@@ -350,6 +383,7 @@ const myAccessRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
+  developersRoute.addChildren([apiKeysRoute, webhooksRoute, endpointRoute]),
   staffRoute.addChildren([
     dashboardRoute,
     customersRoute,

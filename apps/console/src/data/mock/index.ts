@@ -16,6 +16,7 @@ import { authHandlers } from './auth';
 import { configHandlers } from './config';
 import { customerHandlers } from './customers';
 import { dashboardHandlers } from './dashboard';
+import { developerHandlers } from './developer';
 import { disputeHandlers } from './disputes';
 import { fraudHandlers } from './fraud';
 import { kycHandlers } from './kyc';
@@ -40,6 +41,7 @@ const HANDLERS: Handlers = {
   ...auditHandlers,
   ...approvalHandlers,
   ...simulatorHandlers,
+  ...developerHandlers,
 };
 
 export interface MockOptions {

@@ -96,6 +96,10 @@ export function Shell() {
           <Link to="/me" className="nav-link">
             My access
           </Link>
+          <span className="nav-section">Business customers</span>
+          <Link to="/developers" className="nav-link">
+            Developer portal
+          </Link>
         </nav>
       </aside>
       <div className="main">

@@ -1121,3 +1121,26 @@ a {
   outline: 2px solid var(--color-primary-text);
   outline-offset: 2px;
 }
+
+/* ---------- developer portal ---------- */
+
+.secret {
+  display: block;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-raised);
+  overflow-wrap: anywhere;
+  user-select: all;
+}
+
+.code-block {
+  margin: 0;
+  padding: var(--space-3);
+  border-radius: var(--radius-sm);
+  background: var(--color-raised);
+  font-family: ui-monospace, 'SFMono-Regular', Consolas, monospace;
+  font-size: 0.8125rem;
+  line-height: 1.5;
+  overflow-x: auto;
+  white-space: pre;
+}

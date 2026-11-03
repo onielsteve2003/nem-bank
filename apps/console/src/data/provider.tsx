@@ -6,6 +6,7 @@ import { currentAccessToken } from '@/features/auth/session';
 import { createMockDispatcher, type MockOptions } from './mock';
 import { tamperAudit } from './mock/audit';
 import { switchDemoRole } from './mock/auth';
+import { developerStepUp } from './mock/developer';
 import { createMockState, findAccountByEmail } from './mock/state';
 import { repositoriesFromDispatcher, type Repositories } from './repositories';
 
@@ -18,6 +19,8 @@ export interface DemoControls {
   tamperAudit: () => number;
   /** The Merchant Simulator's test cards, with the details a merchant would type. */
   testCards: () => TestCard[];
+  /** Checks the demo business PIN and returns a step-up token (POST /v1/auth/step-up in Phase 2). */
+  developerStepUp: (pin: string) => string | null;
 }
 
 export interface TestCard {
@@ -62,6 +65,7 @@ export function RepositoryProvider({ children, mock }: Props) {
         switchRole: (role) => switchDemoRole(state, role),
         totpSecretFor: (email) => findAccountByEmail(state, email)?.totpSecret ?? null,
         tamperAudit: () => tamperAudit(state),
+        developerStepUp: (pin) => developerStepUp(state, pin),
         testCards: () =>
           state.simulators.cards.map(({ card, pan, cvv, purpose }) => ({
             id: card.id,

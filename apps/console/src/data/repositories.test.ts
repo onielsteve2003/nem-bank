@@ -8,12 +8,13 @@ import { createMockState } from './mock/state';
 import { DOMAINS, REPOSITORY_METHODS, repositoriesFromDispatcher } from './repositories';
 
 describe('console repositories', () => {
-  it('maps only to staff operations that exist in the contract', () => {
+  it('maps only to staff and developer operations that exist in the contract', () => {
     for (const domain of DOMAINS) {
+      const prefix = domain === 'developer' ? '/v1/developer/' : '/v1/admin/';
       for (const operationId of Object.values(REPOSITORY_METHODS[domain])) {
         const meta = OPERATIONS[operationId as keyof typeof OPERATIONS];
         expect(meta, operationId).toBeDefined();
-        expect(meta.path.startsWith('/v1/admin/'), operationId).toBe(true);
+        expect(meta.path.startsWith(prefix), operationId).toBe(true);
       }
     }
   });
