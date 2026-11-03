@@ -24,6 +24,6 @@ describe('console repositories', () => {
     const repos = repositoriesFromDispatcher(
       createMockDispatcher({ latencyMs: 0, state, getAccessToken: () => access_token }),
     );
-    await expect(repos.config.get()).rejects.toSatisfy((e) => isApiError(e, 'not_implemented'));
+    await expect(repos.audit.list()).rejects.toSatisfy((e) => isApiError(e, 'not_implemented'));
   });
 });
