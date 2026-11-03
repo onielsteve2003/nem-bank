@@ -11,13 +11,14 @@ import { canCall } from '@/features/auth/access';
 import { problem } from '../errors';
 import type { Dispatcher } from '../repositories';
 import { authHandlers } from './auth';
+import { customerHandlers } from './customers';
 import { dashboardHandlers } from './dashboard';
 import type { Handler, Handlers } from './handlers';
 import { createMockState, type MockState } from './state';
 
 export type { Handler, Handlers, MockContext } from './handlers';
 
-const HANDLERS: Handlers = { ...authHandlers, ...dashboardHandlers };
+const HANDLERS: Handlers = { ...authHandlers, ...dashboardHandlers, ...customerHandlers };
 
 export interface MockOptions {
   /** Simulated network latency so loading states are real (0 in tests). */

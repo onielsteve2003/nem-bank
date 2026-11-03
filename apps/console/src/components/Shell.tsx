@@ -38,6 +38,9 @@ export function Shell() {
           <Link to="/" className="nav-link" activeOptions={{ exact: true }}>
             Dashboard
           </Link>
+          <Link to="/customers" search={{ q: '' }} className="nav-link">
+            Customers
+          </Link>
           <Link to="/me" className="nav-link">
             My access
           </Link>

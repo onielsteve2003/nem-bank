@@ -1,4 +1,6 @@
-import type { Staff } from '@nem/contracts';
+import type { Schema, Staff } from '@nem/contracts';
+
+import { seedCustomers, type CustomerRecord } from './customerSeed';
 
 // The console's mock back office: staff accounts, login challenges and sessions. Data
 // the pages show (customers, queues, ledger) is added by the task that builds each page.
@@ -25,6 +27,9 @@ export interface MockState {
   challenges: Map<string, LoginChallenge>;
   /** access token → staff id */
   sessions: Map<string, string>;
+  customers: Map<string, CustomerRecord>;
+  /** Maker-checker requests (ADM-10), newest last. */
+  approvals: Map<string, Schema<'ApprovalRequest'>>;
   now: () => number;
 }
 
@@ -59,6 +64,8 @@ export function createMockState(now: () => number = Date.now): MockState {
     accounts: new Map(accounts.map((a) => [a.staff.id, a])),
     challenges: new Map(),
     sessions: new Map(),
+    customers: seedCustomers(),
+    approvals: new Map(),
     now,
   };
 }

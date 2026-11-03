@@ -14,6 +14,8 @@ import type { Repositories } from '@/data/repositories';
 import { requireAccess, requireSession } from '@/features/auth/guards';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { isActive, useSession } from '@/features/auth/session';
+import { CustomerPage } from '@/features/customers/CustomerPage';
+import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { OverviewPage } from '@/features/overview/OverviewPage';
 
@@ -51,6 +53,30 @@ const dashboardRoute = createRoute({
   component: DashboardPage,
 });
 
+const customersRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/customers',
+  validateSearch: (search: Record<string, unknown>): { q: string } => ({
+    q: typeof search.q === 'string' ? search.q.slice(0, 100) : '',
+  }),
+  beforeLoad: requireAccess('searchCustomers'),
+  component: function CustomersRoute() {
+    const { q } = customersRoute.useSearch();
+    // Keyed so the search box resets when the URL's query changes (back/forward).
+    return <CustomersPage key={q} q={q} />;
+  },
+});
+
+const customerRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/customers/$userId',
+  beforeLoad: requireAccess('getCustomer360'),
+  component: function CustomerRoute() {
+    const { userId } = customerRoute.useParams();
+    return <CustomerPage userId={userId} />;
+  },
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -59,7 +85,7 @@ const myAccessRoute = createRoute({
 
 const routeTree = rootRoute.addChildren([
   loginRoute,
-  staffRoute.addChildren([dashboardRoute, myAccessRoute]),
+  staffRoute.addChildren([dashboardRoute, customersRoute, customerRoute, myAccessRoute]),
 ]);
 
 export function createAppRouter(context: RouterContext, history?: RouterHistory) {

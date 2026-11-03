@@ -14,3 +14,15 @@ export function shiftDate(date: string, days: number): string {
 /** Days from `from` to `to`, counting both ends. */
 export const daysBetween = (from: string, to: string): number =>
   Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / DAY_MS) + 1;
+
+const dateTime = new Intl.DateTimeFormat('en-NG', {
+  timeZone: 'Africa/Lagos',
+  day: 'numeric',
+  month: 'short',
+  year: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
+/** A contract timestamp as staff read it, in Lagos time: "3 Nov 2026, 10:14". */
+export const formatDateTime = (iso: string): string => dateTime.format(Date.parse(iso));
