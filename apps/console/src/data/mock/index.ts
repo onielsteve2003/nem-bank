@@ -13,8 +13,10 @@ import type { Dispatcher } from '../repositories';
 import { authHandlers } from './auth';
 import { customerHandlers } from './customers';
 import { dashboardHandlers } from './dashboard';
+import { disputeHandlers } from './disputes';
 import { fraudHandlers } from './fraud';
 import { kycHandlers } from './kyc';
+import { supportHandlers } from './support';
 import type { Handler, Handlers } from './handlers';
 import { createMockState, type MockState } from './state';
 
@@ -26,6 +28,8 @@ const HANDLERS: Handlers = {
   ...customerHandlers,
   ...kycHandlers,
   ...fraudHandlers,
+  ...disputeHandlers,
+  ...supportHandlers,
 };
 
 export interface MockOptions {

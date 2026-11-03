@@ -17,6 +17,9 @@ import { isActive, useSession } from '@/features/auth/session';
 import { CustomerPage } from '@/features/customers/CustomerPage';
 import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { DisputePage } from '@/features/disputes/DisputePage';
+import { DisputeQueuePage } from '@/features/disputes/DisputeQueuePage';
+import type { DisputeFilter } from '@/features/disputes/useDisputes';
 import { FraudCasePage } from '@/features/fraud/FraudCasePage';
 import { FraudQueuePage } from '@/features/fraud/FraudQueuePage';
 import type { FraudFilter } from '@/features/fraud/useFraud';
@@ -24,6 +27,8 @@ import { KycQueuePage } from '@/features/kyc/KycQueuePage';
 import { KycReviewPage } from '@/features/kyc/KycReviewPage';
 import type { KycQueueStatus } from '@/features/kyc/useKyc';
 import { OverviewPage } from '@/features/overview/OverviewPage';
+import { SupportPage } from '@/features/support/SupportPage';
+import type { InboxFilter } from '@/features/support/useSupport';
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -139,6 +144,54 @@ const fraudCaseRoute = createRoute({
   },
 });
 
+const DISPUTE_FILTERS: readonly DisputeFilter[] = [
+  'active',
+  'resolved_refunded',
+  'resolved_declined',
+];
+
+const disputeQueueRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/disputes',
+  validateSearch: (search: Record<string, unknown>): { status: DisputeFilter } => ({
+    status: DISPUTE_FILTERS.find((f) => f === search.status) ?? 'active',
+  }),
+  beforeLoad: requireAccess('listAdminDisputes'),
+  component: function DisputeQueueRoute() {
+    const { status } = disputeQueueRoute.useSearch();
+    return <DisputeQueuePage filter={status} />;
+  },
+});
+
+const disputeRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/disputes/$disputeId',
+  beforeLoad: requireAccess('getAdminDispute'),
+  component: function DisputeRoute() {
+    const { disputeId } = disputeRoute.useParams();
+    return <DisputePage disputeId={disputeId} />;
+  },
+});
+
+const INBOX_FILTERS: readonly InboxFilter[] = ['active', 'open', 'resolved'];
+
+const supportRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/support',
+  validateSearch: (
+    search: Record<string, unknown>,
+  ): { status: InboxFilter; mine: boolean; c?: string } => ({
+    status: INBOX_FILTERS.find((f) => f === search.status) ?? 'active',
+    mine: search.mine === true || search.mine === 'true',
+    ...(typeof search.c === 'string' && { c: search.c.slice(0, 64) }),
+  }),
+  beforeLoad: requireAccess('listAgentConversations'),
+  component: function SupportRoute() {
+    const { status, mine, c } = supportRoute.useSearch();
+    return <SupportPage filter={status} mine={mine} selected={c} />;
+  },
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -155,6 +208,9 @@ const routeTree = rootRoute.addChildren([
     kycReviewRoute,
     fraudQueueRoute,
     fraudCaseRoute,
+    disputeQueueRoute,
+    disputeRoute,
+    supportRoute,
     myAccessRoute,
   ]),
 ]);

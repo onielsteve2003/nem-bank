@@ -1,8 +1,10 @@
 import type { Schema, Staff } from '@nem/contracts';
 
 import { seedCustomers, type CustomerRecord } from './customerSeed';
+import { seedDisputes, type AdminDispute } from './disputeSeed';
 import { seedFraud, type FraudCase } from './fraudSeed';
 import { seedKyc, type KycRecord } from './kycSeed';
+import { seedSupport, type ConversationRecord } from './supportSeed';
 
 // The console's mock back office: staff accounts, login challenges and sessions. Data
 // the pages show (customers, queues, ledger) is added by the task that builds each page.
@@ -34,6 +36,10 @@ export interface MockState {
   kyc: Map<string, KycRecord>;
   /** Fraud cases (held transfers) by case ID. */
   fraud: Map<string, FraudCase>;
+  /** Customer disputes by dispute ID. */
+  disputes: Map<string, AdminDispute>;
+  /** Support chats by conversation ID. */
+  support: Map<string, ConversationRecord>;
   /** Idempotency-Key → first response, for money-moving staff actions. */
   idempotency: Map<string, unknown>;
   /** Maker-checker requests (ADM-10), newest last. */
@@ -76,6 +82,8 @@ export function createMockState(now: () => number = Date.now): MockState {
     customers,
     kyc: seedKyc(customers),
     fraud: seedFraud(customers),
+    disputes: seedDisputes(customers),
+    support: seedSupport(customers, now()),
     idempotency: new Map(),
     approvals: new Map(),
     now,

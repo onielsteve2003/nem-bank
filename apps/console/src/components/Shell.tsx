@@ -53,6 +53,16 @@ export function Shell() {
               Fraud cases
             </Link>
           )}
+          {canCall(roles, 'listAdminDisputes') && (
+            <Link to="/disputes" search={{ status: 'active' }} className="nav-link">
+              Disputes
+            </Link>
+          )}
+          {canCall(roles, 'listAgentConversations') && (
+            <Link to="/support" search={{ status: 'active', mine: false }} className="nav-link">
+              Support chat
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>
