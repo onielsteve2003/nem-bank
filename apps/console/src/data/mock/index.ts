@@ -13,6 +13,7 @@ import type { Dispatcher } from '../repositories';
 import { authHandlers } from './auth';
 import { customerHandlers } from './customers';
 import { dashboardHandlers } from './dashboard';
+import { fraudHandlers } from './fraud';
 import { kycHandlers } from './kyc';
 import type { Handler, Handlers } from './handlers';
 import { createMockState, type MockState } from './state';
@@ -24,6 +25,7 @@ const HANDLERS: Handlers = {
   ...dashboardHandlers,
   ...customerHandlers,
   ...kycHandlers,
+  ...fraudHandlers,
 };
 
 export interface MockOptions {

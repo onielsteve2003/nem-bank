@@ -48,6 +48,11 @@ export function Shell() {
               KYC reviews
             </Link>
           )}
+          {canCall(roles, 'listFraudCases') && (
+            <Link to="/fraud" search={{ status: 'active', mine: false }} className="nav-link">
+              Fraud cases
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>

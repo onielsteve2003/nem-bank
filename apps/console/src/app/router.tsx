@@ -17,6 +17,9 @@ import { isActive, useSession } from '@/features/auth/session';
 import { CustomerPage } from '@/features/customers/CustomerPage';
 import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
+import { FraudCasePage } from '@/features/fraud/FraudCasePage';
+import { FraudQueuePage } from '@/features/fraud/FraudQueuePage';
+import type { FraudFilter } from '@/features/fraud/useFraud';
 import { KycQueuePage } from '@/features/kyc/KycQueuePage';
 import { KycReviewPage } from '@/features/kyc/KycReviewPage';
 import type { KycQueueStatus } from '@/features/kyc/useKyc';
@@ -110,6 +113,32 @@ const kycReviewRoute = createRoute({
   },
 });
 
+const FRAUD_FILTERS: readonly FraudFilter[] = ['active', 'released', 'rejected'];
+
+const fraudQueueRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/fraud',
+  validateSearch: (search: Record<string, unknown>): { status: FraudFilter; mine: boolean } => ({
+    status: FRAUD_FILTERS.find((f) => f === search.status) ?? 'active',
+    mine: search.mine === true || search.mine === 'true',
+  }),
+  beforeLoad: requireAccess('listFraudCases'),
+  component: function FraudQueueRoute() {
+    const { status, mine } = fraudQueueRoute.useSearch();
+    return <FraudQueuePage filter={status} mine={mine} />;
+  },
+});
+
+const fraudCaseRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/fraud/$caseId',
+  beforeLoad: requireAccess('getFraudCase'),
+  component: function FraudCaseRoute() {
+    const { caseId } = fraudCaseRoute.useParams();
+    return <FraudCasePage caseId={caseId} />;
+  },
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -124,6 +153,8 @@ const routeTree = rootRoute.addChildren([
     customerRoute,
     kycQueueRoute,
     kycReviewRoute,
+    fraudQueueRoute,
+    fraudCaseRoute,
     myAccessRoute,
   ]),
 ]);
