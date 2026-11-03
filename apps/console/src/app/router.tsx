@@ -42,6 +42,7 @@ import { ReconciliationPage } from '@/features/ledger/ReconciliationPage';
 import { TrialBalancePage } from '@/features/ledger/TrialBalancePage';
 import type { AccountFilters, EntryFilters, EntryKind } from '@/features/ledger/useLedger';
 import { OverviewPage } from '@/features/overview/OverviewPage';
+import { SimulatorsPage } from '@/features/simulators/SimulatorsPage';
 import { SupportPage } from '@/features/support/SupportPage';
 import type { InboxFilter } from '@/features/support/useSupport';
 import { lagosDate, shiftDate } from '@/lib/dates';
@@ -334,6 +335,13 @@ const approvalRoute = createRoute({
   },
 });
 
+const simulatorsRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/simulators',
+  beforeLoad: requireAccess('simulateCardCharge'),
+  component: SimulatorsPage,
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -364,6 +372,7 @@ const routeTree = rootRoute.addChildren([
     auditRoute,
     approvalsRoute,
     approvalRoute,
+    simulatorsRoute,
     myAccessRoute,
   ]),
 ]);

@@ -84,6 +84,8 @@ export function tamperAudit(state: MockState): number {
 type AuditRule = {
   action: string | ((body: Record<string, unknown>) => string);
   resource: string;
+  /** For a resource with no ID of its own, like a settings singleton. */
+  id?: string;
 };
 
 /**
@@ -109,6 +111,14 @@ const AUDITED: Partial<Record<OperationId, AuditRule>> = {
     resource: 'feature_flag',
   },
   rejectRequest: { action: 'approval.reject', resource: 'approval' },
+  simulateCardCharge: { action: 'simulator.card.charge', resource: 'card_authorization' },
+  captureSimulatedCharge: { action: 'simulator.card.capture', resource: 'card_authorization' },
+  reverseSimulatedCharge: { action: 'simulator.card.reverse', resource: 'card_authorization' },
+  setBankPartnerSimulator: {
+    action: 'simulator.bank_partner.update',
+    resource: 'simulator',
+    id: 'bank_partner',
+  },
 };
 
 /** Body fields safe to keep: outcomes and section names, never free text. */
@@ -139,7 +149,13 @@ export function recordStaffAction(
     metadata.approval_action = out.action;
     metadata.approval_id = out.id;
   }
+  // A card authorization: keep its outcome (the card details never reach the log).
+  if ('decline_reason' in out) {
+    metadata.status = out.status;
+    metadata.decline_reason = out.decline_reason;
+  }
   const resourceId =
+    rule.id ??
     (path && Object.values(path)[0]) ??
     (typeof out.id === 'string' ? out.id : undefined) ??
     who?.id ??

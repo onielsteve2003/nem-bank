@@ -16,6 +16,19 @@ export interface DemoControls {
   totpSecretFor: (email: string) => string | null;
   /** Edits an audit entry without re-hashing it, so verify has a break to find. */
   tamperAudit: () => number;
+  /** The Merchant Simulator's test cards, with the details a merchant would type. */
+  testCards: () => TestCard[];
+}
+
+export interface TestCard {
+  id: string;
+  label: string;
+  purpose: string;
+  pan: string;
+  cvv: string;
+  expiryMonth: number;
+  expiryYear: number;
+  currency: 'NGN' | 'USD';
 }
 
 interface DataValue {
@@ -49,6 +62,17 @@ export function RepositoryProvider({ children, mock }: Props) {
         switchRole: (role) => switchDemoRole(state, role),
         totpSecretFor: (email) => findAccountByEmail(state, email)?.totpSecret ?? null,
         tamperAudit: () => tamperAudit(state),
+        testCards: () =>
+          state.simulators.cards.map(({ card, pan, cvv, purpose }) => ({
+            id: card.id,
+            label: `${card.name_on_card} · ${card.currency} ${card.type.replace('_', ' ')} ·${card.last4}`,
+            purpose: card.status === 'used' ? `${purpose} (used)` : purpose,
+            pan,
+            cvv,
+            expiryMonth: card.expiry_month,
+            expiryYear: card.expiry_year,
+            currency: card.currency,
+          })),
       },
     };
   }, [mock]);

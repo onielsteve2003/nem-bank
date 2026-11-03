@@ -88,6 +88,11 @@ export function Shell() {
               Audit log
             </Link>
           )}
+          {canCall(roles, 'simulateCardCharge') && (
+            <Link to="/simulators" className="nav-link">
+              Simulators
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>

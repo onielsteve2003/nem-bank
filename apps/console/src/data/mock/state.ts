@@ -8,6 +8,13 @@ import { seedDisputes, type AdminDispute } from './disputeSeed';
 import { seedFraud, type FraudCase } from './fraudSeed';
 import { seedKyc, type KycRecord } from './kycSeed';
 import { seedLedger, type LedgerState } from './ledgerSeed';
+import {
+  DEFAULT_BANK_PARTNER,
+  seedCards,
+  type BankPartnerSettings,
+  type SimCard,
+  type SimCharge,
+} from './simulatorSeed';
 import { seedSupport, type ConversationRecord } from './supportSeed';
 
 // The console's mock back office: staff accounts, login challenges and sessions. Data
@@ -56,6 +63,13 @@ export interface MockState {
   approvals: Map<string, Schema<'ApprovalRequest'>>;
   /** The hash-chained audit log (ADM-9), oldest first; seq is the index + 1. */
   audit: AuditEntry[];
+  /** Merchant and Bank Partner simulators (ADM-11). */
+  simulators: {
+    cards: SimCard[];
+    /** Authorizations by ID, approved or declined. */
+    charges: Map<string, SimCharge>;
+    bankPartner: BankPartnerSettings;
+  };
   now: () => number;
 }
 
@@ -102,6 +116,11 @@ export function createMockState(now: () => number = Date.now): MockState {
     idempotency: new Map(),
     approvals: seedApprovals(now()),
     audit: seedAudit(),
+    simulators: {
+      cards: seedCards(customers),
+      charges: new Map(),
+      bankPartner: structuredClone(DEFAULT_BANK_PARTNER),
+    },
     now,
   };
 }
