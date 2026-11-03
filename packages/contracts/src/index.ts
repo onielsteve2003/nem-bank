@@ -54,3 +54,14 @@ export type JournalEntry = Schemas['JournalEntry'];
 export type AuditEntry = Schemas['AuditEntry'];
 export type ApiKey = Schemas['ApiKey'];
 export type WebhookEvent = Schemas['WebhookEvent'];
+
+// Repository typing shared by the mobile app and the console.
+export type {
+  CallOptions,
+  MethodMap,
+  OperationId,
+  OperationInput,
+  OperationOutput,
+  RepoMethod,
+  RepoOf,
+} from './repository';
