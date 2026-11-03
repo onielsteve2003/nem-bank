@@ -16,6 +16,7 @@ import { dashboardHandlers } from './dashboard';
 import { disputeHandlers } from './disputes';
 import { fraudHandlers } from './fraud';
 import { kycHandlers } from './kyc';
+import { ledgerHandlers } from './ledger';
 import { supportHandlers } from './support';
 import type { Handler, Handlers } from './handlers';
 import { createMockState, type MockState } from './state';
@@ -30,6 +31,7 @@ const HANDLERS: Handlers = {
   ...fraudHandlers,
   ...disputeHandlers,
   ...supportHandlers,
+  ...ledgerHandlers,
 };
 
 export interface MockOptions {

@@ -63,6 +63,11 @@ export function Shell() {
               Support chat
             </Link>
           )}
+          {canCall(roles, 'listJournalEntries') && (
+            <Link to="/ledger" search={{}} className="nav-link">
+              Ledger
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>

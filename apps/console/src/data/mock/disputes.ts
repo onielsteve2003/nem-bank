@@ -7,6 +7,7 @@ import { problem } from '../errors';
 import { findCustomer } from './customers';
 import { REFUND_CHECKER_THRESHOLD, isOpenDispute, type AdminDispute } from './disputeSeed';
 import type { Handlers } from './handlers';
+import { post, systemAccountId } from './ledgerSeed';
 import { paginate, staffRef } from './paging';
 import { newId, type MockState } from './state';
 
@@ -38,6 +39,24 @@ function postRefund(state: MockState, d: AdminDispute, refund: Schema<'Money'>, 
     account.ledger_balance = credit(account.ledger_balance);
     account.available_balance = credit(account.available_balance);
   }
+  const reference = `NEMREF${d.dispute.case_number.slice(4)}`;
+  // Card refunds come back through the card scheme; the rest from the settlement partner.
+  post(state.ledger, {
+    kind: 'dispute_refund',
+    reference,
+    at,
+    postings: [
+      [
+        systemAccountId(
+          d.transaction.type === 'card_payment' ? 'card_settlement' : 'partner_settlement',
+          refund.currency,
+        ),
+        -BigInt(refund.amount_minor),
+      ],
+      [d.transaction.account_id, BigInt(refund.amount_minor)],
+    ],
+    metadata: { dispute_id: d.dispute.id, case_number: d.dispute.case_number },
+  });
   const refundTx: Schema<'Transaction'> = {
     id: newId(),
     account_id: d.transaction.account_id,
@@ -48,7 +67,7 @@ function postRefund(state: MockState, d: AdminDispute, refund: Schema<'Money'>, 
     fee: null,
     balance_after: account?.ledger_balance ?? null,
     narration: `Refund for ${d.dispute.case_number}`,
-    reference: `NEMREF${d.dispute.case_number.slice(4)}`,
+    reference,
     category: 'other',
     category_source: 'rules',
     counterparty: { name: 'Nem Bank disputes' },

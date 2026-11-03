@@ -21,10 +21,11 @@ const NEM_BANK_CODE = '090999';
 export const customerId = (n: number) =>
   `01900000-0000-7000-8000-0000000c${String(n).padStart(4, '0')}`;
 const accountId = (n: number, i: number) =>
-  `01900000-0000-7000-8000-0000000a${n}${i}`.padEnd(36, '0');
+  `01900000-0000-7000-8000-0000000a${String(n).padStart(2, '0')}${i}`.padEnd(36, '0');
 const deviceId = (n: number, i: number) =>
-  `01900000-0000-7000-8000-0000000d${n}${i}`.padEnd(36, '0');
-const txId = (n: number, i: number) => `01900000-0000-7000-8000-0000000e${n}${i}`.padEnd(36, '0');
+  `01900000-0000-7000-8000-0000000d${String(n).padStart(2, '0')}${i}`.padEnd(36, '0');
+const txId = (n: number, i: number) =>
+  `01900000-0000-7000-8000-0000000e${String(n).padStart(2, '0')}${i}`.padEnd(36, '0');
 
 const money = (amount: bigint, currency: CurrencyCode) => ({
   amount_minor: amount.toString(),

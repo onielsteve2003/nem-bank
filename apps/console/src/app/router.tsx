@@ -7,6 +7,7 @@ import {
   createRouter,
   redirect,
 } from '@tanstack/react-router';
+import { useState } from 'react';
 
 import { RouteError } from '@/components/RouteError';
 import { Shell } from '@/components/Shell';
@@ -26,9 +27,18 @@ import type { FraudFilter } from '@/features/fraud/useFraud';
 import { KycQueuePage } from '@/features/kyc/KycQueuePage';
 import { KycReviewPage } from '@/features/kyc/KycReviewPage';
 import type { KycQueueStatus } from '@/features/kyc/useKyc';
+import { AccountPage } from '@/features/ledger/AccountPage';
+import { AccountsPage } from '@/features/ledger/AccountsPage';
+import { EntryPage } from '@/features/ledger/EntryPage';
+import { JournalPage } from '@/features/ledger/JournalPage';
+import { ENTRY_KINDS } from '@/features/ledger/labels';
+import { ReconciliationPage } from '@/features/ledger/ReconciliationPage';
+import { TrialBalancePage } from '@/features/ledger/TrialBalancePage';
+import type { AccountFilters, EntryFilters, EntryKind } from '@/features/ledger/useLedger';
 import { OverviewPage } from '@/features/overview/OverviewPage';
 import { SupportPage } from '@/features/support/SupportPage';
 import type { InboxFilter } from '@/features/support/useSupport';
+import { lagosDate, shiftDate } from '@/lib/dates';
 
 export interface RouterContext {
   queryClient: QueryClient;
@@ -192,6 +202,86 @@ const supportRoute = createRoute({
   },
 });
 
+const isDate = (v: unknown): v is string => typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v);
+
+const journalRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/ledger',
+  validateSearch: (search: Record<string, unknown>): EntryFilters => ({
+    ...(typeof search.kind === 'string' &&
+      search.kind in ENTRY_KINDS && { kind: search.kind as EntryKind }),
+    ...(typeof search.reference === 'string' &&
+      search.reference.trim() && { reference: search.reference.trim().slice(0, 60) }),
+    ...(isDate(search.from) && { from: search.from }),
+    ...(isDate(search.to) && { to: search.to }),
+  }),
+  beforeLoad: requireAccess('listJournalEntries'),
+  component: function JournalRoute() {
+    return <JournalPage filters={journalRoute.useSearch()} />;
+  },
+});
+
+const entryRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/ledger/entries/$entryId',
+  beforeLoad: requireAccess('getJournalEntry'),
+  component: function EntryRoute() {
+    const { entryId } = entryRoute.useParams();
+    return <EntryPage entryId={entryId} />;
+  },
+});
+
+const ledgerAccountsRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/ledger/accounts',
+  validateSearch: (search: Record<string, unknown>): AccountFilters => ({
+    ...((search.owner === 'system' || search.owner === 'customer') && { owner: search.owner }),
+    ...((search.currency === 'NGN' || search.currency === 'USD') && {
+      currency: search.currency,
+    }),
+  }),
+  beforeLoad: requireAccess('listLedgerAccounts'),
+  component: function LedgerAccountsRoute() {
+    return <AccountsPage filters={ledgerAccountsRoute.useSearch()} />;
+  },
+});
+
+const ledgerAccountRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/ledger/accounts/$accountId',
+  beforeLoad: requireAccess('listLedgerPostings'),
+  component: function LedgerAccountRoute() {
+    const { accountId } = ledgerAccountRoute.useParams();
+    return <AccountPage accountId={accountId} />;
+  },
+});
+
+const trialBalanceRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/ledger/trial-balance',
+  validateSearch: (search: Record<string, unknown>): { asOf?: string } =>
+    isDate(search.asOf) ? { asOf: search.asOf } : {},
+  beforeLoad: requireAccess('getTrialBalance'),
+  component: function TrialBalanceRoute() {
+    const { asOf } = trialBalanceRoute.useSearch();
+    return <TrialBalancePage asOf={asOf} />;
+  },
+});
+
+const reconciliationRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/ledger/reconciliation',
+  validateSearch: (search: Record<string, unknown>): { date?: string } =>
+    isDate(search.date) ? { date: search.date } : {},
+  beforeLoad: requireAccess('getReconciliationReport'),
+  component: function ReconciliationRoute() {
+    const { date } = reconciliationRoute.useSearch();
+    // Yesterday by default: today's partner file arrives tomorrow morning.
+    const [yesterday] = useState(() => shiftDate(lagosDate(Date.now()), -1));
+    return <ReconciliationPage date={date ?? yesterday} />;
+  },
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -211,6 +301,12 @@ const routeTree = rootRoute.addChildren([
     disputeQueueRoute,
     disputeRoute,
     supportRoute,
+    journalRoute,
+    entryRoute,
+    ledgerAccountsRoute,
+    ledgerAccountRoute,
+    trialBalanceRoute,
+    reconciliationRoute,
     myAccessRoute,
   ]),
 ]);
