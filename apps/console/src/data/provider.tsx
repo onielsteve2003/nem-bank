@@ -4,6 +4,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 import { currentAccessToken } from '@/features/auth/session';
 
 import { createMockDispatcher, type MockOptions } from './mock';
+import { tamperAudit } from './mock/audit';
 import { switchDemoRole } from './mock/auth';
 import { createMockState, findAccountByEmail } from './mock/state';
 import { repositoriesFromDispatcher, type Repositories } from './repositories';
@@ -13,6 +14,8 @@ export interface DemoControls {
   switchRole: (role: StaffRole) => StaffSession;
   /** The seeded authenticator secret for a demo account, for the on-page authenticator. */
   totpSecretFor: (email: string) => string | null;
+  /** Edits an audit entry without re-hashing it, so verify has a break to find. */
+  tamperAudit: () => number;
 }
 
 interface DataValue {
@@ -45,6 +48,7 @@ export function RepositoryProvider({ children, mock }: Props) {
       demo: {
         switchRole: (role) => switchDemoRole(state, role),
         totpSecretFor: (email) => findAccountByEmail(state, email)?.totpSecret ?? null,
+        tamperAudit: () => tamperAudit(state),
       },
     };
   }, [mock]);

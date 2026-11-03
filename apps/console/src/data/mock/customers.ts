@@ -39,7 +39,7 @@ function matches(record: CustomerRecord, q: string): boolean {
   );
 }
 
-function setFrozen(record: CustomerRecord, frozen: boolean) {
+export function setFrozen(record: CustomerRecord, frozen: boolean) {
   const status = frozen ? 'frozen' : 'active';
   const view = record.view;
   view.customer.status = status;

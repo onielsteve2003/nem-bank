@@ -10,6 +10,8 @@ import { canCall } from '@/features/auth/access';
 
 import { problem } from '../errors';
 import type { Dispatcher } from '../repositories';
+import { approvalHandlers } from './approvals';
+import { auditHandlers, recordStaffAction } from './audit';
 import { authHandlers } from './auth';
 import { configHandlers } from './config';
 import { customerHandlers } from './customers';
@@ -34,6 +36,8 @@ const HANDLERS: Handlers = {
   ...supportHandlers,
   ...ledgerHandlers,
   ...configHandlers,
+  ...auditHandlers,
+  ...approvalHandlers,
 };
 
 export interface MockOptions {
@@ -84,6 +88,8 @@ export function createMockDispatcher({
         detail: `${operationId} has no mock handler.`,
       });
     }
-    return handler(input as OperationInput<OperationId>, { state, token, staff });
+    const result = await handler(input as OperationInput<OperationId>, { state, token, staff });
+    recordStaffAction(state, operationId, input, result, staff);
+    return result;
   };
 }

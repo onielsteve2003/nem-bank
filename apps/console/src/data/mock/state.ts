@@ -1,5 +1,7 @@
 import type { Schema, Staff } from '@nem/contracts';
 
+import type { AuditEntry } from './audit';
+import { seedApprovals, seedAudit } from './auditSeed';
 import { seedConfig, seedFlags, type BankConfig, type FeatureFlag } from './configSeed';
 import { seedCustomers, type CustomerRecord } from './customerSeed';
 import { seedDisputes, type AdminDispute } from './disputeSeed';
@@ -52,6 +54,8 @@ export interface MockState {
   idempotency: Map<string, unknown>;
   /** Maker-checker requests (ADM-10), newest last. */
   approvals: Map<string, Schema<'ApprovalRequest'>>;
+  /** The hash-chained audit log (ADM-9), oldest first; seq is the index + 1. */
+  audit: AuditEntry[];
   now: () => number;
 }
 
@@ -96,7 +100,8 @@ export function createMockState(now: () => number = Date.now): MockState {
     config: seedConfig(),
     flags: seedFlags(),
     idempotency: new Map(),
-    approvals: new Map(),
+    approvals: seedApprovals(now()),
+    audit: seedAudit(),
     now,
   };
 }

@@ -82,6 +82,24 @@ function close(state: MockState, d: AdminDispute) {
   findCustomer(state, d.customer.user_id).view.open_cases.disputes -= 1;
 }
 
+/** Resolves a dispute with a refund: directly, or once a checker approves a large one. */
+export function refundDispute(
+  state: MockState,
+  disputeId: string,
+  refund: Schema<'Money'>,
+  note: string,
+  at: string,
+) {
+  const d = findDispute(state, disputeId);
+  d.dispute.status = 'resolved_refunded';
+  d.dispute.refund = refund;
+  d.dispute.resolution_note = note;
+  d.dispute.resolved_at = at;
+  d.dispute.timeline.push({ status: 'resolved_refunded', label: 'Refunded', at, detail: note });
+  postRefund(state, d, refund, at);
+  close(state, d);
+}
+
 export const disputeHandlers: Handlers = {
   listAdminDisputes: ({ query } = {}, { state }) => {
     const rows = [...state.disputes.values()]
@@ -168,13 +186,7 @@ export const disputeHandlers: Handlers = {
         event('under_review', `Refund of ${shown} sent for a second approval`, null);
         result = structuredClone(approval);
       } else {
-        d.dispute.status = 'resolved_refunded';
-        d.dispute.refund = refund;
-        d.dispute.resolution_note = note;
-        d.dispute.resolved_at = at;
-        event('resolved_refunded', 'Refunded');
-        postRefund(state, d, refund, at);
-        close(state, d);
+        refundDispute(state, d.dispute.id, refund, note, at);
         result = view(state, d);
       }
     } else if (body.outcome === 'decline') {

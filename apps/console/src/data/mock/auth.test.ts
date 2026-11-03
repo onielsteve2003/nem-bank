@@ -86,7 +86,7 @@ describe('mock staff auth', () => {
     setToken(switchDemoRole(state, 'support').access_token);
     await expect(repos.audit.list()).rejects.toSatisfy(is('forbidden'));
     setToken(switchDemoRole(state, 'admin').access_token);
-    await expect(repos.audit.list()).rejects.toSatisfy(is('not_implemented'));
+    await expect(repos.audit.list()).resolves.toMatchObject({ data: expect.any(Array) });
   });
 
   it('revokes the token on logout', async () => {

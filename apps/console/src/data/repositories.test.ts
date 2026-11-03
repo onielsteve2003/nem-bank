@@ -24,6 +24,15 @@ describe('console repositories', () => {
     const repos = repositoriesFromDispatcher(
       createMockDispatcher({ latencyMs: 0, state, getAccessToken: () => access_token }),
     );
-    await expect(repos.audit.list()).rejects.toSatisfy((e) => isApiError(e, 'not_implemented'));
+    await expect(
+      repos.customers.requestLimitOverride({
+        path: { user_id: 'any' },
+        body: {
+          daily_limit: { amount_minor: '100', currency: 'NGN' },
+          expires_at: '2030-01-01T00:00:00Z',
+          reason: 'Not mocked yet.',
+        },
+      }),
+    ).rejects.toSatisfy((e) => isApiError(e, 'not_implemented'));
   });
 });

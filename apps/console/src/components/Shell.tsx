@@ -78,6 +78,16 @@ export function Shell() {
               Feature flags
             </Link>
           )}
+          {canCall(roles, 'listApprovalRequests') && (
+            <Link to="/approvals" search={{ status: 'pending' }} className="nav-link">
+              Approvals
+            </Link>
+          )}
+          {canCall(roles, 'listAuditLog') && (
+            <Link to="/audit" className="nav-link">
+              Audit log
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>

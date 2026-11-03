@@ -12,6 +12,10 @@ import { useState } from 'react';
 import { RouteError } from '@/components/RouteError';
 import { Shell } from '@/components/Shell';
 import type { Repositories } from '@/data/repositories';
+import { ApprovalPage } from '@/features/approvals/ApprovalPage';
+import { ApprovalsPage } from '@/features/approvals/ApprovalsPage';
+import type { ApprovalStatus } from '@/features/approvals/useApprovals';
+import { AuditLogPage } from '@/features/audit/AuditLogPage';
 import { requireAccess, requireSession } from '@/features/auth/guards';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { isActive, useSession } from '@/features/auth/session';
@@ -298,6 +302,38 @@ const featureFlagsRoute = createRoute({
   component: FeatureFlagsPage,
 });
 
+const auditRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/audit',
+  beforeLoad: requireAccess('listAuditLog'),
+  component: AuditLogPage,
+});
+
+const APPROVAL_STATUSES: readonly ApprovalStatus[] = ['pending', 'approved', 'rejected', 'expired'];
+
+const approvalsRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/approvals',
+  validateSearch: (search: Record<string, unknown>): { status: ApprovalStatus } => ({
+    status: APPROVAL_STATUSES.find((s) => s === search.status) ?? 'pending',
+  }),
+  beforeLoad: requireAccess('listApprovalRequests'),
+  component: function ApprovalsRoute() {
+    const { status } = approvalsRoute.useSearch();
+    return <ApprovalsPage status={status} />;
+  },
+});
+
+const approvalRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/approvals/$approvalId',
+  beforeLoad: requireAccess('getApprovalRequest'),
+  component: function ApprovalRoute() {
+    const { approvalId } = approvalRoute.useParams();
+    return <ApprovalPage approvalId={approvalId} />;
+  },
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -325,6 +361,9 @@ const routeTree = rootRoute.addChildren([
     reconciliationRoute,
     configRoute,
     featureFlagsRoute,
+    auditRoute,
+    approvalsRoute,
+    approvalRoute,
     myAccessRoute,
   ]),
 ]);
