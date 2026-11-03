@@ -659,9 +659,22 @@ a {
 
 .detail-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
-  gap: var(--space-4);
+  grid-template-columns: repeat(auto-fit, minmax(380px, 1fr));
+  gap: var(--space-6);
   align-items: start;
+}
+
+/* Grid items default to min-width: auto, so a wide table would push past its card into
+   the next one. Keep each card to its column and let the table scroll inside it. */
+.detail-grid > .card,
+.review-grid > *,
+.review-grid > .stack > .card {
+  min-width: 0;
+}
+
+.detail-grid > .card,
+.review-grid .card {
+  overflow-x: auto;
 }
 
 .facts {
