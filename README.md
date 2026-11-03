@@ -12,8 +12,10 @@ A mobile-first digital bank for Nigerians, with multi-currency wallets, scam and
 | -------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Web demo (Vercel)          | https://nem-bank-fodx.vercel.app                                                                                                                     |
 | iPhone / Android (Expo Go) | [EAS Update `preview` channel](https://expo.dev/accounts/onielsteve/projects/nem-bank): install Expo Go, open the latest update and scan its QR code |
+| Staff console (Vercel)     | https://nem-console.vercel.app: pick a demo staff account on the login page (password `nem-console-demo`, code from the on-page authenticator)       |
+| Developer portal           | https://nem-console.vercel.app/developers · [API reference](https://nem-console.vercel.app/api-reference.html)                                       |
 
-The web demo redeploys on every push to `main`.
+The web demo and the console redeploy on every push to `main` (the console only when it or a shared package changed).
 
 ## Repository layout
 
