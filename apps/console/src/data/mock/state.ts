@@ -1,5 +1,6 @@
 import type { Schema, Staff } from '@nem/contracts';
 
+import { seedConfig, seedFlags, type BankConfig, type FeatureFlag } from './configSeed';
 import { seedCustomers, type CustomerRecord } from './customerSeed';
 import { seedDisputes, type AdminDispute } from './disputeSeed';
 import { seedFraud, type FraudCase } from './fraudSeed';
@@ -43,6 +44,10 @@ export interface MockState {
   support: Map<string, ConversationRecord>;
   /** The double-entry ledger behind the explorer and trial balance. */
   ledger: LedgerState;
+  /** Live fees, limits, spreads and cool-off rules (ADM-8). */
+  config: BankConfig;
+  /** Feature flags by key, including the paid-feature toggles. */
+  flags: Map<string, FeatureFlag>;
   /** Idempotency-Key → first response, for money-moving staff actions. */
   idempotency: Map<string, unknown>;
   /** Maker-checker requests (ADM-10), newest last. */
@@ -88,6 +93,8 @@ export function createMockState(now: () => number = Date.now): MockState {
     disputes: seedDisputes(customers),
     support: seedSupport(customers, now()),
     ledger: seedLedger(customers, now()),
+    config: seedConfig(),
+    flags: seedFlags(),
     idempotency: new Map(),
     approvals: new Map(),
     now,

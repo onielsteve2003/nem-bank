@@ -68,6 +68,16 @@ export function Shell() {
               Ledger
             </Link>
           )}
+          {canCall(roles, 'getBankConfig') && (
+            <Link to="/config" className="nav-link">
+              Configuration
+            </Link>
+          )}
+          {canCall(roles, 'listFeatureFlags') && (
+            <Link to="/feature-flags" className="nav-link">
+              Feature flags
+            </Link>
+          )}
           <Link to="/me" className="nav-link">
             My access
           </Link>

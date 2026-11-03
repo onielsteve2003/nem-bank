@@ -1,5 +1,7 @@
 import type { CurrencyCode, Schema } from '@nem/contracts';
 
+import { EMTL, money as sharedMoney, transferFee } from '@nem/shared';
+
 import { lagosDate } from '@/lib/dates';
 
 import type { CustomerRecord } from './customerSeed';
@@ -98,6 +100,7 @@ export function post(ledger: LedgerState, input: EntryInput, id?: string): Journ
 }
 
 const DAY = 86_400_000;
+const nairaMinor = (minor: bigint) => sharedMoney(minor, 'NGN');
 
 /** Ledger accounts for every customer account plus the bank's own, with 14 days of history. */
 export function seedLedger(customers: Map<string, CustomerRecord>, now: number): LedgerState {
@@ -156,7 +159,7 @@ export function seedLedger(customers: Map<string, CustomerRecord>, now: number):
         `NEM${lagosDate(at).replaceAll('-', '')}${tag}${String(c).padStart(2, '0')}${d}`;
       const step = (c + d) % 4;
       if (step === 0) {
-        const fee = 10_75n;
+        const fee = transferFee(nairaMinor(slice), 'external').amount;
         plans.push({
           kind: 'transfer_external',
           reference: ref('X'),
@@ -176,8 +179,8 @@ export function seedLedger(customers: Map<string, CustomerRecord>, now: number):
           at: iso,
           postings: [
             [ngn('partner_settlement'), -amount],
-            [account.id, amount - 50_00n],
-            [ngn('levy_payable'), 50_00n],
+            [account.id, amount - EMTL.levy.amount],
+            [ngn('levy_payable'), EMTL.levy.amount],
           ],
           metadata: { rail: 'nip', direction: 'in', levy: 'EMTL' },
         });

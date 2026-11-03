@@ -11,6 +11,7 @@ import { canCall } from '@/features/auth/access';
 import { problem } from '../errors';
 import type { Dispatcher } from '../repositories';
 import { authHandlers } from './auth';
+import { configHandlers } from './config';
 import { customerHandlers } from './customers';
 import { dashboardHandlers } from './dashboard';
 import { disputeHandlers } from './disputes';
@@ -32,6 +33,7 @@ const HANDLERS: Handlers = {
   ...disputeHandlers,
   ...supportHandlers,
   ...ledgerHandlers,
+  ...configHandlers,
 };
 
 export interface MockOptions {

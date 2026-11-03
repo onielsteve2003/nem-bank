@@ -15,6 +15,8 @@ import type { Repositories } from '@/data/repositories';
 import { requireAccess, requireSession } from '@/features/auth/guards';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { isActive, useSession } from '@/features/auth/session';
+import { ConfigPage } from '@/features/config/ConfigPage';
+import { FeatureFlagsPage } from '@/features/config/FeatureFlagsPage';
 import { CustomerPage } from '@/features/customers/CustomerPage';
 import { CustomersPage } from '@/features/customers/CustomersPage';
 import { DashboardPage } from '@/features/dashboard/DashboardPage';
@@ -282,6 +284,20 @@ const reconciliationRoute = createRoute({
   },
 });
 
+const configRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/config',
+  beforeLoad: requireAccess('getBankConfig'),
+  component: ConfigPage,
+});
+
+const featureFlagsRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/feature-flags',
+  beforeLoad: requireAccess('listFeatureFlags'),
+  component: FeatureFlagsPage,
+});
+
 const myAccessRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/me',
@@ -307,6 +323,8 @@ const routeTree = rootRoute.addChildren([
     ledgerAccountRoute,
     trialBalanceRoute,
     reconciliationRoute,
+    configRoute,
+    featureFlagsRoute,
     myAccessRoute,
   ]),
 ]);
