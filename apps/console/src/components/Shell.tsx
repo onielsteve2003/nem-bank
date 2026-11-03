@@ -36,7 +36,10 @@ export function Shell() {
         <nav className="nav" aria-label="Main">
           <span className="nav-section">Back office</span>
           <Link to="/" className="nav-link" activeOptions={{ exact: true }}>
-            Overview
+            Dashboard
+          </Link>
+          <Link to="/me" className="nav-link">
+            My access
           </Link>
         </nav>
       </aside>

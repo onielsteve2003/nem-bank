@@ -34,7 +34,7 @@ const renderAt = (path: string) =>
 afterEach(() => useSession.getState().signOut());
 
 describe('staff login', () => {
-  it('sends a signed-out visitor to login, then through TOTP to the overview', async () => {
+  it('sends a signed-out visitor to login, then through TOTP to the dashboard', async () => {
     const user = userEvent.setup();
     renderAt('/');
 
@@ -44,8 +44,11 @@ describe('staff login', () => {
     expect(await screen.findByRole('heading', { name: 'Two-step sign in' })).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Use this code' }));
 
-    expect(await screen.findByRole('heading', { name: 'Welcome, Aisha' })).toBeInTheDocument();
+    expect(await screen.findByRole('heading', { name: 'Dashboard' })).toBeInTheDocument();
     expect(useSession.getState().session?.staff.roles).toEqual(['compliance']);
+
+    await user.click(screen.getByRole('link', { name: 'My access' }));
+    await screen.findByRole('heading', { name: 'My access' });
     expect(screen.getByText('KYC reviews').closest('li')).toHaveAttribute('data-allowed', 'true');
     expect(screen.getByText('Feature flags').closest('li')).toHaveAttribute(
       'data-allowed',
@@ -76,10 +79,11 @@ describe('staff login', () => {
     await user.click(await screen.findByRole('button', { name: /Admin/ }));
     await user.click(screen.getByRole('button', { name: 'Continue' }));
     await user.click(await screen.findByRole('button', { name: 'Use this code' }));
-    await screen.findByRole('heading', { name: 'Welcome, Ifeoma' });
+    await screen.findByRole('heading', { name: 'Dashboard' });
+    expect(screen.getByText('Ifeoma Adeyemi')).toBeInTheDocument();
 
     await user.selectOptions(screen.getByLabelText(/view the console as another role/), 'finance');
-    expect(await screen.findByRole('heading', { name: 'Welcome, Tunde' })).toBeInTheDocument();
+    expect(await screen.findByText('Tunde Okafor')).toBeInTheDocument();
 
     await user.click(screen.getByRole('button', { name: 'Sign out' }));
     expect(await screen.findByRole('heading', { name: 'Staff sign in' })).toBeInTheDocument();

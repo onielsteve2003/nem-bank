@@ -13,7 +13,7 @@ export function RouteError({ error, reset }: ErrorComponentProps) {
           Your role can't open this page. Ask an admin if you need it for your work.
         </p>
         <Link to="/" className="btn">
-          Back to overview
+          Back to the dashboard
         </Link>
       </div>
     );

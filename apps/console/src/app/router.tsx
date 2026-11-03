@@ -11,9 +11,10 @@ import {
 import { RouteError } from '@/components/RouteError';
 import { Shell } from '@/components/Shell';
 import type { Repositories } from '@/data/repositories';
-import { requireSession } from '@/features/auth/guards';
+import { requireAccess, requireSession } from '@/features/auth/guards';
 import { LoginPage } from '@/features/auth/LoginPage';
 import { isActive, useSession } from '@/features/auth/session';
+import { DashboardPage } from '@/features/dashboard/DashboardPage';
 import { OverviewPage } from '@/features/overview/OverviewPage';
 
 export interface RouterContext {
@@ -43,13 +44,23 @@ const staffRoute = createRoute({
   errorComponent: RouteError,
 });
 
-const overviewRoute = createRoute({
+const dashboardRoute = createRoute({
   getParentRoute: () => staffRoute,
   path: '/',
+  beforeLoad: requireAccess('getAdminDashboard'),
+  component: DashboardPage,
+});
+
+const myAccessRoute = createRoute({
+  getParentRoute: () => staffRoute,
+  path: '/me',
   component: OverviewPage,
 });
 
-const routeTree = rootRoute.addChildren([loginRoute, staffRoute.addChildren([overviewRoute])]);
+const routeTree = rootRoute.addChildren([
+  loginRoute,
+  staffRoute.addChildren([dashboardRoute, myAccessRoute]),
+]);
 
 export function createAppRouter(context: RouterContext, history?: RouterHistory) {
   return createRouter({ routeTree, context, history, defaultPreload: 'intent' });

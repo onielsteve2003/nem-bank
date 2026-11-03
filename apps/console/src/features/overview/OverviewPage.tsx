@@ -19,9 +19,9 @@ export function OverviewPage() {
   return (
     <>
       <div className="stack">
-        <h1>Welcome, {staff.name.split(' ')[0]}</h1>
+        <h1>My access</h1>
         <p className="muted">
-          {staff.email} · {staff.roles.map((r) => ROLE_LABELS[r]).join(', ')}
+          {staff.name} · {staff.email} · {staff.roles.map((r) => ROLE_LABELS[r]).join(', ')}
         </p>
       </div>
       <section className="card stack" aria-labelledby="access-title">
