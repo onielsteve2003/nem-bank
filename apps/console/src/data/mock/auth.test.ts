@@ -82,11 +82,11 @@ describe('mock staff auth', () => {
 
   it('enforces x-roles: 401 without a session, 403 for the wrong role', async () => {
     const { state, repos, setToken } = setup();
-    await expect(repos.config.listFlags()).rejects.toSatisfy(is('unauthorized'));
+    await expect(repos.audit.list()).rejects.toSatisfy(is('unauthorized'));
     setToken(switchDemoRole(state, 'support').access_token);
-    await expect(repos.config.listFlags()).rejects.toSatisfy(is('forbidden'));
+    await expect(repos.audit.list()).rejects.toSatisfy(is('forbidden'));
     setToken(switchDemoRole(state, 'admin').access_token);
-    await expect(repos.config.listFlags()).rejects.toSatisfy(is('not_implemented'));
+    await expect(repos.audit.list()).rejects.toSatisfy(is('not_implemented'));
   });
 
   it('revokes the token on logout', async () => {
