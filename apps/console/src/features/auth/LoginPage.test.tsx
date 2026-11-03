@@ -49,7 +49,10 @@ describe('staff login', () => {
 
     await user.click(screen.getByRole('link', { name: 'My access' }));
     await screen.findByRole('heading', { name: 'My access' });
-    expect(screen.getByText('KYC reviews').closest('li')).toHaveAttribute('data-allowed', 'true');
+    expect(screen.getByText('KYC reviews', { selector: 'strong' }).closest('li')).toHaveAttribute(
+      'data-allowed',
+      'true',
+    );
     expect(screen.getByText('Feature flags').closest('li')).toHaveAttribute(
       'data-allowed',
       'false',
