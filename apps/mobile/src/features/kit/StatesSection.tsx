@@ -1,4 +1,4 @@
-import { Inbox } from 'lucide-react-native';
+import { Inbox } from '@/components/icons';
 import { useState } from 'react';
 
 import {

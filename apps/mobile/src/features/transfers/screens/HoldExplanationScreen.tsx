@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Gauge, LifeBuoy, ShieldCheck, ShieldOff, type LucideIcon } from 'lucide-react-native';
+import { Gauge, LifeBuoy, ShieldCheck, ShieldOff, type LucideIcon } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

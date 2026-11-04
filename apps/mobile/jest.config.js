@@ -10,6 +10,9 @@ module.exports = {
     // jest-expo resolves the "react-native" export condition, which points lucide at
     // an .mjs build Jest can't load; Node's "require" condition gives its CJS build.
     '^lucide-react-native$': require.resolve('lucide-react-native'),
+    '^lucide-react-native/icons/(.*)$': require
+      .resolve('lucide-react-native')
+      .replace(/lucide-react-native\.js$/, 'icons/$1.js'),
   },
   // @noble/* and @shopify/flash-list ship ESM only, so Jest must transform them like the RN packages. Extends
   // the preset's own list so packages it adds later are not dropped.

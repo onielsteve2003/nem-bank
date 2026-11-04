@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Info, LayoutGrid, Zap } from 'lucide-react-native';
+import { Info, LayoutGrid, Zap } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 

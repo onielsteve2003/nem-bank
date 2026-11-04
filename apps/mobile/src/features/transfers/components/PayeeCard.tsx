@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { CircleCheck, CircleX, TriangleAlert } from 'lucide-react-native';
+import { CircleCheck, CircleX, TriangleAlert } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Avatar, Badge, Card, Checkbox, Icon, Text, TONE_PALETTE } from '@/components';

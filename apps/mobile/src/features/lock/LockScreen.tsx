@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Fingerprint, ScanFace, Zap } from 'lucide-react-native';
+import { Fingerprint, ScanFace, Zap } from '@/components/icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';

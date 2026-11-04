@@ -10,7 +10,7 @@ import {
   ScanLine,
   Split,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { ScrollView, StyleSheet, View } from 'react-native';
 
 import {

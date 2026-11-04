@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { KeyRound } from 'lucide-react-native';
+import { KeyRound } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

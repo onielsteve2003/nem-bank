@@ -1,6 +1,6 @@
 import { NEMTAG_MAX_LENGTH } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { AtSign, CalendarClock } from 'lucide-react-native';
+import { AtSign, CalendarClock } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

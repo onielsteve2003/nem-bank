@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Receipt } from 'lucide-react-native';
+import { Receipt } from '@/components/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import {

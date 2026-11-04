@@ -1,6 +1,6 @@
 import type { ScamReason } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { ShieldAlert } from 'lucide-react-native';
+import { ShieldAlert } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, Text } from '@/components';

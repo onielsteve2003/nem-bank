@@ -9,7 +9,7 @@ import {
   Target,
   Users,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

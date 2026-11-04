@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { HandCoins, RefreshCw, ShieldCheck } from 'lucide-react-native';
+import { HandCoins, RefreshCw, ShieldCheck } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

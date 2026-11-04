@@ -1,6 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { AtSign, HandCoins } from 'lucide-react-native';
+import { AtSign, HandCoins } from '@/components/icons';
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 

@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { CircleAlert, CircleCheck, Info, type LucideIcon } from 'lucide-react-native';
+import { CircleAlert, CircleCheck, Info, type LucideIcon } from '@/components/icons';
 
 import type { Tone } from '@/components';
 import i18n, { withLabel } from '@/lib/i18n';

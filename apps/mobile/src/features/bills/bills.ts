@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { Lightbulb, Smartphone, Tv, Wifi, type LucideIcon } from 'lucide-react-native';
+import { Lightbulb, Smartphone, Tv, Wifi, type LucideIcon } from '@/components/icons';
 import i18n, { localized } from '@/lib/i18n';
 
 // Bills (FR-BILL): the four kinds of bill and how each is named and drawn.

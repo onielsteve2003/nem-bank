@@ -1,5 +1,5 @@
 import { add, CURRENCIES, formatMoney, money, parseRate } from '@nem/shared';
-import { Globe, Info } from 'lucide-react-native';
+import { Globe, Info } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { Globe, Monitor, Smartphone } from 'lucide-react-native';
+import { Globe, Monitor, Smartphone } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

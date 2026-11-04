@@ -1,4 +1,4 @@
-import { CircleAlert } from 'lucide-react-native';
+import { CircleAlert } from '@/components/icons';
 import type { ReactNode } from 'react';
 import { StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 

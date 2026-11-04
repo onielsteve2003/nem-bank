@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ArrowLeft, X } from 'lucide-react-native';
+import { ArrowLeft, X } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { IconButton, Text } from '@/components';

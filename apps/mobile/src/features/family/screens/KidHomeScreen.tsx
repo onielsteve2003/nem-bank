@@ -1,6 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams } from 'expo-router';
-import { Eye, Plus, Receipt, Trash2 } from 'lucide-react-native';
+import { Eye, Plus, Receipt, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

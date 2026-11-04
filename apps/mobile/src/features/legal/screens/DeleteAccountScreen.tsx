@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
-import { CircleCheck, Dot } from 'lucide-react-native';
+import { CircleCheck, Dot } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

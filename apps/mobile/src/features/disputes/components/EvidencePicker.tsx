@@ -1,4 +1,4 @@
-import { Camera, ImagePlus, X } from 'lucide-react-native';
+import { Camera, ImagePlus, X } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Image, Linking, StyleSheet, View } from 'react-native';

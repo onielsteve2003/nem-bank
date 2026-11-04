@@ -1,5 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
-import { Copy } from 'lucide-react-native';
+import { Copy } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { IconButton, Text, useToast } from '@/components';

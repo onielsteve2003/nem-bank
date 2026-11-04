@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { Clock, Pencil, Send, Trash2 } from 'lucide-react-native';
+import { Clock, Pencil, Send, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

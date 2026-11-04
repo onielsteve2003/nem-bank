@@ -7,7 +7,7 @@ import {
   ShieldAlert,
   Tags,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 
 import i18n from '@/lib/i18n';
 import type { AiFeature } from '@/stores';

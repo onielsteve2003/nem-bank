@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { BellRing, Trash2 } from 'lucide-react-native';
+import { BellRing, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { View } from 'react-native';
 

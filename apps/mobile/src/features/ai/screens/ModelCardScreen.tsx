@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { Ban, Check, Info } from 'lucide-react-native';
+import { Ban, Check, Info } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type ViewStyle } from 'react-native';
 

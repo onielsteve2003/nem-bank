@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CalendarClock, Inbox, ListChecks, Smile } from 'lucide-react-native';
+import { CalendarClock, Inbox, ListChecks, Smile } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

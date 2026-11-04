@@ -1,6 +1,6 @@
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useRouter } from 'expo-router';
-import { Fingerprint, ScanFace } from 'lucide-react-native';
+import { Fingerprint, ScanFace } from '@/components/icons';
 import { useEffect, useEffectEvent, useRef, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { View } from 'react-native';

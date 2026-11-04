@@ -1,4 +1,4 @@
-import { CloudOff, RotateCw, TriangleAlert } from 'lucide-react-native';
+import { CloudOff, RotateCw, TriangleAlert } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet } from 'react-native';

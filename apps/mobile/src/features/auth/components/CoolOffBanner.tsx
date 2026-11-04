@@ -1,4 +1,4 @@
-import { ShieldAlert } from 'lucide-react-native';
+import { ShieldAlert } from '@/components/icons';
 import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

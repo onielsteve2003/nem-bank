@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
-import { Lock } from 'lucide-react-native';
+import { Lock } from '@/components/icons';
 import { useCallback, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

@@ -1,6 +1,6 @@
 import { MIN_TOUCH_TARGET } from '@nem/shared';
 import { render, screen, within, type RenderResult } from '@testing-library/react-native';
-import { Bell } from 'lucide-react-native';
+import { Bell } from '@/components/icons';
 import { StyleSheet, type Insets } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 

@@ -1,4 +1,4 @@
-import { Zap } from 'lucide-react-native';
+import { Zap } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Icon, Text } from '@/components';

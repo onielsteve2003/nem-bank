@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { Wallet } from 'lucide-react-native';
+import { Wallet } from '@/components/icons';
 
 import { haptic } from '@/lib/haptics';
 import { DEFAULT_PREFERENCES, usePreferencesStore } from '@/stores';

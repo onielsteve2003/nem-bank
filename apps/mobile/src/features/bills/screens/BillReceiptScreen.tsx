@@ -2,7 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
 import { useRouter } from 'expo-router';
-import { CircleCheck, CircleX, Clock, Copy, Share2 } from 'lucide-react-native';
+import { CircleCheck, CircleX, Clock, Copy, Share2 } from '@/components/icons';
 import { Share, StyleSheet, View } from 'react-native';
 
 import {

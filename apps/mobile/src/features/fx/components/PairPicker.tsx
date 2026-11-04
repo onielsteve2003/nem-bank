@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES, formatMoney } from '@nem/shared';
-import { ArrowDownUp } from 'lucide-react-native';
+import { ArrowDownUp } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, IconButton, SelectSheet } from '@/components';

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Plus, Target } from 'lucide-react-native';
+import { Plus, Target } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 

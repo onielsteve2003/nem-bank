@@ -1,6 +1,6 @@
 import { useRouter, type Href } from 'expo-router';
-import { Eye, EyeOff, ReceiptText, Wallet } from 'lucide-react-native';
-import { useState } from 'react';
+import { Eye, EyeOff, ReceiptText, Wallet } from '@/components/icons';
+import { useEffect, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 
 import {
@@ -25,6 +25,7 @@ import { NotificationBell } from '@/features/notifications/components/Notificati
 import { TransactionRow } from '@/features/transactions/TransactionRow';
 import { env } from '@/lib/env';
 import { useRepoQuery } from '@/lib/query';
+import { markInteractive } from '@/lib/startup';
 import { usePreferencesStore, usePrivacyStore } from '@/stores';
 import { useTheme } from '@/theme';
 
@@ -72,6 +73,10 @@ export function HomeScreen() {
   const accounts = useRepoQuery('accounts', 'list');
   const recent = useRepoQuery('transactions', 'list', { query: { limit: RECENT_COUNT } });
   const spending = useRepoQuery('insights', 'getSpending', { query: { currency: 'NGN' } });
+  const balancesShown = accounts.data !== undefined;
+  useEffect(() => {
+    if (balancesShown) markInteractive();
+  }, [balancesShown]);
 
   const refreshing = [accounts, recent, spending].some((q) => q.isRefetching);
   const refresh = () => {

@@ -1,6 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Link2, LogIn, Send, X } from 'lucide-react-native';
+import { Link2, LogIn, Send, X } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

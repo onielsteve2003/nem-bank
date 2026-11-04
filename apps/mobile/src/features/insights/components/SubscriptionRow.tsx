@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
-import { CreditCard, Repeat, TriangleAlert, Wallet } from 'lucide-react-native';
+import { CreditCard, Repeat, TriangleAlert, Wallet } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

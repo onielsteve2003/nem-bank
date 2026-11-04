@@ -1,5 +1,5 @@
 import { fireEvent, render, screen } from '@testing-library/react-native';
-import { ArrowRight, X } from 'lucide-react-native';
+import { ArrowRight, X } from '@/components/icons';
 
 import { haptic } from '@/lib/haptics';
 import { ThemeProvider } from '@/theme';

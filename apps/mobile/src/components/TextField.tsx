@@ -1,5 +1,5 @@
 import { MIN_TOUCH_TARGET } from '@nem/shared';
-import { Eye, EyeOff, type LucideIcon } from 'lucide-react-native';
+import { Eye, EyeOff, type LucideIcon } from '@/components/icons';
 import { useState, type ReactNode, type Ref, type ComponentRef } from 'react';
 import {
   StyleSheet,

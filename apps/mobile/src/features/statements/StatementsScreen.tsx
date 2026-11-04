@@ -1,6 +1,6 @@
 import { CURRENCIES, lagosToday, parseDisplayDate, statementRangeError } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, FileText } from 'lucide-react-native';
+import { ArrowLeft, FileText } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

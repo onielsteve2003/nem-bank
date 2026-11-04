@@ -1,13 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { compare, formatMoney, type Money } from '@nem/shared';
 import type { Href } from 'expo-router';
-import {
-  ShieldAlert,
-  ShieldCheck,
-  ShieldHalf,
-  ShieldX,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { ShieldAlert, ShieldCheck, ShieldHalf, ShieldX, type LucideIcon } from '@/components/icons';
 
 import i18n from '@/lib/i18n';
 

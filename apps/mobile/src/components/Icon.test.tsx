@@ -1,5 +1,5 @@
 import { render, screen } from '@testing-library/react-native';
-import { ShieldCheck } from 'lucide-react-native';
+import { ShieldCheck } from '@/components/icons';
 
 import { ThemeProvider } from '@/theme';
 

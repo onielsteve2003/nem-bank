@@ -1,5 +1,5 @@
 import { CURRENCIES, parseMajor, type CurrencyCode } from '@nem/shared';
-import { ScanFace } from 'lucide-react-native';
+import { ScanFace } from '@/components/icons';
 import { useState } from 'react';
 import { Alert } from 'react-native';
 

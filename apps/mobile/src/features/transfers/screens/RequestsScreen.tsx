@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CircleCheck, HandCoins, Inbox, Send } from 'lucide-react-native';
+import { CircleCheck, HandCoins, Inbox, Send } from '@/components/icons';
 import { useCallback, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { MessageCircle, Search, SearchX } from 'lucide-react-native';
+import { MessageCircle, Search, SearchX } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

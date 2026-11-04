@@ -10,7 +10,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
-import { ChevronRight, Info, Plus } from 'lucide-react-native';
+import { ChevronRight, Info, Plus } from '@/components/icons';
 
 import { Icon, MoneyText, Text } from '@/components';
 import { BalanceTick } from '@/features/accounts/BalanceTick';

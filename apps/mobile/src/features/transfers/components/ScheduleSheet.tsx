@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { lagosToday, parseDisplayDate } from '@nem/shared';
-import { CalendarClock } from 'lucide-react-native';
+import { CalendarClock } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

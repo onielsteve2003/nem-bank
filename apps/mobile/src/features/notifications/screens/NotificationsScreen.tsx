@@ -1,8 +1,9 @@
 import type { Schema } from '@nem/contracts';
+import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { BellOff, CheckCheck, Settings2, X } from 'lucide-react-native';
-import { useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { BellOff, CheckCheck, Settings2, X } from '@/components/icons';
+import { useMemo, useState } from 'react';
+import { RefreshControl, StyleSheet, View } from 'react-native';
 
 import {
   Badge,
@@ -27,7 +28,14 @@ import { useTheme } from '@/theme';
 import { categoryMeta, groupByDay } from '../notifications';
 import { useTranslation } from 'react-i18next';
 
-/** The notification inbox (NOT-1): newest first, unread marked, each opens where it's about. */
+type ListRow =
+  | { kind: 'day'; key: string; title: string }
+  | { kind: 'note'; key: string; note: Schema<'Notification'> };
+
+/**
+ * The notification inbox (NOT-1): newest first, unread marked, each opens where it's about.
+ * Up to 100 cards, so it is a FlashList with the day headers as rows.
+ */
 export function NotificationsScreen() {
   const router = useRouter();
   const toast = useToast();
@@ -39,6 +47,14 @@ export function NotificationsScreen() {
   });
   const markRead = useRepoMutation('notifications', 'markRead');
   const unread = q.data?.unread_count ?? 0;
+  const rows = useMemo<ListRow[]>(
+    () =>
+      groupByDay(q.data?.data ?? []).flatMap((g) => [
+        { kind: 'day', key: `day:${g.title}`, title: g.title },
+        ...g.items.map((note) => ({ kind: 'note' as const, key: note.id, note })),
+      ]),
+    [q.data],
+  );
 
   const open = (n: Schema<'Notification'>) => {
     if (!n.read) markRead.mutate({ body: { ids: [n.id] } });
@@ -85,7 +101,6 @@ export function NotificationsScreen() {
     const meta = categoryMeta(n.category);
     return (
       <Card
-        key={n.id}
         variant={n.read ? 'surface' : 'raised'}
         onPress={() => open(n)}
         accessibilityLabel={`${n.read ? '' : t('notifications.inbox.unreadPrefix')}${n.title}. ${n.body}. ${formatDateTime(n.created_at)}`}
@@ -138,13 +153,56 @@ export function NotificationsScreen() {
         }
       />
     );
-  } else {
-    body = groupByDay(q.data.data).map((g) => (
-      <View key={g.title} style={{ gap: spacing[2] }}>
-        <SectionHeader title={g.title} />
-        {g.items.map(row)}
-      </View>
-    ));
+  }
+
+  const filters = (
+    <View style={[styles.row, { gap: spacing[2], paddingBottom: spacing[2] }]}>
+      <Chip
+        label={t('notifications.inbox.all')}
+        selected={!unreadOnly}
+        onPress={() => setUnreadOnly(false)}
+      />
+      <Chip
+        label={
+          unread
+            ? t('notifications.inbox.unreadCount', { count: unread })
+            : t('notifications.inbox.unread')
+        }
+        selected={unreadOnly}
+        onPress={() => setUnreadOnly(true)}
+      />
+    </View>
+  );
+
+  if (body === undefined) {
+    return (
+      <Screen header={header} scroll={false} padded={false} edges={['top', 'bottom']}>
+        <FlashList
+          testID="notifications-list"
+          data={rows}
+          keyExtractor={(r) => r.key}
+          getItemType={(r) => r.kind}
+          renderItem={({ item }) =>
+            item.kind === 'day' ? (
+              <View style={{ paddingTop: spacing[4], paddingBottom: spacing[2] }}>
+                <SectionHeader title={item.title} />
+              </View>
+            ) : (
+              <View style={{ paddingBottom: spacing[2] }}>{row(item.note)}</View>
+            )
+          }
+          ListHeaderComponent={filters}
+          contentContainerStyle={{ paddingHorizontal: spacing[4], paddingBottom: spacing[8] }}
+          refreshControl={
+            <RefreshControl
+              refreshing={q.isRefetching}
+              onRefresh={() => void q.refetch()}
+              tintColor={colors.primaryText}
+            />
+          }
+        />
+      </Screen>
+    );
   }
 
   return (
@@ -154,22 +212,7 @@ export function NotificationsScreen() {
       onRefresh={() => void q.refetch()}
       refreshing={q.isRefetching}
     >
-      <View style={[styles.row, { gap: spacing[2] }]}>
-        <Chip
-          label={t('notifications.inbox.all')}
-          selected={!unreadOnly}
-          onPress={() => setUnreadOnly(false)}
-        />
-        <Chip
-          label={
-            unread
-              ? t('notifications.inbox.unreadCount', { count: unread })
-              : t('notifications.inbox.unread')
-          }
-          selected={unreadOnly}
-          onPress={() => setUnreadOnly(true)}
-        />
-      </View>
+      {filters}
       {body}
     </Screen>
   );

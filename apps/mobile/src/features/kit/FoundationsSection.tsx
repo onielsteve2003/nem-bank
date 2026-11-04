@@ -1,5 +1,5 @@
 import { SPACING, type ColorTokens, type TypeVariant } from '@nem/shared';
-import { ArrowUpRight, Bell, Send, Wallet } from 'lucide-react-native';
+import { ArrowUpRight, Bell, Send, Wallet } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Icon, ICON_SIZE, Text } from '@/components';

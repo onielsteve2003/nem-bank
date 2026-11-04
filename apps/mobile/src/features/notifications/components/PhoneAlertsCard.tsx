@@ -1,5 +1,5 @@
 import * as Linking from 'expo-linking';
-import { BellRing, CircleCheck, Info, TriangleAlert } from 'lucide-react-native';
+import { BellRing, CircleCheck, Info, TriangleAlert } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

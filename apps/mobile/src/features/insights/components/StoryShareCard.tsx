@@ -1,4 +1,4 @@
-import { Sparkles } from 'lucide-react-native';
+import { Sparkles } from '@/components/icons';
 import type { ComponentRef, Ref } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

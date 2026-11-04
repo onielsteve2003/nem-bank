@@ -1,4 +1,4 @@
-import { Ban, EyeOff, KeyRound, Siren, UserX, Wallet } from 'lucide-react-native';
+import { Ban, EyeOff, KeyRound, Siren, UserX, Wallet } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

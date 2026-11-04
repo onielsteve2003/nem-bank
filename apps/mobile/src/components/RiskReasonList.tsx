@@ -1,10 +1,4 @@
-import {
-  CircleAlert,
-  Info,
-  ShieldCheck,
-  TriangleAlert,
-  type LucideIcon,
-} from 'lucide-react-native';
+import { CircleAlert, Info, ShieldCheck, TriangleAlert, type LucideIcon } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { useTranslation } from 'react-i18next';

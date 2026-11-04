@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, parseMajor } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { ArrowDownToLine, ArrowUpFromLine, Repeat, Target, XCircle } from 'lucide-react-native';
+import { ArrowDownToLine, ArrowUpFromLine, Repeat, Target, XCircle } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

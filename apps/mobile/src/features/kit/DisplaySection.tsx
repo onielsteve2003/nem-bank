@@ -1,4 +1,4 @@
-import { ArrowDownLeft, Landmark, Wallet } from 'lucide-react-native';
+import { ArrowDownLeft, Landmark, Wallet } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

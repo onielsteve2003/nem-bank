@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, isZero } from '@nem/shared';
-import { ChartPie, ChevronRight } from 'lucide-react-native';
+import { ChartPie, ChevronRight } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Icon, MoneyText, Text } from '@/components';

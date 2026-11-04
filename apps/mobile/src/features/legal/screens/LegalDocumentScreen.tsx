@@ -1,5 +1,5 @@
 import { useLocalSearchParams } from 'expo-router';
-import { FileText } from 'lucide-react-native';
+import { FileText } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 

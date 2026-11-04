@@ -1,5 +1,5 @@
 import { formatMoney, parseMajor } from '@nem/shared';
-import { Phone } from 'lucide-react-native';
+import { Phone } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

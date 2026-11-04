@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { QrCode as QrIcon, ScanLine, ShieldAlert, X } from 'lucide-react-native';
+import { QrCode as QrIcon, ScanLine, ShieldAlert, X } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

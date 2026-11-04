@@ -6,7 +6,7 @@ import {
   money,
 } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { AtSign, Plus, Receipt, X } from 'lucide-react-native';
+import { AtSign, Plus, Receipt, X } from '@/components/icons';
 import { useState } from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 

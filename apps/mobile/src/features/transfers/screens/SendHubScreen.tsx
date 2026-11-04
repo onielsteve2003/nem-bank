@@ -11,7 +11,7 @@ import {
   Receipt,
   Search,
   Users,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 

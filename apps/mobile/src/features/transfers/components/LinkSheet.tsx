@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import * as Clipboard from 'expo-clipboard';
-import { Copy, Pause, Play, Share2 } from 'lucide-react-native';
+import { Copy, Pause, Play, Share2 } from '@/components/icons';
 import { useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 

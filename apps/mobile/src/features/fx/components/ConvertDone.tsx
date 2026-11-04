@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { CheckCircle2 } from 'lucide-react-native';
+import { CheckCircle2 } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Button, Icon, MoneyText, Screen, Text } from '@/components';

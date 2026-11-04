@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { parseDisplayDate } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { BadgeCheck, FlaskConical, LockKeyhole } from 'lucide-react-native';
+import { BadgeCheck, FlaskConical, LockKeyhole } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

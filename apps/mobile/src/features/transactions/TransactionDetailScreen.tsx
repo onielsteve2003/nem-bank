@@ -11,7 +11,7 @@ import {
   Repeat,
   ShieldQuestion,
   Tag,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

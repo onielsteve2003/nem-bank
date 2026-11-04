@@ -1,4 +1,4 @@
-import { FlaskConical } from 'lucide-react-native';
+import { FlaskConical } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

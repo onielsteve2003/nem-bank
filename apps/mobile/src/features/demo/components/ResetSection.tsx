@@ -1,5 +1,5 @@
 import { useQueryClient } from '@tanstack/react-query';
-import { Trash2 } from 'lucide-react-native';
+import { Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 

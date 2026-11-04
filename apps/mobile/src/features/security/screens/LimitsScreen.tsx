@@ -1,5 +1,5 @@
 import { formatMoney } from '@nem/shared';
-import { CalendarClock, Gauge, Send } from 'lucide-react-native';
+import { CalendarClock, Gauge, Send } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

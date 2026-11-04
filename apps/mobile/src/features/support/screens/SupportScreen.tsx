@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useRouter } from 'expo-router';
-import { BookOpen, MessageCircle, Plus } from 'lucide-react-native';
+import { BookOpen, MessageCircle, Plus } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 

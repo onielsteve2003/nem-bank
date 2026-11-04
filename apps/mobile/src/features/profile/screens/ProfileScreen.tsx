@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { AtSign, BadgeCheck, Camera, ImagePlus, Trash2 } from 'lucide-react-native';
+import { AtSign, BadgeCheck, Camera, ImagePlus, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, Platform, StyleSheet, View } from 'react-native';

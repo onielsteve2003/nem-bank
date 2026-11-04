@@ -1,4 +1,4 @@
-import { X, type LucideIcon } from 'lucide-react-native';
+import { X, type LucideIcon } from '@/components/icons';
 import { Pressable, StyleSheet } from 'react-native';
 
 import { haptic } from '@/lib/haptics';

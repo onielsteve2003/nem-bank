@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ListChecks, UserPlus, Users } from 'lucide-react-native';
+import { ListChecks, UserPlus, Users } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

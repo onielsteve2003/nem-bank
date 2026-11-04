@@ -1,5 +1,5 @@
 import { COLORS, DURATION, EASING } from '@nem/shared';
-import { Nfc, Snowflake } from 'lucide-react-native';
+import { Nfc, Snowflake } from '@/components/icons';
 import { useState, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View, type TextStyle } from 'react-native';

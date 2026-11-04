@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { isZero } from '@nem/shared';
-import { RefreshCw, Timer } from 'lucide-react-native';
+import { RefreshCw, Timer } from '@/components/icons';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { Button, Card, Divider, Icon, MoneyText, Text } from '@/components';

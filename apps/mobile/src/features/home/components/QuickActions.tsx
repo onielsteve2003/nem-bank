@@ -5,7 +5,7 @@ import {
   Receipt,
   ScanLine,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Icon, PressableScale, Text } from '@/components';

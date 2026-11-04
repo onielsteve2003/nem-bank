@@ -1,4 +1,4 @@
-import { Check, X } from 'lucide-react-native';
+import { Check, X } from '@/components/icons';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 
 import { Icon, Text } from '@/components';

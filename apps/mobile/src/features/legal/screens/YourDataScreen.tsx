@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { Check, CircleCheck, UserX } from 'lucide-react-native';
+import { Check, CircleCheck, UserX } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

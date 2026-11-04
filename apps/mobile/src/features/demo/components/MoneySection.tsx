@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
-import { ArrowDownLeft, Plus } from 'lucide-react-native';
+import { ArrowDownLeft, Plus } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

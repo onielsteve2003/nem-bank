@@ -6,7 +6,7 @@ import {
   House,
   Sprout,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 
 import { useTranslation } from 'react-i18next';
 

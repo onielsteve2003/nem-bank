@@ -1,6 +1,6 @@
 import type { ColorScheme } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { ArrowLeft } from 'lucide-react-native';
+import { ArrowLeft } from '@/components/icons';
 import { useState, type ComponentType } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 

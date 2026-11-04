@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
-import { CalendarClock, HandCoins, TriangleAlert } from 'lucide-react-native';
+import { CalendarClock, HandCoins, TriangleAlert } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

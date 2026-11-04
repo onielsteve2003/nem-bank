@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
-import { Ban, Send, XCircle } from 'lucide-react-native';
+import { Ban, Send, XCircle } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

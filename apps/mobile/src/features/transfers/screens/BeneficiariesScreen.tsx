@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { Search, Users } from 'lucide-react-native';
+import { Search, Users } from '@/components/icons';
 import { useCallback, useState } from 'react';
 import { View } from 'react-native';
 

@@ -1,5 +1,5 @@
 import { formatMoney } from '@nem/shared';
-import { Share2, X } from 'lucide-react-native';
+import { Share2, X } from '@/components/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 

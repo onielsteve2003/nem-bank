@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { BellPlus } from 'lucide-react-native';
+import { BellPlus } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

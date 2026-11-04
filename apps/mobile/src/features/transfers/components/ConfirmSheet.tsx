@@ -1,4 +1,4 @@
-import { Fingerprint, ScanFace } from 'lucide-react-native';
+import { Fingerprint, ScanFace } from '@/components/icons';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

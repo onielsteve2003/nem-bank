@@ -2,7 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { CURRENCIES } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeft, Copy, FileText } from 'lucide-react-native';
+import { ArrowLeft, Copy, FileText } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

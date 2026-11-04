@@ -1,5 +1,5 @@
 import { MIN_TOUCH_TARGET } from '@nem/shared';
-import { Check } from 'lucide-react-native';
+import { Check } from '@/components/icons';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { haptic } from '@/lib/haptics';

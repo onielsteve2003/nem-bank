@@ -1,6 +1,6 @@
 import { lagosToday } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Repeat } from 'lucide-react-native';
+import { Repeat } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

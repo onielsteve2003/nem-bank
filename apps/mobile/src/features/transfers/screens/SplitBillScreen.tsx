@@ -1,6 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { BellRing, Receipt } from 'lucide-react-native';
+import { BellRing, Receipt } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

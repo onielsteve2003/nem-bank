@@ -9,7 +9,7 @@ import {
   ShieldAlert,
   Sun,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import type { ParseKeys } from 'i18next';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

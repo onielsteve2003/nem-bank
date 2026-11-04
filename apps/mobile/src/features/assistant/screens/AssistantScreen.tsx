@@ -8,7 +8,7 @@ import {
   SquarePen,
   Wallet,
   X,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, StyleSheet, TextInput, View } from 'react-native';

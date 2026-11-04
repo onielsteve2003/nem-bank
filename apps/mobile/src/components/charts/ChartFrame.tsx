@@ -1,6 +1,6 @@
 import { EASING, type ColorTokens } from '@nem/shared';
 import { useEffect, useState, type ReactNode } from 'react';
-import { ChartLine } from 'lucide-react-native';
+import { ChartLine } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import { Easing, useSharedValue, withTiming, type SharedValue } from 'react-native-reanimated';

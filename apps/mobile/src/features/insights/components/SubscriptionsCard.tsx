@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
-import { ChevronRight, Repeat } from 'lucide-react-native';
+import { ChevronRight, Repeat } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

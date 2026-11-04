@@ -1,5 +1,5 @@
 import { add, formatMoney, subtract } from '@nem/shared';
-import { Lock as LockIcon, Unlock } from 'lucide-react-native';
+import { Lock as LockIcon, Unlock } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

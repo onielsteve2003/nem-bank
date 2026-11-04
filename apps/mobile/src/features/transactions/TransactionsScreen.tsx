@@ -1,8 +1,9 @@
+import type { Schema } from '@nem/contracts';
 import { FlashList } from '@shopify/flash-list';
 import { CURRENCIES } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { ArrowLeft, ReceiptText, Search, SlidersHorizontal, X } from 'lucide-react-native';
-import { useEffect, useMemo, useState } from 'react';
+import { ArrowLeft, ReceiptText, Search, SlidersHorizontal, X } from '@/components/icons';
+import { memo, useCallback, useEffect, useMemo, useState } from 'react';
 import { ActivityIndicator, RefreshControl, ScrollView, StyleSheet, View } from 'react-native';
 
 import {
@@ -147,6 +148,7 @@ export function TransactionsScreen() {
     </View>
   );
 
+  const open = useCallback((id: string) => router.push(`/transactions/${id}`), [router]);
   const renderItem = ({ item }: { item: ListRow }) =>
     item.kind === 'day' ? (
       <View
@@ -157,13 +159,7 @@ export function TransactionsScreen() {
         </Text>
       </View>
     ) : (
-      <View style={{ paddingHorizontal: spacing[2] }}>
-        <TransactionRow
-          transaction={item.transaction}
-          timeOnly
-          onPress={() => router.push(`/transactions/${item.transaction.id}`)}
-        />
-      </View>
+      <ListTransaction transaction={item.transaction} onOpen={open} />
     );
 
   const body = list.data ? (
@@ -252,6 +248,25 @@ export function TransactionsScreen() {
     </Screen>
   );
 }
+
+/**
+ * Memoized so typing in search or loading the next page re-renders only rows whose
+ * transaction changed (the query keeps unchanged objects by reference).
+ */
+const ListTransaction = memo(function ListTransaction({
+  transaction,
+  onOpen,
+}: {
+  transaction: Schema<'Transaction'>;
+  onOpen: (id: string) => void;
+}) {
+  const { spacing } = useTheme();
+  return (
+    <View style={{ paddingHorizontal: spacing[2] }}>
+      <TransactionRow transaction={transaction} timeOnly onPress={() => onOpen(transaction.id)} />
+    </View>
+  );
+});
 
 const styles = StyleSheet.create({
   row: { flexDirection: 'row', alignItems: 'center' },

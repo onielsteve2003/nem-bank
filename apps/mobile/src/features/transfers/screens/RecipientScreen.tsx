@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { recipientWarning } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { AtSign, ChevronDown, Hash, Landmark, UserRound } from 'lucide-react-native';
+import { AtSign, ChevronDown, Hash, Landmark, UserRound } from '@/components/icons';
 import { useState } from 'react';
 import { ActivityIndicator, Pressable, StyleSheet, View } from 'react-native';
 

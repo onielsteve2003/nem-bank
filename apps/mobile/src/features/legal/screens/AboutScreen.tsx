@@ -1,6 +1,6 @@
 import Constants from 'expo-constants';
 import { useRouter } from 'expo-router';
-import { Bot, FileText, Info, Package, ShieldCheck } from 'lucide-react-native';
+import { Bot, FileText, Info, Package, ShieldCheck } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

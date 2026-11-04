@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { Check, Landmark, Search } from 'lucide-react-native';
+import { Check, Landmark, Search } from '@/components/icons';
 import { useState } from 'react';
 
 import {

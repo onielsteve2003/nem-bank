@@ -1,4 +1,4 @@
-import { Globe, ShieldCheck, Users, Zap, type LucideIcon } from 'lucide-react-native';
+import { Globe, ShieldCheck, Users, Zap, type LucideIcon } from '@/components/icons';
 
 export interface WelcomeSlide {
   /** Title and body come from auth.welcome.slides.<key> in the locale files. */

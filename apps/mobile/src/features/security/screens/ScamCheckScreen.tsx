@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { checkScamText } from '@nem/shared';
 import * as Clipboard from 'expo-clipboard';
-import { ClipboardPaste, Lock } from 'lucide-react-native';
+import { ClipboardPaste, Lock } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

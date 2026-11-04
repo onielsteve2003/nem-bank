@@ -6,7 +6,7 @@ import {
   ShieldAlert,
   Undo2,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useEffect } from 'react';
 import { StyleSheet, View } from 'react-native';
 import Animated, {

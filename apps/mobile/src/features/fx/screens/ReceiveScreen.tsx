@@ -1,6 +1,6 @@
 import { CURRENCIES, type CurrencyCode } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowLeftRight, Globe, Share2 } from 'lucide-react-native';
+import { ArrowLeftRight, Globe, Share2 } from '@/components/icons';
 import { useState } from 'react';
 import { Share, StyleSheet, View } from 'react-native';
 

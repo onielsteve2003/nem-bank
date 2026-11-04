@@ -1,4 +1,4 @@
-import { RotateCcw } from 'lucide-react-native';
+import { RotateCcw } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 
 import { Button, Chip, Switch } from '@/components';

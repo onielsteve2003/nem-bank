@@ -1,4 +1,4 @@
-import { FileText, Image as ImageIcon } from 'lucide-react-native';
+import { FileText, Image as ImageIcon } from '@/components/icons';
 import { useRef, useState, type ComponentRef } from 'react';
 import { StyleSheet, View } from 'react-native';
 

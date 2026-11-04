@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { Camera, CameraOff, CircleAlert, CircleCheck, Image, Settings } from 'lucide-react-native';
+import { Camera, CameraOff, CircleAlert, CircleCheck, Image, Settings } from '@/components/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, View } from 'react-native';

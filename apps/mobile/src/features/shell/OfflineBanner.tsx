@@ -1,4 +1,4 @@
-import { CloudOff } from 'lucide-react-native';
+import { CloudOff } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 import Animated, { FadeInUp, FadeOutUp } from 'react-native-reanimated';

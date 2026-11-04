@@ -1,4 +1,4 @@
-import { ArrowRight, Plus, Send, Trash2 } from 'lucide-react-native';
+import { ArrowRight, Plus, Send, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

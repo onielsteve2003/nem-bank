@@ -1,7 +1,7 @@
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
 import type { Schema } from '@nem/contracts';
-import { CalendarClock, Receipt, Trash2 } from 'lucide-react-native';
+import { CalendarClock, Receipt, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

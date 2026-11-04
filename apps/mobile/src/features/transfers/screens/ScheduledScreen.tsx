@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { CalendarClock, CircleCheck } from 'lucide-react-native';
+import { CalendarClock, CircleCheck } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

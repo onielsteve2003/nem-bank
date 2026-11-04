@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
-import { Minus, Sparkles, TrendingDown, TrendingUp, type LucideIcon } from 'lucide-react-native';
+import { Minus, Sparkles, TrendingDown, TrendingUp, type LucideIcon } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

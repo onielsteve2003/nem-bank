@@ -10,7 +10,7 @@ import {
   Sparkles,
   Wallet,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 
 import { CATEGORIES } from '@/features/transactions/categories';
 import i18n from '@/lib/i18n';

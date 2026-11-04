@@ -1,4 +1,4 @@
-import { Landmark, Smartphone, Wallet } from 'lucide-react-native';
+import { Landmark, Smartphone, Wallet } from '@/components/icons';
 import { useState } from 'react';
 
 import { BottomSheet, Button, Dialog, ListItem, Text, useToast } from '@/components';

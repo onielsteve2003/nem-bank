@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, type CurrencyCode } from '@nem/shared';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { ArrowDownLeft, ChartLine, History, Lock, Wallet } from 'lucide-react-native';
+import { ArrowDownLeft, ChartLine, History, Lock, Wallet } from '@/components/icons';
 import { useCallback, useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

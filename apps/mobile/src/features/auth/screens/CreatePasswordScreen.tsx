@@ -1,6 +1,6 @@
 import { checkPassword, PASSWORD_MAX_LENGTH } from '@nem/shared';
 import { Redirect, useRouter } from 'expo-router';
-import { Check } from 'lucide-react-native';
+import { Check } from '@/components/icons';
 import { useMemo, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

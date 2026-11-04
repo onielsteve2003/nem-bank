@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import * as Clipboard from 'expo-clipboard';
-import { Copy, EyeOff } from 'lucide-react-native';
+import { Copy, EyeOff } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

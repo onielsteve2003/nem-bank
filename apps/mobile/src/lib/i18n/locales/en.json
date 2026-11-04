@@ -3770,6 +3770,16 @@
       "confirmTitle": "Reset the demo?",
       "confirmMessage": "Everything you did in the demo is wiped: transfers, cards, savings and ajo groups."
     },
+    "performance": {
+      "title": "Performance",
+      "description": "How long the app took to get ready, from its code starting to Home showing your balances. The phone's own launch time is not counted.",
+      "startup": "Startup time",
+      "value": "{{seconds}} s",
+      "target": "Target: under {{target}} s",
+      "withinTarget": "Within target",
+      "overTarget": "Over target",
+      "notYet": "Open Home once to measure it."
+    },
     "scenarios": {
       "title": "Scenarios",
       "description": "Rehearse what is hard to make happen on purpose.",

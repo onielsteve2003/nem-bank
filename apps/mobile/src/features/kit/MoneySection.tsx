@@ -1,5 +1,5 @@
 import { add, money } from '@nem/shared';
-import { Eye, EyeOff, Plus } from 'lucide-react-native';
+import { Eye, EyeOff, Plus } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

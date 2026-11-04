@@ -1,7 +1,7 @@
 import { formatMoney, isZero, money } from '@nem/shared';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { ChartPie, Sparkles } from 'lucide-react-native';
+import { ChartPie, Sparkles } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

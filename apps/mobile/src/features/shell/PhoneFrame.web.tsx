@@ -6,7 +6,7 @@ import {
   KeyRound,
   Vibrate,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useCallback, useEffect, useRef, useState, type ReactNode, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Linking, StyleSheet, useWindowDimensions, View } from 'react-native';

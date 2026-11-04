@@ -1,4 +1,4 @@
-import { Check, ChevronDown, X, type LucideIcon } from 'lucide-react-native';
+import { Check, ChevronDown, X, type LucideIcon } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';

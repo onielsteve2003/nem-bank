@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { FlashList } from '@shopify/flash-list';
 import { useRouter } from 'expo-router';
-import { ArrowLeftRight } from 'lucide-react-native';
+import { ArrowLeftRight } from '@/components/icons';
 import { useCallback, useState } from 'react';
 import { ActivityIndicator, RefreshControl, View } from 'react-native';
 

@@ -16,7 +16,7 @@ import {
   SlidersHorizontal,
   UserRound,
   Users,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

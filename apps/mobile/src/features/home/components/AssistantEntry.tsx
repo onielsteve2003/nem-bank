@@ -1,4 +1,4 @@
-import { ChevronRight, Sparkles } from 'lucide-react-native';
+import { ChevronRight, Sparkles } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { AIBadge, Card, Icon, Text } from '@/components';

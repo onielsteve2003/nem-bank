@@ -3775,6 +3775,16 @@
       "confirmTitle": "Reset the demo?",
       "confirmMessage": "Everything wey you do for the demo go clear: transfers, cards, savings and ajo groups."
     },
+    "performance": {
+      "title": "Performance",
+      "description": "How long the app take to ready, from when im code start reach when Home show your balance. The time wey the phone take to open am no dey inside.",
+      "startup": "Startup time",
+      "value": "{{seconds}} s",
+      "target": "Target: under {{target}} s",
+      "withinTarget": "E dey inside target",
+      "overTarget": "E pass target",
+      "notYet": "Open Home one time make we measure am."
+    },
     "scenarios": {
       "title": "Scenarios",
       "description": "Practise the things wey hard to make happen by yourself.",

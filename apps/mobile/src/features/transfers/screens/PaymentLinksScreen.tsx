@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { Link2, Plus } from 'lucide-react-native';
+import { Link2, Plus } from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

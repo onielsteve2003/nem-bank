@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { ListChecks } from 'lucide-react-native';
+import { ListChecks } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

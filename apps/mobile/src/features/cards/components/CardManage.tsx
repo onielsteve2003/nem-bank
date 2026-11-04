@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { RefreshCw, Trash2 } from 'lucide-react-native';
+import { RefreshCw, Trash2 } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

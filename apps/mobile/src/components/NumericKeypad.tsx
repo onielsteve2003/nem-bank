@@ -1,4 +1,4 @@
-import { Delete, type LucideIcon } from 'lucide-react-native';
+import { Delete, type LucideIcon } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { SlidersHorizontal, X } from 'lucide-react-native';
+import { SlidersHorizontal, X } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 
@@ -20,6 +20,7 @@ import { useTheme } from '@/theme';
 
 import { MoneySection } from '../components/MoneySection';
 import { NetworkSection } from '../components/NetworkSection';
+import { PerformanceSection } from '../components/PerformanceSection';
 import { ResetSection } from '../components/ResetSection';
 import { ScenarioSection } from '../components/ScenarioSection';
 
@@ -82,6 +83,7 @@ export function DemoControlsScreen() {
       {money}
       <ScenarioSection />
       {simulation && <NetworkSection />}
+      <PerformanceSection />
       <ResetSection />
     </Screen>
   );

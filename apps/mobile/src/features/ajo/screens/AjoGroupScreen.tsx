@@ -1,6 +1,6 @@
 import { formatMoney, nemtagProblem, normalizeNemtag } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { AtSign, Link2, Play, Share2, XCircle } from 'lucide-react-native';
+import { AtSign, Link2, Play, Share2, XCircle } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Share, View } from 'react-native';

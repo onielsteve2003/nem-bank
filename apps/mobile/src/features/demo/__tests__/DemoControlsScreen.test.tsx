@@ -8,6 +8,7 @@ import { RepositoryProvider, type Repositories } from '@/data';
 import { createMockBank, type Simulation } from '@/data/mock';
 import { createMemoryStore } from '@/data/mock/persistence/types';
 import { createQueryClient, QueryProvider } from '@/lib/query';
+import { markInteractive } from '@/lib/startup';
 import { useDemoStore, useSessionStore } from '@/stores';
 import { ThemeProvider } from '@/theme';
 
@@ -137,4 +138,16 @@ it('is closed to accounts that are not the demo', async () => {
   useSessionStore.getState().setSession(session(false));
   await mount(createMockBank({ store: createMemoryStore() }).repositories);
   expect(screen.getByText('Only for the demo account')).toBeOnTheScreen();
+});
+
+it('shows how long startup took against the 2.5 s target once Home has loaded', async () => {
+  await renderScreen();
+  expect(screen.getByText('Open Home once to measure it.')).toBeOnTheScreen();
+  screen.unmount();
+
+  markInteractive(Date.now() + 10_000);
+  await renderScreen();
+  expect(screen.getByText(/^\d+\.\d\d s$/)).toBeOnTheScreen();
+  expect(screen.getByText('Over target')).toBeOnTheScreen();
+  expect(screen.getByText('Target: under 2.5 s')).toBeOnTheScreen();
 });

@@ -1,5 +1,5 @@
 import { NEMTAG_MAX_LENGTH, nemtagIdeas } from '@nem/shared';
-import { AtSign } from 'lucide-react-native';
+import { AtSign } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

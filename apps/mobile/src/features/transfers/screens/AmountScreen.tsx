@@ -1,7 +1,7 @@
 import { narrationWarning } from '@nem/shared';
 import { keepPreviousData } from '@tanstack/react-query';
 import { useRouter } from 'expo-router';
-import { MessageSquareText, UserSearch } from 'lucide-react-native';
+import { MessageSquareText, UserSearch } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

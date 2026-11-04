@@ -1,6 +1,6 @@
 import { NEMTAG_MAX_LENGTH, parseDisplayDate } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { AtSign, KeyRound, Share2 } from 'lucide-react-native';
+import { AtSign, KeyRound, Share2 } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Share, StyleSheet, View } from 'react-native';

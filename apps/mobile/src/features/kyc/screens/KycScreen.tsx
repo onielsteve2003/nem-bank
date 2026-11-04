@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { BadgeCheck, CircleX, Clock, RotateCcw } from 'lucide-react-native';
+import { BadgeCheck, CircleX, Clock, RotateCcw } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

@@ -1,5 +1,5 @@
 import { formatMoney, negate } from '@nem/shared';
-import { TriangleAlert } from 'lucide-react-native';
+import { TriangleAlert } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

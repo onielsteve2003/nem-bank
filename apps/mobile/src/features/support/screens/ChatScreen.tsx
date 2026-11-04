@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { useLocalSearchParams } from 'expo-router';
-import { Camera, ImagePlus, Send, X } from 'lucide-react-native';
+import { Camera, ImagePlus, Send, X } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { FlatList, Image, Linking, StyleSheet, TextInput, View } from 'react-native';

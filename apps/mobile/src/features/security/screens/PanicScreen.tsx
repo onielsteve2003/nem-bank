@@ -1,5 +1,5 @@
 import { useRouter } from 'expo-router';
-import { ArrowDownLeft, Ban, CreditCard, MonitorSmartphone, OctagonX } from 'lucide-react-native';
+import { ArrowDownLeft, Ban, CreditCard, MonitorSmartphone, OctagonX } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

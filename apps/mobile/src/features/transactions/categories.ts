@@ -19,7 +19,7 @@ import {
   Utensils,
   Wallet,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import i18n from '@/lib/i18n';
 
 export type Category = Schema<'Category'>;

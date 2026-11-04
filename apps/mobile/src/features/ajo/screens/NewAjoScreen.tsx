@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { addDaysIso, formatMoney, lagosToday } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Minus, Plus } from 'lucide-react-native';
+import { Minus, Plus } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

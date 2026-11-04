@@ -1,5 +1,5 @@
 import { CURRENCIES, CURRENCY_CODES, type CurrencyCode } from '@nem/shared';
-import { AtSign, Search } from 'lucide-react-native';
+import { AtSign, Search } from '@/components/icons';
 import { useState } from 'react';
 
 import { Checkbox, SelectSheet, Switch, TextField } from '@/components';

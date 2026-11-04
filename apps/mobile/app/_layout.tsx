@@ -1,3 +1,5 @@
+// First, so the startup clock starts before the rest of the app loads.
+import '@/lib/startup';
 import { BottomSheetModalProvider } from '@gorhom/bottom-sheet';
 import { useFonts } from 'expo-font';
 import * as SplashScreen from 'expo-splash-screen';

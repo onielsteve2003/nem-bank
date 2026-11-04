@@ -9,7 +9,7 @@ import {
   ShieldQuestion,
   Undo2,
   type LucideIcon,
-} from 'lucide-react-native';
+} from '@/components/icons';
 import { useEffect, useRef, useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

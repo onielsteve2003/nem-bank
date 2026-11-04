@@ -1,5 +1,5 @@
 import { Redirect } from 'expo-router';
-import { Fingerprint, KeyRound, ScanFace, ShieldCheck, type LucideIcon } from 'lucide-react-native';
+import { Fingerprint, KeyRound, ScanFace, ShieldCheck, type LucideIcon } from '@/components/icons';
 import { useEffect, useState } from 'react';
 import { Platform, StyleSheet, View } from 'react-native';
 

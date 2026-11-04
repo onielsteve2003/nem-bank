@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { Wallet } from 'lucide-react-native';
+import { Wallet } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 

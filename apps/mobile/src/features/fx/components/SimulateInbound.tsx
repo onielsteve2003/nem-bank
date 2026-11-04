@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { ArrowDownLeft } from 'lucide-react-native';
+import { ArrowDownLeft } from '@/components/icons';
 import { View } from 'react-native';
 
 import { Button, Card, Text, useToast } from '@/components';

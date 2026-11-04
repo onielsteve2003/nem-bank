@@ -1,6 +1,6 @@
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Users } from 'lucide-react-native';
+import { Users } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

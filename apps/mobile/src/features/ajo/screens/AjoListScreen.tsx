@@ -1,6 +1,6 @@
 import { normalizeNemtag } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Plus, Ticket, Users } from 'lucide-react-native';
+import { Plus, Ticket, Users } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';

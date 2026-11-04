@@ -1,5 +1,5 @@
 import { formatMoney, parseMajor } from '@nem/shared';
-import { CircleCheck, Hash } from 'lucide-react-native';
+import { CircleCheck, Hash } from '@/components/icons';
 import { useState } from 'react';
 import { StyleSheet, View } from 'react-native';
 

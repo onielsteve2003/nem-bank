@@ -1,4 +1,4 @@
-import { CircleCheck, Circle } from 'lucide-react-native';
+import { CircleCheck, Circle } from '@/components/icons';
 import { StyleSheet, View } from 'react-native';
 
 import { Card, Icon, Text } from '@/components';

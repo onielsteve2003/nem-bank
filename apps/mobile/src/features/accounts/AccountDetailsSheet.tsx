@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { CircleHelp, FileText, Share2, TriangleAlert } from 'lucide-react-native';
+import { CircleHelp, FileText, Share2, TriangleAlert } from '@/components/icons';
 import { Share, StyleSheet, View } from 'react-native';
 
 import { Badge, BottomSheet, Button, Icon, Text, useToast } from '@/components';

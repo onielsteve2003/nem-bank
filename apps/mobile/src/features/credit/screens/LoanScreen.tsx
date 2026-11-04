@@ -1,5 +1,5 @@
 import { formatMoney } from '@nem/shared';
-import { CircleCheck } from 'lucide-react-native';
+import { CircleCheck } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

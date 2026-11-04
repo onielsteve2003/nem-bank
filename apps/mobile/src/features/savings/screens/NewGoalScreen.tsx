@@ -1,6 +1,6 @@
 import { addDaysIso, lagosToday, parseDisplayDate, parseMajor } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { CalendarDays } from 'lucide-react-native';
+import { CalendarDays } from '@/components/icons';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';

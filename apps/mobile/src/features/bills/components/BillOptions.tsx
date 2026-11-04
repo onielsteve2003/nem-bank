@@ -1,4 +1,4 @@
-import { CalendarClock } from 'lucide-react-native';
+import { CalendarClock } from '@/components/icons';
 import { useState } from 'react';
 
 import { Card, ListItem, Switch, TextField } from '@/components';

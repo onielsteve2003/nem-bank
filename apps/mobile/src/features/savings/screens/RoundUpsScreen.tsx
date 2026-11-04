@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney, money } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Coins } from 'lucide-react-native';
+import { Coins } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
 

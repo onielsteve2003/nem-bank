@@ -1,5 +1,5 @@
 import type { Schema } from '@nem/contracts';
-import { Clock, Star } from 'lucide-react-native';
+import { Clock, Star } from '@/components/icons';
 import { memo } from 'react';
 import { StyleSheet, View } from 'react-native';
 

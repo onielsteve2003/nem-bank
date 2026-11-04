@@ -1,4 +1,4 @@
-import { CircleAlert, CircleCheck, Info, type LucideIcon } from 'lucide-react-native';
+import { CircleAlert, CircleCheck, Info, type LucideIcon } from '@/components/icons';
 import {
   createContext,
   useCallback,

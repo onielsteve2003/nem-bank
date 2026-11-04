@@ -1,7 +1,7 @@
 import type { Schema } from '@nem/contracts';
 import { formatMoney } from '@nem/shared';
 import { useRouter } from 'expo-router';
-import { Lock, Plus } from 'lucide-react-native';
+import { Lock, Plus } from '@/components/icons';
 import { useTranslation } from 'react-i18next';
 import { View } from 'react-native';
 

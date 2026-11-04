@@ -1,6 +1,6 @@
 import type { Schema } from '@nem/contracts';
 import { CURRENCIES, MIN_TIER_FOR, type KycTier } from '@nem/shared';
-import { ShieldCheck } from 'lucide-react-native';
+import { ShieldCheck } from '@/components/icons';
 import { View } from 'react-native';
 
 import { BottomSheet, Button, EmptyState, ListItem, Text, useToast } from '@/components';

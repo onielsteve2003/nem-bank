@@ -1,5 +1,5 @@
 import { useLocalSearchParams, useRouter } from 'expo-router';
-import { BookOpen, Pause, Play, Share2, X } from 'lucide-react-native';
+import { BookOpen, Pause, Play, Share2, X } from '@/components/icons';
 import { useEffect, useRef, useState, type ComponentRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AccessibilityInfo, Pressable, Share, StyleSheet, View } from 'react-native';

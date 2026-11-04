@@ -1,4 +1,4 @@
-import { House, RotateCw, TriangleAlert } from 'lucide-react-native';
+import { House, RotateCw, TriangleAlert } from '@/components/icons';
 import { Component, type ErrorInfo, type ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { StyleSheet, View } from 'react-native';
