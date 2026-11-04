@@ -295,6 +295,12 @@ a {
   gap: var(--space-3);
 }
 
+/* A page-level state is the next heading under the page's h1, so it is an h2 sized like an h3. */
+.state h2 {
+  font-size: 16px;
+  line-height: 24px;
+}
+
 .skeleton {
   background: var(--color-raised);
   border-radius: var(--radius-sm);

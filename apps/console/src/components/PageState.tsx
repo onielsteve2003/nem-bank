@@ -18,7 +18,7 @@ export function ErrorState({ error, onRetry, title = 'Could not load this' }: Er
   const detail = isApiError(error) ? error.message : 'Check your connection and try again.';
   return (
     <div className="card state" role="alert">
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       <p className="muted">{detail}</p>
       {onRetry && (
         <button type="button" className="btn" onClick={onRetry}>
@@ -32,7 +32,7 @@ export function ErrorState({ error, onRetry, title = 'Could not load this' }: Er
 export function EmptyState({ title, children }: { title: string; children?: ReactNode }) {
   return (
     <div className="card state">
-      <h3>{title}</h3>
+      <h2>{title}</h2>
       {children && <p className="muted">{children}</p>}
     </div>
   );
