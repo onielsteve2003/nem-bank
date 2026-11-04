@@ -36,6 +36,54 @@ tasks:
     cmds:
       - golangci-lint run ./...
 
+  db:up:
+    desc: Start local Postgres (docker compose) and wait until it is healthy.
+    cmds:
+      - docker compose up -d --wait
+
+  db:down:
+    desc: Stop local Postgres. Data stays in the pgdata volume.
+    cmds:
+      - docker compose down
+
+  db:reset:
+    desc: Delete the local database and start an empty one.
+    cmds:
+      - docker compose down -v
+      - task: db:up
+
+  migrate:up:
+    desc: Apply pending migrations (the API also does this on start).
+    env: &goose
+      GOOSE_DRIVER: postgres
+      GOOSE_DBSTRING: '{{.DATABASE_URL | default "postgres://nem:nem@localhost:5433/nem?sslmode=disable"}}'
+      GOOSE_MIGRATION_DIR: db/migrations
+    cmds:
+      - goose up
+
+  migrate:down:
+    desc: Roll back the latest migration.
+    env: *goose
+    cmds:
+      - goose down
+
+  migrate:status:
+    desc: Show which migrations are applied.
+    env: *goose
+    cmds:
+      - goose status
+
+  migrate:new:
+    desc: 'Create a migration: task migrate:new -- add_users'
+    env: *goose
+    cmds:
+      - goose -s create {{.CLI_ARGS}} sql
+
+  generate:
+    desc: Regenerate typed Go from db/queries with sqlc.
+    cmds:
+      - sqlc generate
+
   fmt:
     desc: Format the code.
     cmds:

@@ -20,7 +20,8 @@ func TestLoadUsesDevelopmentDefaults(t *testing.T) {
 		t.Fatalf("Load: %v", err)
 	}
 	if cfg.Env != EnvDevelopment || cfg.Port != 8080 || cfg.LogLevel != slog.LevelInfo ||
-		cfg.ShutdownTimeout != 15*time.Second || !slices.Equal(cfg.CORSOrigins, devOrigins) {
+		cfg.ShutdownTimeout != 15*time.Second || !slices.Equal(cfg.CORSOrigins, devOrigins) ||
+		cfg.DatabaseURL != devDatabaseURL || cfg.DBMaxConns != 10 || !cfg.MigrateOnStart {
 		t.Fatalf("unexpected defaults: %+v", cfg)
 	}
 	if cfg.Addr() != ":8080" {
@@ -37,13 +38,17 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		"LOG_LEVEL":            "debug",
 		"SHUTDOWN_TIMEOUT":     "5s",
 		"CORS_ALLOWED_ORIGINS": "https://nem-bank-fodx.vercel.app/, https://nem-console.vercel.app",
+		"DATABASE_URL":         "postgres://u:p@db.example/nem?sslmode=require",
+		"DB_MAX_CONNS":         "4",
+		"MIGRATE_ON_START":     "false",
 	}))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
 	want := []string{"https://nem-bank-fodx.vercel.app", "https://nem-console.vercel.app"}
 	if cfg.Env != EnvProduction || cfg.Port != 10000 || cfg.LogLevel != slog.LevelDebug ||
-		cfg.ShutdownTimeout != 5*time.Second || !slices.Equal(cfg.CORSOrigins, want) {
+		cfg.ShutdownTimeout != 5*time.Second || !slices.Equal(cfg.CORSOrigins, want) ||
+		cfg.DatabaseURL != "postgres://u:p@db.example/nem?sslmode=require" || cfg.DBMaxConns != 4 || cfg.MigrateOnStart {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }
@@ -65,6 +70,10 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"origin with a path", map[string]string{"CORS_ALLOWED_ORIGINS": "https://a.com/app"}, "CORS_ALLOWED_ORIGINS"},
 		{"production without origins", map[string]string{"APP_ENV": "production"}, "required in production"},
 		{"production over http", map[string]string{"APP_ENV": "production", "CORS_ALLOWED_ORIGINS": "http://a.com"}, "https"},
+		{"production without a database", map[string]string{"APP_ENV": "production", "CORS_ALLOWED_ORIGINS": "https://a.com"}, "DATABASE_URL"},
+		{"zero connections", map[string]string{"DB_MAX_CONNS": "0"}, "DB_MAX_CONNS"},
+		{"connections past int32", map[string]string{"DB_MAX_CONNS": "9999999999"}, "DB_MAX_CONNS"},
+		{"migrate flag not a bool", map[string]string{"MIGRATE_ON_START": "maybe"}, "MIGRATE_ON_START"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

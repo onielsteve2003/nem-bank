@@ -12,6 +12,11 @@ linters:
     - bodyclose
     - noctx
     - errorlint
+  exclusions:
+    rules:
+      # Tests use throwaway connection strings and fixtures that look like credentials.
+      - path: _test\.go
+        linters: [gosec]
 
 formatters:
   enable:

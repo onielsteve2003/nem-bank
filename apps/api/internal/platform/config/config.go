@@ -28,10 +28,16 @@ type Config struct {
 	LogLevel        slog.Level
 	CORSOrigins     []string
 	ShutdownTimeout time.Duration
+	DatabaseURL     string
+	DBMaxConns      int32
+	MigrateOnStart  bool
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
 var devOrigins = []string{"http://localhost:8081", "http://localhost:5173"}
+
+// devDatabaseURL matches docker-compose.yml.
+const devDatabaseURL = "postgres://nem:nem@localhost:5433/nem?sslmode=disable" //nolint:gosec // local docker-compose credentials, not a secret
 
 // Load reads the configuration through getenv (os.Getenv in main, a map in tests).
 // Every problem is reported at once so a bad deploy shows the full list.
@@ -70,6 +76,27 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.CORSOrigins, err = parseOrigins(getenv("CORS_ALLOWED_ORIGINS"), cfg.Env)
 	if err != nil {
 		errs = append(errs, fmt.Errorf("CORS_ALLOWED_ORIGINS: %w", err))
+	}
+
+	cfg.DatabaseURL = get("DATABASE_URL", "")
+	if cfg.DatabaseURL == "" {
+		if cfg.Env == EnvProduction {
+			errs = append(errs, errors.New("DATABASE_URL: required in production"))
+		}
+		cfg.DatabaseURL = devDatabaseURL
+	}
+
+	// Neon's free tier allows few connections, and Render runs one instance: keep the pool small.
+	maxConns, err := strconv.ParseInt(get("DB_MAX_CONNS", "10"), 10, 32)
+	if err != nil || maxConns < 1 {
+		errs = append(errs, fmt.Errorf("DB_MAX_CONNS: %q is not a positive number", getenv("DB_MAX_CONNS")))
+	}
+	cfg.DBMaxConns = int32(maxConns)
+
+	// On by default: Render's free tier has no pre-deploy step, so the API migrates on boot.
+	cfg.MigrateOnStart, err = strconv.ParseBool(get("MIGRATE_ON_START", "true"))
+	if err != nil {
+		errs = append(errs, fmt.Errorf("MIGRATE_ON_START: %q is not true or false", getenv("MIGRATE_ON_START")))
 	}
 
 	if len(errs) > 0 {

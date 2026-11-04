@@ -12,7 +12,7 @@ cmd/api/              entry point
 internal/platform/    config, logging, HTTP server, middleware, database
 internal/<domain>/    one package per domain (ledger, identity, transfers, ...)
 db/migrations/        goose SQL migrations
-db/queries/           sqlc queries
+db/queries/<domain>/  sqlc queries, generated into internal/<domain>
 ```
 
 Domain packages talk to each other through exported service interfaces, never through each
@@ -24,12 +24,16 @@ other's tables.
 - [Task](https://taskfile.dev): `go install github.com/go-task/task/v3/cmd/task@latest`
 - [air](https://github.com/air-verse/air) for hot reload: `go install github.com/air-verse/air@latest`
 - [golangci-lint](https://golangci-lint.run) v2 for `task lint`
+- Docker, for the local Postgres
+- [goose](https://github.com/pressly/goose) for the `migrate:*` tasks: `go install github.com/pressly/goose/v3/cmd/goose@latest`
+- [sqlc](https://sqlc.dev) for `task generate` (on Windows, the release binary; `go install` needs cgo)
 
 ## Run
 
 ```sh
 cd apps/api
-task dev        # hot reload on http://localhost:8080
+task db:up      # Postgres 17 on localhost:5433
+task dev        # hot reload on http://localhost:8080; applies migrations on start
 curl localhost:8080/v1/health
 ```
 
@@ -47,6 +51,24 @@ The API refuses to start on a bad value and lists every problem at once.
 | `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
 | `SHUTDOWN_TIMEOUT` | `15s` | How long in-flight requests get after SIGTERM |
 | `CORS_ALLOWED_ORIGINS` | Expo web + console dev servers | Exact origins, comma-separated. Required (https only) in production; no wildcards |
+| `DATABASE_URL` | the docker-compose database | Required in production (Neon) |
+| `DB_MAX_CONNS` | `10` | Pool size; Neon's free tier allows few connections |
+| `MIGRATE_ON_START` | `true` | Apply pending migrations at boot (Render free has no pre-deploy step) |
+
+## Database
+
+- **pgx v5** pool. Idle connections close after 4 minutes, before Neon suspends the database,
+  and startup pings with a 15-second timeout so a cold Neon database can wake.
+- **goose** migrations in `db/migrations`, embedded in the binary. On start the API applies
+  pending ones under a Postgres advisory lock, so two instances booting together are safe.
+  `task migrate:status | migrate:up | migrate:down | migrate:new -- <name>` work on the same files.
+- **sqlc** turns `db/queries/<domain>/*.sql` into typed Go in that domain's package
+  (`sqlc.yaml` has one entry per domain). Edit the SQL, run `task generate`, commit both.
+  No ORM: money paths stay explicit, reviewable SQL.
+- The compose database listens on host port **5433**, so a Postgres installed natively on
+  5432 does not get in the way. `task db:reset` wipes it.
+- `TEST_DATABASE_URL=postgres://nem:nem@localhost:5433/nem?sslmode=disable go test ./internal/platform/database/`
+  runs the database test against it.
 
 ## Request pipeline
 

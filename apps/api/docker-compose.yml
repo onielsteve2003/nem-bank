@@ -1,0 +1,23 @@
+# Local Postgres for development: `task db:up`. Same major version as Neon in production.
+name: nem-bank
+
+services:
+  postgres:
+    image: postgres:17-alpine
+    environment:
+      POSTGRES_USER: nem
+      POSTGRES_PASSWORD: nem
+      POSTGRES_DB: nem
+    ports:
+      # 5433 on the host so a natively installed Postgres on 5432 never answers instead.
+      - '5433:5432'
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U nem -d nem']
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+volumes:
+  pgdata:

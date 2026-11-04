@@ -9,6 +9,7 @@ import (
 	"syscall"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/httpserver"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 )
@@ -33,6 +34,17 @@ func run() error {
 	// Render sends SIGTERM before it stops an instance; Ctrl+C sends SIGINT locally.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	pool, err := database.Open(ctx, cfg.DatabaseURL, cfg.DBMaxConns)
+	if err != nil {
+		return err
+	}
+	defer pool.Close()
+	if cfg.MigrateOnStart {
+		if err := database.Migrate(ctx, pool, log); err != nil {
+			return err
+		}
+	}
 
 	router := httpserver.NewRouter(httpserver.Options{
 		Version:     version,

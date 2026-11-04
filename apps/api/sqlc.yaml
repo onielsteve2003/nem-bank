@@ -1,0 +1,19 @@
+# sqlc generates typed Go from db/queries. One package per domain keeps each domain's
+# queries private to it (domains talk through service interfaces, never through tables).
+version: '2'
+sql:
+  - engine: postgresql
+    schema: db/migrations
+    queries: db/queries/platform
+    gen:
+      go:
+        package: platformdb
+        out: internal/platform/database/platformdb
+        sql_package: pgx/v5
+        emit_interface: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: timestamptz
+            go_type: time.Time
