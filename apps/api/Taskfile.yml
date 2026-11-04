@@ -1,0 +1,44 @@
+# https://taskfile.dev — run `task --list` to see everything.
+version: '3'
+
+vars:
+  BIN: ./bin/api{{exeExt}}
+  VERSION:
+    sh: git describe --tags --always --dirty 2>/dev/null || echo dev
+
+tasks:
+  dev:
+    desc: Run the API with hot reload (air).
+    cmds:
+      # The binary name needs .exe on Windows, so air gets the build command from here.
+      - air --build.cmd "go build -o ./tmp/api{{exeExt}} ./cmd/api" --build.entrypoint "./tmp/api{{exeExt}}"
+
+  run:
+    desc: Run the API once, without hot reload.
+    cmds:
+      - go run ./cmd/api
+
+  build:
+    desc: Build a release binary into ./bin.
+    cmds:
+      - go build -trimpath -ldflags "-s -w -X main.version={{.VERSION}}" -o {{.BIN}} ./cmd/api
+
+  test:
+    desc: Run all tests with the race detector.
+    cmds:
+      - go test -race ./...
+
+  lint:
+    desc: Run golangci-lint.
+    cmds:
+      - golangci-lint run ./...
+
+  fmt:
+    desc: Format the code.
+    cmds:
+      - gofmt -w .
+
+  tidy:
+    desc: Tidy go.mod and go.sum.
+    cmds:
+      - go mod tidy
