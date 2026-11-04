@@ -1,6 +1,9 @@
 # https://taskfile.dev — run `task --list` to see everything.
 version: '3'
 
+# Local overrides; a missing file is fine.
+dotenv: ['.env']
+
 vars:
   BIN: ./bin/api{{exeExt}}
   VERSION:
