@@ -8,6 +8,7 @@ import (
 	"log/slog"
 	"time"
 
+	"github.com/exaring/otelpgx"
 	"github.com/jackc/pgx/v5/pgxpool"
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
@@ -31,6 +32,9 @@ func Open(ctx context.Context, url string, maxConns int32) (*pgxpool.Pool, error
 	cfg.MaxConnIdleTime = 4 * time.Minute
 	cfg.MaxConnLifetime = 30 * time.Minute
 	cfg.HealthCheckPeriod = time.Minute
+	// One span per query under the request's trace. The SQL text is recorded, never the
+	// arguments (otelpgx's default), so no customer data reaches the trace backend.
+	cfg.ConnConfig.Tracer = otelpgx.NewTracer()
 
 	pool, err := pgxpool.NewWithConfig(ctx, cfg)
 	if err != nil {

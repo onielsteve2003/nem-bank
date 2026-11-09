@@ -21,7 +21,8 @@ func TestLoadUsesDevelopmentDefaults(t *testing.T) {
 	}
 	if cfg.Env != EnvDevelopment || cfg.Port != 8080 || cfg.LogLevel != slog.LevelInfo ||
 		cfg.ShutdownTimeout != 15*time.Second || !slices.Equal(cfg.CORSOrigins, devOrigins) ||
-		cfg.DatabaseURL != devDatabaseURL || cfg.DBMaxConns != 10 || !cfg.MigrateOnStart {
+		cfg.DatabaseURL != devDatabaseURL || cfg.DBMaxConns != 10 || !cfg.MigrateOnStart ||
+		cfg.OTLPEndpoint != "" || cfg.TraceSampleRatio != 1 || cfg.SentryDSN != "" || cfg.MetricsToken != "" {
 		t.Fatalf("unexpected defaults: %+v", cfg)
 	}
 	if cfg.Addr() != ":8080" {
@@ -33,14 +34,18 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 	t.Parallel()
 
 	cfg, err := Load(env(map[string]string{
-		"APP_ENV":              "production",
-		"PORT":                 "10000",
-		"LOG_LEVEL":            "debug",
-		"SHUTDOWN_TIMEOUT":     "5s",
-		"CORS_ALLOWED_ORIGINS": "https://nem-bank-fodx.vercel.app/, https://nem-console.vercel.app",
-		"DATABASE_URL":         "postgres://u:p@db.example/nem?sslmode=require",
-		"DB_MAX_CONNS":         "4",
-		"MIGRATE_ON_START":     "false",
+		"APP_ENV":                     "production",
+		"PORT":                        "10000",
+		"LOG_LEVEL":                   "debug",
+		"SHUTDOWN_TIMEOUT":            "5s",
+		"CORS_ALLOWED_ORIGINS":        "https://nem-bank-fodx.vercel.app/, https://nem-console.vercel.app",
+		"DATABASE_URL":                "postgres://u:p@db.example/nem?sslmode=require",
+		"DB_MAX_CONNS":                "4",
+		"MIGRATE_ON_START":            "false",
+		"OTEL_EXPORTER_OTLP_ENDPOINT": "https://otlp-gateway.example/otlp",
+		"TRACE_SAMPLE_RATIO":          "0.25",
+		"SENTRY_DSN":                  "https://key@o1.ingest.sentry.io/1",
+		"METRICS_TOKEN":               "scrape-secret",
 	}))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -48,7 +53,9 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 	want := []string{"https://nem-bank-fodx.vercel.app", "https://nem-console.vercel.app"}
 	if cfg.Env != EnvProduction || cfg.Port != 10000 || cfg.LogLevel != slog.LevelDebug ||
 		cfg.ShutdownTimeout != 5*time.Second || !slices.Equal(cfg.CORSOrigins, want) ||
-		cfg.DatabaseURL != "postgres://u:p@db.example/nem?sslmode=require" || cfg.DBMaxConns != 4 || cfg.MigrateOnStart {
+		cfg.DatabaseURL != "postgres://u:p@db.example/nem?sslmode=require" || cfg.DBMaxConns != 4 || cfg.MigrateOnStart ||
+		cfg.OTLPEndpoint != "https://otlp-gateway.example/otlp" || cfg.TraceSampleRatio != 0.25 ||
+		cfg.SentryDSN != "https://key@o1.ingest.sentry.io/1" || cfg.MetricsToken != "scrape-secret" {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }
@@ -74,6 +81,9 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"zero connections", map[string]string{"DB_MAX_CONNS": "0"}, "DB_MAX_CONNS"},
 		{"connections past int32", map[string]string{"DB_MAX_CONNS": "9999999999"}, "DB_MAX_CONNS"},
 		{"migrate flag not a bool", map[string]string{"MIGRATE_ON_START": "maybe"}, "MIGRATE_ON_START"},
+		{"otlp endpoint not a url", map[string]string{"OTEL_EXPORTER_OTLP_ENDPOINT": "grafana"}, "OTEL_EXPORTER_OTLP_ENDPOINT"},
+		{"sample ratio above one", map[string]string{"TRACE_SAMPLE_RATIO": "1.5"}, "TRACE_SAMPLE_RATIO"},
+		{"production without a metrics token", map[string]string{"APP_ENV": "production"}, "METRICS_TOKEN"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

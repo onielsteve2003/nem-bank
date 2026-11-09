@@ -66,7 +66,7 @@ func readiness(checks []ReadinessCheck, log *slog.Logger) gin.HandlerFunc {
 	}
 }
 
-// isProbe reports whether route is a health endpoint the access log should keep quiet.
+// isProbe reports whether route is a health or scrape endpoint that logs and traces skip.
 func isProbe(route string) bool {
-	return route == healthPath || route == LivenessPath || route == ReadinessPath
+	return route == healthPath || route == LivenessPath || route == ReadinessPath || route == MetricsPath
 }

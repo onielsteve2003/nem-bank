@@ -56,6 +56,27 @@ docker run --rm -p 8080:8080 -e DATABASE_URL=... -e CORS_ALLOWED_ORIGINS=https:/
 
 CI builds the image on every push.
 
+## Observability
+
+All three are free tiers and all are optional: with nothing set, the API still runs.
+
+- **Traces (OpenTelemetry).** `otelgin` makes a span per request and `otelpgx` one per query
+  (SQL text only, never arguments). W3C `traceparent` is honoured, so a trace started by the
+  app continues here. Probes and `/metrics` are not traced. Spans export over OTLP/HTTP when
+  `OTEL_EXPORTER_OTLP_ENDPOINT` is set.
+- **Logs.** Every record logged with a request context carries `request_id`, `trace_id`
+  and `span_id`, so a log line leads straight to its trace.
+- **Metrics (Prometheus).** `GET /metrics`: `http_requests_total` and
+  `http_request_duration_seconds` by route template (never raw paths), in-flight requests,
+  pgx pool stats (`db_pool_*`), Go runtime and process metrics. Bearer `METRICS_TOKEN`.
+- **Errors (Sentry).** Anything logged at error level (a failed request, a recovered panic)
+  becomes one Sentry event, tagged with `request_id`, `route` and `code` and linked to its
+  trace ID. Events are built from PII-free log records, so nothing extra leaks.
+
+```sh
+curl -H "Authorization: Bearer $METRICS_TOKEN" localhost:8080/metrics
+```
+
 `task --list` shows everything else: `run`, `build`, `test` (with `-race`), `lint`, `fmt`, `tidy`.
 
 ## Configuration
@@ -73,6 +94,11 @@ The API refuses to start on a bad value and lists every problem at once.
 | `DATABASE_URL` | the docker-compose database | Required in production (Neon) |
 | `DB_MAX_CONNS` | `10` | Pool size; Neon's free tier allows few connections |
 | `MIGRATE_ON_START` | `true` | Apply pending migrations at boot (Render free has no pre-deploy step) |
+| `OTEL_EXPORTER_OTLP_ENDPOINT` | empty | OTLP/HTTP URL for traces (Grafana Cloud free). Empty keeps spans local |
+| `OTEL_EXPORTER_OTLP_HEADERS` | empty | Read by the exporter itself, e.g. `Authorization=Basic ...` |
+| `TRACE_SAMPLE_RATIO` | `1` | Share of new traces kept, 0 to 1. Sampled parents are always kept |
+| `SENTRY_DSN` | empty | Error tracking (Sentry free). Empty turns it off |
+| `METRICS_TOKEN` | empty | Bearer token for `/metrics`. Required in production |
 
 ## Database
 

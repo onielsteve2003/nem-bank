@@ -8,12 +8,18 @@ import (
 	"time"
 
 	"github.com/gin-gonic/gin"
+	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
-const healthPath = "/v1/health"
+const (
+	healthPath = "/v1/health"
+	// MetricsPath serves Prometheus metrics, outside /v1 like the probes.
+	MetricsPath = "/metrics"
+)
 
 // Options are the router's dependencies.
 type Options struct {
@@ -22,6 +28,10 @@ type Options struct {
 	CORSOrigins []string
 	// Readiness lists the dependencies /readyz checks (the database in production).
 	Readiness []ReadinessCheck
+	// Metrics records HTTP metrics and serves /metrics; nil gets a fresh registry.
+	Metrics *observability.Metrics
+	// MetricsToken, when set, is the bearer token /metrics requires.
+	MetricsToken string
 	// Now is the clock; nil means time.Now.
 	Now func() time.Time
 }
@@ -31,6 +41,9 @@ type Options struct {
 func NewRouter(opts Options) (*gin.Engine, error) {
 	if opts.Now == nil {
 		opts.Now = time.Now
+	}
+	if opts.Metrics == nil {
+		opts.Metrics = observability.NewMetrics()
 	}
 	spec, err := api.GetSpec()
 	if err != nil {
@@ -46,7 +59,16 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	// Request ID first so every later log line and problem carries it; recovery next so a
 	// panic anywhere below is still logged by AccessLog with a 500. CORS answers preflights
 	// before validation, which would reject an OPTIONS the contract does not declare.
-	r.Use(RequestID(), AccessLog(opts.Logger), Recovery(opts.Logger), CORS(opts.CORSOrigins))
+	// Tracing comes before AccessLog so its log line carries the trace ID. Probes and scrapes
+	// are not traced: they would bury real requests under thousands of identical spans.
+	r.Use(
+		RequestID(),
+		otelgin.Middleware(observability.ServiceName, otelgin.WithGinFilter(func(c *gin.Context) bool {
+			return !isProbe(c.FullPath())
+		})),
+		opts.Metrics.Middleware(),
+		AccessLog(opts.Logger), Recovery(opts.Logger), CORS(opts.CORSOrigins),
+	)
 
 	r.NoRoute(func(c *gin.Context) {
 		problem.Render(c, problem.New(http.StatusNotFound, problem.CodeNotFound, "No such endpoint."))
@@ -60,6 +82,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	r.GET(LivenessPath, liveness)
 	r.GET(ReadinessPath, readiness(opts.Readiness, opts.Logger))
+	r.GET(MetricsPath, opts.Metrics.Handler(opts.MetricsToken))
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", validate)

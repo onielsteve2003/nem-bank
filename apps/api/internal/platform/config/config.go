@@ -31,6 +31,12 @@ type Config struct {
 	DatabaseURL     string
 	DBMaxConns      int32
 	MigrateOnStart  bool
+
+	// Observability. Every exporter is optional so local runs need no accounts.
+	OTLPEndpoint     string
+	TraceSampleRatio float64
+	SentryDSN        string
+	MetricsToken     string
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
@@ -97,6 +103,25 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.MigrateOnStart, err = strconv.ParseBool(get("MIGRATE_ON_START", "true"))
 	if err != nil {
 		errs = append(errs, fmt.Errorf("MIGRATE_ON_START: %q is not true or false", getenv("MIGRATE_ON_START")))
+	}
+
+	// The standard OTel variable, so Grafana Cloud's copy-paste setup works unchanged.
+	cfg.OTLPEndpoint = get("OTEL_EXPORTER_OTLP_ENDPOINT", "")
+	if cfg.OTLPEndpoint != "" {
+		if u, err := url.Parse(cfg.OTLPEndpoint); err != nil || (u.Scheme != "http" && u.Scheme != "https") || u.Host == "" {
+			errs = append(errs, errors.New("OTEL_EXPORTER_OTLP_ENDPOINT: not an http(s) URL"))
+		}
+	}
+	// Keep every trace by default: demo traffic is tiny and Grafana's free tier has room.
+	cfg.TraceSampleRatio, err = strconv.ParseFloat(get("TRACE_SAMPLE_RATIO", "1"), 64)
+	if err != nil || cfg.TraceSampleRatio < 0 || cfg.TraceSampleRatio > 1 {
+		errs = append(errs, fmt.Errorf("TRACE_SAMPLE_RATIO: %q is not between 0 and 1", getenv("TRACE_SAMPLE_RATIO")))
+	}
+	cfg.SentryDSN = get("SENTRY_DSN", "")
+	// /metrics shows routes, pool sizes and runtime internals: never public in production.
+	cfg.MetricsToken = get("METRICS_TOKEN", "")
+	if cfg.MetricsToken == "" && cfg.Env == EnvProduction {
+		errs = append(errs, errors.New("METRICS_TOKEN: required in production"))
 	}
 
 	if len(errs) > 0 {

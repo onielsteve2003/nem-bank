@@ -4,6 +4,7 @@ package main
 import (
 	"context"
 	"fmt"
+	"log/slog"
 	"net/http"
 	"os"
 	"os/signal"
@@ -15,6 +16,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/httpserver"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -41,11 +43,38 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	log := logging.New(os.Stdout, cfg.LogLevel, version)
+
+	flushSentry, err := observability.SetupSentry(observability.SentryConfig{
+		DSN: cfg.SentryDSN, Version: version, Environment: string(cfg.Env),
+	})
+	if err != nil {
+		return err
+	}
+	defer flushSentry()
+	log := logging.New(os.Stdout, cfg.LogLevel, version, func(h slog.Handler) slog.Handler {
+		return observability.NewSentryHandler(h, nil)
+	})
 
 	// Render sends SIGTERM before it stops an instance; Ctrl+C sends SIGINT locally.
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
+
+	// Before the pool opens, so the pgx tracer picks up the real provider.
+	shutdownTracing, err := observability.SetupTracing(ctx, observability.TracingConfig{
+		Endpoint: cfg.OTLPEndpoint, SampleRatio: cfg.TraceSampleRatio,
+		Version: version, Environment: string(cfg.Env),
+	})
+	if err != nil {
+		return err
+	}
+	defer func() {
+		// The signal context is already cancelled here; give the exporter its own deadline.
+		flushCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), 5*time.Second)
+		defer cancel()
+		if err := shutdownTracing(flushCtx); err != nil {
+			log.Warn("flush traces", "error", err.Error())
+		}
+	}()
 
 	pool, err := database.Open(ctx, cfg.DatabaseURL, cfg.DBMaxConns)
 	if err != nil {
@@ -58,11 +87,16 @@ func run() error {
 		}
 	}
 
+	metrics := observability.NewMetrics()
+	metrics.RegisterPool(pool)
+
 	router, err := httpserver.NewRouter(httpserver.Options{
-		Version:     version,
-		Logger:      log,
-		CORSOrigins: cfg.CORSOrigins,
-		Readiness:   []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
+		Version:      version,
+		Logger:       log,
+		CORSOrigins:  cfg.CORSOrigins,
+		Readiness:    []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
+		Metrics:      metrics,
+		MetricsToken: cfg.MetricsToken,
 	})
 	if err != nil {
 		return err
