@@ -26,7 +26,10 @@ func TestBanksAreSortedAndUnique(t *testing.T) {
 
 func TestSandboxNameEnquiry(t *testing.T) {
 	t.Parallel()
-	nip := NewSandboxNIP()
+	nip, err := NewSandboxNIP(SandboxConfig{})
+	if err != nil {
+		t.Fatal(err)
+	}
 	tests := []struct {
 		name, bank, number, want string
 		notFound                 bool

@@ -30,6 +30,8 @@ type Options struct {
 	// Housekeeping runs with the hourly outbox prune: other tables' clean-ups and catch-ups
 	// (expired idempotency keys, end-of-day balances). Each runs even if an earlier one failed.
 	Housekeeping []func(context.Context) error
+	// Workers add domains' own River workers (sagas, the sandbox partner's callbacks).
+	Workers []func(*river.Workers)
 }
 
 // Runner owns the River client and the outbox dispatcher for the process.
@@ -78,6 +80,9 @@ func New(pool *pgxpool.Pool, log *slog.Logger, opts Options) (*Runner, error) {
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &deliverWorker{subscribers: subs})
 	river.AddWorker(workers, &pruneWorker{pool: pool, retain: opts.RetainDispatched, housekeeping: opts.Housekeeping})
+	for _, register := range opts.Workers {
+		register(workers)
+	}
 
 	client, err := river.NewClient(riverpgxv5.New(pool), &river.Config{
 		Logger:  log.With("component", "river"),

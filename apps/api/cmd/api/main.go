@@ -14,6 +14,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/riverqueue/river"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
@@ -29,6 +30,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -133,7 +135,21 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	transfersSvc, err = transfers.NewService(transfers.Config{Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Logger: log})
+	sandbox, err := partners.NewSandboxNIP(partners.SandboxConfig{
+		Pool: pool, CallbackURL: cfg.SandboxNIPCallbackURL, Secret: cfg.SandboxNIPSecret, Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+	var partner partners.BankPartner = sandbox
+	if cfg.BankPartner == "paystack_test" {
+		if partner, err = partners.NewPaystack(partners.PaystackConfig{SecretKey: cfg.PaystackSecretKey}); err != nil {
+			return err
+		}
+	}
+	transfersSvc, err = transfers.NewService(transfers.Config{
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
+	})
 	if err != nil {
 		return err
 	}
@@ -181,6 +197,7 @@ func run() error {
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber()},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances},
+		Workers:      []func(*river.Workers){sandbox.Register},
 	})
 	if err != nil {
 		return err

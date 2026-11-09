@@ -53,6 +53,9 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		"STAFF_JWT_SIGNING_KEY":       "ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=", // gitleaks:allow (test key)
 		"FIELD_ENCRYPTION_KEYS":       "1:" + key32,
 		"FIELD_INDEX_KEY":             key32,
+		"SANDBOX_NIP_WEBHOOK_SECRET":  key32,
+		"BANK_PARTNER":                "paystack_test",
+		"PAYSTACK_SECRET_KEY":         "sk_test_123", // gitleaks:allow (not a real key)
 	}))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -64,7 +67,9 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		cfg.OTLPEndpoint != "https://otlp-gateway.example/otlp" || cfg.TraceSampleRatio != 0.25 ||
 		cfg.SentryDSN != "https://key@o1.ingest.sentry.io/1" || cfg.MetricsToken != "scrape-secret" ||
 		cfg.BrevoAPIKey != "xkeysib-test" || cfg.MailFromEmail != "hello@nem.example" ||
-		string(cfg.OTPKey) != "0123456789abcdef0123456789abcdef" || len(cfg.JWTSigningKey) != 32 {
+		string(cfg.OTPKey) != "0123456789abcdef0123456789abcdef" || len(cfg.JWTSigningKey) != 32 ||
+		cfg.BankPartner != "paystack_test" || len(cfg.SandboxNIPSecret) != 32 ||
+		cfg.SandboxNIPCallbackURL != "http://127.0.0.1:10000/v1/partner-webhooks/sandbox_nip" {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }
@@ -124,6 +129,10 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"field key version 0", map[string]string{"FIELD_ENCRYPTION_KEYS": "0:" + key32}, "version from 1"},
 		{"field key listed twice", map[string]string{"FIELD_ENCRYPTION_KEYS": "1:" + key32 + ",1:" + key32}, "twice"},
 		{"field key wrong length", map[string]string{"FIELD_ENCRYPTION_KEYS": "1:c2hvcnQ="}, "need exactly 32"},
+		{"unknown bank partner", map[string]string{"BANK_PARTNER": "nibss"}, "BANK_PARTNER"},
+		{"paystack without a key", map[string]string{"BANK_PARTNER": "paystack_test"}, "PAYSTACK_SECRET_KEY"},
+		{"paystack with a live key", map[string]string{"BANK_PARTNER": "paystack_test", "PAYSTACK_SECRET_KEY": "sk_live_123"}, "test key"}, // gitleaks:allow (not a real key)
+		{"production without a sandbox webhook secret", map[string]string{"APP_ENV": "production"}, "SANDBOX_NIP_WEBHOOK_SECRET"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

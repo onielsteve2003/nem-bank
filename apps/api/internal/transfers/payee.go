@@ -17,11 +17,6 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 )
 
-// NameEnquirer asks another bank whose account a number is (NIP name enquiry).
-type NameEnquirer interface {
-	NameEnquiry(ctx context.Context, bankCode, accountNumber string) (partners.AccountName, error)
-}
-
 // Problems with the mock bank's codes and wording.
 var (
 	errUnknownBank            = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Pick a bank from the list")
@@ -89,7 +84,7 @@ func (s *Service) ResolvePayee(ctx context.Context, q api.PayeeQuery) (api.Resol
 	// Beneficiaries arrive in T25.6; until then nothing is saved.
 	return api.ResolvedPayee{
 		Kind: api.ResolvedPayeeKindBank, Name: acct.Name, BankCode: bank.Code, BankName: bank.Name,
-		AccountNumber: acct.AccountNumber, NameMatch: nameMatch(b.ExpectedName, acct.Name),
+		AccountNumber: acct.AccountNumber, NameMatch: forced(nameMatch(b.ExpectedName, acct.Name), acct.NameCheck),
 	}, nil
 }
 
@@ -117,6 +112,19 @@ func nemPayee(caller uuid.UUID, r accounts.Recipient, expected *string) (api.Res
 		BankCode: accounts.BankCode, BankName: accounts.BankName, AccountNumber: r.AccountNumber,
 		NameMatch: nameMatch(expected, r.Name),
 	}, nil
+}
+
+// forced applies the sandbox's name-check override, so a demo can show every warning.
+func forced(m *api.NameMatch, mode partners.NameCheck) *api.NameMatch {
+	switch {
+	case m == nil:
+		return nil
+	case mode == partners.AlwaysMatch:
+		m.Result, m.Confidence = api.Match, 1
+	case mode == partners.AlwaysNoMatch:
+		m.Result, m.Confidence = api.NoMatch, 0
+	}
+	return m
 }
 
 // nameMatch runs Confirmation of Payee when the customer typed a name.

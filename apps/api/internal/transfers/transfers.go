@@ -103,8 +103,11 @@ type Config struct {
 	Pool      *pgxpool.Pool
 	Accounts  *accounts.Service
 	Customers Customers
-	// Partner answers name enquiries for other banks; nil means the sandbox rail.
-	Partner NameEnquirer
+	// Partner carries money to other banks; nil means Sandbox.
+	Partner partners.BankPartner
+	// Sandbox is the simulated rail, whose settings staff change from the console; nil
+	// builds one on Pool with no callbacks.
+	Sandbox *partners.SandboxNIP
 	Logger  *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
@@ -116,7 +119,8 @@ type Service struct {
 	q         *transfersdb.Queries
 	accounts  *accounts.Service
 	customers Customers
-	partner   NameEnquirer
+	partner   partners.BankPartner
+	sandbox   *partners.SandboxNIP
 	log       *slog.Logger
 	now       func() time.Time
 }
@@ -129,12 +133,19 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
+	if cfg.Sandbox == nil {
+		sb, err := partners.NewSandboxNIP(partners.SandboxConfig{Pool: cfg.Pool, Logger: cfg.Logger, Now: cfg.Now})
+		if err != nil {
+			return nil, err
+		}
+		cfg.Sandbox = sb
+	}
 	if cfg.Partner == nil {
-		cfg.Partner = partners.NewSandboxNIP()
+		cfg.Partner = cfg.Sandbox
 	}
 	return &Service{
 		pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers,
-		partner: cfg.Partner, log: cfg.Logger, now: cfg.Now,
+		partner: cfg.Partner, sandbox: cfg.Sandbox, log: cfg.Logger, now: cfg.Now,
 	}, nil
 }
 

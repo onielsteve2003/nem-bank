@@ -6,8 +6,11 @@ import (
 	"fmt"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/transfersdb"
 )
 
@@ -146,4 +149,49 @@ func (a *API) ResolvePayee(ctx context.Context, req api.ResolvePayeeRequestObjec
 		return nil, err
 	}
 	return api.ResolvePayee200JSONResponse(p), nil
+}
+
+func simulatorJSON(s partners.Settings) api.BankPartnerSimulator {
+	timeout := s.TimeoutRateBps
+	return api.BankPartnerSimulator{
+		FailureRateBps: s.FailureRateBps, MinDelaySeconds: s.MinDelaySeconds, MaxDelaySeconds: s.MaxDelaySeconds,
+		NameCheck: api.BankPartnerSimulatorNameCheck(s.NameCheck), TimeoutRateBps: &timeout,
+	}
+}
+
+// GetBankPartnerSimulator is GET /v1/admin/simulators/bank-partner (admin; x-roles checked
+// by the validator).
+func (a *API) GetBankPartnerSimulator(ctx context.Context, _ api.GetBankPartnerSimulatorRequestObject) (api.GetBankPartnerSimulatorResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	s, err := a.svc.sandbox.Settings(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return api.GetBankPartnerSimulator200JSONResponse(simulatorJSON(s)), nil
+}
+
+// SetBankPartnerSimulator is PUT /v1/admin/simulators/bank-partner, audited.
+func (a *API) SetBankPartnerSimulator(ctx context.Context, req api.SetBankPartnerSimulatorRequestObject) (api.SetBankPartnerSimulatorResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	staff, ok := admin.PrincipalFrom(ctx)
+	if !ok {
+		return nil, problem.Unauthorized()
+	}
+	b := req.Body
+	in := partners.Settings{
+		FailureRateBps: b.FailureRateBps, MinDelaySeconds: b.MinDelaySeconds, MaxDelaySeconds: b.MaxDelaySeconds,
+		NameCheck: partners.NameCheck(b.NameCheck),
+	}
+	if b.TimeoutRateBps != nil {
+		in.TimeoutRateBps = *b.TimeoutRateBps
+	}
+	s, err := a.svc.sandbox.SetSettings(ctx, staff.StaffID, staff.Name, in)
+	if err != nil {
+		return nil, err
+	}
+	return api.SetBankPartnerSimulator200JSONResponse(simulatorJSON(s)), nil
 }

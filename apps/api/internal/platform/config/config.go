@@ -59,6 +59,16 @@ type Config struct {
 	// encrypts. FieldIndexKey keys the blind indexes. See internal/platform/fieldcrypt.
 	FieldKeys     map[uint16][]byte
 	FieldIndexKey []byte
+
+	// BankPartner carries interbank transfers: "sandbox_nip" (default) or "paystack_test".
+	BankPartner string
+	// PaystackSecretKey is a Paystack test key, required for paystack_test.
+	PaystackSecretKey string
+	// SandboxNIPSecret signs the sandbox rail's callbacks and verifies them on the way in.
+	SandboxNIPSecret []byte
+	// SandboxNIPCallbackURL is where the sandbox calls back; default this process over
+	// loopback, so callbacks never leave the container.
+	SandboxNIPCallbackURL string
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
@@ -186,6 +196,24 @@ func Load(getenv func(string) string) (Config, error) {
 	if err != nil {
 		errs = append(errs, fmt.Errorf("FIELD_INDEX_KEY: %w", err))
 	}
+
+	cfg.BankPartner = get("BANK_PARTNER", "sandbox_nip")
+	cfg.PaystackSecretKey = get("PAYSTACK_SECRET_KEY", "")
+	switch cfg.BankPartner {
+	case "sandbox_nip":
+	case "paystack_test":
+		// The demo runs on simulated money: a live key is refused, not just discouraged.
+		if !strings.HasPrefix(cfg.PaystackSecretKey, "sk_test_") {
+			errs = append(errs, errors.New("PAYSTACK_SECRET_KEY: a Paystack test key (sk_test_...) is required for paystack_test"))
+		}
+	default:
+		errs = append(errs, fmt.Errorf("BANK_PARTNER: %q is not sandbox_nip or paystack_test", cfg.BankPartner))
+	}
+	cfg.SandboxNIPSecret, err = secretKey(getenv("SANDBOX_NIP_WEBHOOK_SECRET"), cfg.Env, "nem-dev-sandbox-nip-webhook")
+	if err != nil {
+		errs = append(errs, fmt.Errorf("SANDBOX_NIP_WEBHOOK_SECRET: %w", err))
+	}
+	cfg.SandboxNIPCallbackURL = get("SANDBOX_NIP_CALLBACK_URL", "http://127.0.0.1:"+strconv.Itoa(cfg.Port)+"/v1/partner-webhooks/sandbox_nip")
 
 	if len(errs) > 0 {
 		return Config{}, fmt.Errorf("invalid config: %w", errors.Join(errs...))

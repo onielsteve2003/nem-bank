@@ -108,6 +108,10 @@ The API refuses to start on a bad value and lists every problem at once.
 | `FIELD_ENCRYPTION_KEYS` | fixed dev key | `1:<base64 32 bytes>,2:<...>`: AES-256 keys by version for BVN/NIN/ID numbers; the highest encrypts. Keep old versions until `Rewrap` reports 0. Required in production |
 | `FIELD_INDEX_KEY` | fixed dev key | Base64, 32+ bytes: HMAC key for the blind indexes (one owner per BVN). Never rotated with the field keys. Required in production |
 | `OTP_KEY` | fixed dev key | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production |
+| `BANK_PARTNER` | `sandbox_nip` | Interbank rail: `sandbox_nip` (simulated NIP: delays, failures, timeouts and signed callbacks, tuned from the console's Bank Partner Simulator) or `paystack_test` (Paystack test mode) |
+| `PAYSTACK_SECRET_KEY` | empty | Paystack **test** key (`sk_test_…`), required for `paystack_test`. A live key is refused |
+| `SANDBOX_NIP_WEBHOOK_SECRET` | fixed dev key | Base64, 32+ bytes: HMAC secret the sandbox signs callbacks with and the partner webhook verifies. Required in production |
+| `SANDBOX_NIP_CALLBACK_URL` | loopback | Where the sandbox posts callbacks; default `http://127.0.0.1:$PORT/v1/partner-webhooks/sandbox_nip` |
 
 ## Database
 

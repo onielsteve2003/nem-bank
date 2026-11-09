@@ -193,6 +193,20 @@ type RefreshToken struct {
 	UsedAt    *time.Time
 }
 
+type SandboxNipPayment struct {
+	Reference        string
+	PartnerReference string
+	BankCode         string
+	AccountNumber    string
+	Currency         string
+	AmountMinor      int64
+	Outcome          string
+	FailureCode      *string
+	ReceivedAt       time.Time
+	SettleAt         time.Time
+	CallbackSentAt   *time.Time
+}
+
 type Session struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
@@ -224,6 +238,13 @@ type Signup struct {
 	ExpiresAt         time.Time
 	CompletedAt       *time.Time
 	UserID            *uuid.UUID
+}
+
+type SimulatorSetting struct {
+	Name      string
+	Settings  []byte
+	UpdatedAt time.Time
+	UpdatedBy *uuid.UUID
 }
 
 type Staff struct {
