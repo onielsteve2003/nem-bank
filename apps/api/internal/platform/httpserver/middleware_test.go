@@ -2,7 +2,6 @@ package httpserver
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"log/slog"
 	"net/http"
@@ -47,11 +46,8 @@ func TestRecoveryTurnsAPanicIntoA500Problem(t *testing.T) {
 	if rec.Code != http.StatusInternalServerError {
 		t.Fatalf("status = %d", rec.Code)
 	}
-	var p problem
-	if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if p.Code != "internal_error" || p.RequestID != "req-9" {
+	p := decodeProblem(t, rec)
+	if p.Code != "internal_error" || p.RequestId == nil || *p.RequestId != "req-9" {
 		t.Fatalf("unexpected problem: %+v", p)
 	}
 	if strings.Contains(rec.Body.String(), "kaboom") {

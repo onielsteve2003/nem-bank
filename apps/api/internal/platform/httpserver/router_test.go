@@ -8,6 +8,8 @@ import (
 	"net/http"
 	"net/http/httptest"
 	"testing"
+
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 )
 
 func newTestRouter(t *testing.T, logs io.Writer) http.Handler {
@@ -15,11 +17,15 @@ func newTestRouter(t *testing.T, logs io.Writer) http.Handler {
 	if logs == nil {
 		logs = io.Discard
 	}
-	return NewRouter(Options{
+	r, err := NewRouter(Options{
 		Version:     "test-1",
 		Logger:      slog.New(slog.NewJSONHandler(logs, &slog.HandlerOptions{Level: slog.LevelDebug})),
 		CORSOrigins: []string{"https://app.example"},
 	})
+	if err != nil {
+		t.Fatalf("new router: %v", err)
+	}
+	return r
 }
 
 func do(t *testing.T, h http.Handler, method, path string, headers map[string]string) *httptest.ResponseRecorder {
@@ -40,7 +46,7 @@ func TestHealthReportsOKAndVersion(t *testing.T) {
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want 200", rec.Code)
 	}
-	var got Health
+	var got api.Health
 	if err := json.Unmarshal(rec.Body.Bytes(), &got); err != nil {
 		t.Fatalf("decode body: %v", err)
 	}
@@ -56,11 +62,8 @@ func TestUnknownRouteIsAProblemWithTheRequestID(t *testing.T) {
 	if rec.Code != http.StatusNotFound || rec.Header().Get("Content-Type") != "application/problem+json" {
 		t.Fatalf("got %d %q", rec.Code, rec.Header().Get("Content-Type"))
 	}
-	var p problem
-	if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil {
-		t.Fatalf("decode: %v", err)
-	}
-	if p.Code != "not_found" || p.RequestID != "abc-123" || p.Status != http.StatusNotFound {
+	p := decodeProblem(t, rec)
+	if p.Code != "not_found" || p.RequestId == nil || *p.RequestId != "abc-123" || p.Status != http.StatusNotFound {
 		t.Fatalf("unexpected problem: %+v", p)
 	}
 }
@@ -76,4 +79,16 @@ func TestAccessLogUsesTheRouteTemplateNotTheQuery(t *testing.T) {
 	if !bytes.Contains(logs.Bytes(), []byte(`"route":"/v1/health"`)) {
 		t.Fatalf("route missing from logs: %s", logs.String())
 	}
+}
+
+func decodeProblem(t *testing.T, rec *httptest.ResponseRecorder) api.Problem {
+	t.Helper()
+	if ct := rec.Header().Get("Content-Type"); ct != "application/problem+json" {
+		t.Fatalf("content type = %q, want application/problem+json", ct)
+	}
+	var p api.Problem
+	if err := json.Unmarshal(rec.Body.Bytes(), &p); err != nil {
+		t.Fatalf("decode problem: %v", err)
+	}
+	return p
 }

@@ -46,11 +46,14 @@ func run() error {
 		}
 	}
 
-	router := httpserver.NewRouter(httpserver.Options{
+	router, err := httpserver.NewRouter(httpserver.Options{
 		Version:     version,
 		Logger:      log,
 		CORSOrigins: cfg.CORSOrigins,
 	})
+	if err != nil {
+		return err
+	}
 	log.Info("starting nem api", "env", string(cfg.Env))
 	return httpserver.NewServer(cfg.Addr(), router, log, cfg.ShutdownTimeout).Run(ctx)
 }

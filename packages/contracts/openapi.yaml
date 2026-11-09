@@ -12086,6 +12086,8 @@ components:
         value:
           description: The full new value of the section.
           type: [object, array]
+          # The shape depends on `section`; the Go server keeps it raw and validates per section.
+          x-go-type: json.RawMessage
         reason:
           type: string
           minLength: 5

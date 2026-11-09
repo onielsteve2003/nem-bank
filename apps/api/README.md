@@ -81,5 +81,16 @@ Request ID → access log → panic recovery → CORS → handler.
   numbers and emails stay out of logs.
 - A panic becomes a logged stack trace and a `500 application/problem+json`; the client never
   sees the panic value.
+- **Contract-first.** `task generate` runs oapi-codegen (pinned as a Go `tool` in `go.mod`) on
+  the contract to produce `internal/api/api.gen.go`: request/response models and a Gin strict
+  server, one typed method per operation. It also writes `unimplemented.gen.go`, an
+  `Unimplemented` base that answers every operation with `501 not_implemented`, so a new
+  operation in the contract compiles at once and each domain overrides its methods as it is built.
+- **Request validation.** Before any handler runs, the request is checked against the embedded
+  spec (kin-openapi `openapi3filter`): path, query and header parameters and the JSON body,
+  including OpenAPI 3.1 `type: [string, 'null']`. Failures return one `400 validation_failed`
+  problem with a field error per violation: body fields as JSON Pointers (`/last_name`),
+  parameters as `query.limit`. Messages describe the rule (`Must be at most 100.`) and never
+  repeat the submitted value, because values can be PII. Authentication is enforced separately.
 - On SIGTERM or Ctrl+C the server stops accepting connections and lets in-flight requests
   finish within `SHUTDOWN_TIMEOUT`.

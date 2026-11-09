@@ -14,6 +14,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 )
 
@@ -141,22 +142,20 @@ func CORS(origins []string) gin.HandlerFunc {
 	}
 }
 
-// problem is a minimal RFC 9457 body; T22.5 replaces it with the full error model.
-type problem struct {
-	Type      string `json:"type"`
-	Title     string `json:"title"`
-	Status    int    `json:"status"`
-	Code      string `json:"code"`
-	RequestID string `json:"request_id,omitempty"`
+// newProblem builds an RFC 9457 body in the contract's shape; T22.5 adds the full error model.
+func newProblem(c *gin.Context, status int, code, title string) api.Problem {
+	p := api.Problem{Type: "about:blank", Title: title, Status: status, Code: code}
+	if id := logging.RequestID(c.Request.Context()); id != "" {
+		p.RequestId = &id
+	}
+	return p
+}
+
+func sendProblem(c *gin.Context, p api.Problem) {
+	c.Header("Content-Type", "application/problem+json")
+	c.JSON(p.Status, p)
 }
 
 func writeProblem(c *gin.Context, status int, code, title string) {
-	c.Header("Content-Type", "application/problem+json")
-	c.JSON(status, problem{
-		Type:      "about:blank",
-		Title:     title,
-		Status:    status,
-		Code:      code,
-		RequestID: logging.RequestID(c.Request.Context()),
-	})
+	sendProblem(c, newProblem(c, status, code, title))
 }

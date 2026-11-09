@@ -80,8 +80,9 @@ tasks:
       - goose -s create {{.CLI_ARGS}} sql
 
   generate:
-    desc: Regenerate typed Go from db/queries with sqlc.
+    desc: Regenerate Go from the contract (oapi-codegen + Unimplemented stubs) and db/queries (sqlc).
     cmds:
+      - go generate ./internal/api
       - sqlc generate
 
   fmt:

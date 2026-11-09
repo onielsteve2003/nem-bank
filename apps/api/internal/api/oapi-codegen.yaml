@@ -1,0 +1,20 @@
+# Generates the Gin strict server, the request/response models and the embedded spec
+# from the contract. Run `task generate` (or `go generate ./internal/api`).
+package: api
+generate:
+  gin-server: true
+  strict-server: true
+  models: true
+  embedded-spec: true
+output: api.gen.go
+output-options:
+  # Keep every component: the pruner only follows `paths`, so it would drop the parameter
+  # types that only `webhooks` reference and leave the generated code uncompilable.
+  skip-prune: true
+  # Webhooks are events this API sends, not routes it serves.
+  exclude-operation-ids:
+    - onPaymentLinkPaid
+    - onTransferCompleted
+    - onTransferFailed
+    - onTransferReversed
+    - onAccountCredited
