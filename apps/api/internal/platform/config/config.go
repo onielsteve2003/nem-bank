@@ -52,6 +52,10 @@ type Config struct {
 	OTPKey []byte
 	// JWTSigningKey is the Ed25519 seed access tokens are signed with.
 	JWTSigningKey []byte
+	// FieldKeys are the AES-256 keys for field encryption, by version; the highest
+	// encrypts. FieldIndexKey keys the blind indexes. See internal/platform/fieldcrypt.
+	FieldKeys     map[uint16][]byte
+	FieldIndexKey []byte
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
@@ -160,10 +164,52 @@ func Load(getenv func(string) string) (Config, error) {
 		errs = append(errs, fmt.Errorf("JWT_SIGNING_KEY: %w", err))
 	}
 
+	cfg.FieldKeys, err = fieldKeys(getenv("FIELD_ENCRYPTION_KEYS"), cfg.Env)
+	if err != nil {
+		errs = append(errs, fmt.Errorf("FIELD_ENCRYPTION_KEYS: %w", err))
+	}
+	cfg.FieldIndexKey, err = secretKey(getenv("FIELD_INDEX_KEY"), cfg.Env, "nem-dev-field-index-key")
+	if err != nil {
+		errs = append(errs, fmt.Errorf("FIELD_INDEX_KEY: %w", err))
+	}
+
 	if len(errs) > 0 {
 		return Config{}, fmt.Errorf("invalid config: %w", errors.Join(errs...))
 	}
 	return cfg, nil
+}
+
+// fieldKeys parses "1:<base64>,2:<base64>": each version with an exact 32-byte key.
+// Rotation adds a version; the old one stays listed until every row is rewrapped.
+func fieldKeys(raw string, env Env) (map[uint16][]byte, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		if env == EnvProduction {
+			return nil, errors.New("required in production")
+		}
+		sum := sha256.Sum256([]byte("nem-dev-field-key-v1"))
+		return map[uint16][]byte{1: sum[:]}, nil
+	}
+	keys := map[uint16][]byte{}
+	for _, part := range strings.Split(raw, ",") {
+		ver, b64, ok := strings.Cut(strings.TrimSpace(part), ":")
+		v, err := strconv.ParseUint(ver, 10, 16)
+		if !ok || err != nil || v == 0 {
+			return nil, fmt.Errorf("%q is not <version>:<base64 key> with a version from 1", ver)
+		}
+		if _, dup := keys[uint16(v)]; dup {
+			return nil, fmt.Errorf("version %d is listed twice", v)
+		}
+		key, err := base64.StdEncoding.DecodeString(b64)
+		if err != nil {
+			return nil, fmt.Errorf("version %d is not valid base64", v)
+		}
+		if len(key) != 32 {
+			return nil, fmt.Errorf("version %d decodes to %d bytes, need exactly 32", v, len(key))
+		}
+		keys[uint16(v)] = key
+	}
+	return keys, nil
 }
 
 // secretKey decodes a base64 key of 32+ bytes (`openssl rand -base64 32`). Outside

@@ -15,6 +15,7 @@ import (
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/jackc/pgx/v5/pgxpool"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/audit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity/identitydb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 )
@@ -98,6 +99,14 @@ func newID() (uuid.UUID, error) {
 		return uuid.Nil, fmt.Errorf("new id: %w", err)
 	}
 	return id, nil
+}
+
+// audit records a security change in the audit log, inside the change's transaction.
+func (s *Service) audit(ctx context.Context, tx pgx.Tx, actor audit.Actor, action, resourceType, resourceID string, meta map[string]any) error {
+	_, err := audit.Append(ctx, tx, audit.Input{
+		Actor: actor, Action: action, ResourceType: resourceType, ResourceID: resourceID, Metadata: meta,
+	}, s.now())
+	return err
 }
 
 // uniqueViolation returns the constraint name of a unique violation, or "".

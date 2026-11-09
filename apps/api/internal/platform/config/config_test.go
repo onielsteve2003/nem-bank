@@ -50,6 +50,8 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		"MAIL_FROM_EMAIL":             "hello@nem.example",
 		"OTP_KEY":                     "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 		"JWT_SIGNING_KEY":             "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+		"FIELD_ENCRYPTION_KEYS":       "1:" + key32,
+		"FIELD_INDEX_KEY":             key32,
 	}))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -63,6 +65,20 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		cfg.BrevoAPIKey != "xkeysib-test" || cfg.MailFromEmail != "hello@nem.example" ||
 		string(cfg.OTPKey) != "0123456789abcdef0123456789abcdef" || len(cfg.JWTSigningKey) != 32 {
 		t.Fatalf("unexpected config: %+v", cfg)
+	}
+}
+
+// key32 is 32 bytes of base64, for the field-key cases.
+const key32 = "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=" // gitleaks:allow (test key)
+
+func TestFieldKeysParseEveryVersion(t *testing.T) {
+	t.Parallel()
+	cfg, err := Load(env(map[string]string{"FIELD_ENCRYPTION_KEYS": "1:" + key32 + ", 2:" + key32}))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(cfg.FieldKeys) != 2 || len(cfg.FieldKeys[2]) != 32 || len(cfg.FieldIndexKey) != 32 {
+		t.Fatalf("keys = %d, index = %d bytes", len(cfg.FieldKeys), len(cfg.FieldIndexKey))
 	}
 }
 
@@ -96,6 +112,12 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"otp key too short", map[string]string{"OTP_KEY": "c2hvcnQ="}, "need at least 32"},
 		{"production without a jwt key", map[string]string{"APP_ENV": "production"}, "JWT_SIGNING_KEY"},
 		{"jwt key not a seed", map[string]string{"JWT_SIGNING_KEY": "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIz"}, "need exactly 32"}, // gitleaks:allow (a deliberately wrong-length test key)
+		{"production without field keys", map[string]string{"APP_ENV": "production"}, "FIELD_ENCRYPTION_KEYS"},
+		{"production without an index key", map[string]string{"APP_ENV": "production"}, "FIELD_INDEX_KEY"},
+		{"field key without a version", map[string]string{"FIELD_ENCRYPTION_KEYS": "c2hvcnQ="}, "FIELD_ENCRYPTION_KEYS"},
+		{"field key version 0", map[string]string{"FIELD_ENCRYPTION_KEYS": "0:" + key32}, "version from 1"},
+		{"field key listed twice", map[string]string{"FIELD_ENCRYPTION_KEYS": "1:" + key32 + ",1:" + key32}, "twice"},
+		{"field key wrong length", map[string]string{"FIELD_ENCRYPTION_KEYS": "1:c2hvcnQ="}, "need exactly 32"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

@@ -14,6 +14,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/audit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity/identitydb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
@@ -103,6 +104,11 @@ func (s *Service) bindDevice(ctx context.Context, tx pgx.Tx, q *identitydb.Queri
 	}
 	if err != nil {
 		return identitydb.Device{}, fmt.Errorf("insert device: %w", err)
+	}
+	if err := s.audit(ctx, tx, audit.Customer(userID), "device.bind", "device", d.ID.String(), map[string]any{
+		"platform": d.Platform, "hardware_backed": d.HardwareBacked, "cool_off": coolOff,
+	}); err != nil {
+		return identitydb.Device{}, err
 	}
 	if coolOff {
 		// The notifications domain alerts the customer's other devices (AUTH-8).
@@ -276,6 +282,11 @@ func (s *Service) Refresh(ctx context.Context, token string) (AuthResult, error)
 			}); err != nil {
 				return fmt.Errorf("revoke reused session: %w", err)
 			}
+			if err := s.audit(ctx, tx, audit.System(), "session.token_reuse", "session", sess.ID.String(), map[string]any{
+				"user_id": sess.UserID, "device_id": sess.DeviceID,
+			}); err != nil {
+				return err
+			}
 			_, err := jobs.Write(ctx, tx, jobs.Event{
 				Topic: "identity.refresh_token_reused", AggregateType: "user", AggregateID: sess.UserID.String(),
 				Payload: map[string]any{"session_id": sess.ID, "device_id": sess.DeviceID},
@@ -396,7 +407,7 @@ func (s *Service) RevokeDevice(ctx context.Context, deviceID uuid.UUID) error {
 	if deviceID == p.DeviceID {
 		return ErrRevokeCurrent
 	}
-	return s.inTx(ctx, func(q *identitydb.Queries) error {
+	return s.inTxWith(ctx, func(tx pgx.Tx, q *identitydb.Queries) error {
 		n, err := q.RevokeDevice(ctx, identitydb.RevokeDeviceParams{ID: deviceID, UserID: p.UserID})
 		if err != nil {
 			return fmt.Errorf("revoke device: %w", err)
@@ -407,7 +418,8 @@ func (s *Service) RevokeDevice(ctx context.Context, deviceID uuid.UUID) error {
 		if err := q.RevokeDeviceSessions(ctx, identitydb.RevokeDeviceSessionsParams{Reason: ptr("device_revoked"), DeviceID: deviceID}); err != nil {
 			return fmt.Errorf("revoke device sessions: %w", err)
 		}
-		return nil
+		return s.audit(ctx, tx, audit.Customer(p.UserID), "device.revoke", "device", deviceID.String(),
+			map[string]any{"by_device_id": p.DeviceID})
 	})
 }
 

@@ -11,6 +11,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AuditLog struct {
+	Seq          int64
+	ID           uuid.UUID
+	At           time.Time
+	ActorType    string
+	ActorID      pgtype.Text
+	ActorName    pgtype.Text
+	Action       string
+	ResourceType string
+	ResourceID   string
+	Metadata     []byte
+	Ip           pgtype.Text
+	PrevHash     string
+	Hash         string
+}
+
 type Device struct {
 	ID             uuid.UUID
 	UserID         uuid.UUID
@@ -32,6 +48,17 @@ type DeviceChallenge struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	UsedAt    *time.Time
+}
+
+type KycIdentifier struct {
+	UserID     uuid.UUID
+	Kind       string
+	Ciphertext []byte
+	KeyVersion int32
+	BlindIndex []byte
+	Last4      string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type OtpChallenge struct {

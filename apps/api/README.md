@@ -104,6 +104,8 @@ The API refuses to start on a bad value and lists every problem at once.
 | `BREVO_API_KEY` | empty | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production |
 | `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `no-reply@nem.bank` / `Nem Bank` | Sender; must be verified in Brevo |
 | `JWT_SIGNING_KEY` | fixed dev key | Base64 32-byte Ed25519 seed that signs access tokens. Required in production |
+| `FIELD_ENCRYPTION_KEYS` | fixed dev key | `1:<base64 32 bytes>,2:<...>`: AES-256 keys by version for BVN/NIN/ID numbers; the highest encrypts. Keep old versions until `Rewrap` reports 0. Required in production |
+| `FIELD_INDEX_KEY` | fixed dev key | Base64, 32+ bytes: HMAC key for the blind indexes (one owner per BVN). Never rotated with the field keys. Required in production |
 | `OTP_KEY` | fixed dev key | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production |
 
 ## Database
@@ -203,6 +205,27 @@ The API refuses to start on a bad value and lists every problem at once.
   sets one; `X-Forwarded-For` is ignored because a caller could set it.
 - **Bearer auth** is enforced by the request validator from each operation's `security`: a
   missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
+
+## Field encryption and the audit log
+
+- **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers
+  are encrypted per field with AES-256-GCM (`internal/platform/fieldcrypt`). The ciphertext
+  carries its key version, and is bound to its owner and kind as associated data, so a
+  ciphertext copied onto another customer's row does not decrypt. A keyed HMAC blind index
+  enforces one customer per BVN and per NIN without decrypting anything, and `last4` is what
+  screens show. Rotation: add a key version, run `Identifiers.Rewrap` until it returns 0,
+  then drop the old version. Plaintext only exists in memory for the KYC provider check and
+  the step-up-gated reveal (T30.2).
+- **Audit log** (`internal/audit`, `audit_log`): append-only (triggers refuse UPDATE, DELETE
+  and TRUNCATE) and hash-chained: each entry's hash is SHA-256 over the previous hash and
+  the entry's canonical JSON, byte for byte the console's scheme
+  (`apps/console/src/data/mock/audit.ts`; a Go test pins a hash computed by that code).
+  `Verify` recomputes a range and names the first broken entry. Entries are written in the
+  same transaction as the change they record, serialised by an advisory lock. Today:
+  `device.bind`, `device.revoke`, `pin.reset`, `duress_pin.set`, `duress_pin.remove`,
+  `session.token_reuse`, `security.duress_triggered`; staff actions join with T23.7.
+  Metadata holds IDs only. A chain cannot show rows cut from its end, so the head hash should
+  also be recorded outside the database (T32).
 
 ## Jobs and the outbox
 

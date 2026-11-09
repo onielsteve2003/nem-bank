@@ -70,3 +70,43 @@ sql:
             go_type:
               type: string
               pointer: true
+  - engine: postgresql
+    schema: db/migrations
+    queries: db/queries/audit
+    gen:
+      go:
+        package: auditdb
+        out: internal/audit/auditdb
+        sql_package: pgx/v5
+        emit_interface: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: timestamptz
+            go_type: time.Time
+          - db_type: text
+            nullable: true
+            go_type:
+              type: string
+              pointer: true
+  - engine: postgresql
+    schema: db/migrations
+    queries: db/queries/kyc
+    gen:
+      go:
+        package: kycdb
+        out: internal/kyc/kycdb
+        sql_package: pgx/v5
+        emit_interface: true
+        emit_empty_slices: true
+        overrides:
+          - db_type: uuid
+            go_type: github.com/google/uuid.UUID
+          - db_type: timestamptz
+            go_type: time.Time
+          - db_type: text
+            nullable: true
+            go_type:
+              type: string
+              pointer: true

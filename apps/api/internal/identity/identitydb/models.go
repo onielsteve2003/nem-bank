@@ -10,6 +10,22 @@ import (
 	"github.com/google/uuid"
 )
 
+type AuditLog struct {
+	Seq          int64
+	ID           uuid.UUID
+	At           time.Time
+	ActorType    string
+	ActorID      *string
+	ActorName    *string
+	Action       string
+	ResourceType string
+	ResourceID   string
+	Metadata     []byte
+	Ip           *string
+	PrevHash     string
+	Hash         string
+}
+
 type Device struct {
 	ID             uuid.UUID
 	UserID         uuid.UUID
@@ -31,6 +47,17 @@ type DeviceChallenge struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	UsedAt    *time.Time
+}
+
+type KycIdentifier struct {
+	UserID     uuid.UUID
+	Kind       string
+	Ciphertext []byte
+	KeyVersion int32
+	BlindIndex []byte
+	Last4      string
+	CreatedAt  time.Time
+	UpdatedAt  time.Time
 }
 
 type OtpChallenge struct {

@@ -10,6 +10,7 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/audit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity/identitydb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
@@ -199,11 +200,15 @@ func (s *Service) VerifyPin(ctx context.Context, pin string) (PinResult, error) 
 // it exists exactly when duress mode was recorded; nothing is sent to the customer's
 // devices, where the person forcing them would see it.
 func (s *Service) raiseDuressAlert(ctx context.Context, tx pgx.Tx, userID uuid.UUID, p Principal) error {
-	_, err := jobs.Write(ctx, tx, jobs.Event{
+	if _, err := jobs.Write(ctx, tx, jobs.Event{
 		Topic: "security.duress_triggered", AggregateType: "user", AggregateID: userID.String(),
 		Payload: map[string]any{"session_id": p.SessionID, "device_id": p.DeviceID},
-	})
-	return err
+	}); err != nil {
+		return err
+	}
+	// Staff see it in the audit log; the customer's devices never do.
+	return s.audit(ctx, tx, audit.System(), "security.duress_triggered", "user", userID.String(),
+		map[string]any{"session_id": p.SessionID, "device_id": p.DeviceID})
 }
 
 // InDuress reports whether the customer is in duress mode. Transfers block silently and
@@ -243,7 +248,7 @@ func (s *Service) consumeStepUp(ctx context.Context, q *identitydb.Queries, user
 // apply runs with the user row locked and the step-up already spent. In duress mode the
 // change is skipped but still reported as done: whoever forces the phone must not be able
 // to disarm the duress PIN or take over the real one.
-func (s *Service) pinChange(ctx context.Context, stepUp, pin string, apply func(q *identitydb.Queries, u identitydb.User, hash *string) error) error {
+func (s *Service) pinChange(ctx context.Context, action, stepUp, pin string, apply func(q *identitydb.Queries, u identitydb.User, hash *string) error) error {
 	p, err := principal(ctx)
 	if err != nil {
 		return err
@@ -263,7 +268,7 @@ func (s *Service) pinChange(ctx context.Context, stepUp, pin string, apply func(
 		}
 		hash = &h
 	}
-	return s.inTx(ctx, func(q *identitydb.Queries) error {
+	return s.inTxWith(ctx, func(tx pgx.Tx, q *identitydb.Queries) error {
 		u, err := q.GetUserForUpdate(ctx, p.UserID)
 		if err != nil {
 			return fmt.Errorf("lock user: %w", err)
@@ -274,7 +279,11 @@ func (s *Service) pinChange(ctx context.Context, stepUp, pin string, apply func(
 		if u.DuressSince != nil {
 			return nil
 		}
-		return apply(q, u, hash)
+		if err := apply(q, u, hash); err != nil {
+			return err
+		}
+		return s.audit(ctx, tx, audit.Customer(u.ID), action, "user", u.ID.String(),
+			map[string]any{"device_id": p.DeviceID})
 	})
 }
 
@@ -288,7 +297,7 @@ func (s *Service) samePin(ctx context.Context, pin string, hash *string) (bool, 
 
 // ResetPin replaces the PIN after step-up (AUTH-9) and clears any lockout.
 func (s *Service) ResetPin(ctx context.Context, stepUp, pin string) error {
-	return s.pinChange(ctx, stepUp, pin, func(q *identitydb.Queries, u identitydb.User, hash *string) error {
+	return s.pinChange(ctx, "pin.reset", stepUp, pin, func(q *identitydb.Queries, u identitydb.User, hash *string) error {
 		if same, err := s.samePin(ctx, pin, u.DuressPinHash); err != nil {
 			return err
 		} else if same {
@@ -303,7 +312,7 @@ func (s *Service) ResetPin(ctx context.Context, stepUp, pin string) error {
 
 // SetDuressPin sets or replaces the duress PIN (SEC-5), which must differ from the PIN.
 func (s *Service) SetDuressPin(ctx context.Context, stepUp, pin string) error {
-	return s.pinChange(ctx, stepUp, pin, func(q *identitydb.Queries, u identitydb.User, hash *string) error {
+	return s.pinChange(ctx, "duress_pin.set", stepUp, pin, func(q *identitydb.Queries, u identitydb.User, hash *string) error {
 		if u.PinHash == nil {
 			return ErrPinNotSet
 		}
@@ -321,7 +330,7 @@ func (s *Service) SetDuressPin(ctx context.Context, stepUp, pin string) error {
 
 // RemoveDuressPin removes the duress PIN.
 func (s *Service) RemoveDuressPin(ctx context.Context, stepUp string) error {
-	return s.pinChange(ctx, stepUp, "", func(q *identitydb.Queries, u identitydb.User, _ *string) error {
+	return s.pinChange(ctx, "duress_pin.remove", stepUp, "", func(q *identitydb.Queries, u identitydb.User, _ *string) error {
 		if err := q.SetDuressPinHash(ctx, identitydb.SetDuressPinHashParams{ID: u.ID}); err != nil {
 			return fmt.Errorf("remove duress pin: %w", err)
 		}
