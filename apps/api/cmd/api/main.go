@@ -19,6 +19,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/httpserver"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
@@ -123,6 +124,8 @@ func run() error {
 		return err
 	}
 
+	idem := idempotency.NewStore(pool)
+
 	metrics := observability.NewMetrics()
 	metrics.RegisterPool(pool)
 
@@ -137,6 +140,7 @@ func run() error {
 		Identity:           identity.NewAPI(identitySvc),
 		Authenticator:      identitySvc,
 		Signatures:         identitySvc,
+		Idempotency:        idem,
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
@@ -147,7 +151,7 @@ func run() error {
 
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
-	runner, err := jobs.New(pool, log, jobs.Options{})
+	runner, err := jobs.New(pool, log, jobs.Options{Housekeeping: []func(context.Context) error{idem.Prune}})
 	if err != nil {
 		return err
 	}

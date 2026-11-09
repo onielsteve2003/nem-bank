@@ -76,7 +76,7 @@ func signedOperation(op *openapi3.Operation) bool {
 // re-encodes it, and the signature covers the client's bytes. sig may be nil, and then
 // every signed operation is refused.
 func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
-	return requestValidator(spec, auth, nil, sig, nil, log)
+	return requestValidator(spec, auth, nil, sig, nil, nil, log)
 }
 
 // customerLimit runs once the caller is known; see limiter.byCustomer.
@@ -84,7 +84,7 @@ type customerLimit func(ctx context.Context, c *gin.Context, signed bool) error
 
 // staff verifies console (staffAuth) tokens; nil makes every staff operation a 401. Staff
 // operations that list x-roles are refused with 403 unless the caller holds one of them.
-func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig SignatureVerifier, limit customerLimit, log *slog.Logger) (gin.HandlerFunc, error) {
+func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig SignatureVerifier, idem IdempotencyStore, limit customerLimit, log *slog.Logger) (gin.HandlerFunc, error) {
 	roles, err := operationRoles(spec)
 	if err != nil {
 		return nil, err
@@ -138,9 +138,9 @@ func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig Signature
 			c.Next()
 			return
 		}
-		signed := signedOperation(route.Operation)
+		signed, keyed := signedOperation(route.Operation), keyedOperation(route.Operation)
 		var raw []byte
-		if signed && c.Request.Body != nil {
+		if (signed || keyed) && c.Request.Body != nil {
 			raw, err = io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, maxSignedBody))
 			if err != nil {
 				var tooLarge *http.MaxBytesError
@@ -190,6 +190,10 @@ func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig Signature
 				problem.Write(c, log, err)
 				return
 			}
+		}
+		if keyed {
+			runIdempotent(c, idem, raw, log)
+			return
 		}
 		c.Next()
 	}, nil

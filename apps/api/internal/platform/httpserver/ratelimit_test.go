@@ -42,7 +42,7 @@ func limitedRouter(t *testing.T, limits RateLimits, ipHeader string, sig Signatu
 	t.Helper()
 	h, err := NewRouter(Options{
 		Version: "test", Logger: slog.New(slog.NewTextHandler(io.Discard, nil)),
-		Authenticator: customerAuth{}, Signatures: sig, RateLimits: &limits, ClientIPHeader: ipHeader,
+		Authenticator: customerAuth{}, Signatures: sig, Idempotency: alwaysRun{}, RateLimits: &limits, ClientIPHeader: ipHeader,
 	})
 	if err != nil {
 		t.Fatal(err)

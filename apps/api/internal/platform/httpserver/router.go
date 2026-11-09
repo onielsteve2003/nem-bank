@@ -47,6 +47,9 @@ type Options struct {
 	StaffAuthenticator Authenticator
 	// Signatures verifies device signatures on money-moving requests; nil refuses them all.
 	Signatures SignatureVerifier
+	// Idempotency stores Idempotency-Key claims and responses; nil refuses every
+	// operation that takes the header.
+	Idempotency IdempotencyStore
 	// RateLimits are the request limits; nil means DefaultRateLimits.
 	RateLimits *RateLimits
 	// ClientIPHeader names the header the hosting proxy puts the caller's address in (for
@@ -73,7 +76,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 		limits = *opts.RateLimits
 	}
 	lim := newLimiter(limits, opts.Now)
-	validate, err := requestValidator(spec, opts.Authenticator, opts.StaffAuthenticator, opts.Signatures, lim.byCustomer, opts.Logger)
+	validate, err := requestValidator(spec, opts.Authenticator, opts.StaffAuthenticator, opts.Signatures, opts.Idempotency, lim.byCustomer, opts.Logger)
 	if err != nil {
 		return nil, err
 	}

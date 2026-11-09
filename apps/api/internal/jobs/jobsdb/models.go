@@ -78,6 +78,19 @@ type DeviceChallenge struct {
 	UsedAt    *time.Time
 }
 
+type IdempotencyKey struct {
+	Scope               string
+	Key                 uuid.UUID
+	RequestHash         []byte
+	Status              string
+	ResponseStatus      pgtype.Int4
+	ResponseContentType pgtype.Text
+	ResponseBody        []byte
+	LockedAt            time.Time
+	CreatedAt           time.Time
+	CompletedAt         *time.Time
+}
+
 type JournalEntry struct {
 	ID             uuid.UUID
 	Kind           string

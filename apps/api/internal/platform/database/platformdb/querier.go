@@ -10,6 +10,15 @@ import (
 )
 
 type Querier interface {
+	// Takes the key for a new request. An existing row is taken over only when it has
+	// expired, or when it is the same request whose claim went stale (the server died mid
+	// flight). No row back means someone else holds the key: read it with GetIdempotencyKey.
+	ClaimIdempotencyKey(ctx context.Context, arg ClaimIdempotencyKeyParams) (time.Time, error)
+	CompleteIdempotencyKey(ctx context.Context, arg CompleteIdempotencyKeyParams) (int64, error)
+	GetIdempotencyKey(ctx context.Context, arg GetIdempotencyKeyParams) (IdempotencyKey, error)
+	PruneIdempotencyKeys(ctx context.Context, before time.Time) (int64, error)
+	// Frees the key after a failure the client should retry (5xx, 429).
+	ReleaseIdempotencyKey(ctx context.Context, arg ReleaseIdempotencyKeyParams) error
 	// The database clock. Readiness checks use it to prove a real round trip, not just a pooled connection.
 	ServerTime(ctx context.Context) (time.Time, error)
 }

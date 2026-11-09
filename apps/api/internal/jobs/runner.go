@@ -27,6 +27,9 @@ type Options struct {
 	DispatchBatch int32
 	// RetainDispatched is how long dispatched events stay for debugging. Default 7 days.
 	RetainDispatched time.Duration
+	// Housekeeping runs with the hourly outbox prune: other tables' clean-ups (expired
+	// idempotency keys, ...). Each runs even if an earlier one failed.
+	Housekeeping []func(context.Context) error
 }
 
 // Runner owns the River client and the outbox dispatcher for the process.
@@ -74,7 +77,7 @@ func New(pool *pgxpool.Pool, log *slog.Logger, opts Options) (*Runner, error) {
 
 	workers := river.NewWorkers()
 	river.AddWorker(workers, &deliverWorker{subscribers: subs})
-	river.AddWorker(workers, &pruneWorker{pool: pool, retain: opts.RetainDispatched})
+	river.AddWorker(workers, &pruneWorker{pool: pool, retain: opts.RetainDispatched, housekeeping: opts.Housekeeping})
 
 	client, err := river.NewClient(riverpgxv5.New(pool), &river.Config{
 		Logger:  log.With("component", "river"),
@@ -145,13 +148,18 @@ func (PruneArgs) InsertOpts() river.InsertOpts {
 
 type pruneWorker struct {
 	river.WorkerDefaults[PruneArgs]
-	pool   *pgxpool.Pool
-	retain time.Duration
+	pool         *pgxpool.Pool
+	retain       time.Duration
+	housekeeping []func(context.Context) error
 }
 
 func (w *pruneWorker) Work(ctx context.Context, _ *river.Job[PruneArgs]) error {
 	_, err := Prune(ctx, w.pool, time.Now().Add(-w.retain))
-	return err
+	errs := []error{err}
+	for _, clean := range w.housekeeping {
+		errs = append(errs, clean(ctx))
+	}
+	return errors.Join(errs...)
 }
 
 // Prune deletes events dispatched before cutoff, in batches, and returns how many went.

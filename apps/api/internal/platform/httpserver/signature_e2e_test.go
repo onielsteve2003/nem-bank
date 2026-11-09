@@ -18,6 +18,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/testdb"
 )
 
@@ -45,8 +46,9 @@ func TestMoneyRequestsNeedTheDeviceSignatureAndQuickLoginWorks(t *testing.T) {
 
 	quiet := slog.New(slog.NewTextHandler(io.Discard, nil))
 	mail := &lastMail{}
+	pool := testdb.New(t)
 	svc, err := identity.NewService(identity.Config{
-		Pool: testdb.New(t), Mailer: mail, Logger: quiet,
+		Pool: pool, Mailer: mail, Logger: quiet,
 		OTPKey:     []byte("0123456789abcdef0123456789abcdef"),
 		SigningKey: []byte("fedcba9876543210fedcba9876543210"),
 		Hasher:     identity.NewHasher(identity.Argon2Params{MemoryKiB: 64, Time: 1, Threads: 1}, 2),
@@ -54,7 +56,8 @@ func TestMoneyRequestsNeedTheDeviceSignatureAndQuickLoginWorks(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	h, err := NewRouter(Options{Version: "e2e", Logger: quiet, Identity: identity.NewAPI(svc), Authenticator: svc, Signatures: svc})
+	h, err := NewRouter(Options{Version: "e2e", Logger: quiet, Identity: identity.NewAPI(svc), Authenticator: svc, Signatures: svc,
+		Idempotency: idempotency.NewStore(pool)})
 	if err != nil {
 		t.Fatal(err)
 	}
