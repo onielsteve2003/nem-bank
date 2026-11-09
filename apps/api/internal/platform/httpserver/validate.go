@@ -75,6 +75,13 @@ func signedOperation(op *openapi3.Operation) bool {
 // re-encodes it, and the signature covers the client's bytes. sig may be nil, and then
 // every signed operation is refused.
 func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
+	return requestValidator(spec, auth, sig, nil, log)
+}
+
+// customerLimit runs once the caller is known; see limiter.byCustomer.
+type customerLimit func(ctx context.Context, c *gin.Context, signed bool) error
+
+func requestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, limit customerLimit, log *slog.Logger) (gin.HandlerFunc, error) {
 	// Routes are matched on the path alone. The spec's `servers` name a localhost URL that
 	// would never match the host the API runs on in production.
 	spec.Servers = nil
@@ -150,6 +157,12 @@ func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifie
 		}
 		if slot.ctx != nil {
 			c.Request = c.Request.WithContext(slot.ctx)
+		}
+		if limit != nil {
+			if err := limit(c.Request.Context(), c, signed); err != nil {
+				problem.Write(c, log, err)
+				return
+			}
 		}
 		if signed {
 			if err := verifySignature(c, sig, raw); err != nil {

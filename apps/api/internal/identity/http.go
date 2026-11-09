@@ -83,7 +83,7 @@ func userJSON(u identitydb.User) api.User {
 func deviceJSON(d identitydb.Device, current uuid.UUID, now time.Time) api.Device {
 	out := api.Device{
 		Id: d.ID, Name: d.Name, Platform: api.Platform(d.Platform), Current: d.ID == current,
-		Trusted:        d.CoolOffUntil == nil || !now.Before(*d.CoolOffUntil),
+		Trusted:        !coolOffOf(d, now).Active,
 		HardwareBacked: d.HardwareBacked, KeyFingerprint: KeyFingerprint(d.PublicKey),
 		BoundAt: d.BoundAt.UTC(), LastSeenAt: d.LastSeenAt.UTC(),
 	}

@@ -25,10 +25,13 @@ const (
 
 // Config holds every setting the API reads at startup.
 type Config struct {
-	Env             Env
-	Port            int
-	LogLevel        slog.Level
-	CORSOrigins     []string
+	Env         Env
+	Port        int
+	LogLevel    slog.Level
+	CORSOrigins []string
+	// ClientIPHeader is the header the hosting proxy sets to the caller's address, for the
+	// per-address rate limits. Empty uses the TCP peer.
+	ClientIPHeader  string
 	ShutdownTimeout time.Duration
 	DatabaseURL     string
 	DBMaxConns      int32
@@ -129,6 +132,7 @@ func Load(getenv func(string) string) (Config, error) {
 	if err != nil || cfg.TraceSampleRatio < 0 || cfg.TraceSampleRatio > 1 {
 		errs = append(errs, fmt.Errorf("TRACE_SAMPLE_RATIO: %q is not between 0 and 1", getenv("TRACE_SAMPLE_RATIO")))
 	}
+	cfg.ClientIPHeader = get("CLIENT_IP_HEADER", "")
 	cfg.SentryDSN = get("SENTRY_DSN", "")
 	// /metrics shows routes, pool sizes and runtime internals: never public in production.
 	cfg.MetricsToken = get("METRICS_TOKEN", "")

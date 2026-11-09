@@ -98,6 +98,7 @@ The API refuses to start on a bad value and lists every problem at once.
 | `OTEL_EXPORTER_OTLP_ENDPOINT` | empty | OTLP/HTTP URL for traces (Grafana Cloud free). Empty keeps spans local |
 | `OTEL_EXPORTER_OTLP_HEADERS` | empty | Read by the exporter itself, e.g. `Authorization=Basic ...` |
 | `TRACE_SAMPLE_RATIO` | `1` | Share of new traces kept, 0 to 1. Sampled parents are always kept |
+| `CLIENT_IP_HEADER` | empty | Header the host's proxy sets to the caller's address (e.g. `CF-Connecting-IP`), for per-address rate limits. Empty uses the TCP peer; `X-Forwarded-For` is never trusted as sent |
 | `SENTRY_DSN` | empty | Error tracking (Sentry free). Empty turns it off |
 | `METRICS_TOKEN` | empty | Bearer token for `/metrics`. Required in production |
 | `BREVO_API_KEY` | empty | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production |
@@ -185,6 +186,21 @@ The API refuses to start on a bad value and lists every problem at once.
 - **Quick login (AUTH-5).** `POST /v1/auth/device-challenge` gives a bound device a random
   nonce (2 minutes); `POST /v1/auth/login/device` opens a session when the device key signed
   it. One attempt per challenge: a wrong signature spends it too.
+- **New-device cool-off (AUTH-8).** A login that binds a new device sets `cool_off_until` to
+  24 hours ahead and alerts the other devices. While it runs, `identity.CoolOff` reports a
+  ₦50,000 daily cap and the risk reason `new_device`, which the limits and risk engines (M25)
+  apply as the mock bank does: the lowest of that, the KYC cap and the customer's own limit,
+  and a step-up on every transfer from that device. The sign-up device has no cool-off.
+- **Rate limits.** In-memory GCRA (`internal/platform/ratelimit`: one timestamp per key, a
+  burst of N then one every window/N). Exact on one instance, which is what Render free runs;
+  more instances would need a shared store behind the same call. Per address before
+  validation: 600/min on every contract route, plus tighter per-route budgets on the public
+  routes that check a secret or send email (login and device login 10/min, code checks
+  10/min, sign-up 20/h, password reset 10/h, ...). Per customer once authenticated: 300/min,
+  and 30/min on each money-moving route, checked before the signature so a flood never writes
+  nonces. `429 rate_limited` with `Retry-After`. The domains' own limits (codes, PIN lockout,
+  step-ups) stay underneath. The address is the TCP peer, or `CLIENT_IP_HEADER` when the host
+  sets one; `X-Forwarded-For` is ignored because a caller could set it.
 - **Bearer auth** is enforced by the request validator from each operation's `security`: a
   missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
 

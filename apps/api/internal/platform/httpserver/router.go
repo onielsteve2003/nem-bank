@@ -42,6 +42,12 @@ type Options struct {
 	Authenticator Authenticator
 	// Signatures verifies device signatures on money-moving requests; nil refuses them all.
 	Signatures SignatureVerifier
+	// RateLimits are the request limits; nil means DefaultRateLimits.
+	RateLimits *RateLimits
+	// ClientIPHeader names the header the hosting proxy puts the caller's address in (for
+	// example CF-Connecting-IP). Empty means the TCP peer address. X-Forwarded-For is never
+	// trusted as sent, because a caller could set it to dodge the per-address limits.
+	ClientIPHeader string
 }
 
 // NewRouter returns the Gin engine with the middleware chain and every contract operation
@@ -57,7 +63,12 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load embedded openapi spec: %w", err)
 	}
-	validate, err := RequestValidator(spec, opts.Authenticator, opts.Signatures, opts.Logger)
+	limits := DefaultRateLimits()
+	if opts.RateLimits != nil {
+		limits = *opts.RateLimits
+	}
+	lim := newLimiter(limits, opts.Now)
+	validate, err := requestValidator(spec, opts.Authenticator, opts.Signatures, lim.byCustomer, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -68,6 +79,11 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	// fallback its Value, Done and Deadline ignore the request context, so handlers would
 	// lose the caller, cancellation and the trace parent of their database spans.
 	r.ContextWithFallback = true
+	// The caller's address feeds the per-address limits, so it must not be spoofable.
+	if err := r.SetTrustedProxies(nil); err != nil {
+		return nil, fmt.Errorf("trusted proxies: %w", err)
+	}
+	r.TrustedPlatform = opts.ClientIPHeader
 	// Request ID first so every later log line and problem carries it; recovery next so a
 	// panic anywhere below is still logged by AccessLog with a 500. CORS answers preflights
 	// before validation, which would reject an OPTIONS the contract does not declare.
@@ -97,7 +113,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	r.GET(MetricsPath, opts.Metrics.Handler(opts.MetricsToken))
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
-	contract := r.Group("", validate)
+	contract := r.Group("", lim.byAddress(), validate)
 	h := &handlers{API: opts.Identity, version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),

@@ -107,15 +107,16 @@ func run() error {
 	metrics.RegisterPool(pool)
 
 	router, err := httpserver.NewRouter(httpserver.Options{
-		Version:       version,
-		Logger:        log,
-		CORSOrigins:   cfg.CORSOrigins,
-		Readiness:     []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
-		Metrics:       metrics,
-		MetricsToken:  cfg.MetricsToken,
-		Identity:      identity.NewAPI(identitySvc),
-		Authenticator: identitySvc,
-		Signatures:    identitySvc,
+		Version:        version,
+		Logger:         log,
+		CORSOrigins:    cfg.CORSOrigins,
+		ClientIPHeader: cfg.ClientIPHeader,
+		Readiness:      []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
+		Metrics:        metrics,
+		MetricsToken:   cfg.MetricsToken,
+		Identity:       identity.NewAPI(identitySvc),
+		Authenticator:  identitySvc,
+		Signatures:     identitySvc,
 	})
 	if err != nil {
 		return err
