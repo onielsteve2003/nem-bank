@@ -67,8 +67,24 @@ The API refuses to start on a bad value and lists every problem at once.
   No ORM: money paths stay explicit, reviewable SQL.
 - The compose database listens on host port **5433**, so a Postgres installed natively on
   5432 does not get in the way. `task db:reset` wipes it.
-- `TEST_DATABASE_URL=postgres://nem:nem@localhost:5433/nem?sslmode=disable go test ./internal/platform/database/`
-  runs the database test against it.
+
+## Tests
+
+`task test` runs everything with the race detector (needs cgo, so on Windows without gcc use
+`go test ./...`; CI always runs `-race`).
+
+- **Database tests** call `testdb.New(t)` (`internal/platform/testdb`) and get their own
+  database at the latest migration, dropped when the test ends, so they can run with
+  `t.Parallel()`. Migrations run once into a template database named after a hash of the
+  migration files; each test clones it with `CREATE DATABASE ... TEMPLATE` in milliseconds.
+  Postgres comes from testcontainers-go (one container per test binary, Docker required), or
+  from `TEST_DATABASE_URL` when set, which is faster on a running compose database:
+  `TEST_DATABASE_URL=postgres://nem:nem@localhost:5433/nem?sslmode=disable go test ./...`.
+  Without Docker the database tests skip locally; in CI they fail.
+- **Fixtures** are plain SQL files in a package's `testdata/`, applied in order in one
+  transaction: `testdb.Load(t, pool, os.DirFS("testdata"), "users.sql", "accounts.sql")`.
+- **CI** (`API (Go)` job): the generated server must match the contract, golangci-lint,
+  `go test -race`, and govulncheck.
 
 ## Request pipeline
 
