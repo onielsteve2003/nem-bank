@@ -14,8 +14,8 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
-	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 // HeaderRequestID is echoed on every response and repeated in problem bodies.
@@ -88,10 +88,8 @@ func Recovery(log *slog.Logger) gin.HandlerFunc {
 				slog.String("route", c.FullPath()),
 				slog.String("stack", string(debug.Stack())),
 			)
-			if !c.Writer.Written() {
-				writeProblem(c, http.StatusInternalServerError, "internal_error", "Something went wrong on our side.")
-			}
-			c.Abort()
+			// Already logged with the stack above, so Render rather than Write.
+			problem.Render(c, problem.Internal())
 		}()
 		c.Next()
 	}
@@ -140,22 +138,4 @@ func CORS(origins []string) gin.HandlerFunc {
 		}
 		c.Next()
 	}
-}
-
-// newProblem builds an RFC 9457 body in the contract's shape; T22.5 adds the full error model.
-func newProblem(c *gin.Context, status int, code, title string) api.Problem {
-	p := api.Problem{Type: "about:blank", Title: title, Status: status, Code: code}
-	if id := logging.RequestID(c.Request.Context()); id != "" {
-		p.RequestId = &id
-	}
-	return p
-}
-
-func sendProblem(c *gin.Context, p api.Problem) {
-	c.Header("Content-Type", "application/problem+json")
-	c.JSON(p.Status, p)
-}
-
-func writeProblem(c *gin.Context, status int, code, title string) {
-	sendProblem(c, newProblem(c, status, code, title))
 }

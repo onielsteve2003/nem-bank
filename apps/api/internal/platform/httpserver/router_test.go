@@ -7,6 +7,7 @@ import (
 	"log/slog"
 	"net/http"
 	"net/http/httptest"
+	"strings"
 	"testing"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
@@ -91,4 +92,26 @@ func decodeProblem(t *testing.T, rec *httptest.ResponseRecorder) api.Problem {
 		t.Fatalf("decode problem: %v", err)
 	}
 	return p
+}
+
+func TestAKnownPathWithTheWrongMethodIsA405(t *testing.T) {
+	t.Parallel()
+
+	rec := do(t, newTestRouter(t, nil), http.MethodDelete, "/v1/health", nil)
+	if rec.Code != http.StatusMethodNotAllowed || !strings.Contains(rec.Header().Get("Allow"), http.MethodGet) {
+		t.Fatalf("got %d Allow=%q", rec.Code, rec.Header().Get("Allow"))
+	}
+	if p := decodeProblem(t, rec); p.Code != "method_not_allowed" {
+		t.Fatalf("unexpected problem: %+v", p)
+	}
+}
+
+func TestNotImplementedOperationsUseTheProblemType(t *testing.T) {
+	t.Parallel()
+
+	rec := do(t, newTestRouter(t, nil), http.MethodGet, "/v1/accounts", nil)
+	p := decodeProblem(t, rec)
+	if rec.Code != http.StatusNotImplemented || p.Type != "https://nem.bank/problems/not_implemented" {
+		t.Fatalf("got %d %+v", rec.Code, p)
+	}
 }

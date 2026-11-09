@@ -3,7 +3,6 @@ package httpserver
 import (
 	"errors"
 	"fmt"
-	"net/http"
 	"strconv"
 	"strings"
 
@@ -14,6 +13,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 // RequestValidator checks every request against the contract (path, query and header
@@ -52,18 +52,11 @@ func RequestValidator(spec *openapi3.T) (gin.HandlerFunc, error) {
 			Options:    opts,
 		}
 		if err := openapi3filter.ValidateRequest(c.Request.Context(), in); err != nil {
-			writeValidationProblem(c, fieldErrors(err))
-			c.Abort()
+			problem.Render(c, problem.Validation(fieldErrors(err)...))
 			return
 		}
 		c.Next()
 	}, nil
-}
-
-func writeValidationProblem(c *gin.Context, errs []api.FieldError) {
-	p := newProblem(c, http.StatusBadRequest, "validation_failed", "The request is not valid.")
-	p.Errors = &errs
-	sendProblem(c, p)
 }
 
 // fieldErrors flattens kin-openapi's error tree into the contract's FieldError list. Body

@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 const healthPath = "/v1/health"
@@ -46,7 +47,13 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	r.Use(RequestID(), AccessLog(opts.Logger), Recovery(opts.Logger), CORS(opts.CORSOrigins))
 
 	r.NoRoute(func(c *gin.Context) {
-		writeProblem(c, http.StatusNotFound, "not_found", "No such endpoint.")
+		problem.Render(c, problem.New(http.StatusNotFound, problem.CodeNotFound, "No such endpoint."))
+	})
+	// A known path with the wrong method is a 405 with an Allow header, not a 404.
+	r.HandleMethodNotAllowed = true
+	r.NoMethod(func(c *gin.Context) {
+		problem.Render(c, problem.New(http.StatusMethodNotAllowed, problem.CodeMethodNotAllowed,
+			"This endpoint does not support "+c.Request.Method+"."))
 	})
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.

@@ -94,3 +94,19 @@ Request ID → access log → panic recovery → CORS → handler.
   repeat the submitted value, because values can be PII. Authentication is enforced separately.
 - On SIGTERM or Ctrl+C the server stops accepting connections and lets in-flight requests
   finish within `SHUTDOWN_TIMEOUT`.
+
+## Errors and pagination
+
+- **Errors** are RFC 9457 `application/problem+json` (`internal/platform/problem`) with a stable
+  `code` and `type: https://nem.bank/problems/<code>`, the same shape the app's mock bank
+  produces. Domains declare sentinels such as
+  `ErrInsufficientFunds = problem.New(422, "insufficient_funds", "...")`, wrap them with `%w` as
+  they travel up, and add specifics with `WithDetail` (copies, so sentinels stay shared and
+  `errors.Is` still matches). `problem.Write` renders the first `*problem.Error` in the chain;
+  anything else is logged with its cause and sent as an opaque `500 internal_error`. A deadline
+  becomes `504 timeout`; a client that hung up gets nothing. `RetryAt` sets `Retry-After`.
+- **Pagination** (`internal/platform/pagination`) is keyset, not offset: the cursor is an opaque
+  base64url `(time, id)` position, versioned, so pages never skip or repeat rows when new ones
+  arrive and every page is an index range scan. Fetch `limit + 1` rows; `pagination.Page`
+  trims the extra row and sets `next_cursor` (null on the last page). A cursor the server did
+  not issue is a `400` on `query.cursor`.

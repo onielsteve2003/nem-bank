@@ -3,6 +3,7 @@ package httpserver
 import (
 	"context"
 	"errors"
+	"fmt"
 	"log/slog"
 	"net/http"
 	"time"
@@ -10,6 +11,7 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 // handlers implements the contract's strict server. Operations not overridden here fall
@@ -32,21 +34,17 @@ func strictOptions(log *slog.Logger) api.StrictGinServerOptions {
 		RequestErrorHandlerFunc: func(c *gin.Context, _ error) {
 			// Reached only when the body passed validation but failed to bind, e.g. a JSON
 			// number too large for its Go type.
-			writeValidationProblem(c, []api.FieldError{{Field: "/", Code: "malformed", Message: "The request body could not be read."}})
+			problem.Render(c, problem.Validation(problem.Field("/", "malformed", "The request body could not be read.")))
 		},
 		HandlerErrorFunc: func(c *gin.Context, err error) {
 			if errors.Is(err, api.ErrNotImplemented) {
-				writeProblem(c, http.StatusNotImplemented, "not_implemented", "This endpoint is not available yet.")
+				problem.Render(c, problem.NotImplemented())
 				return
 			}
-			log.ErrorContext(c.Request.Context(), "handler error", slog.String("route", c.FullPath()), slog.Any("error", err))
-			writeProblem(c, http.StatusInternalServerError, "internal_error", "Something went wrong on our side.")
+			problem.Write(c, log, err)
 		},
 		ResponseErrorHandlerFunc: func(c *gin.Context, err error) {
-			log.ErrorContext(c.Request.Context(), "response error", slog.String("route", c.FullPath()), slog.Any("error", err))
-			if !c.Writer.Written() {
-				writeProblem(c, http.StatusInternalServerError, "internal_error", "Something went wrong on our side.")
-			}
+			problem.Write(c, log, fmt.Errorf("write response: %w", err))
 		},
 	}
 }
@@ -55,8 +53,8 @@ func strictOptions(log *slog.Logger) api.StrictGinServerOptions {
 // runs first and catches these, so this is a backstop that keeps the problem shape.
 func paramErrorHandler(c *gin.Context, _ error, status int) {
 	if status == http.StatusBadRequest {
-		writeValidationProblem(c, []api.FieldError{{Field: "/", Code: "malformed", Message: "A parameter could not be read."}})
+		problem.Render(c, problem.Validation(problem.Field("/", "malformed", "A parameter could not be read.")))
 		return
 	}
-	writeProblem(c, status, "invalid_request", http.StatusText(status))
+	problem.Render(c, problem.New(status, "invalid_request", http.StatusText(status)))
 }
