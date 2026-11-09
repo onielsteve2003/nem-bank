@@ -51,7 +51,7 @@ func TestTheDailyLimitIsCountedAndEnforced(t *testing.T) {
 		t.Fatalf("refused transfer left %d transfers, balance %d", n, f.balance(tolu))
 	}
 
-	q, err := f.svc.Quote(tolu.ctx, tolu.account, toNem(ada.number), ngn(100))
+	q, err := f.svc.Quote(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100)})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -107,7 +107,7 @@ func TestOwnLimitsAndCoolOffBind(t *testing.T) {
 
 	_, err := f.svc.Create(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(1_000_001)})
 	wantProblem(t, err, "limit_exceeded", "Your own limit is ₦10,000.00 per transfer.")
-	q, err := f.svc.Quote(tolu.ctx, tolu.account, toNem(ada.number), ngn(100))
+	q, err := f.svc.Quote(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100)})
 	if err != nil || q.Limits.DailyMinor != 3_000_000 || !q.Limits.SelfSet {
 		t.Fatalf("own limit status = %+v, %v", q.Limits, err)
 	}
@@ -116,8 +116,8 @@ func TestOwnLimitsAndCoolOffBind(t *testing.T) {
 	f.profs.mu.Lock()
 	f.profs.coolOff = identity.CoolOff{Active: true, DailyLimitMinor: 500_000, Reason: "new_device"}
 	f.profs.mu.Unlock()
-	q, err = f.svc.Quote(tolu.ctx, tolu.account, toNem(ada.number), ngn(100))
-	if err != nil || q.Limits.DailyMinor != 500_000 || q.Limits.SelfSet || !q.Limits.CoolOffActive || !q.CoolOff.Active {
+	q, err = f.svc.Quote(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100)})
+	if err != nil || q.Limits.DailyMinor != 500_000 || q.Limits.SelfSet || !q.Limits.CoolOffActive || (q.CoolingOff == nil || q.CoolingOff.Reason != "new_device") {
 		t.Fatalf("cool-off status = %+v, %v", q.Limits, err)
 	}
 	_, err = f.svc.Create(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(600_000)})
@@ -146,7 +146,7 @@ func TestQuotesPriceLikeTheTransfer(t *testing.T) {
 		if tc.internal {
 			dest = toNem(ada.number)
 		}
-		q, err := f.svc.Quote(tolu.ctx, tolu.account, dest, ngn(tc.amount))
+		q, err := f.svc.Quote(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: dest, Amount: ngn(tc.amount)})
 		if err != nil {
 			t.Fatalf("%s: %v", tc.name, err)
 		}

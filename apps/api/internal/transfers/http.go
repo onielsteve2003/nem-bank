@@ -77,6 +77,12 @@ func (a *API) CreateTransfer(ctx context.Context, req api.CreateTransferRequestO
 		return nil, fmt.Errorf("amount passed validation but not parsing: %w", err)
 	}
 	r := Request{SourceAccountID: b.SourceAccountId, Destination: b.Destination, Amount: amount}
+	if b.SaveBeneficiary != nil {
+		r.SaveBeneficiary = *b.SaveBeneficiary
+	}
+	if req.Params.XStepUpToken != nil {
+		r.StepUpToken = *req.Params.XStepUpToken
+	}
 	if b.Narration != nil {
 		r.Narration = *b.Narration
 	}
@@ -105,7 +111,7 @@ func (a *API) QuoteTransfer(ctx context.Context, req api.QuoteTransferRequestObj
 	if err != nil {
 		return nil, fmt.Errorf("amount passed validation but not parsing: %w", err)
 	}
-	q, err := a.svc.Quote(ctx, b.SourceAccountId, b.Destination, amount)
+	q, err := a.svc.Quote(ctx, Request{SourceAccountID: b.SourceAccountId, Destination: b.Destination, Amount: amount})
 	if err != nil {
 		return nil, err
 	}
@@ -117,10 +123,7 @@ func (a *API) QuoteTransfer(ctx context.Context, req api.QuoteTransferRequestObj
 	for i, f := range q.Fees {
 		out.Fees[i] = api.FeeLine{Code: api.FeeLineCode(f.Code), Label: f.Label, Amount: accounts.Money(f.Amount)}
 	}
-	if q.CoolOff.Active {
-		// AUTH-8: transfers from a new device are stepped up; confirming skips no delay.
-		out.CoolingOff = &api.CoolingOff{Reason: api.CoolingOffReason(q.CoolOff.Reason), DelayMinutes: 0, StepUpSkipsDelay: true}
-	}
+	out.CoolingOff = q.CoolingOff
 	return out, nil
 }
 
@@ -238,4 +241,191 @@ func (a *API) ReceivePartnerWebhook(ctx context.Context, req api.ReceivePartnerW
 		return nil, err
 	}
 	return api.ReceivePartnerWebhook200Response{}, nil
+}
+
+func transferResponse(v View, err error) (api.Transfer, error) {
+	if err != nil {
+		return api.Transfer{}, err
+	}
+	return TransferJSON(v)
+}
+
+// StepUpTransfer is POST /v1/transfers/{transfer_id}/step-up (signed, idempotent).
+func (a *API) StepUpTransfer(ctx context.Context, req api.StepUpTransferRequestObject) (api.StepUpTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	t, err := transferResponse(a.svc.StepUp(ctx, req.TransferId, req.Params.XStepUpToken))
+	if err != nil {
+		return nil, err
+	}
+	return api.StepUpTransfer200JSONResponse(t), nil
+}
+
+// CancelTransfer is POST /v1/transfers/{transfer_id}/cancel.
+func (a *API) CancelTransfer(ctx context.Context, req api.CancelTransferRequestObject) (api.CancelTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	t, err := transferResponse(a.svc.Cancel(ctx, req.TransferId))
+	if err != nil {
+		return nil, err
+	}
+	return api.CancelTransfer200JSONResponse(t), nil
+}
+
+// ListBeneficiaries is GET /v1/beneficiaries.
+func (a *API) ListBeneficiaries(ctx context.Context, req api.ListBeneficiariesRequestObject) (api.ListBeneficiariesResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	p := req.Params
+	rows, page, err := a.svc.ListBeneficiaries(ctx, p.Favourite, p.Q, p.Cursor, p.Limit)
+	if err != nil {
+		return nil, err
+	}
+	out := api.ListBeneficiaries200JSONResponse{Data: make([]api.Beneficiary, len(rows)), Page: page}
+	for i, b := range rows {
+		out.Data[i] = BeneficiaryJSON(b)
+	}
+	return out, nil
+}
+
+// CreateBeneficiary is POST /v1/beneficiaries.
+func (a *API) CreateBeneficiary(ctx context.Context, req api.CreateBeneficiaryRequestObject) (api.CreateBeneficiaryResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	fav := b.Favourite != nil && *b.Favourite
+	saved, err := a.svc.CreateBeneficiary(ctx, b.Destination, b.Nickname, fav)
+	if err != nil {
+		return nil, err
+	}
+	return api.CreateBeneficiary201JSONResponse(BeneficiaryJSON(saved)), nil
+}
+
+// UpdateBeneficiary is PATCH /v1/beneficiaries/{beneficiary_id}.
+func (a *API) UpdateBeneficiary(ctx context.Context, req api.UpdateBeneficiaryRequestObject) (api.UpdateBeneficiaryResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b, err := a.svc.UpdateBeneficiary(ctx, req.BeneficiaryId, req.Body.Nickname, req.Body.Favourite)
+	if err != nil {
+		return nil, err
+	}
+	return api.UpdateBeneficiary200JSONResponse(BeneficiaryJSON(b)), nil
+}
+
+// DeleteBeneficiary is DELETE /v1/beneficiaries/{beneficiary_id}.
+func (a *API) DeleteBeneficiary(ctx context.Context, req api.DeleteBeneficiaryRequestObject) (api.DeleteBeneficiaryResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	if err := a.svc.DeleteBeneficiary(ctx, req.BeneficiaryId); err != nil {
+		return nil, err
+	}
+	return api.DeleteBeneficiary204Response{}, nil
+}
+
+// ListScheduledTransfers is GET /v1/scheduled-transfers.
+func (a *API) ListScheduledTransfers(ctx context.Context, req api.ListScheduledTransfersRequestObject) (api.ListScheduledTransfersResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	rows, page, err := a.svc.ListSchedules(ctx, req.Params.Cursor, req.Params.Limit)
+	if err != nil {
+		return nil, err
+	}
+	out := api.ListScheduledTransfers200JSONResponse{Data: make([]api.ScheduledTransfer, len(rows)), Page: page}
+	for i, sch := range rows {
+		if out.Data[i], err = ScheduleJSON(sch); err != nil {
+			return nil, err
+		}
+	}
+	return out, nil
+}
+
+// CreateScheduledTransfer is POST /v1/scheduled-transfers (signed, idempotent).
+func (a *API) CreateScheduledTransfer(ctx context.Context, req api.CreateScheduledTransferRequestObject) (api.CreateScheduledTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	amount, err := money.ParseMinor(b.Amount.AmountMinor, string(b.Amount.Currency))
+	if err != nil {
+		return nil, fmt.Errorf("amount passed validation but not parsing: %w", err)
+	}
+	n := NewSchedule{SourceAccountID: b.SourceAccountId, Destination: b.Destination, Amount: amount, Frequency: string(b.Frequency), StartAt: b.StartAt}
+	if b.Narration != nil {
+		n.Narration = *b.Narration
+	}
+	if b.EndsOn != nil {
+		n.EndsOn = &b.EndsOn.Time
+	}
+	sch, err := a.svc.CreateSchedule(ctx, n)
+	if err != nil {
+		return nil, err
+	}
+	out, err := ScheduleJSON(sch)
+	if err != nil {
+		return nil, err
+	}
+	return api.CreateScheduledTransfer201JSONResponse(out), nil
+}
+
+// GetScheduledTransfer is GET /v1/scheduled-transfers/{schedule_id}.
+func (a *API) GetScheduledTransfer(ctx context.Context, req api.GetScheduledTransferRequestObject) (api.GetScheduledTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	sch, err := a.svc.GetSchedule(ctx, req.ScheduleId)
+	if err != nil {
+		return nil, err
+	}
+	out, err := ScheduleJSON(sch)
+	if err != nil {
+		return nil, err
+	}
+	return api.GetScheduledTransfer200JSONResponse(out), nil
+}
+
+// UpdateScheduledTransfer is PATCH /v1/scheduled-transfers/{schedule_id} (signed).
+func (a *API) UpdateScheduledTransfer(ctx context.Context, req api.UpdateScheduledTransferRequestObject) (api.UpdateScheduledTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	c := ScheduleChange{NextRunAt: b.NextRunAt}
+	if b.Status != nil {
+		st := string(*b.Status)
+		c.Status = &st
+	}
+	if b.Amount != nil {
+		m, err := money.ParseMinor(b.Amount.AmountMinor, string(b.Amount.Currency))
+		if err != nil {
+			return nil, fmt.Errorf("amount passed validation but not parsing: %w", err)
+		}
+		c.Amount = &m
+	}
+	sch, err := a.svc.UpdateSchedule(ctx, req.ScheduleId, c)
+	if err != nil {
+		return nil, err
+	}
+	out, err := ScheduleJSON(sch)
+	if err != nil {
+		return nil, err
+	}
+	return api.UpdateScheduledTransfer200JSONResponse(out), nil
+}
+
+// CancelScheduledTransfer is DELETE /v1/scheduled-transfers/{schedule_id}.
+func (a *API) CancelScheduledTransfer(ctx context.Context, req api.CancelScheduledTransferRequestObject) (api.CancelScheduledTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	if err := a.svc.CancelSchedule(ctx, req.ScheduleId); err != nil {
+		return nil, err
+	}
+	return api.CancelScheduledTransfer204Response{}, nil
 }

@@ -360,6 +360,22 @@ balance cap, checked on the balance the posting produced. `POST /v1/transfers/qu
 a transfer with the same rules and reserves nothing. The numbers live in `limits.Rules` for
 the console's configuration (ADM-8).
 
+**Beneficiaries, cooling-off and schedules** (migration 00018). `/v1/beneficiaries` saves
+payees under the bank's name (name enquiry), one per account. A payee is *new* if never
+saved, or saved in the last 24 h and not yet paid; a transfer to a new payee above ₦100k
+is **delayed** 30 min with the money held, and a `transfer_release` River job sends it when
+the wait ends. `X-Step-Up-Token` on the transfer, or `POST /v1/transfers/{id}/step-up`,
+sends it at once; `POST /v1/transfers/{id}/cancel` releases the hold and the day's limit.
+Every path that lets a transfer go (now, after the wait, after a step-up) runs the same
+`proceed`. **Scheduled transfers** (`/v1/scheduled-transfers`, once/daily/weekly/monthly
+with an optional end date) store the payee as an account. A River periodic job runs due
+schedules every minute: each run is a normal transfer committed under a savepoint in the
+same transaction that claims (`FOR UPDATE SKIP LOCKED`) and advances the schedule, so a run
+happens exactly once. A run the bank refuses (funds, limits) is recorded as failed and
+raises `schedule.run_skipped`; a fault is retried next minute. Runs missed while paused are
+skipped on resume. Reads that need the pool (customer profiles, accounts) are done before a
+transaction opens, never inside one, so concurrent transfers cannot starve the pool.
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers

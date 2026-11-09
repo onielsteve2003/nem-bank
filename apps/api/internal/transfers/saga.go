@@ -94,6 +94,8 @@ func (w *checkWorker) Work(ctx context.Context, job *river.Job[CheckArgs]) error
 func (s *Service) Register(w *river.Workers) {
 	river.AddWorker(w, &sendWorker{s: s})
 	river.AddWorker(w, &checkWorker{s: s})
+	river.AddWorker(w, &releaseWorker{s: s})
+	river.AddWorker(w, &runWorker{s: s})
 }
 
 // startSaga queues the send and the deadline check in Create's transaction.

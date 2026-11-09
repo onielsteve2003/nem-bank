@@ -86,3 +86,7 @@ WHERE account_id = @account_id AND entry_id = ANY(@entry_ids::uuid[]);
 -- name: GetCurrentAccountByNumber :one
 -- A Nem current account by its NUBAN: where internal transfers land.
 SELECT * FROM customer_accounts WHERE account_number = $1 AND kind = 'ngn_current';
+
+-- name: GetCustomerAccountByID :one
+-- Where a held internal transfer lands when it is released.
+SELECT * FROM customer_accounts WHERE account_id = $1;

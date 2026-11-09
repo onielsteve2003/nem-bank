@@ -35,6 +35,11 @@ type Rules struct {
 	EMTLThresholdMinor, EMTLMinor int64
 	// IncreaseDelay is how long a raised self-set limit waits before it applies.
 	IncreaseDelay time.Duration
+	// New-beneficiary cooling-off (TRF-8): for BeneficiaryCoolingOff after it is saved (and
+	// for any account never saved), a first transfer above CoolingOffThresholdMinor waits
+	// CoolingOffDelay unless the customer steps up.
+	CoolingOffThresholdMinor               int64
+	CoolingOffDelay, BeneficiaryCoolingOff time.Duration
 }
 
 // naira is n naira in kobo.
@@ -56,6 +61,10 @@ func DefaultRules() Rules {
 		EMTLThresholdMinor: naira(10_000),
 		EMTLMinor:          naira(50),
 		IncreaseDelay:      24 * time.Hour,
+
+		CoolingOffThresholdMinor: naira(100_000),
+		CoolingOffDelay:          30 * time.Minute,
+		BeneficiaryCoolingOff:    24 * time.Hour,
 	}
 }
 

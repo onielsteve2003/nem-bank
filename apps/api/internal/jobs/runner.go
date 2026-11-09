@@ -32,6 +32,8 @@ type Options struct {
 	Housekeeping []func(context.Context) error
 	// Workers add domains' own River workers (sagas, the sandbox partner's callbacks).
 	Workers []func(*river.Workers)
+	// Periodic adds domains' clocks (the scheduled-transfer runner).
+	Periodic []*river.PeriodicJob
 }
 
 // Runner owns the River client and the outbox dispatcher for the process.
@@ -88,11 +90,11 @@ func New(pool *pgxpool.Pool, log *slog.Logger, opts Options) (*Runner, error) {
 		Logger:  log.With("component", "river"),
 		Queues:  map[string]river.QueueConfig{river.QueueDefault: {MaxWorkers: opts.MaxWorkers}},
 		Workers: workers,
-		PeriodicJobs: []*river.PeriodicJob{
+		PeriodicJobs: append([]*river.PeriodicJob{
 			river.NewPeriodicJob(river.PeriodicInterval(time.Hour),
 				func() (river.JobArgs, *river.InsertOpts) { return PruneArgs{}, nil },
 				&river.PeriodicJobOpts{RunOnStart: true}),
-		},
+		}, opts.Periodic...),
 	})
 	if err != nil {
 		return nil, fmt.Errorf("river client: %w", err)

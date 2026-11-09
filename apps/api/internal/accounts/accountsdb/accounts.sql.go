@@ -101,6 +101,27 @@ func (q *Queries) GetCustomerAccountByCurrency(ctx context.Context, arg GetCusto
 	return i, err
 }
 
+const getCustomerAccountByID = `-- name: GetCustomerAccountByID :one
+SELECT account_id, user_id, currency, kind, account_number, nickname, status, opened_at FROM customer_accounts WHERE account_id = $1
+`
+
+// Where a held internal transfer lands when it is released.
+func (q *Queries) GetCustomerAccountByID(ctx context.Context, accountID uuid.UUID) (CustomerAccount, error) {
+	row := q.db.QueryRow(ctx, getCustomerAccountByID, accountID)
+	var i CustomerAccount
+	err := row.Scan(
+		&i.AccountID,
+		&i.UserID,
+		&i.Currency,
+		&i.Kind,
+		&i.AccountNumber,
+		&i.Nickname,
+		&i.Status,
+		&i.OpenedAt,
+	)
+	return i, err
+}
+
 const getTransaction = `-- name: GetTransaction :one
 SELECT id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code, balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id, card_id, created_at, updated_at FROM transactions WHERE id = $1 AND user_id = $2
 `

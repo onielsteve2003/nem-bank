@@ -19,6 +19,8 @@ type Querier interface {
 	GetCurrentAccountByNumber(ctx context.Context, accountNumber string) (CustomerAccount, error)
 	GetCustomerAccount(ctx context.Context, arg GetCustomerAccountParams) (GetCustomerAccountRow, error)
 	GetCustomerAccountByCurrency(ctx context.Context, arg GetCustomerAccountByCurrencyParams) (CustomerAccount, error)
+	// Where a held internal transfer lands when it is released.
+	GetCustomerAccountByID(ctx context.Context, accountID uuid.UUID) (CustomerAccount, error)
 	GetStatement(ctx context.Context, arg GetStatementParams) (GetStatementRow, error)
 	// The public verification page: just enough to confirm the document, nothing to act on.
 	GetStatementByCode(ctx context.Context, verificationCode *string) (GetStatementByCodeRow, error)

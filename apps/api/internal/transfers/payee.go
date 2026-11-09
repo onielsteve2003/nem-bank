@@ -8,6 +8,7 @@ import (
 	"strings"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
@@ -15,6 +16,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/cop"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/transfersdb"
 )
 
 // Problems with the mock bank's codes and wording.
@@ -43,6 +45,21 @@ func (s *Service) ResolvePayee(ctx context.Context, q api.PayeeQuery) (api.Resol
 	if !ok {
 		return api.ResolvedPayee{}, problem.Unauthorized()
 	}
+	out, err := s.resolvePayee(ctx, p, q)
+	if err != nil {
+		return out, err
+	}
+	b, err := s.q.FindBeneficiary(ctx, transfersdb.FindBeneficiaryParams{UserID: p.UserID, BankCode: out.BankCode, AccountNumber: out.AccountNumber})
+	switch {
+	case err == nil:
+		out.IsSavedBeneficiary, out.BeneficiaryId = true, &b.ID
+	case !errors.Is(err, pgx.ErrNoRows):
+		return out, fmt.Errorf("find beneficiary: %w", err)
+	}
+	return out, nil
+}
+
+func (s *Service) resolvePayee(ctx context.Context, p identity.Principal, q api.PayeeQuery) (api.ResolvedPayee, error) {
 	kind, err := q.Discriminator()
 	if err != nil {
 		return api.ResolvedPayee{}, fmt.Errorf("payee query: %w", err)

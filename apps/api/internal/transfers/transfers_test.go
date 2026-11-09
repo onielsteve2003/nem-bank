@@ -363,6 +363,10 @@ func TestTheDatabaseEnforcesTheSameStateMachine(t *testing.T) {
 		t.Fatal(err)
 	}
 	defer func() { _ = tx.Rollback(ctx) }()
+	// delayed needs a release time and money set aside (or a duress look-alike).
+	if _, err := tx.Exec(ctx, `UPDATE transfers SET release_at = now(), duress_blocked = true WHERE id = $1`, v.ID); err != nil {
+		t.Fatal(err)
+	}
 	// Triggers are skipped (replica role) only to put the row in each starting state.
 	for _, from := range all {
 		for _, to := range all {

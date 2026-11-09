@@ -11,26 +11,49 @@ import (
 )
 
 type Querier interface {
+	// One runner at a time per schedule; a schedule another runner holds is skipped, not waited on.
+	ClaimDueSchedule(ctx context.Context, arg ClaimDueScheduleParams) (ScheduledTransfer, error)
+	DeleteBeneficiary(ctx context.Context, arg DeleteBeneficiaryParams) (int64, error)
+	FindBeneficiary(ctx context.Context, arg FindBeneficiaryParams) (Beneficiary, error)
+	GetBeneficiary(ctx context.Context, arg GetBeneficiaryParams) (Beneficiary, error)
+	GetSchedule(ctx context.Context, arg GetScheduleParams) (ScheduledTransfer, error)
 	GetTransfer(ctx context.Context, arg GetTransferParams) (Transfer, error)
 	GetTransferByID(ctx context.Context, id uuid.UUID) (Transfer, error)
 	GetTransferByReference(ctx context.Context, reference string) (Transfer, error)
+	// Saving one twice returns no row: the caller says it is already saved.
+	InsertBeneficiary(ctx context.Context, arg InsertBeneficiaryParams) (Beneficiary, error)
 	// No row back means the event was handled before.
 	InsertPartnerWebhookEvent(ctx context.Context, arg InsertPartnerWebhookEventParams) (string, error)
+	InsertSchedule(ctx context.Context, arg InsertScheduleParams) (ScheduledTransfer, error)
 	InsertTransfer(ctx context.Context, arg InsertTransferParams) (Transfer, error)
 	InsertTransferEvent(ctx context.Context, arg InsertTransferEventParams) error
+	// Favourites first, then most recently paid, then by name (the mock's order). A customer
+	// has tens of these, so pages are by offset.
+	ListBeneficiaries(ctx context.Context, arg ListBeneficiariesParams) ([]Beneficiary, error)
+	ListDueSchedules(ctx context.Context, arg ListDueSchedulesParams) ([]ListDueSchedulesRow, error)
+	// Next run first; ended schedules last, newest first.
+	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]ScheduledTransfer, error)
 	// The timelines of a page of transfers in one query.
 	ListTransferEvents(ctx context.Context, ids []uuid.UUID) ([]TransferEvent, error)
 	ListTransfers(ctx context.Context, arg ListTransfersParams) ([]Transfer, error)
 	// Transfers accepted under duress that are still "on their way".
 	LockDuressTransfers(ctx context.Context, userID uuid.UUID) ([]Transfer, error)
+	LockSchedule(ctx context.Context, arg LockScheduleParams) (ScheduledTransfer, error)
 	// The saga's steps (send, status check, callback) take this lock, so two answers for the
 	// same transfer are judged one after the other, never both on the same old status.
 	LockTransfer(ctx context.Context, id uuid.UUID) (Transfer, error)
+	// Paid once, the beneficiary is no longer new.
+	MarkBeneficiaryPaid(ctx context.Context, arg MarkBeneficiaryPaidParams) error
+	SaveSchedule(ctx context.Context, arg SaveScheduleParams) (ScheduledTransfer, error)
 	SetPartnerReference(ctx context.Context, arg SetPartnerReferenceParams) error
+	// A transfer that waited (cooling-off, step-up) gets the partner's full time from when it goes.
+	SetSagaDeadline(ctx context.Context, arg SetSagaDeadlineParams) error
+	SetTransferBeneficiary(ctx context.Context, arg SetTransferBeneficiaryParams) error
 	SetTransferReversal(ctx context.Context, arg SetTransferReversalParams) error
 	// Moves a transfer on from the state the caller saw. The transition trigger refuses an
 	// illegal move; the status guard turns a lost race into no row instead of a double move.
 	SetTransferStatus(ctx context.Context, arg SetTransferStatusParams) (Transfer, error)
+	UpdateBeneficiary(ctx context.Context, arg UpdateBeneficiaryParams) (Beneficiary, error)
 }
 
 var _ Querier = (*Queries)(nil)

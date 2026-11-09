@@ -2,11 +2,12 @@
 INSERT INTO transfers (
   id, user_id, reference, rail, source_account_id, destination_account_id, recipient, currency, amount_minor,
   fee_minor, narration, category, transaction_id, duress_blocked, hold_id, bank_code, account_number, partner,
-  saga_deadline, limit_day
+  saga_deadline, limit_day, beneficiary_id, release_at
 ) VALUES (
   @id, @user_id, @reference, @rail, @source_account_id, sqlc.narg('destination_account_id'), @recipient, @currency,
   @amount_minor, @fee_minor, @narration, sqlc.narg('category'), @transaction_id, @duress_blocked, sqlc.narg('hold_id'),
-  sqlc.narg('bank_code'), sqlc.narg('account_number'), sqlc.narg('partner'), sqlc.narg('saga_deadline'), @limit_day
+  sqlc.narg('bank_code'), sqlc.narg('account_number'), sqlc.narg('partner'), sqlc.narg('saga_deadline'), @limit_day,
+  sqlc.narg('beneficiary_id'), sqlc.narg('release_at')
 )
 RETURNING *;
 
@@ -70,3 +71,88 @@ INSERT INTO partner_webhook_events (partner, event_id, event_type, reference, ou
 VALUES (@partner, @event_id, @event_type, @reference, @outcome)
 ON CONFLICT (partner, event_id) DO NOTHING
 RETURNING partner;
+
+-- name: SetSagaDeadline :exec
+-- A transfer that waited (cooling-off, step-up) gets the partner's full time from when it goes.
+UPDATE transfers SET saga_deadline = @saga_deadline, updated_at = clock_timestamp() WHERE id = @id;
+
+-- name: SetTransferBeneficiary :exec
+UPDATE transfers SET beneficiary_id = @beneficiary_id WHERE id = @id;
+
+-- name: InsertBeneficiary :one
+-- Saving one twice returns no row: the caller says it is already saved.
+INSERT INTO beneficiaries (id, user_id, kind, name, nickname, nemtag, bank_code, bank_name, account_number, favourite, cooling_off_until)
+VALUES (@id, @user_id, @kind, @name, sqlc.narg('nickname'), sqlc.narg('nemtag'), @bank_code, @bank_name, @account_number, @favourite,
+        @cooling_off_until)
+ON CONFLICT (user_id, bank_code, account_number) DO NOTHING
+RETURNING *;
+
+-- name: GetBeneficiary :one
+SELECT * FROM beneficiaries WHERE id = @id AND user_id = @user_id;
+
+-- name: FindBeneficiary :one
+SELECT * FROM beneficiaries WHERE user_id = @user_id AND bank_code = @bank_code AND account_number = @account_number;
+
+-- name: ListBeneficiaries :many
+-- Favourites first, then most recently paid, then by name (the mock's order). A customer
+-- has tens of these, so pages are by offset.
+SELECT * FROM beneficiaries
+WHERE user_id = @user_id
+  AND (sqlc.narg('favourite')::boolean IS NULL OR favourite = sqlc.narg('favourite'))
+  AND (sqlc.narg('q')::text IS NULL OR concat_ws(' ', name, nickname, nemtag, account_number, bank_name) ILIKE
+       '%' || replace(replace(replace(sqlc.narg('q'), '\', '\\'), '%', '\%'), '_', '\_') || '%')
+ORDER BY favourite DESC, last_paid_at DESC NULLS LAST, name, id
+LIMIT @lim OFFSET @off;
+
+-- name: UpdateBeneficiary :one
+UPDATE beneficiaries
+SET nickname = CASE WHEN @set_nickname::boolean THEN sqlc.narg('nickname') ELSE nickname END,
+    favourite = coalesce(sqlc.narg('favourite'), favourite)
+WHERE id = @id AND user_id = @user_id
+RETURNING *;
+
+-- name: DeleteBeneficiary :execrows
+DELETE FROM beneficiaries WHERE id = @id AND user_id = @user_id;
+
+-- name: MarkBeneficiaryPaid :exec
+-- Paid once, the beneficiary is no longer new.
+UPDATE beneficiaries SET last_paid_at = @at WHERE id = @id;
+
+-- name: InsertSchedule :one
+INSERT INTO scheduled_transfers (id, user_id, source_account_id, destination, recipient, currency, amount_minor, narration,
+                                 frequency, next_run_at, ends_on)
+VALUES (@id, @user_id, @source_account_id, @destination, @recipient, @currency, @amount_minor, @narration, @frequency,
+        @next_run_at, sqlc.narg('ends_on'))
+RETURNING *;
+
+-- name: GetSchedule :one
+SELECT * FROM scheduled_transfers WHERE id = @id AND user_id = @user_id;
+
+-- name: LockSchedule :one
+SELECT * FROM scheduled_transfers WHERE id = @id AND user_id = @user_id FOR UPDATE;
+
+-- name: ListSchedules :many
+-- Next run first; ended schedules last, newest first.
+SELECT * FROM scheduled_transfers
+WHERE user_id = @user_id
+ORDER BY next_run_at NULLS LAST, created_at DESC, id
+LIMIT @lim OFFSET @off;
+
+-- name: SaveSchedule :one
+UPDATE scheduled_transfers
+SET status = @status, amount_minor = @amount_minor, next_run_at = sqlc.narg('next_run_at'), run_count = @run_count,
+    last_run = sqlc.narg('last_run'), updated_at = now()
+WHERE id = @id
+RETURNING *;
+
+-- name: ListDueSchedules :many
+SELECT id, user_id FROM scheduled_transfers
+WHERE status = 'active' AND next_run_at <= @now
+ORDER BY next_run_at
+LIMIT @lim;
+
+-- name: ClaimDueSchedule :one
+-- One runner at a time per schedule; a schedule another runner holds is skipped, not waited on.
+SELECT * FROM scheduled_transfers
+WHERE id = @id AND status = 'active' AND next_run_at <= @now
+FOR UPDATE SKIP LOCKED;

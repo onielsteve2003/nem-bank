@@ -198,6 +198,16 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 	if _, err := pool.Exec(t.Context(), `DELETE FROM self_limits`); err != nil {
 		t.Fatal(err)
 	}
+	// Saving the payee: the bank's name is kept, a second save is a 409, the list shows it.
+	ben := `{"destination":{"kind":"bank","bank_code":"058","account_number":"0123456789","account_name":"chidi"},"nickname":"Chidi"}`
+	saved := call[api.Beneficiary](t, h, http.MethodPost, "/v1/beneficiaries", tolu.AccessToken, json.RawMessage(ben), http.StatusCreated)
+	if saved.Name != "Chidi Okonkwo" || saved.Kind != api.BeneficiaryKindBank || saved.CoolingOffUntil == nil {
+		t.Fatalf("beneficiary = %+v", saved)
+	}
+	call[api.Problem](t, h, http.MethodPost, "/v1/beneficiaries", tolu.AccessToken, json.RawMessage(ben), http.StatusConflict)
+	if list := call[api.BeneficiaryPage](t, h, http.MethodGet, "/v1/beneficiaries?q=chi", tolu.AccessToken, nil, http.StatusOK); len(list.Data) != 1 {
+		t.Fatalf("beneficiaries = %+v", list)
+	}
 	rec := signedPostKey(t, h, toluKey, tolu.Device.Id, tolu.AccessToken, "/v1/transfers", ext, "nonce-trf-000003", uuid.NewString())
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("external transfer = %d: %s", rec.Code, rec.Body)

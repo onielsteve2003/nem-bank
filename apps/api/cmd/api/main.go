@@ -153,7 +153,7 @@ func run() error {
 		return err
 	}
 	transfersSvc, err = transfers.NewService(transfers.Config{
-		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, Partner: partner, Sandbox: sandbox, Logger: log,
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, StepUps: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
 		WebhookSecrets: map[string][]byte{sandbox.Name(): cfg.SandboxNIPSecret},
 	})
 	if err != nil {
@@ -206,6 +206,7 @@ func run() error {
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber()},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances},
 		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register},
+		Periodic:     transfersSvc.PeriodicJobs(),
 	})
 	if err != nil {
 		return err

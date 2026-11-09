@@ -57,6 +57,22 @@ type AuditLog struct {
 	Hash         string
 }
 
+type Beneficiary struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	Kind            string
+	Name            string
+	Nickname        *string
+	Nemtag          *string
+	BankCode        string
+	BankName        string
+	AccountNumber   string
+	Favourite       bool
+	CoolingOffUntil *time.Time
+	LastPaidAt      *time.Time
+	CreatedAt       time.Time
+}
+
 type CustomerAccount struct {
 	AccountID     uuid.UUID
 	UserID        uuid.UUID
@@ -223,6 +239,25 @@ type SandboxNipPayment struct {
 	CallbackSentAt   *time.Time
 }
 
+type ScheduledTransfer struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	SourceAccountID uuid.UUID
+	Destination     []byte
+	Recipient       []byte
+	Currency        string
+	AmountMinor     int64
+	Narration       string
+	Frequency       string
+	Status          string
+	NextRunAt       *time.Time
+	EndsOn          pgtype.Date
+	RunCount        int32
+	LastRun         []byte
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
 type SelfLimit struct {
 	UserID             uuid.UUID
 	DailyMinor         *int64
@@ -375,6 +410,7 @@ type Transfer struct {
 	PartnerReference     *string
 	SagaDeadline         *time.Time
 	LimitDay             pgtype.Date
+	BeneficiaryID        *uuid.UUID
 }
 
 type TransferEvent struct {
