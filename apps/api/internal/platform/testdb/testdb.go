@@ -30,6 +30,8 @@ import (
 
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivermigrate"
 	"github.com/testcontainers/testcontainers-go"
 	tcpostgres "github.com/testcontainers/testcontainers-go/modules/postgres"
 
@@ -213,8 +215,9 @@ func ensureTemplate(admin string) (string, error) {
 	return name, nil
 }
 
-// migrationsHash names the template after the exact migration files, so changing any
-// migration builds a new template instead of reusing a stale schema.
+// migrationsHash names the template after the exact migration files, ours and River's (which
+// change with the River version), so any schema change builds a new template instead of
+// reusing a stale one.
 func migrationsHash() (string, error) {
 	files, err := fs.Glob(db.Migrations, "migrations/*.sql")
 	if err != nil {
@@ -229,6 +232,14 @@ func migrationsHash() (string, error) {
 		}
 		_, _ = fmt.Fprintf(h, "%s\x00%d\x00", f, len(b)) // hash.Hash writes never fail
 		h.Write(b)
+	}
+	// A driver without a pool is enough to list River's embedded migrations.
+	river, err := rivermigrate.New(riverpgxv5.New(nil), nil)
+	if err != nil {
+		return "", fmt.Errorf("list river migrations: %w", err)
+	}
+	for _, m := range river.AllVersions() {
+		_, _ = fmt.Fprintf(h, "river/%d\x00%s", m.Version, m.SQLUp)
 	}
 	return hex.EncodeToString(h.Sum(nil))[:16], nil
 }

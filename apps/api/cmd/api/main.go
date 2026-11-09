@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/httpserver"
@@ -102,7 +103,26 @@ func run() error {
 		return err
 	}
 	log.Info("starting nem api", "env", string(cfg.Env))
-	return httpserver.NewServer(cfg.Addr(), router, log, cfg.ShutdownTimeout).Run(ctx)
+
+	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
+	// domains that need side effects (notify, webhooks, transfer sagas).
+	runner, err := jobs.New(pool, log, jobs.Options{})
+	if err != nil {
+		return err
+	}
+	if err := runner.Start(ctx); err != nil {
+		return err
+	}
+	serveErr := httpserver.NewServer(cfg.Addr(), router, log, cfg.ShutdownTimeout).Run(ctx)
+
+	// HTTP is drained first, so no request can enqueue work into a stopping runner. Running
+	// jobs then get the same shutdown budget; any cut off are retried after restart.
+	stopCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), cfg.ShutdownTimeout)
+	defer cancel()
+	if err := runner.Stop(stopCtx); err != nil {
+		log.Error("stop jobs", slog.Any("error", err))
+	}
+	return serveErr
 }
 
 func healthcheck() error {

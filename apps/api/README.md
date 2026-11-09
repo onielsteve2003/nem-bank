@@ -10,6 +10,7 @@ All money is simulated. External rails run in sandbox mode.
 ```
 cmd/api/              entry point
 internal/platform/    config, logging, HTTP server, middleware, database
+internal/jobs/        River job queue, transactional outbox and its dispatcher
 internal/<domain>/    one package per domain (ledger, identity, transfers, ...)
 db/migrations/        goose SQL migrations
 db/queries/<domain>/  sqlc queries, generated into internal/<domain>
@@ -112,6 +113,26 @@ The API refuses to start on a bad value and lists every problem at once.
   No ORM: money paths stay explicit, reviewable SQL.
 - The compose database listens on host port **5433**, so a Postgres installed natively on
   5432 does not get in the way. `task db:reset` wipes it.
+
+## Jobs and the outbox
+
+Background work runs on [River](https://riverqueue.com), a job queue stored in the same
+Postgres, inside the API process (Render's free tier has no worker dynos). River's schema is
+applied at boot after the goose migrations.
+
+Side effects of a state change (pushes, emails, webhooks, saga steps) go through a
+**transactional outbox** (`outbox_events`):
+
+1. The domain calls `jobs.Write(ctx, tx, event)` in the **same transaction** as its change,
+   so the event exists exactly when the change committed.
+2. The dispatcher claims pending rows with `FOR UPDATE SKIP LOCKED` (several instances can
+   run it at once) and, in one transaction, inserts one River job per (event, subscriber)
+   and marks the rows dispatched. A crash anywhere leaves the batch pending.
+3. River runs each delivery with retries and backoff. Delivery is at-least-once, so
+   subscribers are idempotent on the event ID; jobs are unique per (event, subscriber).
+
+An hourly River periodic job prunes dispatched events older than 7 days. On SIGTERM, HTTP
+drains first, then running jobs get the shutdown budget; anything cut off is retried.
 
 ## Tests
 

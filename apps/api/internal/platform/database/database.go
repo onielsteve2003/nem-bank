@@ -13,6 +13,8 @@ import (
 	"github.com/jackc/pgx/v5/stdlib"
 	"github.com/pressly/goose/v3"
 	"github.com/pressly/goose/v3/lock"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
+	"github.com/riverqueue/river/rivermigrate"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/db"
 )
@@ -81,5 +83,33 @@ func Migrate(ctx context.Context, pool *pgxpool.Pool, log *slog.Logger) error {
 		return fmt.Errorf("read schema version: %w", err)
 	}
 	log.InfoContext(ctx, "schema up to date", "schema_version", version, "applied_now", len(results))
+	return migrateRiver(ctx, pool, log)
+}
+
+// migrateRiver applies River's own job-queue schema. River ships its migrations as a
+// library, so they track the River version in go.mod rather than living in db/migrations.
+// A session advisory lock, held on its own connection, makes concurrent boots wait their
+// turn like goose's lock does.
+func migrateRiver(ctx context.Context, pool *pgxpool.Pool, log *slog.Logger) error {
+	migrator, err := rivermigrate.New(riverpgxv5.New(pool), &rivermigrate.Config{Logger: log})
+	if err != nil {
+		return fmt.Errorf("create river migrator: %w", err)
+	}
+	conn, err := pool.Acquire(ctx)
+	if err != nil {
+		return fmt.Errorf("acquire river migration lock connection: %w", err)
+	}
+	defer conn.Release()
+	if _, err := conn.Exec(ctx, "SELECT pg_advisory_lock(hashtext('nem_river_migrate'))"); err != nil {
+		return fmt.Errorf("lock river migration: %w", err)
+	}
+	defer func() {
+		_, _ = conn.Exec(context.WithoutCancel(ctx), "SELECT pg_advisory_unlock(hashtext('nem_river_migrate'))")
+	}()
+	res, err := migrator.Migrate(ctx, rivermigrate.DirectionUp, nil)
+	if err != nil {
+		return fmt.Errorf("apply river migrations: %w", err)
+	}
+	log.InfoContext(ctx, "river schema up to date", "applied_now", len(res.Versions))
 	return nil
 }
