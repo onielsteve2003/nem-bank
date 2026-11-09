@@ -153,6 +153,17 @@ The API refuses to start on a bad value and lists every problem at once.
   accounts are checked against a dummy argon2id hash, so timing does not reveal who has an
   account. A login that binds a new device sets a 24-hour `cool_off_until` and writes
   `identity.device_bound` to the outbox for the alert to the other devices.
+- **Transaction PIN (AUTH-4).** Set at sign-up or once with `PUT /v1/users/me/pin`; argon2id.
+  Weak PINs (repeats, runs, birthday forms) are refused with the same rules as
+  `packages/shared/src/pin.ts`. Five wrong tries lock it for 30 minutes, then 2 h, 8 h and 24 h
+  for each lockout in a row; a correct PIN resets the count. The user row is locked through
+  the check, so parallel guesses cannot skip the counter. Changing the PIN later needs a
+  `pin_reset` step-up token, which is single-use and bound to that purpose.
+- **Duress PIN (SEC-5).** Verifies exactly like the real PIN (same response; both hashes are
+  always checked, so timing matches too), switches the account into duress mode and writes
+  `security.duress_triggered` to the outbox for staff only. While in duress, attempts to
+  remove the duress PIN or reset the PIN report success but change nothing. The real PIN ends
+  duress mode. `InDuress` is what transfers and balances will read.
 - **Bearer auth** is enforced by the request validator from each operation's `security`: a
   missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
 

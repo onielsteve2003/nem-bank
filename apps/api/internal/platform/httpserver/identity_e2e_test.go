@@ -117,6 +117,22 @@ func TestSignUpThroughTheAPIAndUseTheSession(t *testing.T) {
 		t.Fatalf("devices = %+v", devices)
 	}
 
+	call[struct{}](t, h, http.MethodPut, "/v1/users/me/pin", rotated.AccessToken, map[string]string{"pin": "2580"}, http.StatusNoContent)
+	pin := call[api.PinVerification](t, h, http.MethodPost, "/v1/users/me/pin/verify", rotated.AccessToken,
+		map[string]string{"pin": "1357"}, http.StatusOK)
+	if pin.Valid || pin.AttemptsRemaining != 4 {
+		t.Fatalf("wrong pin = %+v", pin)
+	}
+	if me := call[api.User](t, h, http.MethodGet, "/v1/users/me", rotated.AccessToken, nil, http.StatusOK); !me.HasPin {
+		t.Fatal("has_pin is false after setting the PIN")
+	}
+	// The contract requires X-Step-Up-Token on a PIN reset.
+	pReset := call[api.Problem](t, h, http.MethodPost, "/v1/users/me/pin/reset", rotated.AccessToken,
+		map[string]string{"pin": "4815"}, http.StatusBadRequest)
+	if pReset.Code != "validation_failed" { // no X-Step-Up-Token header: the contract requires it
+		t.Fatalf("reset without header: %+v", pReset)
+	}
+
 	call[struct{}](t, h, http.MethodPost, "/v1/auth/logout", rotated.AccessToken, nil, http.StatusNoContent)
 	p := call[api.Problem](t, h, http.MethodGet, "/v1/users/me", rotated.AccessToken, nil, http.StatusUnauthorized)
 	if p.Code != "session_revoked" {

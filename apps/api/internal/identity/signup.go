@@ -113,10 +113,11 @@ func (s *Service) StartSignup(ctx context.Context, d SignupDetails) (SignupStart
 	return SignupStarted{SignupID: signupID, Challenge: challengeOf(c)}, nil
 }
 
-// CompleteSignup is the last step: the verified email's token plus a password turn the
-// sign-up into an account, bind the first device and open a session, all in one
-// transaction. The password is hashed first, so no row lock is held for argon2id's ~30 ms.
-func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token, password string, device DeviceRegistration) (AuthResult, error) {
+// CompleteSignup is the last step: the verified email's token plus a password (and the
+// transaction PIN, when the app sends it in the same step) turn the sign-up into an
+// account, bind the first device and open a session, all in one transaction. Secrets are
+// hashed first, so no row lock is held for argon2id's ~30 ms.
+func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token, password, pin string, device DeviceRegistration) (AuthResult, error) {
 	pending, err := s.q.GetSignup(ctx, signupID)
 	if errors.Is(err, pgx.ErrNoRows) {
 		return AuthResult{}, ErrNotVerified
@@ -130,9 +131,20 @@ func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token,
 	}); msg != "" {
 		return AuthResult{}, ErrWeakPassword.WithFields(problem.Field("/password", "weak", msg))
 	}
+	if pin != "" && IsWeakPin(pin, pending.DateOfBirth) {
+		return AuthResult{}, ErrWeakPin
+	}
 	hash, err := s.hasher.Hash(ctx, password)
 	if err != nil {
 		return AuthResult{}, err
+	}
+	var pinHash *string
+	if pin != "" {
+		h, err := s.hasher.Hash(ctx, pin)
+		if err != nil {
+			return AuthResult{}, err
+		}
+		pinHash = &h
 	}
 	userID, err := newID()
 	if err != nil {
@@ -174,6 +186,12 @@ func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token,
 		}
 		if err := q.CompleteSignup(ctx, identitydb.CompleteSignupParams{ID: signupID, UserID: &userID}); err != nil {
 			return fmt.Errorf("complete signup: %w", err)
+		}
+		if pinHash != nil {
+			if err := q.SetPinHash(ctx, identitydb.SetPinHashParams{ID: user.ID, PinHash: pinHash}); err != nil {
+				return fmt.Errorf("set pin: %w", err)
+			}
+			user.PinHash = pinHash
 		}
 		d, err := s.bindDevice(ctx, tx, q, user.ID, device, false)
 		if err != nil {

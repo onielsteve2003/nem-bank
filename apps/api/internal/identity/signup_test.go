@@ -131,10 +131,10 @@ func TestSignupFromDetailsToAccount(t *testing.T) {
 	_, err = h.svc.VerifyCode(ctx, c.ID, code)
 	wantProblem(t, err, ErrOTPExpired)
 
-	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, "Tolu-Adeyemi-1996", phone(1))
+	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, "Tolu-Adeyemi-1996", "", phone(1))
 	wantProblem(t, err, ErrWeakPassword)
 
-	res, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, phone(1))
+	res, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, "", phone(1))
 	if err != nil {
 		t.Fatalf("complete: %v", err)
 	}
@@ -151,7 +151,7 @@ func TestSignupFromDetailsToAccount(t *testing.T) {
 	}
 
 	// The token is single use, and the email and phone are now taken.
-	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, phone(2))
+	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, "", phone(2))
 	wantProblem(t, err, ErrNotVerified)
 	_, err = h.svc.StartSignup(ctx, details("tolu@example.com", "+2348039999999"))
 	wantProblem(t, err, ErrEmailTaken)

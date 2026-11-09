@@ -22,7 +22,7 @@ func (q *Queries) ConsumeChallenge(ctx context.Context, id uuid.UUID) error {
 }
 
 const getChallengeByTokenForUpdate = `-- name: GetChallengeByTokenForUpdate :one
-SELECT id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at FROM otp_challenges WHERE token_hash = $1 FOR UPDATE
+SELECT id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose FROM otp_challenges WHERE token_hash = $1 FOR UPDATE
 `
 
 func (q *Queries) GetChallengeByTokenForUpdate(ctx context.Context, tokenHash []byte) (OtpChallenge, error) {
@@ -43,12 +43,13 @@ func (q *Queries) GetChallengeByTokenForUpdate(ctx context.Context, tokenHash []
 		&i.TokenExpiresAt,
 		&i.ConsumedAt,
 		&i.CreatedAt,
+		&i.StepUpPurpose,
 	)
 	return i, err
 }
 
 const getChallengeForUpdate = `-- name: GetChallengeForUpdate :one
-SELECT id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at FROM otp_challenges WHERE id = $1 FOR UPDATE
+SELECT id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose FROM otp_challenges WHERE id = $1 FOR UPDATE
 `
 
 // Row-locked so concurrent guesses are counted one at a time.
@@ -70,6 +71,7 @@ func (q *Queries) GetChallengeForUpdate(ctx context.Context, id uuid.UUID) (OtpC
 		&i.TokenExpiresAt,
 		&i.ConsumedAt,
 		&i.CreatedAt,
+		&i.StepUpPurpose,
 	)
 	return i, err
 }
@@ -78,7 +80,7 @@ const insertChallenge = `-- name: InsertChallenge :one
 INSERT INTO otp_challenges (id, purpose, subject_id, destination, code_hash, attempts_left,
                             expires_at, resend_available_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-RETURNING id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at
+RETURNING id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose
 `
 
 type InsertChallengeParams struct {
@@ -119,6 +121,7 @@ func (q *Queries) InsertChallenge(ctx context.Context, arg InsertChallengeParams
 		&i.TokenExpiresAt,
 		&i.ConsumedAt,
 		&i.CreatedAt,
+		&i.StepUpPurpose,
 	)
 	return i, err
 }
@@ -178,7 +181,7 @@ const resendChallenge = `-- name: ResendChallenge :one
 UPDATE otp_challenges
 SET code_hash = $2, attempts_left = $3, expires_at = $4, resend_available_at = $5, sends = sends + 1
 WHERE id = $1
-RETURNING id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at
+RETURNING id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose
 `
 
 type ResendChallengeParams struct {
@@ -213,6 +216,7 @@ func (q *Queries) ResendChallenge(ctx context.Context, arg ResendChallengeParams
 		&i.TokenExpiresAt,
 		&i.ConsumedAt,
 		&i.CreatedAt,
+		&i.StepUpPurpose,
 	)
 	return i, err
 }

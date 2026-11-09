@@ -100,7 +100,7 @@ func (q *Queries) GetSignupForUpdate(ctx context.Context, id uuid.UUID) (Signup,
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at FROM users WHERE id = $1
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -125,6 +125,12 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.ConsentAcceptedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PinHash,
+		&i.PinFailures,
+		&i.PinLockouts,
+		&i.PinLockedUntil,
+		&i.DuressPinHash,
+		&i.DuressSince,
 	)
 	return i, err
 }
@@ -168,7 +174,7 @@ const insertUser = `-- name: InsertUser :one
 INSERT INTO users (id, first_name, last_name, email, phone, date_of_birth, password_hash,
                    terms_version, privacy_version, consent_accepted_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at
+RETURNING id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since
 `
 
 type InsertUserParams struct {
@@ -217,6 +223,12 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 		&i.ConsentAcceptedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PinHash,
+		&i.PinFailures,
+		&i.PinLockouts,
+		&i.PinLockedUntil,
+		&i.DuressPinHash,
+		&i.DuressSince,
 	)
 	return i, err
 }

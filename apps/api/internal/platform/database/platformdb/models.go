@@ -40,6 +40,7 @@ type OtpChallenge struct {
 	TokenExpiresAt    pgtype.Timestamptz
 	ConsumedAt        pgtype.Timestamptz
 	CreatedAt         time.Time
+	StepUpPurpose     pgtype.Text
 }
 
 type OutboxEvent struct {
@@ -107,4 +108,10 @@ type User struct {
 	ConsentAcceptedAt time.Time
 	CreatedAt         time.Time
 	UpdatedAt         time.Time
+	PinHash           pgtype.Text
+	PinFailures       int16
+	PinLockouts       int16
+	PinLockedUntil    pgtype.Timestamptz
+	DuressPinHash     pgtype.Text
+	DuressSince       pgtype.Timestamptz
 }

@@ -34,7 +34,7 @@ func (h *harness) signedUp(t *testing.T, email, tel string) AuthResult {
 	if err != nil {
 		t.Fatalf("verify: %v", err)
 	}
-	res, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, phone(1))
+	res, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, "", phone(1))
 	if err != nil {
 		t.Fatalf("complete: %v", err)
 	}
@@ -244,6 +244,6 @@ func TestADeviceKeyBelongsToOneAccount(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	_, err = h.svc.CompleteSignup(t.Context(), started.SignupID, v.Token, strongPassword, phone(1))
+	_, err = h.svc.CompleteSignup(t.Context(), started.SignupID, v.Token, strongPassword, "", phone(1))
 	wantProblem(t, err, ErrDeviceKeyInUse)
 }

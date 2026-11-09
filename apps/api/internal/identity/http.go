@@ -70,7 +70,7 @@ func userJSON(u identitydb.User) api.User {
 		Email: openapi_types.Email(u.Email), Phone: u.Phone,
 		DateOfBirth: openapi_types.Date{Time: u.DateOfBirth},
 		Nemtag:      u.Nemtag, KycTier: api.KycTier(u.KycTier), KycStatus: api.KycStatus(u.KycStatus),
-		IsDemo: u.IsDemo, CreatedAt: u.CreatedAt.UTC(),
+		IsDemo: u.IsDemo, CreatedAt: u.CreatedAt.UTC(), HasPin: u.PinHash != nil,
 	}
 	if u.NemtagChangedAt != nil {
 		// A tag can change once every 30 days (the contract's nemtag_changeable_at).
@@ -113,7 +113,7 @@ func registration(d api.DeviceRegistration) DeviceRegistration {
 // CompleteSignup is POST /v1/auth/signup/complete.
 func (a *API) CompleteSignup(ctx context.Context, req api.CompleteSignupRequestObject) (api.CompleteSignupResponseObject, error) {
 	b := req.Body
-	r, err := a.svc.CompleteSignup(ctx, b.SignupId, b.VerificationToken, deref(b.Password), registration(b.Device))
+	r, err := a.svc.CompleteSignup(ctx, b.SignupId, b.VerificationToken, deref(b.Password), deref(b.Pin), registration(b.Device))
 	if err != nil {
 		return nil, err
 	}
@@ -216,4 +216,50 @@ func deref[T any](p *T) T {
 		return zero
 	}
 	return *p
+}
+
+// SetPin is PUT /v1/users/me/pin.
+func (a *API) SetPin(ctx context.Context, req api.SetPinRequestObject) (api.SetPinResponseObject, error) {
+	if err := a.svc.SetPin(ctx, deref(req.Body.Pin)); err != nil {
+		return nil, err
+	}
+	return api.SetPin204Response{}, nil
+}
+
+// VerifyPin is POST /v1/users/me/pin/verify.
+func (a *API) VerifyPin(ctx context.Context, req api.VerifyPinRequestObject) (api.VerifyPinResponseObject, error) {
+	r, err := a.svc.VerifyPin(ctx, deref(req.Body.Pin))
+	if err != nil {
+		return nil, err
+	}
+	out := api.VerifyPin200JSONResponse{Valid: r.Valid, AttemptsRemaining: r.AttemptsLeft}
+	if r.LockedUntil != nil {
+		t := r.LockedUntil.UTC()
+		out.LockedUntil = &t
+	}
+	return out, nil
+}
+
+// ResetPin is POST /v1/users/me/pin/reset.
+func (a *API) ResetPin(ctx context.Context, req api.ResetPinRequestObject) (api.ResetPinResponseObject, error) {
+	if err := a.svc.ResetPin(ctx, req.Params.XStepUpToken, deref(req.Body.Pin)); err != nil {
+		return nil, err
+	}
+	return api.ResetPin204Response{}, nil
+}
+
+// SetDuressPin is PUT /v1/security/duress-pin.
+func (a *API) SetDuressPin(ctx context.Context, req api.SetDuressPinRequestObject) (api.SetDuressPinResponseObject, error) {
+	if err := a.svc.SetDuressPin(ctx, req.Params.XStepUpToken, deref(req.Body.Pin)); err != nil {
+		return nil, err
+	}
+	return api.SetDuressPin204Response{}, nil
+}
+
+// RemoveDuressPin is DELETE /v1/security/duress-pin.
+func (a *API) RemoveDuressPin(ctx context.Context, req api.RemoveDuressPinRequestObject) (api.RemoveDuressPinResponseObject, error) {
+	if err := a.svc.RemoveDuressPin(ctx, req.Params.XStepUpToken); err != nil {
+		return nil, err
+	}
+	return api.RemoveDuressPin204Response{}, nil
 }

@@ -104,7 +104,7 @@ func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at FROM users WHERE email = $1
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since FROM users WHERE email = $1
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -129,12 +129,18 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.ConsentAcceptedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PinHash,
+		&i.PinFailures,
+		&i.PinLockouts,
+		&i.PinLockedUntil,
+		&i.DuressPinHash,
+		&i.DuressSince,
 	)
 	return i, err
 }
 
 const getUserByPhone = `-- name: GetUserByPhone :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at FROM users WHERE phone = $1
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since FROM users WHERE phone = $1
 `
 
 func (q *Queries) GetUserByPhone(ctx context.Context, phone string) (User, error) {
@@ -159,6 +165,12 @@ func (q *Queries) GetUserByPhone(ctx context.Context, phone string) (User, error
 		&i.ConsentAcceptedAt,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.PinHash,
+		&i.PinFailures,
+		&i.PinLockouts,
+		&i.PinLockedUntil,
+		&i.DuressPinHash,
+		&i.DuressSince,
 	)
 	return i, err
 }
