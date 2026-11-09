@@ -148,3 +148,29 @@ func TestEachCustomerHasABudgetAndMoneyRoutesAreCheckedBeforeTheSignature(t *tes
 		t.Fatalf("emeka's transfer = %d", rec.Code)
 	}
 }
+
+func TestNameEnquiryHasAPerCustomerBudget(t *testing.T) {
+	t.Parallel()
+	h := limitedRouter(t, RateLimits{CustomerRoutes: map[string]ratelimit.Rule{"POST /v1/payees/resolve": perMinute(1)}}, "", nil)
+	tolu, emeka := uuid.Must(uuid.NewV7()).String(), uuid.Must(uuid.NewV7()).String()
+	resolve := func(user string) *httptest.ResponseRecorder {
+		req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/payees/resolve",
+			bytes.NewBufferString(`{"kind":"bank","bank_code":"058","account_number":"0123456789"}`))
+		req.Header.Set("Content-Type", "application/json")
+		req.Header.Set("Authorization", "Bearer "+user)
+		rec := httptest.NewRecorder()
+		h.ServeHTTP(rec, req)
+		return rec
+	}
+	if rec := resolve(tolu); rec.Code != http.StatusNotImplemented {
+		t.Fatalf("first lookup = %d: %s", rec.Code, rec.Body)
+	}
+	wantLimited(t, resolve(tolu))
+	// The budget is per customer and per route.
+	if rec := resolve(emeka); rec.Code != http.StatusNotImplemented {
+		t.Fatalf("emeka's lookup = %d", rec.Code)
+	}
+	if rec := do(t, h, http.MethodGet, "/v1/cards", map[string]string{"Authorization": "Bearer " + tolu}); rec.Code != http.StatusNotImplemented {
+		t.Fatalf("cards = %d", rec.Code)
+	}
+}

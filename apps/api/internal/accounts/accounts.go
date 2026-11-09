@@ -355,6 +355,23 @@ func (s *Service) ResolveNuban(ctx context.Context, number string) (Recipient, e
 	return Recipient{CustomerAccount: acc, Name: prof.Name, Nemtag: prof.Nemtag}, nil
 }
 
+// ResolveCustomer finds the customer's Nem current account, for paying them by @nemtag or
+// phone instead of by number.
+func (s *Service) ResolveCustomer(ctx context.Context, userID uuid.UUID) (Recipient, error) {
+	acc, err := s.q.GetCustomerAccountByCurrency(ctx, accountsdb.GetCustomerAccountByCurrencyParams{UserID: userID, Currency: string(money.NGN)})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Recipient{}, ErrNoSuchNuban
+	}
+	if err != nil {
+		return Recipient{}, fmt.Errorf("load current account: %w", err)
+	}
+	prof, err := s.customers.CustomerProfile(ctx, userID)
+	if err != nil {
+		return Recipient{}, err
+	}
+	return Recipient{CustomerAccount: acc, Name: prof.Name, Nemtag: prof.Nemtag}, nil
+}
+
 // Decoy is the duress view of a balance (SEC-5): what a person forcing the customer can
 // see, and so the most a transfer made under duress can appear to send.
 func Decoy(m money.Money) money.Money { return decoy(m) }

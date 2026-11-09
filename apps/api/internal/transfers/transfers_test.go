@@ -35,6 +35,18 @@ func (p *profiles) CustomerProfile(_ context.Context, id uuid.UUID) (identity.Cu
 	return p.m[id], nil
 }
 
+// FindCustomer matches the @nemtag only; identity's own tests cover phones.
+func (p *profiles) FindCustomer(_ context.Context, handle string) (uuid.UUID, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	for id, prof := range p.m {
+		if prof.Nemtag != nil && "@"+*prof.Nemtag == handle {
+			return id, nil
+		}
+	}
+	return uuid.Nil, identity.ErrNoSuchCustomer
+}
+
 func (p *profiles) set(id uuid.UUID, prof identity.CustomerProfile) {
 	p.mu.Lock()
 	defer p.mu.Unlock()

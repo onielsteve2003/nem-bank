@@ -49,6 +49,25 @@ func (q *Queries) EmailOrPhoneTaken(ctx context.Context, arg EmailOrPhoneTakenPa
 	return i, err
 }
 
+const findCustomerByHandle = `-- name: FindCustomerByHandle :one
+SELECT id FROM users
+WHERE ($1::text IS NOT NULL AND nemtag = $1)
+   OR ($2::text IS NOT NULL AND phone = $2)
+`
+
+type FindCustomerByHandleParams struct {
+	Nemtag *string
+	Phone  *string
+}
+
+// A payee by @nemtag or phone (TRF-1). Both columns have unique indexes.
+func (q *Queries) FindCustomerByHandle(ctx context.Context, arg FindCustomerByHandleParams) (uuid.UUID, error) {
+	row := q.db.QueryRow(ctx, findCustomerByHandle, arg.Nemtag, arg.Phone)
+	var id uuid.UUID
+	err := row.Scan(&id)
+	return id, err
+}
+
 const getSignup = `-- name: GetSignup :one
 SELECT id, first_name, last_name, email, phone, date_of_birth, terms_version, privacy_version, consent_accepted_at, created_at, expires_at, completed_at, user_id FROM signups WHERE id = $1
 `

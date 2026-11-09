@@ -131,6 +131,22 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 		t.Fatalf("transaction detail = %+v", detail)
 	}
 	call[api.Problem](t, h, http.MethodGet, "/v1/transfers/"+sent.Id.String(), ada.AccessToken, nil, http.StatusNotFound)
+
+	// Before paying, the app looks the payee up: Ada by her phone in its local spelling, and
+	// an account at another bank by name enquiry with Confirmation of Payee (TRF-1, TRF-3).
+	payee := call[api.ResolvedPayee](t, h, http.MethodPost, "/v1/payees/resolve", tolu.AccessToken,
+		map[string]string{"kind": "nem", "query": "0803 123 4502"}, http.StatusOK)
+	if payee.Kind != api.ResolvedPayeeKindNem || payee.Name != "ada Adeyemi" || payee.AccountNumber != adaNuban.AccountNumber {
+		t.Fatalf("payee by phone = %+v", payee)
+	}
+	other := call[api.ResolvedPayee](t, h, http.MethodPost, "/v1/payees/resolve", tolu.AccessToken,
+		map[string]string{"kind": "bank", "bank_code": "058", "account_number": "0123456789", "expected_name": "Chidi Okonkow"}, http.StatusOK)
+	if other.Name != "Chidi Okonkwo" || other.NameMatch == nil || other.NameMatch.Result != api.CloseMatch {
+		t.Fatalf("other bank = %+v", other)
+	}
+	if banks := call[api.BankList](t, h, http.MethodGet, "/v1/banks", tolu.AccessToken, nil, http.StatusOK); len(banks.Data) < 20 {
+		t.Fatalf("banks = %d", len(banks.Data))
+	}
 }
 
 func decode[T any](t *testing.T, b []byte) T {

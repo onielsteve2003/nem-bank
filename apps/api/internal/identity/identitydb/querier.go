@@ -15,6 +15,8 @@ type Querier interface {
 	CompleteSignup(ctx context.Context, arg CompleteSignupParams) error
 	ConsumeChallenge(ctx context.Context, id uuid.UUID) error
 	EmailOrPhoneTaken(ctx context.Context, arg EmailOrPhoneTakenParams) (EmailOrPhoneTakenRow, error)
+	// A payee by @nemtag or phone (TRF-1). Both columns have unique indexes.
+	FindCustomerByHandle(ctx context.Context, arg FindCustomerByHandleParams) (uuid.UUID, error)
 	GetChallenge(ctx context.Context, id uuid.UUID) (OtpChallenge, error)
 	GetChallengeByTokenForUpdate(ctx context.Context, tokenHash []byte) (OtpChallenge, error)
 	// Row-locked so concurrent guesses are counted one at a time.

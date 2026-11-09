@@ -27,6 +27,9 @@ type RateLimits struct {
 	Routes map[string]ratelimit.Rule
 	// Signed caps each money-moving route per customer.
 	Signed ratelimit.Rule
+	// CustomerRoutes caps single authenticated routes per customer: lookups a script could
+	// use to walk account numbers and harvest names. Keyed "METHOD /gin/path".
+	CustomerRoutes map[string]ratelimit.Rule
 }
 
 // DefaultRateLimits are the production limits.
@@ -53,6 +56,11 @@ func DefaultRateLimits() RateLimits {
 		},
 		// A person sends a handful of payments a minute at most; a script sends hundreds.
 		Signed: perMin(30),
+		// Name enquiry answers "whose account is 0123456789?": generous for someone paying
+		// people, useless for harvesting names.
+		CustomerRoutes: map[string]ratelimit.Rule{
+			"POST /v1/payees/resolve": perHour(60),
+		},
 	}
 }
 
@@ -107,10 +115,16 @@ func (lim *limiter) byCustomer(ctx context.Context, c *gin.Context, signed bool)
 	if err := lim.allow("user:"+user, lim.rules.User); err != nil {
 		return err
 	}
+	route := c.Request.Method + " " + c.FullPath()
+	if rule, ok := lim.rules.CustomerRoutes[route]; ok {
+		if err := lim.allow("customer-route:"+route+":"+user, rule); err != nil {
+			return err
+		}
+	}
 	if !signed {
 		return nil
 	}
-	if err := lim.allow("signed:"+c.Request.Method+" "+c.FullPath()+":"+user, lim.rules.Signed); err != nil {
+	if err := lim.allow("signed:"+route+":"+user, lim.rules.Signed); err != nil {
 		return err
 	}
 	return nil

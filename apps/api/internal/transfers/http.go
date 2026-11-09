@@ -127,3 +127,23 @@ func (a *API) ListTransfers(ctx context.Context, req api.ListTransfersRequestObj
 	}
 	return out, nil
 }
+
+// ListBanks is GET /v1/banks.
+func (a *API) ListBanks(context.Context, api.ListBanksRequestObject) (api.ListBanksResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	return api.ListBanks200JSONResponse{Data: Banks()}, nil
+}
+
+// ResolvePayee is POST /v1/payees/resolve: name enquiry and Confirmation of Payee.
+func (a *API) ResolvePayee(ctx context.Context, req api.ResolvePayeeRequestObject) (api.ResolvePayeeResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	p, err := a.svc.ResolvePayee(ctx, *req.Body)
+	if err != nil {
+		return nil, err
+	}
+	return api.ResolvePayee200JSONResponse(p), nil
+}

@@ -30,6 +30,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/pagination"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/transfersdb"
 )
 
@@ -90,12 +91,21 @@ var (
 	errStale = errors.New("transfers: status changed concurrently")
 )
 
+// Customers is what transfers needs from identity: who a customer is, and who a payee's
+// @nemtag or phone belongs to.
+type Customers interface {
+	accounts.Customers
+	FindCustomer(ctx context.Context, handle string) (uuid.UUID, error)
+}
+
 // Config holds the service's dependencies.
 type Config struct {
 	Pool      *pgxpool.Pool
 	Accounts  *accounts.Service
-	Customers accounts.Customers
-	Logger    *slog.Logger
+	Customers Customers
+	// Partner answers name enquiries for other banks; nil means the sandbox rail.
+	Partner NameEnquirer
+	Logger  *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
 }
@@ -105,7 +115,8 @@ type Service struct {
 	pool      *pgxpool.Pool
 	q         *transfersdb.Queries
 	accounts  *accounts.Service
-	customers accounts.Customers
+	customers Customers
+	partner   NameEnquirer
 	log       *slog.Logger
 	now       func() time.Time
 }
@@ -118,7 +129,13 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
-	return &Service{pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers, log: cfg.Logger, now: cfg.Now}, nil
+	if cfg.Partner == nil {
+		cfg.Partner = partners.NewSandboxNIP()
+	}
+	return &Service{
+		pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers,
+		partner: cfg.Partner, log: cfg.Logger, now: cfg.Now,
+	}, nil
 }
 
 // Request is a send-money request that has passed contract validation.

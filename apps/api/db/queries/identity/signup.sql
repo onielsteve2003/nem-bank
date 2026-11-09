@@ -25,3 +25,9 @@ SELECT * FROM users WHERE id = $1;
 
 -- name: GetSignup :one
 SELECT * FROM signups WHERE id = $1;
+
+-- name: FindCustomerByHandle :one
+-- A payee by @nemtag or phone (TRF-1). Both columns have unique indexes.
+SELECT id FROM users
+WHERE (sqlc.narg(nemtag)::text IS NOT NULL AND nemtag = sqlc.narg(nemtag))
+   OR (sqlc.narg(phone)::text IS NOT NULL AND phone = sqlc.narg(phone));
