@@ -283,6 +283,18 @@ tests check these invariants against `math/big`:
   escaped).
 - **Duress** (SEC-5): balances show the decoy (at most ₦3,850, empty wallets), history
   only small naira lines, with no running balance that would give the decoy away.
+- **Statements** (migration 00013). A request is checked against the app's period rules
+  (Lagos days, up to 12 months, nothing in the future), stored as `generating` and
+  published to the outbox in one transaction; a subscriber builds it from the ledger's
+  postings (opening = the balance just before the period, each line's running balance
+  re-added and checked) and renders it with maroto. Every page carries the demo
+  disclaimer, the SHA-256 of the statement's canonical content and a QR code to the public
+  verification page (`GET /v1/public/statements/{code}`, masked name and number only). The
+  PDF is stored as issued, so a download is the document that was verified.
+- **End-of-day balances** (`daily_balances`): an hourly, idempotent catch-up fills any
+  missing day of the last week, so a server that slept through midnight still records it.
+  Postings are timed with `clock_timestamp()` under the account lock, so "the last posting
+  before midnight" is always the latest balance.
 
 ## Field encryption and the audit log
 

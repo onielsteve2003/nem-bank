@@ -13,6 +13,50 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+const balancesBefore = `-- name: BalancesBefore :many
+SELECT a.id::uuid AS account_id, COALESCE(p.balance_after_minor, 0)::bigint AS balance_minor
+FROM unnest($1::uuid[]) AS a(id)
+LEFT JOIN LATERAL (
+  SELECT balance_after_minor FROM postings
+  WHERE account_id = a.id AND created_at < $2
+  ORDER BY created_at DESC, id DESC
+  LIMIT 1
+) p ON true
+`
+
+type BalancesBeforeParams struct {
+	Ids    []uuid.UUID
+	Before time.Time
+}
+
+type BalancesBeforeRow struct {
+	AccountID    uuid.UUID
+	BalanceMinor int64
+}
+
+// Each account's ledger balance just before an instant: the running balance of its last
+// earlier posting, or zero. Postings are timed under the account lock (migration 00013),
+// so the latest by time is the latest balance.
+func (q *Queries) BalancesBefore(ctx context.Context, arg BalancesBeforeParams) ([]BalancesBeforeRow, error) {
+	rows, err := q.db.Query(ctx, balancesBefore, arg.Ids, arg.Before)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []BalancesBeforeRow{}
+	for rows.Next() {
+		var i BalancesBeforeRow
+		if err := rows.Scan(&i.AccountID, &i.BalanceMinor); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const closeHold = `-- name: CloseHold :exec
 UPDATE account_holds
 SET status = $1, entry_id = $2, closed_at = now()
@@ -214,6 +258,62 @@ func (q *Queries) InsertPosting(ctx context.Context, arg InsertPostingParams) (P
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const listAccountPostings = `-- name: ListAccountPostings :many
+SELECT p.id, p.entry_id, p.amount_minor, p.currency, p.balance_after_minor, p.created_at,
+       e.kind AS entry_kind, e.reference AS entry_reference
+FROM postings p
+JOIN journal_entries e ON e.id = p.entry_id
+WHERE p.account_id = $1 AND p.created_at >= $2 AND p.created_at < $3
+ORDER BY p.created_at, p.id
+`
+
+type ListAccountPostingsParams struct {
+	AccountID uuid.UUID
+	Since     time.Time
+	Until     time.Time
+}
+
+type ListAccountPostingsRow struct {
+	ID                uuid.UUID
+	EntryID           uuid.UUID
+	AmountMinor       int64
+	Currency          string
+	BalanceAfterMinor int64
+	CreatedAt         time.Time
+	EntryKind         string
+	EntryReference    string
+}
+
+// An account's postings in [since, until), oldest first, with their entry: statement lines.
+func (q *Queries) ListAccountPostings(ctx context.Context, arg ListAccountPostingsParams) ([]ListAccountPostingsRow, error) {
+	rows, err := q.db.Query(ctx, listAccountPostings, arg.AccountID, arg.Since, arg.Until)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListAccountPostingsRow{}
+	for rows.Next() {
+		var i ListAccountPostingsRow
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntryID,
+			&i.AmountMinor,
+			&i.Currency,
+			&i.BalanceAfterMinor,
+			&i.CreatedAt,
+			&i.EntryKind,
+			&i.EntryReference,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listActiveHolds = `-- name: ListActiveHolds :many

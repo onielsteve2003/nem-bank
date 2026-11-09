@@ -320,6 +320,49 @@ func (q *Queries) ListCustomerAccounts(ctx context.Context, userID uuid.UUID) ([
 	return items, nil
 }
 
+const listLinesForEntries = `-- name: ListLinesForEntries :many
+SELECT entry_id, type, narration, reference FROM transactions
+WHERE account_id = $1 AND entry_id = ANY($2::uuid[])
+`
+
+type ListLinesForEntriesParams struct {
+	AccountID uuid.UUID
+	EntryIds  []uuid.UUID
+}
+
+type ListLinesForEntriesRow struct {
+	EntryID   *uuid.UUID
+	Type      string
+	Narration string
+	Reference string
+}
+
+// The customer-facing lines behind an account's entries, for statement narrations.
+func (q *Queries) ListLinesForEntries(ctx context.Context, arg ListLinesForEntriesParams) ([]ListLinesForEntriesRow, error) {
+	rows, err := q.db.Query(ctx, listLinesForEntries, arg.AccountID, arg.EntryIds)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListLinesForEntriesRow{}
+	for rows.Next() {
+		var i ListLinesForEntriesRow
+		if err := rows.Scan(
+			&i.EntryID,
+			&i.Type,
+			&i.Narration,
+			&i.Reference,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listTransactions = `-- name: ListTransactions :many
 SELECT id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code, balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id, card_id, created_at, updated_at FROM transactions t
 WHERE t.user_id = $1

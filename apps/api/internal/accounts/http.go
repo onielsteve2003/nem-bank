@@ -1,6 +1,7 @@
 package accounts
 
 import (
+	"bytes"
 	"context"
 	"encoding/json"
 	"fmt"
@@ -265,4 +266,58 @@ func utcPtr(t *time.Time) *time.Time {
 	}
 	u := t.UTC()
 	return &u
+}
+
+// ListStatements is GET /v1/statements.
+func (a *API) ListStatements(ctx context.Context, req api.ListStatementsRequestObject) (api.ListStatementsResponseObject, error) {
+	rows, page, err := a.svc.Statements(ctx, req.Params.Cursor, req.Params.Limit)
+	if err != nil {
+		return nil, err
+	}
+	out := api.ListStatements200JSONResponse{Data: make([]api.Statement, 0, len(rows)), Page: page}
+	for _, st := range rows {
+		out.Data = append(out.Data, a.svc.StatementJSON(st))
+	}
+	return out, nil
+}
+
+// RequestStatement is POST /v1/statements: generation runs in the background.
+func (a *API) RequestStatement(ctx context.Context, req api.RequestStatementRequestObject) (api.RequestStatementResponseObject, error) {
+	b := req.Body
+	st, err := a.svc.RequestStatement(ctx, b.AccountId, b.From.Time, b.To.Time)
+	if err != nil {
+		return nil, err
+	}
+	return api.RequestStatement202JSONResponse(a.svc.StatementJSON(st)), nil
+}
+
+// GetStatement is GET /v1/statements/{statement_id}.
+func (a *API) GetStatement(ctx context.Context, req api.GetStatementRequestObject) (api.GetStatementResponseObject, error) {
+	st, err := a.svc.Statement(ctx, req.StatementId)
+	if err != nil {
+		return nil, err
+	}
+	return api.GetStatement200JSONResponse(a.svc.StatementJSON(st)), nil
+}
+
+// DownloadStatement is GET /v1/statements/{statement_id}/download: the PDF as issued.
+func (a *API) DownloadStatement(ctx context.Context, req api.DownloadStatementRequestObject) (api.DownloadStatementResponseObject, error) {
+	pdf, err := a.svc.StatementPDF(ctx, req.StatementId)
+	if err != nil {
+		return nil, err
+	}
+	return api.DownloadStatement200ApplicationpdfResponse{Body: bytes.NewReader(pdf), ContentLength: int64(len(pdf))}, nil
+}
+
+// VerifyStatement is GET /v1/public/statements/{verification_code} (no sign-in).
+func (a *API) VerifyStatement(ctx context.Context, req api.VerifyStatementRequestObject) (api.VerifyStatementResponseObject, error) {
+	v, err := a.svc.VerifyStatement(ctx, req.VerificationCode)
+	if err != nil {
+		return nil, err
+	}
+	return api.VerifyStatement200JSONResponse{
+		Valid: true, AccountNameMasked: v.NameMasked, AccountNumberMasked: v.NumberMasked,
+		Currency: api.CurrencyCode(v.Currency), PeriodFrom: api.Date{Time: v.From}, PeriodTo: api.Date{Time: v.To},
+		Sha256: v.SHA256, IssuedAt: v.IssuedAt.UTC(), Demo: true,
+	}, nil
 }

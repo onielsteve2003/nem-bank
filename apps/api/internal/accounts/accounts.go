@@ -72,6 +72,9 @@ type Config struct {
 	Logger    *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
+	// VerifyURL prefixes a statement's verification code in its QR link; empty means
+	// DefaultVerifyURL.
+	VerifyURL string
 	// Timelines returns a transfer's status history for its transactions' detail (the
 	// transfers domain); nil gives every line a single step for its status.
 	Timelines func(ctx context.Context, transferID uuid.UUID) ([]api.TimelineEvent, error)
@@ -85,6 +88,7 @@ type Service struct {
 	log       *slog.Logger
 	now       func() time.Time
 	timelines func(ctx context.Context, transferID uuid.UUID) ([]api.TimelineEvent, error)
+	verifyURL string
 }
 
 // NewService checks the configuration and returns the service.
@@ -95,7 +99,10 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
-	return &Service{pool: cfg.Pool, q: accountsdb.New(cfg.Pool), customers: cfg.Customers, log: cfg.Logger, now: cfg.Now, timelines: cfg.Timelines}, nil
+	if cfg.VerifyURL == "" {
+		cfg.VerifyURL = DefaultVerifyURL
+	}
+	return &Service{verifyURL: cfg.VerifyURL, pool: cfg.Pool, q: accountsdb.New(cfg.Pool), customers: cfg.Customers, log: cfg.Logger, now: cfg.Now, timelines: cfg.Timelines}, nil
 }
 
 // View is an account as the customer sees it.

@@ -158,7 +158,10 @@ func run() error {
 
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
-	runner, err := jobs.New(pool, log, jobs.Options{Housekeeping: []func(context.Context) error{idem.Prune}})
+	runner, err := jobs.New(pool, log, jobs.Options{
+		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber()},
+		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances},
+	})
 	if err != nil {
 		return err
 	}

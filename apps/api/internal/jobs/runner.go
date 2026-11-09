@@ -27,8 +27,8 @@ type Options struct {
 	DispatchBatch int32
 	// RetainDispatched is how long dispatched events stay for debugging. Default 7 days.
 	RetainDispatched time.Duration
-	// Housekeeping runs with the hourly outbox prune: other tables' clean-ups (expired
-	// idempotency keys, ...). Each runs even if an earlier one failed.
+	// Housekeeping runs with the hourly outbox prune: other tables' clean-ups and catch-ups
+	// (expired idempotency keys, end-of-day balances). Each runs even if an earlier one failed.
 	Housekeeping []func(context.Context) error
 }
 

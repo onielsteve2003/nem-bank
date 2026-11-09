@@ -12,6 +12,10 @@ import (
 )
 
 type Querier interface {
+	// Each account's ledger balance just before an instant: the running balance of its last
+	// earlier posting, or zero. Postings are timed under the account lock (migration 00013),
+	// so the latest by time is the latest balance.
+	BalancesBefore(ctx context.Context, arg BalancesBeforeParams) ([]BalancesBeforeRow, error)
 	CloseHold(ctx context.Context, arg CloseHoldParams) error
 	GetAccount(ctx context.Context, id uuid.UUID) (LedgerAccount, error)
 	GetEntryByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (JournalEntry, error)
@@ -23,6 +27,8 @@ type Querier interface {
 	InsertEntry(ctx context.Context, arg InsertEntryParams) (JournalEntry, error)
 	InsertHold(ctx context.Context, arg InsertHoldParams) (AccountHold, error)
 	InsertPosting(ctx context.Context, arg InsertPostingParams) (Posting, error)
+	// An account's postings in [since, until), oldest first, with their entry: statement lines.
+	ListAccountPostings(ctx context.Context, arg ListAccountPostingsParams) ([]ListAccountPostingsRow, error)
 	// What makes up ledger minus available on one account (ACC-3), newest first.
 	ListActiveHolds(ctx context.Context, accountID uuid.UUID) ([]AccountHold, error)
 	// Accounts whose cached balances disagree with the postings and active holds. Always

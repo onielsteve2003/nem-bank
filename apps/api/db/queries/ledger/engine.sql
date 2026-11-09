@@ -68,3 +68,25 @@ ORDER BY a.id;
 -- name: ListActiveHolds :many
 -- What makes up ledger minus available on one account (ACC-3), newest first.
 SELECT * FROM account_holds WHERE account_id = $1 AND status = 'active' ORDER BY created_at DESC, id DESC;
+
+-- name: BalancesBefore :many
+-- Each account's ledger balance just before an instant: the running balance of its last
+-- earlier posting, or zero. Postings are timed under the account lock (migration 00013),
+-- so the latest by time is the latest balance.
+SELECT a.id::uuid AS account_id, COALESCE(p.balance_after_minor, 0)::bigint AS balance_minor
+FROM unnest(@ids::uuid[]) AS a(id)
+LEFT JOIN LATERAL (
+  SELECT balance_after_minor FROM postings
+  WHERE account_id = a.id AND created_at < @before
+  ORDER BY created_at DESC, id DESC
+  LIMIT 1
+) p ON true;
+
+-- name: ListAccountPostings :many
+-- An account's postings in [since, until), oldest first, with their entry: statement lines.
+SELECT p.id, p.entry_id, p.amount_minor, p.currency, p.balance_after_minor, p.created_at,
+       e.kind AS entry_kind, e.reference AS entry_reference
+FROM postings p
+JOIN journal_entries e ON e.id = p.entry_id
+WHERE p.account_id = @account_id AND p.created_at >= @since AND p.created_at < @until
+ORDER BY p.created_at, p.id;

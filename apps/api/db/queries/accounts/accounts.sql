@@ -77,3 +77,8 @@ WHERE t.user_id = @user_id
        OR (t.created_at, t.id) < (@after_at::timestamptz, @after_id::uuid))
 ORDER BY t.created_at DESC, t.id DESC
 LIMIT @lim;
+
+-- name: ListLinesForEntries :many
+-- The customer-facing lines behind an account's entries, for statement narrations.
+SELECT entry_id, type, narration, reference FROM transactions
+WHERE account_id = @account_id AND entry_id = ANY(@entry_ids::uuid[]);

@@ -11,20 +11,37 @@ import (
 )
 
 type Querier interface {
+	// Customer accounts open before the day ended that have no balance for that day yet.
+	AccountsWithoutSnapshot(ctx context.Context, arg AccountsWithoutSnapshotParams) ([]uuid.UUID, error)
+	CompleteStatement(ctx context.Context, arg CompleteStatementParams) error
+	FailStatement(ctx context.Context, id uuid.UUID) error
 	GetCustomerAccount(ctx context.Context, arg GetCustomerAccountParams) (GetCustomerAccountRow, error)
 	GetCustomerAccountByCurrency(ctx context.Context, arg GetCustomerAccountByCurrencyParams) (CustomerAccount, error)
+	GetStatement(ctx context.Context, arg GetStatementParams) (GetStatementRow, error)
+	// The public verification page: just enough to confirm the document, nothing to act on.
+	GetStatementByCode(ctx context.Context, verificationCode *string) (GetStatementByCodeRow, error)
+	GetStatementPDF(ctx context.Context, arg GetStatementPDFParams) (GetStatementPDFRow, error)
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
 	InsertCustomerAccount(ctx context.Context, arg InsertCustomerAccountParams) (CustomerAccount, error)
+	// Written once: a re-run (or a second instance) leaves the first row in place.
+	InsertDailyBalances(ctx context.Context, arg InsertDailyBalancesParams) error
 	// The customer's ledger account, opened with the details row in one transaction. Balances
 	// start at zero and only ever move through the posting engine.
 	InsertLedgerAccount(ctx context.Context, arg InsertLedgerAccountParams) error
+	InsertStatement(ctx context.Context, arg InsertStatementParams) (InsertStatementRow, error)
 	InsertTransaction(ctx context.Context, arg InsertTransactionParams) (Transaction, error)
 	// NGN first, then the wallets in the app's order.
 	ListCustomerAccounts(ctx context.Context, userID uuid.UUID) ([]ListCustomerAccountsRow, error)
+	// The customer-facing lines behind an account's entries, for statement narrations.
+	ListLinesForEntries(ctx context.Context, arg ListLinesForEntriesParams) ([]ListLinesForEntriesRow, error)
+	// Newest first, keyset paged. The PDF column is left out: lists never need it.
+	ListStatements(ctx context.Context, arg ListStatementsParams) ([]ListStatementsRow, error)
 	// The customer's history, newest first, keyset paged on (created_at, id). Every filter is
 	// optional; the date range is a half-open [from, until) pair of instants worked out in
 	// Lagos time by the caller, so the index still serves the range.
 	ListTransactions(ctx context.Context, arg ListTransactionsParams) ([]Transaction, error)
+	// The generator works one statement at a time, under its row lock.
+	LockStatement(ctx context.Context, id uuid.UUID) (LockStatementRow, error)
 	NextNubanSerial(ctx context.Context) (int64, error)
 	NextWalletSerial(ctx context.Context) (int64, error)
 	// A pending line whose money has now moved (or failed to): the entry and balance arrive

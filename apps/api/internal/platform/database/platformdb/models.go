@@ -68,6 +68,13 @@ type CustomerAccount struct {
 	OpenedAt      time.Time
 }
 
+type DailyBalance struct {
+	AccountID    uuid.UUID
+	AsOf         pgtype.Date
+	BalanceMinor int64
+	CreatedAt    time.Time
+}
+
 type Device struct {
 	ID             uuid.UUID
 	UserID         uuid.UUID
@@ -247,6 +254,23 @@ type StaffSession struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	RevokedAt pgtype.Timestamptz
+}
+
+type Statement struct {
+	ID                  uuid.UUID
+	UserID              uuid.UUID
+	AccountID           uuid.UUID
+	Currency            string
+	PeriodFrom          pgtype.Date
+	PeriodTo            pgtype.Date
+	Status              string
+	OpeningBalanceMinor pgtype.Int8
+	ClosingBalanceMinor pgtype.Int8
+	Sha256              pgtype.Text
+	VerificationCode    pgtype.Text
+	Pdf                 []byte
+	CreatedAt           time.Time
+	ReadyAt             pgtype.Timestamptz
 }
 
 type Transaction struct {
