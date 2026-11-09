@@ -33,7 +33,7 @@ type harness struct {
 	clock *clock
 }
 
-const staffPassword = "Lagoon-Harmattan-Kettle-42"
+const staffPassword = "Lagoon-Harmattan-Kettle-42" // gitleaks:allow (test fixture, not a credential)
 
 func newHarness(t *testing.T) *harness {
 	t.Helper()

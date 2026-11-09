@@ -38,7 +38,7 @@ func TestTOTPAcceptsOneStepOfClockSkewAndNoMore(t *testing.T) {
 func TestEnrolmentURIMatchesTheConsoleFormat(t *testing.T) {
 	t.Parallel()
 	uri := otpauthURI([]byte("12345678901234567890"), "aisha@nem.bank")
-	for _, part := range []string{"otpauth://totp/Nem%20Console:aisha@nem.bank?", "secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", "issuer=Nem+Console", "period=30", "digits=6"} {
+	for _, part := range []string{"otpauth://totp/Nem%20Console:aisha@nem.bank?", "secret=GEZDGNBVGY3TQOJQGEZDGNBVGY3TQOJQ", "issuer=Nem+Console", "period=30", "digits=6"} { // gitleaks:allow (RFC 6238 test secret)
 		if !strings.Contains(uri, part) {
 			t.Errorf("%s lacks %q", uri, part)
 		}

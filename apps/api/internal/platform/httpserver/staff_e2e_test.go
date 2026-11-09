@@ -79,11 +79,11 @@ func TestStaffRealmIsSeparateAndRolesComeFromTheContract(t *testing.T) {
 
 	// Staff sign in: password, then the code from the enrolment QR they just scanned.
 	signIn := func(name, email string, role admin.Role) api.StaffSession {
-		if _, err := adminSvc.CreateStaff(t.Context(), admin.StaffInput{Name: name, Email: email, Password: "Lagoon-Harmattan-Kettle-42", Roles: []admin.Role{role}}); err != nil {
+		if _, err := adminSvc.CreateStaff(t.Context(), admin.StaffInput{Name: name, Email: email, Password: "Lagoon-Harmattan-Kettle-42", Roles: []admin.Role{role}}); err != nil { // gitleaks:allow (test fixture)
 			t.Fatal(err)
 		}
 		ch := call[api.StaffLoginChallenge](t, h, http.MethodPost, "/v1/admin/auth/login", "",
-			map[string]string{"email": email, "password": "Lagoon-Harmattan-Kettle-42"}, http.StatusOK)
+			map[string]string{"email": email, "password": "Lagoon-Harmattan-Kettle-42"}, http.StatusOK) // gitleaks:allow (test fixture)
 		if ch.TotpEnrolment == nil {
 			t.Fatal("first login has no enrolment URI")
 		}

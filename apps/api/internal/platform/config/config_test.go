@@ -50,7 +50,7 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		"MAIL_FROM_EMAIL":             "hello@nem.example",
 		"OTP_KEY":                     "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 		"JWT_SIGNING_KEY":             "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-		"STAFF_JWT_SIGNING_KEY":       "ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=",
+		"STAFF_JWT_SIGNING_KEY":       "ZmVkY2JhOTg3NjU0MzIxMGZlZGNiYTk4NzY1NDMyMTA=", // gitleaks:allow (test key)
 		"FIELD_ENCRYPTION_KEYS":       "1:" + key32,
 		"FIELD_INDEX_KEY":             key32,
 	}))
@@ -116,7 +116,7 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"production without a staff jwt key", map[string]string{"APP_ENV": "production"}, "STAFF_JWT_SIGNING_KEY"},
 		{"staff key reuses the customer key", map[string]string{
 			"JWT_SIGNING_KEY":       "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
-			"STAFF_JWT_SIGNING_KEY": "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+			"STAFF_JWT_SIGNING_KEY": "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=", // gitleaks:allow (test key)
 		}, "must differ from JWT_SIGNING_KEY"},
 		{"production without field keys", map[string]string{"APP_ENV": "production"}, "FIELD_ENCRYPTION_KEYS"},
 		{"production without an index key", map[string]string{"APP_ENV": "production"}, "FIELD_INDEX_KEY"},
