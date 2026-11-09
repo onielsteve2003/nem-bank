@@ -25,8 +25,9 @@ import (
 )
 
 type profiles struct {
-	mu sync.Mutex
-	m  map[uuid.UUID]identity.CustomerProfile
+	mu      sync.Mutex
+	m       map[uuid.UUID]identity.CustomerProfile
+	coolOff identity.CoolOff
 }
 
 func (p *profiles) CustomerProfile(_ context.Context, id uuid.UUID) (identity.CustomerProfile, error) {
@@ -45,6 +46,13 @@ func (p *profiles) FindCustomer(_ context.Context, handle string) (uuid.UUID, er
 		}
 	}
 	return uuid.Nil, identity.ErrNoSuchCustomer
+}
+
+// CoolOff is off unless a test turns it on.
+func (p *profiles) CoolOff(context.Context) (identity.CoolOff, error) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	return p.coolOff, nil
 }
 
 func (p *profiles) set(id uuid.UUID, prof identity.CustomerProfile) {
@@ -186,8 +194,13 @@ func TestInternalTransferMovesMoneyInOneTransaction(t *testing.T) {
 	if got := fmt.Sprint(statuses(v)); got != "[created risk_checked completed]" {
 		t.Fatalf("timeline = %s", got)
 	}
-	if f.balance(tolu) != 3_750_000 || f.balance(ada) != 1_250_000 {
-		t.Fatalf("balances = %d, %d", f.balance(tolu), f.balance(ada))
+	// Nem to Nem is free for the sender; ₦12,500 is over the EMTL threshold, so the
+	// receiver pays the ₦50 levy out of it.
+	if v.FeeMinor != 0 || f.balance(tolu) != 3_750_000 || f.balance(ada) != 1_245_000 {
+		t.Fatalf("fee %d, balances = %d, %d", v.FeeMinor, f.balance(tolu), f.balance(ada))
+	}
+	if levy, err := ledger.SystemAccount(t.Context(), f.pool, ledger.KindLevyPayable, "NGN"); err != nil || levy.BalanceMinor != 5_000 {
+		t.Fatalf("levy payable = %d, %v", levy.BalanceMinor, err)
 	}
 
 	// The sender's line is completed, carries the transfer and its timeline.
@@ -200,7 +213,8 @@ func TestInternalTransferMovesMoneyInOneTransaction(t *testing.T) {
 	}
 	// The recipient's line names the sender, not the other way round.
 	in, _, err := f.accts.Transactions(ada.ctx, accounts.Filter{})
-	if err != nil || len(in) != 1 || in[0].Type != "transfer_in" || in[0].Direction != "credit" || *in[0].BalanceAfterMinor != 1_250_000 {
+	if err != nil || len(in) != 1 || in[0].Type != "transfer_in" || in[0].Direction != "credit" || *in[0].BalanceAfterMinor != 1_245_000 ||
+		in[0].AmountMinor != 1_250_000 || in[0].FeeMinor == nil || *in[0].FeeMinor != 5_000 || *in[0].FeeCode != "emtl" {
 		t.Fatalf("recipient lines = %+v, %v", in, err)
 	}
 	var events int

@@ -343,6 +343,23 @@ again. Callbacks to `POST /v1/partner-webhooks/{partner}` are checked in the req
 validator: HMAC-SHA256 over the raw body with a timestamp (±5 min), then recorded by
 `Partner-Event-Id` in the same transaction as their effect, so a repeat changes nothing.
 
+**Limits and fees** (`internal/limits`, migration 00017). Outgoing naira is capped per
+Lagos calendar day by the lowest of the KYC tier cap (₦50k / ₦200k / ₦5m), the customer's
+own daily limit and the new-device cool-off cap, and per transfer by their own single limit.
+Every transfer adds its amount to `daily_limit_usage` in its own transaction, with the limit
+as the guard of the same `INSERT … ON CONFLICT DO UPDATE … WHERE`, so racing transfers cannot
+both take the last of the day (a test sends 10 at once against a 5-transfer limit). A
+reversed or duress-stopped transfer gives its amount back to the day it was counted on
+(`transfers.limit_day`). `GET/PUT /v1/security/limits`: lowering applies at once; raising or
+removing a limit needs a `limit_increase` step-up and waits 24 hours. Fees follow the demo
+schedule (Nem to Nem free; other banks ₦10 ≤ ₦5k, ₦25 ≤ ₦50k, ₦50 above): the hold covers
+amount + fee, and settlement credits the partner the amount and `fee_income` the fee.
+**EMTL**: a Nem-to-Nem inflow of ₦10,000 or more pays ₦50 from what reaches the receiver to
+`levy_payable`, shown on their line as an `emtl` fee. Receivers on Tiers 1–2 are held to their
+balance cap, checked on the balance the posting produced. `POST /v1/transfers/quote` prices
+a transfer with the same rules and reserves nothing. The numbers live in `limits.Rules` for
+the console's configuration (ADM-8).
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers

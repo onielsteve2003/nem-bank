@@ -262,11 +262,25 @@ func (s *Service) settle(ctx context.Context, tx pgx.Tx, t transfersdb.Transfer,
 	if err != nil {
 		return err
 	}
-	amount := money.New(t.AmountMinor, money.Currency(t.Currency))
+	c := money.Currency(t.Currency)
+	amount, fee := money.New(t.AmountMinor, c), money.New(t.FeeMinor, c)
+	total, err := amount.Add(fee)
+	if err != nil {
+		return err
+	}
+	// The partner gets the amount; the fee is the bank's.
+	legs := []ledger.Leg{ledger.Debit(t.SourceAccountID, total), ledger.Credit(clearing.ID, amount)}
+	if fee.IsPositive() {
+		income, err := ledger.SystemAccount(ctx, tx, ledger.KindFeeIncome, t.Currency)
+		if err != nil {
+			return err
+		}
+		legs = append(legs, ledger.Credit(income.ID, fee))
+	}
 	posted, err := ledger.Post(ctx, tx, ledger.Entry{
 		Kind: "transfer_external", Reference: t.Reference, IdempotencyKey: "transfer:" + t.ID.String(),
 		Metadata: map[string]any{"transfer_id": t.ID.String(), "partner": deref(t.Partner), "partner_reference": r.PartnerReference},
-		Legs:     []ledger.Leg{ledger.Debit(t.SourceAccountID, amount), ledger.Credit(clearing.ID, amount)},
+		Legs:     legs,
 		Capture:  []uuid.UUID{*t.HoldID},
 	})
 	if err != nil {
@@ -293,6 +307,9 @@ func (s *Service) reverse(ctx context.Context, tx pgx.Tx, t transfersdb.Transfer
 	q := s.q.WithTx(tx)
 	if err := ledger.ReleaseHold(ctx, tx, *t.HoldID); err != nil {
 		return fmt.Errorf("release transfer hold: %w", err)
+	}
+	if err := s.releaseLimit(ctx, tx, t); err != nil {
+		return err
 	}
 	reason := failureReason(code)
 	t, err := s.move(ctx, q, t, Failed, "Transfer failed", &reason, nil)

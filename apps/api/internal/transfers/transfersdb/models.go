@@ -70,9 +70,16 @@ type CustomerAccount struct {
 
 type DailyBalance struct {
 	AccountID    uuid.UUID
-	AsOf         pgtype.Date
+	AsOf         time.Time
 	BalanceMinor int64
 	CreatedAt    time.Time
+}
+
+type DailyLimitUsage struct {
+	UserID    uuid.UUID
+	Day       time.Time
+	UsedMinor int64
+	UpdatedAt time.Time
 }
 
 type Device struct {
@@ -216,6 +223,16 @@ type SandboxNipPayment struct {
 	CallbackSentAt   *time.Time
 }
 
+type SelfLimit struct {
+	UserID             uuid.UUID
+	DailyMinor         *int64
+	SingleMinor        *int64
+	PendingDailyMinor  *int64
+	PendingSingleMinor *int64
+	PendingEffectiveAt *time.Time
+	UpdatedAt          time.Time
+}
+
 type Session struct {
 	ID           uuid.UUID
 	UserID       uuid.UUID
@@ -239,7 +256,7 @@ type Signup struct {
 	LastName          string
 	Email             string
 	Phone             string
-	DateOfBirth       pgtype.Date
+	DateOfBirth       time.Time
 	TermsVersion      string
 	PrivacyVersion    string
 	ConsentAcceptedAt time.Time
@@ -291,8 +308,8 @@ type Statement struct {
 	UserID              uuid.UUID
 	AccountID           uuid.UUID
 	Currency            string
-	PeriodFrom          pgtype.Date
-	PeriodTo            pgtype.Date
+	PeriodFrom          time.Time
+	PeriodTo            time.Time
 	Status              string
 	OpeningBalanceMinor *int64
 	ClosingBalanceMinor *int64
@@ -357,6 +374,7 @@ type Transfer struct {
 	Partner              *string
 	PartnerReference     *string
 	SagaDeadline         *time.Time
+	LimitDay             *time.Time
 }
 
 type TransferEvent struct {
@@ -375,7 +393,7 @@ type User struct {
 	PreferredName     *string
 	Email             string
 	Phone             string
-	DateOfBirth       pgtype.Date
+	DateOfBirth       time.Time
 	Nemtag            *string
 	NemtagChangedAt   *time.Time
 	PasswordHash      string

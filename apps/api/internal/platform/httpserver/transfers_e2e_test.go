@@ -23,6 +23,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/testdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
@@ -65,14 +66,18 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if tr, err = transfers.NewService(transfers.Config{Pool: pool, Accounts: acc, Customers: idsvc, Logger: quiet,
+	lim, err := limits.NewService(limits.Config{Pool: pool, Customers: idsvc, StepUps: idsvc})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if tr, err = transfers.NewService(transfers.Config{Pool: pool, Accounts: acc, Customers: idsvc, Logger: quiet, Limits: lim,
 		Sandbox: sandbox, WebhookSecrets: map[string][]byte{"sandbox_nip": secret}}); err != nil {
 		t.Fatal(err)
 	}
 	h, err = NewRouter(Options{
 		Version: "e2e", Logger: quiet, Identity: identity.NewAPI(idsvc), Authenticator: idsvc, Signatures: idsvc,
 		Idempotency: idempotency.NewStore(pool), Accounts: accounts.NewAPI(acc), Transfers: transfers.NewAPI(tr),
-		PartnerCallbacks: tr,
+		Limits: limits.NewAPI(lim), PartnerCallbacks: tr,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -173,6 +178,26 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 	}
 	ext := `{"source_account_id":"` + toluAcc.Id.String() + `","destination":{"kind":"bank","bank_code":"058",` +
 		`"account_number":"0123456789","account_name":"Chidi Okonkwo"},"amount":{"amount_minor":"100000","currency":"NGN"}}`
+	// The quote shows the ₦10 fee and what is left of the day before the customer confirms.
+	quote := call[api.TransferQuote](t, h, http.MethodPost, "/v1/transfers/quote", tolu.AccessToken, json.RawMessage(ext), http.StatusOK)
+	if quote.Fee.AmountMinor != "1000" || quote.TotalDebit.AmountMinor != "101000" || len(quote.Fees) != 1 ||
+		quote.Rail != api.Interbank || quote.Limits.KycTier != 1 || quote.Limits.DailyLimit.AmountMinor != "5000000" {
+		t.Fatalf("quote = %+v", quote)
+	}
+	// Lowering the customer's own limit applies at once; raising it back needs a step-up.
+	own := call[api.SelfLimits](t, h, http.MethodPut, "/v1/security/limits", tolu.AccessToken,
+		api.SetSelfLimitsRequest{DailyLimit: &api.Money{AmountMinor: "50000", Currency: api.CurrencyCodeNGN}}, http.StatusOK)
+	if own.DailyLimit == nil || own.DailyLimit.AmountMinor != "50000" || own.KycDailyCap.AmountMinor != "5000000" {
+		t.Fatalf("own limits = %+v", own)
+	}
+	if rec := signedPostKey(t, h, toluKey, tolu.Device.Id, tolu.AccessToken, "/v1/transfers", ext, "nonce-trf-000009", uuid.NewString()); rec.Code != http.StatusUnprocessableEntity ||
+		!strings.Contains(rec.Body.String(), "limit_exceeded") {
+		t.Fatalf("over own limit = %d: %s", rec.Code, rec.Body)
+	}
+	call[api.Problem](t, h, http.MethodPut, "/v1/security/limits", tolu.AccessToken, api.SetSelfLimitsRequest{}, http.StatusForbidden)
+	if _, err := pool.Exec(t.Context(), `DELETE FROM self_limits`); err != nil {
+		t.Fatal(err)
+	}
 	rec := signedPostKey(t, h, toluKey, tolu.Device.Id, tolu.AccessToken, "/v1/transfers", ext, "nonce-trf-000003", uuid.NewString())
 	if rec.Code != http.StatusCreated {
 		t.Fatalf("external transfer = %d: %s", rec.Code, rec.Body)
@@ -182,7 +207,7 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 		t.Fatalf("external = %+v", out)
 	}
 	held := call[api.Account](t, h, http.MethodGet, "/v1/accounts/"+toluAcc.Id.String(), tolu.AccessToken, nil, http.StatusOK)
-	if held.LedgerBalance.AmountMinor != "750000" || held.AvailableBalance.AmountMinor != "650000" {
+	if held.LedgerBalance.AmountMinor != "750000" || held.AvailableBalance.AmountMinor != "649000" {
 		t.Fatalf("while held: ledger %s, available %s", held.LedgerBalance.AmountMinor, held.AvailableBalance.AmountMinor)
 	}
 	if err := tr.SendExternal(t.Context(), out.Id); err != nil { // the River job, run inline
@@ -196,7 +221,7 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 		t.Fatalf("after the callback = %+v", done)
 	}
 	paid := call[api.Account](t, h, http.MethodGet, "/v1/accounts/"+toluAcc.Id.String(), tolu.AccessToken, nil, http.StatusOK)
-	if paid.LedgerBalance.AmountMinor != "650000" || paid.AvailableBalance.AmountMinor != "650000" {
+	if paid.LedgerBalance.AmountMinor != "649000" || paid.AvailableBalance.AmountMinor != "649000" {
 		t.Fatalf("after settling: ledger %s, available %s", paid.LedgerBalance.AmountMinor, paid.AvailableBalance.AmountMinor)
 	}
 

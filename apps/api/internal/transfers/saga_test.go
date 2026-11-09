@@ -135,8 +135,9 @@ func TestExternalTransferHoldsThenSettlesOnTheStatusCheck(t *testing.T) {
 	if v.Status != "processing" || v.Rail != "interbank" || v.HoldID == nil || *v.Partner != "fake" || *v.AccountNumber != "0123456789" {
 		t.Fatalf("created = %+v", v.Transfer)
 	}
-	// Held, not debited: available drops, the ledger balance does not.
-	if s.available(t) != 4_000_000 || s.balance(s.tolu) != 5_000_000 {
+	// Held, not debited: available drops by the amount and the ₦25 fee, the ledger
+	// balance does not.
+	if v.FeeMinor != 2_500 || s.available(t) != 3_997_500 || s.balance(s.tolu) != 5_000_000 {
 		t.Fatalf("available %d, ledger %d", s.available(t), s.balance(s.tolu))
 	}
 	// The send and the deadline check were queued with the transfer.
@@ -173,15 +174,19 @@ func TestExternalTransferHoldsThenSettlesOnTheStatusCheck(t *testing.T) {
 		got.Timeline[3].Label != "Received by Guaranty Trust Bank" {
 		t.Fatalf("settled = %+v %v", got.Transfer, statuses(got))
 	}
-	if s.available(t) != 4_000_000 || s.balance(s.tolu) != 4_000_000 {
+	if s.available(t) != 3_997_500 || s.balance(s.tolu) != 3_997_500 {
 		t.Fatalf("after settling: available %d, ledger %d", s.available(t), s.balance(s.tolu))
 	}
+	// The partner is owed the amount; the fee is the bank's income.
 	clearing, err := ledger.SystemAccount(t.Context(), s.pool, ledger.KindPartnerSettlement, "NGN")
 	if err != nil || clearing.BalanceMinor != 1_000_000 {
 		t.Fatalf("partner settlement = %d, %v", clearing.BalanceMinor, err)
 	}
+	if income, err := ledger.SystemAccount(t.Context(), s.pool, ledger.KindFeeIncome, "NGN"); err != nil || income.BalanceMinor != 2_500 {
+		t.Fatalf("fee income = %d, %v", income.BalanceMinor, err)
+	}
 	line, err := s.accts.Transaction(s.tolu.ctx, got.TransactionID)
-	if err != nil || line.Status != "completed" || *line.BalanceAfterMinor != 4_000_000 {
+	if err != nil || line.Status != "completed" || *line.BalanceAfterMinor != 3_997_500 || line.FeeCode == nil || *line.FeeCode != "transfer_fee" {
 		t.Fatalf("line = %+v, %v", line, err)
 	}
 	// A late duplicate answer does nothing.
@@ -212,9 +217,13 @@ func TestAFailedExternalTransferIsAutoReversed(t *testing.T) {
 	if err := json.Unmarshal(got.Reversal, &rev); err != nil || !strings.Contains(rev.Reason, "not available") || rev.TransactionId != got.TransactionID {
 		t.Fatalf("reversal = %+v, %v", rev, err)
 	}
-	// Nothing ever left: the hold is gone and every kobo is spendable again.
+	// Nothing ever left: the hold (fee included) is gone, every kobo is spendable again
+	// and the amount no longer counts against today's limit.
 	if s.available(t) != 5_000_000 || s.balance(s.tolu) != 5_000_000 {
 		t.Fatalf("after reversal: available %d, ledger %d", s.available(t), s.balance(s.tolu))
+	}
+	if used := s.count(t, `SELECT used_minor FROM daily_limit_usage WHERE user_id = $1`, s.tolu.id); used != 0 {
+		t.Fatalf("still counted against the limit: %d", used)
 	}
 	if line, err := s.accts.Transaction(s.tolu.ctx, got.TransactionID); err != nil || line.Status != "failed" {
 		t.Fatalf("line = %+v, %v", line, err)
@@ -305,7 +314,7 @@ func TestPartnerCallbacksSettleOnceAndAreDeduplicated(t *testing.T) {
 			t.Fatalf("delivery %d = %s, %v; want %s", i+1, out, err, want)
 		}
 	}
-	if got := s.reload(t, v.ID); got.Status != "completed" || s.balance(s.tolu) != 4_000_000 {
+	if got := s.reload(t, v.ID); got.Status != "completed" || s.balance(s.tolu) != 3_997_500 {
 		t.Fatalf("after callbacks: %s, balance %d", got.Status, s.balance(s.tolu))
 	}
 	if n := s.count(t, `SELECT count(*) FROM partner_webhook_events WHERE partner = 'fake' AND event_id = 'evt-1'`); n != 1 {

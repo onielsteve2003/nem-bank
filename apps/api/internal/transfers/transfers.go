@@ -30,6 +30,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/pagination"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
@@ -88,16 +89,19 @@ var (
 	errOutgoingBlocked = problem.New(http.StatusForbidden, "outgoing_blocked", "Outgoing payments are paused").
 				WithDetail("This account cannot send money right now. Contact support.")
 	errRailNotReady = problem.NotImplemented()
+	errMaxBalance   = problem.New(http.StatusUnprocessableEntity, "max_balance_exceeded", "This would go over their balance limit").
+			WithDetail("The person you are paying cannot receive this much until they upgrade their KYC tier.")
 	// errStale means the transfer moved under us between read and update: a programmer
 	// error or a lost race, never a customer mistake.
 	errStale = errors.New("transfers: status changed concurrently")
 )
 
-// Customers is what transfers needs from identity: who a customer is, and who a payee's
-// @nemtag or phone belongs to.
+// Customers is what transfers needs from identity: who a customer is, who a payee's
+// @nemtag or phone belongs to, and the calling device's cool-off.
 type Customers interface {
 	accounts.Customers
 	FindCustomer(ctx context.Context, handle string) (uuid.UUID, error)
+	CoolOff(ctx context.Context) (identity.CoolOff, error)
 }
 
 // Config holds the service's dependencies.
@@ -105,6 +109,9 @@ type Config struct {
 	Pool      *pgxpool.Pool
 	Accounts  *accounts.Service
 	Customers Customers
+	// Limits counts transfers against the daily limits and prices them; nil builds one on
+	// Pool with the default rules.
+	Limits *limits.Service
 	// Partner carries money to other banks; nil means Sandbox.
 	Partner partners.BankPartner
 	// Sandbox is the simulated rail, whose settings staff change from the console; nil
@@ -128,6 +135,7 @@ type Service struct {
 	q         *transfersdb.Queries
 	accounts  *accounts.Service
 	customers Customers
+	limits    *limits.Service
 	partner   partners.BankPartner
 	sandbox   *partners.SandboxNIP
 	secrets   map[string][]byte
@@ -156,6 +164,13 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Partner == nil {
 		cfg.Partner = cfg.Sandbox
 	}
+	if cfg.Limits == nil {
+		l, err := limits.NewService(limits.Config{Pool: cfg.Pool, Customers: cfg.Customers, Now: cfg.Now})
+		if err != nil {
+			return nil, err
+		}
+		cfg.Limits = l
+	}
 	if cfg.SagaTimeout <= 0 {
 		cfg.SagaTimeout = DefaultSagaTimeout
 	}
@@ -169,7 +184,7 @@ func NewService(cfg Config) (*Service, error) {
 	}
 	return &Service{
 		pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers,
-		partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
+		limits: cfg.Limits, partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
 		log: cfg.Logger, now: cfg.Now, sagaTimeout: cfg.SagaTimeout, pollAfter: cfg.PollAfter,
 	}, nil
 }
@@ -217,6 +232,27 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 	if dest.internal() && dest.nem.UserID == p.UserID {
 		return View{}, errOwnAccount
 	}
+	coolOff, err := s.customers.CoolOff(ctx)
+	if err != nil {
+		return View{}, err
+	}
+	fee := s.limits.Rules().TransferFee(r.Amount, dest.rail())
+	total, err := r.Amount.Add(fee)
+	if err != nil {
+		return View{}, err
+	}
+	// EMTL is the receiver's to pay, taken from what reaches them (Nem to Nem only: another
+	// bank levies its own customers).
+	var levy money.Money
+	var recipientCapMinor int64
+	if dest.internal() {
+		levy = s.limits.Rules().EMTL(r.Amount)
+		rp, err := s.customers.CustomerProfile(ctx, dest.nem.UserID)
+		if err != nil {
+			return View{}, err
+		}
+		recipientCapMinor = s.limits.Rules().Tier(rp.KycTier).MaxBalanceMinor
+	}
 
 	narration := strings.TrimSpace(r.Narration)
 	if narration == "" {
@@ -246,17 +282,21 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 
 	err = pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		q := s.q.WithTx(tx)
+		day, err := s.limits.Consume(ctx, tx, p.UserID, sender.KycTier, coolOff, r.Amount)
+		if err != nil {
+			return err
+		}
 		if _, err := accounts.Record(ctx, tx, accounts.Line{
 			ID: lineID, UserID: p.UserID, AccountID: src.AccountID, Type: "transfer_out", Direction: "debit",
-			Status: "pending", Amount: r.Amount, Narration: narration, Reference: reference, Category: category,
+			Status: "pending", Amount: r.Amount, Fee: &fee, FeeCode: "transfer_fee", Narration: narration, Reference: reference, Category: category,
 			Counterparty: party, TransferID: &id,
 		}); err != nil {
 			return err
 		}
 		in := transfersdb.InsertTransferParams{
 			ID: id, UserID: p.UserID, Reference: reference, Rail: "internal", SourceAccountID: src.AccountID,
-			Recipient: recipientJSON, Currency: string(money.NGN), AmountMinor: r.Amount.Amount(), Narration: narration,
-			Category: &category, TransactionID: lineID, DuressBlocked: sender.InDuress,
+			Recipient: recipientJSON, Currency: string(money.NGN), AmountMinor: r.Amount.Amount(), FeeMinor: fee.Amount(),
+			Narration: narration, Category: &category, TransactionID: lineID, DuressBlocked: sender.InDuress, LimitDay: &day,
 		}
 		if dest.internal() {
 			in.DestinationAccountID = &dest.nem.AccountID
@@ -266,12 +306,12 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 			in.Rail, in.Partner, in.SagaDeadline = "interbank", &partner, &deadline
 			in.BankCode, in.AccountNumber = &dest.bank.Code, &dest.account.AccountNumber
 			if !sender.InDuress {
-				// The money is set aside now and only leaves when the partner settles.
+				// The money and the fee are set aside now and only leave when the partner settles.
 				hold, err := ledger.PlaceHold(ctx, tx, ledger.Hold{
-					Account: src.AccountID, Amount: r.Amount, Reference: id.String(), Reason: "pending_transfer",
+					Account: src.AccountID, Amount: total, Reference: id.String(), Reason: "pending_transfer",
 				})
 				if errors.Is(err, ledger.ErrInsufficientFunds) {
-					return insufficient(r.Amount)
+					return insufficient(total)
 				}
 				if err != nil {
 					return fmt.Errorf("hold transfer: %w", err)
@@ -299,8 +339,8 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 			if err != nil {
 				return err
 			}
-			if accounts.Decoy(bal.Available).Amount() < r.Amount.Amount() {
-				return insufficient(r.Amount)
+			if accounts.Decoy(bal.Available).Amount() < total.Amount() {
+				return insufficient(total)
 			}
 			_, err = s.move(ctx, q, t, Processing, "Sent to "+dest.party.BankName, nil, nil)
 			return err
@@ -312,16 +352,25 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 			return s.startSaga(ctx, tx, t)
 		}
 
+		legs, err := internalLegs(ctx, tx, src.AccountID, dest.nem.AccountID, r.Amount, levy)
+		if err != nil {
+			return err
+		}
 		posted, err := ledger.Post(ctx, tx, ledger.Entry{
 			Kind: "transfer_internal", Reference: reference, IdempotencyKey: "transfer:" + id.String(),
 			Metadata: map[string]any{"transfer_id": id.String()},
-			Legs:     []ledger.Leg{ledger.Debit(src.AccountID, r.Amount), ledger.Credit(dest.nem.AccountID, r.Amount)},
+			Legs:     legs,
 		})
 		if errors.Is(err, ledger.ErrInsufficientFunds) {
 			return insufficient(r.Amount)
 		}
 		if err != nil {
 			return fmt.Errorf("post transfer: %w", err)
+		}
+		// The receiver's KYC balance cap, checked on the balance the posting produced (the
+		// account row was locked by it), so concurrent credits cannot slip past it together.
+		if recipientCapMinor > 0 && balanceAfter(posted, dest.nem.AccountID) > recipientCapMinor {
+			return errMaxBalance
 		}
 		if _, err := accounts.Settle(ctx, tx, lineID, "completed", &posted, src.AccountID); err != nil {
 			return err
@@ -330,7 +379,7 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 		bankName := accounts.BankName
 		if _, err := accounts.Record(ctx, tx, accounts.Line{
 			UserID: dest.nem.UserID, AccountID: dest.nem.AccountID, Type: "transfer_in", Direction: "credit", Status: "completed",
-			Amount: r.Amount, Entry: &posted, Narration: narration, Reference: reference, Category: "transfers",
+			Amount: r.Amount, Fee: &levy, FeeCode: "emtl", Entry: &posted, Narration: narration, Reference: reference, Category: "transfers",
 			Counterparty: api.Counterparty{Name: sender.Name, Nemtag: sender.Nemtag, BankName: &bankName, AccountNumberMasked: &senderNumber},
 		}); err != nil {
 			return err
@@ -363,6 +412,40 @@ type target struct {
 }
 
 func (d target) internal() bool { return d.nem != nil }
+
+// rail is the contract TransferRail the target goes over.
+func (d target) rail() string {
+	if d.internal() {
+		return "internal"
+	}
+	return "interbank"
+}
+
+// internalLegs moves amount from src to dst, the levy (if any) going from what dst
+// receives to the levy account the bank remits to the government.
+func internalLegs(ctx context.Context, tx pgx.Tx, src, dst uuid.UUID, amount, levy money.Money) ([]ledger.Leg, error) {
+	if !levy.IsPositive() {
+		return []ledger.Leg{ledger.Debit(src, amount), ledger.Credit(dst, amount)}, nil
+	}
+	levyAcct, err := ledger.SystemAccount(ctx, tx, ledger.KindLevyPayable, string(money.NGN))
+	if err != nil {
+		return nil, err
+	}
+	net, err := amount.Sub(levy)
+	if err != nil {
+		return nil, err
+	}
+	return []ledger.Leg{ledger.Debit(src, amount), ledger.Credit(dst, net), ledger.Credit(levyAcct.ID, levy)}, nil
+}
+
+func balanceAfter(p ledger.Posted, account uuid.UUID) int64 {
+	for _, x := range p.Postings {
+		if x.AccountID == account {
+			return x.BalanceAfterMinor
+		}
+	}
+	return 0
+}
 
 func nemTarget(r accounts.Recipient) target {
 	return target{nem: &r, party: api.TransferParty{
@@ -469,8 +552,19 @@ func (s *Service) StopDuressTransfers(ctx context.Context, tx pgx.Tx, userID uui
 		if _, err := accounts.Settle(ctx, tx, t.TransactionID, "failed", nil, t.SourceAccountID); err != nil {
 			return err
 		}
+		if err := s.releaseLimit(ctx, tx, t); err != nil {
+			return err
+		}
 	}
 	return nil
+}
+
+// releaseLimit gives a transfer that moved no money back to the day it was counted on.
+func (s *Service) releaseLimit(ctx context.Context, tx pgx.Tx, t transfersdb.Transfer) error {
+	if t.LimitDay == nil { // sent before limits were counted
+		return nil
+	}
+	return s.limits.Release(ctx, tx, t.UserID, *t.LimitDay, money.New(t.AmountMinor, money.Currency(t.Currency)))
 }
 
 // Get returns one of the caller's transfers.
@@ -572,4 +666,78 @@ func newIDs(n int) ([]uuid.UUID, error) {
 		out[i] = id
 	}
 	return out, nil
+}
+
+// QuoteTTL is how long a quote is shown as valid; the transfer re-prices when sent.
+const QuoteTTL = 5 * time.Minute
+
+// Quote is a transfer priced before the customer confirms (TRF-4).
+type Quote struct {
+	ID          uuid.UUID
+	Amount, Fee money.Money
+	// Fees lists what makes up Fee, by contract FeeLine code.
+	Fees    []FeeLine
+	Total   money.Money
+	Limits  limits.Status
+	CoolOff identity.CoolOff
+	Rail    string
+	Expires time.Time
+}
+
+// FeeLine is one charge on a quote.
+type FeeLine struct {
+	Code, Label string
+	Amount      money.Money
+}
+
+// Quote prices a transfer with the same rules Create applies: the fee, the customer's
+// standing against today's limits and any cool-off. Nothing is reserved.
+func (s *Service) Quote(ctx context.Context, sourceID uuid.UUID, d api.TransferDestination, amount money.Money) (Quote, error) {
+	p, ok := identity.PrincipalFrom(ctx)
+	if !ok {
+		return Quote{}, problem.Unauthorized()
+	}
+	sender, err := s.customers.CustomerProfile(ctx, p.UserID)
+	if err != nil {
+		return Quote{}, err
+	}
+	src, err := s.accounts.Owned(ctx, p.UserID, sourceID)
+	if err != nil {
+		return Quote{}, err
+	}
+	if src.Currency != string(money.NGN) || amount.Currency() != money.NGN {
+		return Quote{}, errNotNaira
+	}
+	dest, err := s.resolve(ctx, d)
+	if err != nil {
+		return Quote{}, err
+	}
+	if dest.internal() && dest.nem.UserID == p.UserID {
+		return Quote{}, errOwnAccount
+	}
+	coolOff, err := s.customers.CoolOff(ctx)
+	if err != nil {
+		return Quote{}, err
+	}
+	st, err := s.limits.StatusFor(ctx, s.pool, p.UserID, sender.KycTier, coolOff)
+	if err != nil {
+		return Quote{}, err
+	}
+	fee := s.limits.Rules().TransferFee(amount, dest.rail())
+	total, err := amount.Add(fee)
+	if err != nil {
+		return Quote{}, err
+	}
+	id, err := uuid.NewV7()
+	if err != nil {
+		return Quote{}, fmt.Errorf("quote id: %w", err)
+	}
+	q := Quote{
+		ID: id, Amount: amount, Fee: fee, Fees: []FeeLine{}, Total: total, Limits: st, CoolOff: coolOff,
+		Rail: dest.rail(), Expires: s.now().Add(QuoteTTL),
+	}
+	if fee.IsPositive() {
+		q.Fees = append(q.Fees, FeeLine{Code: "transfer_fee", Label: "Transfer fee", Amount: fee})
+	}
+	return q, nil
 }

@@ -363,3 +363,10 @@ func (s *Service) CustomerProfile(ctx context.Context, userID uuid.UUID) (Custom
 		Name: u.FirstName + " " + u.LastName, Nemtag: u.Nemtag, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil,
 	}, nil
 }
+
+// ConsumeStepUp spends a step-up token the user earned for purpose, inside another
+// domain's transaction (raising self-set limits, for example), so the token is only
+// spent if that change commits.
+func (s *Service) ConsumeStepUp(ctx context.Context, tx pgx.Tx, userID uuid.UUID, purpose, token string) error {
+	return s.consumeStepUp(ctx, s.q.WithTx(tx), userID, purpose, token)
+}

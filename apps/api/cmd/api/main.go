@@ -21,6 +21,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
@@ -147,8 +148,12 @@ func run() error {
 			return err
 		}
 	}
+	limitsSvc, err := limits.NewService(limits.Config{Pool: pool, Customers: identitySvc, StepUps: identitySvc})
+	if err != nil {
+		return err
+	}
 	transfersSvc, err = transfers.NewService(transfers.Config{
-		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, Partner: partner, Sandbox: sandbox, Logger: log,
 		WebhookSecrets: map[string][]byte{sandbox.Name(): cfg.SandboxNIPSecret},
 	})
 	if err != nil {
@@ -186,6 +191,7 @@ func run() error {
 		Idempotency:        idem,
 		Accounts:           accounts.NewAPI(accountsSvc),
 		Transfers:          transfers.NewAPI(transfersSvc),
+		Limits:             limits.NewAPI(limitsSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})

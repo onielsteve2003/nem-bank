@@ -9,6 +9,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/transfersdb"
@@ -92,6 +93,35 @@ func (a *API) CreateTransfer(ctx context.Context, req api.CreateTransferRequestO
 		return nil, err
 	}
 	return api.CreateTransfer201JSONResponse(t), nil
+}
+
+// QuoteTransfer is POST /v1/transfers/quote.
+func (a *API) QuoteTransfer(ctx context.Context, req api.QuoteTransferRequestObject) (api.QuoteTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	amount, err := money.ParseMinor(b.Amount.AmountMinor, string(b.Amount.Currency))
+	if err != nil {
+		return nil, fmt.Errorf("amount passed validation but not parsing: %w", err)
+	}
+	q, err := a.svc.Quote(ctx, b.SourceAccountId, b.Destination, amount)
+	if err != nil {
+		return nil, err
+	}
+	out := api.QuoteTransfer200JSONResponse{
+		QuoteId: q.ID, Amount: accounts.Money(q.Amount), Fee: accounts.Money(q.Fee), Fees: make([]api.FeeLine, len(q.Fees)),
+		TotalDebit: accounts.Money(q.Total), Limits: limits.StatusJSON(q.Limits), Rail: api.TransferRail(q.Rail),
+		ExpiresAt: q.Expires.UTC(),
+	}
+	for i, f := range q.Fees {
+		out.Fees[i] = api.FeeLine{Code: api.FeeLineCode(f.Code), Label: f.Label, Amount: accounts.Money(f.Amount)}
+	}
+	if q.CoolOff.Active {
+		// AUTH-8: transfers from a new device are stepped up; confirming skips no delay.
+		out.CoolingOff = &api.CoolingOff{Reason: api.CoolingOffReason(q.CoolOff.Reason), DelayMinutes: 0, StepUpSkipsDelay: true}
+	}
+	return out, nil
 }
 
 // GetTransfer is GET /v1/transfers/{transfer_id}.

@@ -75,6 +75,13 @@ type DailyBalance struct {
 	CreatedAt    time.Time
 }
 
+type DailyLimitUsage struct {
+	UserID    uuid.UUID
+	Day       time.Time
+	UsedMinor int64
+	UpdatedAt time.Time
+}
+
 type Device struct {
 	ID             uuid.UUID
 	UserID         uuid.UUID
@@ -214,6 +221,16 @@ type SandboxNipPayment struct {
 	ReceivedAt       time.Time
 	SettleAt         time.Time
 	CallbackSentAt   *time.Time
+}
+
+type SelfLimit struct {
+	UserID             uuid.UUID
+	DailyMinor         pgtype.Int8
+	SingleMinor        pgtype.Int8
+	PendingDailyMinor  pgtype.Int8
+	PendingSingleMinor pgtype.Int8
+	PendingEffectiveAt *time.Time
+	UpdatedAt          time.Time
 }
 
 type Session struct {
@@ -357,6 +374,7 @@ type Transfer struct {
 	Partner              *string
 	PartnerReference     *string
 	SagaDeadline         *time.Time
+	LimitDay             pgtype.Date
 }
 
 type TransferEvent struct {
