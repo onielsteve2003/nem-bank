@@ -33,6 +33,17 @@ type Config struct {
 	Hasher *Hasher
 	// Now defaults to time.Now.
 	Now func() time.Time
+	// OnCustomerCreated runs inside the sign-up transaction once the user row exists, so
+	// a new customer is never left without an account (the accounts domain opens the NGN
+	// account here). Nil does nothing.
+	OnCustomerCreated func(ctx context.Context, tx pgx.Tx, c NewCustomer) error
+}
+
+// NewCustomer is the customer a completed sign-up created.
+type NewCustomer struct {
+	UserID uuid.UUID
+	// Name is the legal name, "First Last".
+	Name string
 }
 
 // Service implements the identity use cases.
@@ -45,6 +56,8 @@ type Service struct {
 	hasher *Hasher
 	tokens *tokenSigner
 	now    func() time.Time
+
+	onCustomerCreated func(ctx context.Context, tx pgx.Tx, c NewCustomer) error
 
 	// dummyHash is verified against when a login names no account, so an unknown email
 	// costs the same argon2id time as a wrong password and response timing reveals nothing.
@@ -72,7 +85,7 @@ func NewService(cfg Config) (*Service, error) {
 	hasher := cfg.Hasher
 	return &Service{
 		pool: cfg.Pool, q: identitydb.New(cfg.Pool), mail: cfg.Mailer, log: cfg.Logger,
-		otpKey: cfg.OTPKey, hasher: hasher, tokens: tokens, now: cfg.Now,
+		otpKey: cfg.OTPKey, hasher: hasher, tokens: tokens, now: cfg.Now, onCustomerCreated: cfg.OnCustomerCreated,
 		dummyHash: sync.OnceValues(func() (string, error) {
 			return hasher.Hash(context.Background(), "not-a-real-password")
 		}),

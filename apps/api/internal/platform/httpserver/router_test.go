@@ -110,7 +110,7 @@ func TestAKnownPathWithTheWrongMethodIsA405(t *testing.T) {
 func TestNotImplementedOperationsUseTheProblemType(t *testing.T) {
 	t.Parallel()
 
-	rec := do(t, newTestRouter(t, nil), http.MethodGet, "/v1/accounts", map[string]string{"Authorization": "Bearer " + testToken})
+	rec := do(t, newTestRouter(t, nil), http.MethodGet, "/v1/cards", map[string]string{"Authorization": "Bearer " + testToken})
 	p := decodeProblem(t, rec)
 	if rec.Code != http.StatusNotImplemented || p.Type != "https://nem.bank/problems/not_implemented" {
 		t.Fatalf("got %d %+v", rec.Code, p)

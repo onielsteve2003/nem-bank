@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
@@ -41,6 +42,9 @@ type Options struct {
 	Identity *identity.API
 	// Authenticator verifies bearer tokens; nil makes every protected operation a 401.
 	Authenticator Authenticator
+	// Accounts serves accounts, balances, holds and transaction history; nil in tests
+	// that do not need them.
+	Accounts *accounts.API
 	// Admin serves staff login and maker-checker; nil in tests that skip the console.
 	Admin *admin.API
 	// StaffAuthenticator verifies console tokens; nil makes every staff operation a 401.
@@ -122,7 +126,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, accountsAPI: opts.Accounts, version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

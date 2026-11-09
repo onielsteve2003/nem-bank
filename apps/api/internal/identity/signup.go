@@ -193,6 +193,11 @@ func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token,
 			}
 			user.PinHash = pinHash
 		}
+		if s.onCustomerCreated != nil {
+			if err := s.onCustomerCreated(ctx, tx, NewCustomer{UserID: user.ID, Name: user.FirstName + " " + user.LastName}); err != nil {
+				return fmt.Errorf("set up customer: %w", err)
+			}
+		}
 		d, err := s.bindDevice(ctx, tx, q, user.ID, device, false)
 		if err != nil {
 			return err

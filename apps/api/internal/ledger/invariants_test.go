@@ -147,7 +147,7 @@ func TestLedgerInvariantsHoldForAnySequenceOfOperations(t *testing.T) {
 				ok := amt <= m.available[on]
 				var hold uuid.UUID
 				expect("hold", ok, inTx(func(tx pgx.Tx) error {
-					h, err := PlaceHold(ctx, tx, on, ngn(amt), "prop")
+					h, err := PlaceHold(ctx, tx, Hold{Account: on, Amount: ngn(amt), Reference: "prop", Reason: "card_authorization"})
 					hold = h.ID
 					return err
 				}))

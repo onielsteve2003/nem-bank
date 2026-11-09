@@ -139,10 +139,10 @@ func TestEachCustomerHasABudgetAndMoneyRoutesAreCheckedBeforeTheSignature(t *tes
 		t.Fatalf("signature checks = %d: a limited request was verified", sig.n.Load())
 	}
 	// Tolu's other calls still have budget (2 of 3 used); then the per-customer cap.
-	if rec := do(t, h, http.MethodGet, "/v1/accounts", map[string]string{"Authorization": "Bearer " + tolu}); rec.Code != http.StatusNotImplemented {
-		t.Fatalf("accounts = %d", rec.Code)
+	if rec := do(t, h, http.MethodGet, "/v1/cards", map[string]string{"Authorization": "Bearer " + tolu}); rec.Code != http.StatusNotImplemented {
+		t.Fatalf("cards = %d", rec.Code)
 	}
-	wantLimited(t, do(t, h, http.MethodGet, "/v1/accounts", map[string]string{"Authorization": "Bearer " + tolu}))
+	wantLimited(t, do(t, h, http.MethodGet, "/v1/cards", map[string]string{"Authorization": "Bearer " + tolu}))
 	// Another customer is unaffected.
 	if rec := transfer(emeka); rec.Code != http.StatusNotImplemented {
 		t.Fatalf("emeka's transfer = %d", rec.Code)

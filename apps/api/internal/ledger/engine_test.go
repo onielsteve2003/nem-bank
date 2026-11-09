@@ -162,7 +162,7 @@ func TestHoldsReduceAvailableUntilReleasedOrCaptured(t *testing.T) {
 	hold := func(minor int64) (uuid.UUID, error) {
 		var id uuid.UUID
 		err := pgx.BeginFunc(ctx, d.pool, func(tx pgx.Tx) error {
-			h, err := PlaceHold(ctx, tx, tolu, ngn(minor), "trf_ext")
+			h, err := PlaceHold(ctx, tx, Hold{Account: tolu, Amount: ngn(minor), Reference: "trf_ext", Reason: "pending_transfer"})
 			id = h.ID
 			return err
 		})

@@ -12,6 +12,9 @@ import (
 	"sync"
 	"testing"
 
+	"github.com/google/uuid"
+
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
@@ -70,16 +73,24 @@ func TestSignUpThroughTheAPIAndUseTheSession(t *testing.T) {
 
 	quiet := slog.New(slog.NewTextHandler(io.Discard, nil))
 	mail := &lastMail{}
+	pool := testdb.New(t)
 	svc, err := identity.NewService(identity.Config{
-		Pool: testdb.New(t), Mailer: mail, Logger: quiet,
-		OTPKey:     []byte("0123456789abcdef0123456789abcdef"),
-		SigningKey: []byte("fedcba9876543210fedcba9876543210"),
-		Hasher:     identity.NewHasher(identity.Argon2Params{MemoryKiB: 64, Time: 1, Threads: 1}, 2),
+		Pool: pool, Mailer: mail, Logger: quiet,
+		OTPKey:            []byte("0123456789abcdef0123456789abcdef"),
+		SigningKey:        []byte("fedcba9876543210fedcba9876543210"),
+		Hasher:            identity.NewHasher(identity.Argon2Params{MemoryKiB: 64, Time: 1, Threads: 1}, 2),
+		OnCustomerCreated: accounts.OpenCurrentAccount,
 	})
 	if err != nil {
 		t.Fatal(err)
 	}
-	h, err := NewRouter(Options{Version: "e2e", Logger: quiet, Identity: identity.NewAPI(svc), Authenticator: svc})
+	acctSvc, err := accounts.NewService(accounts.Config{Pool: pool, Customers: svc, Logger: quiet})
+	if err != nil {
+		t.Fatal(err)
+	}
+	h, err := NewRouter(Options{
+		Version: "e2e", Logger: quiet, Identity: identity.NewAPI(svc), Authenticator: svc, Accounts: accounts.NewAPI(acctSvc),
+	})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -109,6 +120,21 @@ func TestSignUpThroughTheAPIAndUseTheSession(t *testing.T) {
 		t.Fatalf("me = %+v", me)
 	}
 	call[api.Problem](t, h, http.MethodGet, "/v1/users/me", "", nil, http.StatusUnauthorized)
+
+	// Sign-up opened the NGN account in the same transaction (ACC-1).
+	accs := call[api.AccountList](t, h, http.MethodGet, "/v1/accounts", session.AccessToken, nil, http.StatusOK)
+	if len(accs.Data) != 1 || accs.Data[0].Kind != api.NgnCurrent || accs.Data[0].AvailableBalance.AmountMinor != "0" {
+		t.Fatalf("accounts = %+v", accs)
+	}
+	nuban, err := accs.Data[0].ReceivingDetails.AsNubanDetails()
+	if err != nil || !accounts.ValidNuban(accounts.BankCode, nuban.AccountNumber) || nuban.AccountName != "Tolu Adeyemi" {
+		t.Fatalf("receiving details = %+v, %v", nuban, err)
+	}
+	call[api.Problem](t, h, http.MethodGet, "/v1/accounts/"+uuid.NewString(), session.AccessToken, nil, http.StatusNotFound)
+	page := call[api.TransactionPage](t, h, http.MethodGet, "/v1/transactions?limit=5", session.AccessToken, nil, http.StatusOK)
+	if len(page.Data) != 0 || page.Page.NextCursor != nil {
+		t.Fatalf("new customer's history = %+v", page)
+	}
 
 	rotated := call[api.AuthSession](t, h, http.MethodPost, "/v1/auth/refresh", "",
 		map[string]string{"refresh_token": session.RefreshToken}, http.StatusOK)

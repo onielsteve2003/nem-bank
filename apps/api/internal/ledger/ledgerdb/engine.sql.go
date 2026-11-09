@@ -7,6 +7,7 @@ package ledgerdb
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgtype"
@@ -72,7 +73,7 @@ func (q *Queries) GetEntryByIdempotencyKey(ctx context.Context, idempotencyKey p
 }
 
 const getHold = `-- name: GetHold :one
-SELECT id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at FROM account_holds WHERE id = $1
+SELECT id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at, reason, expires_at FROM account_holds WHERE id = $1
 `
 
 func (q *Queries) GetHold(ctx context.Context, id uuid.UUID) (AccountHold, error) {
@@ -88,6 +89,8 @@ func (q *Queries) GetHold(ctx context.Context, id uuid.UUID) (AccountHold, error
 		&i.EntryID,
 		&i.CreatedAt,
 		&i.ClosedAt,
+		&i.Reason,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
@@ -134,9 +137,9 @@ func (q *Queries) InsertEntry(ctx context.Context, arg InsertEntryParams) (Journ
 }
 
 const insertHold = `-- name: InsertHold :one
-INSERT INTO account_holds (id, account_id, currency, amount_minor, reference)
-VALUES ($1, $2, $3, $4, $5)
-RETURNING id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at
+INSERT INTO account_holds (id, account_id, currency, amount_minor, reference, reason, expires_at)
+VALUES ($1, $2, $3, $4, $5, $6, $7)
+RETURNING id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at, reason, expires_at
 `
 
 type InsertHoldParams struct {
@@ -145,6 +148,8 @@ type InsertHoldParams struct {
 	Currency    string
 	AmountMinor int64
 	Reference   string
+	Reason      string
+	ExpiresAt   *time.Time
 }
 
 func (q *Queries) InsertHold(ctx context.Context, arg InsertHoldParams) (AccountHold, error) {
@@ -154,6 +159,8 @@ func (q *Queries) InsertHold(ctx context.Context, arg InsertHoldParams) (Account
 		arg.Currency,
 		arg.AmountMinor,
 		arg.Reference,
+		arg.Reason,
+		arg.ExpiresAt,
 	)
 	var i AccountHold
 	err := row.Scan(
@@ -166,6 +173,8 @@ func (q *Queries) InsertHold(ctx context.Context, arg InsertHoldParams) (Account
 		&i.EntryID,
 		&i.CreatedAt,
 		&i.ClosedAt,
+		&i.Reason,
+		&i.ExpiresAt,
 	)
 	return i, err
 }
@@ -205,6 +214,43 @@ func (q *Queries) InsertPosting(ctx context.Context, arg InsertPostingParams) (P
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const listActiveHolds = `-- name: ListActiveHolds :many
+SELECT id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at, reason, expires_at FROM account_holds WHERE account_id = $1 AND status = 'active' ORDER BY created_at DESC, id DESC
+`
+
+// What makes up ledger minus available on one account (ACC-3), newest first.
+func (q *Queries) ListActiveHolds(ctx context.Context, accountID uuid.UUID) ([]AccountHold, error) {
+	rows, err := q.db.Query(ctx, listActiveHolds, accountID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []AccountHold{}
+	for rows.Next() {
+		var i AccountHold
+		if err := rows.Scan(
+			&i.ID,
+			&i.AccountID,
+			&i.Currency,
+			&i.AmountMinor,
+			&i.Reference,
+			&i.Status,
+			&i.EntryID,
+			&i.CreatedAt,
+			&i.ClosedAt,
+			&i.Reason,
+			&i.ExpiresAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listDrift = `-- name: ListDrift :many
@@ -328,7 +374,7 @@ func (q *Queries) LockAccounts(ctx context.Context, ids []uuid.UUID) ([]LedgerAc
 }
 
 const lockHolds = `-- name: LockHolds :many
-SELECT id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at FROM account_holds WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE
+SELECT id, account_id, currency, amount_minor, reference, status, entry_id, created_at, closed_at, reason, expires_at FROM account_holds WHERE id = ANY($1::uuid[]) ORDER BY id FOR UPDATE
 `
 
 // Holds are locked after their accounts, in ID order, by every writer.
@@ -351,6 +397,8 @@ func (q *Queries) LockHolds(ctx context.Context, ids []uuid.UUID) ([]AccountHold
 			&i.EntryID,
 			&i.CreatedAt,
 			&i.ClosedAt,
+			&i.Reason,
+			&i.ExpiresAt,
 		); err != nil {
 			return nil, err
 		}

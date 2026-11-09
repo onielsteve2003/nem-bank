@@ -23,6 +23,8 @@ type Querier interface {
 	InsertEntry(ctx context.Context, arg InsertEntryParams) (JournalEntry, error)
 	InsertHold(ctx context.Context, arg InsertHoldParams) (AccountHold, error)
 	InsertPosting(ctx context.Context, arg InsertPostingParams) (Posting, error)
+	// What makes up ledger minus available on one account (ACC-3), newest first.
+	ListActiveHolds(ctx context.Context, accountID uuid.UUID) ([]AccountHold, error)
 	// Accounts whose cached balances disagree with the postings and active holds. Always
 	// empty while every write goes through the engine; the invariant tests and the
 	// reconciliation job read it.

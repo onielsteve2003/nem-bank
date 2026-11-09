@@ -186,8 +186,21 @@ func Post(ctx context.Context, tx pgx.Tx, e Entry) (Posted, error) {
 	return Posted{EntryID: entry.ID, CreatedAt: entry.CreatedAt, Postings: postings}, nil
 }
 
-// PlaceHold sets amount aside on account: available drops, the ledger balance does not.
-func PlaceHold(ctx context.Context, tx pgx.Tx, account uuid.UUID, amount money.Money, reference string) (ledgerdb.AccountHold, error) {
+// Hold describes money to set aside.
+type Hold struct {
+	Account uuid.UUID
+	Amount  money.Money
+	// Reference names what the hold is for: a transfer ID, a card authorisation.
+	Reference string
+	// Reason is a contract HoldReason ("pending_transfer", "card_authorization", ...).
+	Reason string
+	// ExpiresAt is when the hold lapses by itself; nil for none.
+	ExpiresAt *time.Time
+}
+
+// PlaceHold sets the hold's amount aside: available drops, the ledger balance does not.
+func PlaceHold(ctx context.Context, tx pgx.Tx, spec Hold) (ledgerdb.AccountHold, error) {
+	account, amount := spec.Account, spec.Amount
 	if !amount.IsPositive() {
 		return ledgerdb.AccountHold{}, ErrBadHold
 	}
@@ -208,7 +221,8 @@ func PlaceHold(ctx context.Context, tx pgx.Tx, account uuid.UUID, amount money.M
 		return ledgerdb.AccountHold{}, fmt.Errorf("hold id: %w", err)
 	}
 	hold, err := q.InsertHold(ctx, ledgerdb.InsertHoldParams{
-		ID: id, AccountID: account, Currency: p.row.Currency, AmountMinor: amount.Amount(), Reference: reference,
+		ID: id, AccountID: account, Currency: p.row.Currency, AmountMinor: amount.Amount(), Reference: spec.Reference,
+		Reason: spec.Reason, ExpiresAt: spec.ExpiresAt,
 	})
 	if err != nil {
 		return ledgerdb.AccountHold{}, fmt.Errorf("insert hold: %w", err)
@@ -262,6 +276,15 @@ func GetBalances(ctx context.Context, db ledgerdb.DBTX, account uuid.UUID) (Bala
 	}
 	c := money.Currency(a.Currency)
 	return Balances{Ledger: money.New(a.BalanceMinor, c), Available: money.New(a.AvailableMinor, c), Version: a.Version}, nil
+}
+
+// ActiveHolds lists the account's active holds, newest first.
+func ActiveHolds(ctx context.Context, db ledgerdb.DBTX, account uuid.UUID) ([]ledgerdb.AccountHold, error) {
+	rows, err := ledgerdb.New(db).ListActiveHolds(ctx, account)
+	if err != nil {
+		return nil, fmt.Errorf("list holds: %w", err)
+	}
+	return rows, nil
 }
 
 // Drift lists accounts whose cached balances disagree with their postings and active

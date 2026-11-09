@@ -337,3 +337,22 @@ func (s *Service) RemoveDuressPin(ctx context.Context, stepUp string) error {
 		return nil
 	})
 }
+
+// CustomerProfile is what other domains need to know about a customer to show their
+// money: the name on the account, the KYC tier and whether the decoy view is on.
+type CustomerProfile struct {
+	Name     string
+	KycTier  int
+	InDuress bool
+}
+
+// CustomerProfile loads the customer's profile.
+func (s *Service) CustomerProfile(ctx context.Context, userID uuid.UUID) (CustomerProfile, error) {
+	u, err := s.q.GetUser(ctx, userID)
+	if err != nil {
+		return CustomerProfile{}, fmt.Errorf("load user: %w", err)
+	}
+	return CustomerProfile{
+		Name: u.FirstName + " " + u.LastName, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil,
+	}, nil
+}

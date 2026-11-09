@@ -21,6 +21,8 @@ type AccountHold struct {
 	EntryID     pgtype.UUID
 	CreatedAt   time.Time
 	ClosedAt    pgtype.Timestamptz
+	Reason      string
+	ExpiresAt   pgtype.Timestamptz
 }
 
 type ApprovalRequest struct {
@@ -53,6 +55,17 @@ type AuditLog struct {
 	Ip           pgtype.Text
 	PrevHash     string
 	Hash         string
+}
+
+type CustomerAccount struct {
+	AccountID     uuid.UUID
+	UserID        uuid.UUID
+	Currency      string
+	Kind          string
+	AccountNumber string
+	Nickname      pgtype.Text
+	Status        string
+	OpenedAt      time.Time
 }
 
 type Device struct {
@@ -234,6 +247,31 @@ type StaffSession struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	RevokedAt pgtype.Timestamptz
+}
+
+type Transaction struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	AccountID          uuid.UUID
+	Currency           string
+	EntryID            pgtype.UUID
+	Type               string
+	Direction          string
+	Status             string
+	AmountMinor        int64
+	FeeMinor           pgtype.Int8
+	FeeCode            pgtype.Text
+	BalanceAfterMinor  pgtype.Int8
+	Narration          string
+	Reference          string
+	Category           string
+	CategorySource     string
+	CategoryConfidence pgtype.Float4
+	Counterparty       []byte
+	TransferID         pgtype.UUID
+	CardID             pgtype.UUID
+	CreatedAt          time.Time
+	UpdatedAt          time.Time
 }
 
 type User struct {

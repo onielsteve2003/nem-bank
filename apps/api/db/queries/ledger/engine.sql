@@ -34,8 +34,8 @@ RETURNING *;
 SELECT * FROM postings WHERE entry_id = $1 ORDER BY id;
 
 -- name: InsertHold :one
-INSERT INTO account_holds (id, account_id, currency, amount_minor, reference)
-VALUES (@id, @account_id, @currency, @amount_minor, @reference)
+INSERT INTO account_holds (id, account_id, currency, amount_minor, reference, reason, expires_at)
+VALUES (@id, @account_id, @currency, @amount_minor, @reference, @reason, sqlc.narg('expires_at'))
 RETURNING *;
 
 -- name: GetHold :one
@@ -64,3 +64,7 @@ LEFT JOIN (SELECT account_id, sum(amount_minor) AS total FROM account_holds WHER
 WHERE a.balance_minor <> COALESCE(p.total, 0)
    OR a.available_minor <> COALESCE(p.total, 0) - COALESCE(h.total, 0)
 ORDER BY a.id;
+
+-- name: ListActiveHolds :many
+-- What makes up ledger minus available on one account (ACC-3), newest first.
+SELECT * FROM account_holds WHERE account_id = $1 AND status = 'active' ORDER BY created_at DESC, id DESC;

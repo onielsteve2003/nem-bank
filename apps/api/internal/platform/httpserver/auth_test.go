@@ -54,7 +54,7 @@ func TestProtectedOperationsNeedAValidBearerToken(t *testing.T) {
 			if tt.auth != "" {
 				headers["Authorization"] = tt.auth
 			}
-			rec := do(t, h, http.MethodGet, "/v1/accounts", headers)
+			rec := do(t, h, http.MethodGet, "/v1/cards", headers)
 			if p := decodeProblem(t, rec); rec.Code != tt.status || p.Code != tt.code {
 				t.Fatalf("got %d %s, want %d %s", rec.Code, p.Code, tt.status, tt.code)
 			}

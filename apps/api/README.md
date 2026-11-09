@@ -262,6 +262,28 @@ tests check these invariants against `math/big`:
 `go test -run '^$' -fuzz FuzzAllocate ./internal/ledger/money` (also `FuzzMulDiv`,
 `FuzzParseMajor`, `FuzzJSON`, `FuzzAddSub`).
 
+## Accounts
+
+`internal/accounts` is what a customer sees around the ledger (migration 00012):
+
+- **NGN account at sign-up.** Completing sign-up opens the ledger account and its customer
+  record in the same transaction, so nobody exists without one. The number is a real
+  **NUBAN**: a nine-digit serial from a sequence plus the CBN check digit (weights
+  3-7-3 over the six-digit bank code and serial), on the fictitious bank code `090999`.
+- **Wallets.** USD, GBP and EUR wallets need KYC Tier 2. Their receiving details are
+  simulated and flagged `demo: true`; the EUR one is a German-format IBAN with correct
+  ISO 13616 mod-97 check digits.
+- **Balances** come straight from the ledger's cached balances; holds explain the gap
+  between ledger and available. The NGN account shows the tier's balance cap.
+- **History** is a `transactions` table: one line per account per movement, written by the
+  domain that posts the entry, in the same transaction (`accounts.Record`). Its balance
+  after comes from the entry's own posting. The list is keyset paged on
+  `(created_at, id)`; filters by account, type, currency, status, category and Lagos
+  dates; search matches narration, counterparty and reference literally (`%` and `_` are
+  escaped).
+- **Duress** (SEC-5): balances show the decoy (at most ₦3,850, empty wallets), history
+  only small naira lines, with no running balance that would give the decoy away.
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers

@@ -12,6 +12,7 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
@@ -108,7 +109,12 @@ func run() error {
 	}
 	identitySvc, err := identity.NewService(identity.Config{
 		Pool: pool, Mailer: mail, Logger: log, OTPKey: cfg.OTPKey, SigningKey: cfg.JWTSigningKey,
+		OnCustomerCreated: accounts.OpenCurrentAccount,
 	})
+	if err != nil {
+		return err
+	}
+	accountsSvc, err := accounts.NewService(accounts.Config{Pool: pool, Customers: identitySvc, Logger: log})
 	if err != nil {
 		return err
 	}
@@ -141,6 +147,7 @@ func run() error {
 		Authenticator:      identitySvc,
 		Signatures:         identitySvc,
 		Idempotency:        idem,
+		Accounts:           accounts.NewAPI(accountsSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
