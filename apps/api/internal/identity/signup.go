@@ -114,33 +114,33 @@ func (s *Service) StartSignup(ctx context.Context, d SignupDetails) (SignupStart
 }
 
 // CompleteSignup is the last step: the verified email's token plus a password turn the
-// sign-up into an account. The password is hashed before the transaction, so no row lock
-// is held for argon2id's ~30 ms.
-func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token, password string) (identitydb.User, error) {
+// sign-up into an account, bind the first device and open a session, all in one
+// transaction. The password is hashed first, so no row lock is held for argon2id's ~30 ms.
+func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token, password string, device DeviceRegistration) (AuthResult, error) {
 	pending, err := s.q.GetSignup(ctx, signupID)
 	if errors.Is(err, pgx.ErrNoRows) {
-		return identitydb.User{}, ErrNotVerified
+		return AuthResult{}, ErrNotVerified
 	}
 	if err != nil {
-		return identitydb.User{}, fmt.Errorf("load signup: %w", err)
+		return AuthResult{}, fmt.Errorf("load signup: %w", err)
 	}
 	if msg := CheckPassword(password, PasswordContext{
 		FirstName: pending.FirstName, LastName: pending.LastName, Email: pending.Email,
 		DateOfBirth: pending.DateOfBirth.Format(time.DateOnly),
 	}); msg != "" {
-		return identitydb.User{}, ErrWeakPassword.WithFields(problem.Field("/password", "weak", msg))
+		return AuthResult{}, ErrWeakPassword.WithFields(problem.Field("/password", "weak", msg))
 	}
 	hash, err := s.hasher.Hash(ctx, password)
 	if err != nil {
-		return identitydb.User{}, err
+		return AuthResult{}, err
 	}
 	userID, err := newID()
 	if err != nil {
-		return identitydb.User{}, err
+		return AuthResult{}, err
 	}
 
-	var user identitydb.User
-	err = s.inTx(ctx, func(q *identitydb.Queries) error {
+	var out AuthResult
+	err = s.inTxWith(ctx, func(tx pgx.Tx, q *identitydb.Queries) error {
 		su, err := q.GetSignupForUpdate(ctx, signupID)
 		if err != nil {
 			return fmt.Errorf("lock signup: %w", err)
@@ -154,7 +154,7 @@ func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token,
 		if err := s.consumeToken(ctx, q, PurposeSignup, signupID, token); err != nil {
 			return err
 		}
-		user, err = q.InsertUser(ctx, identitydb.InsertUserParams{
+		user, err := q.InsertUser(ctx, identitydb.InsertUserParams{
 			ID: userID, FirstName: su.FirstName, LastName: su.LastName, Email: su.Email, Phone: su.Phone,
 			DateOfBirth: su.DateOfBirth, PasswordHash: hash, TermsVersion: su.TermsVersion,
 			PrivacyVersion: su.PrivacyVersion, ConsentAcceptedAt: su.ConsentAcceptedAt,
@@ -175,10 +175,15 @@ func (s *Service) CompleteSignup(ctx context.Context, signupID uuid.UUID, token,
 		if err := q.CompleteSignup(ctx, identitydb.CompleteSignupParams{ID: signupID, UserID: &userID}); err != nil {
 			return fmt.Errorf("complete signup: %w", err)
 		}
-		return nil
+		d, err := s.bindDevice(ctx, tx, q, user.ID, device, false)
+		if err != nil {
+			return err
+		}
+		out, err = s.openSession(ctx, q, user, d)
+		return err
 	})
 	if err != nil {
-		return identitydb.User{}, err
+		return AuthResult{}, err
 	}
-	return user, nil
+	return out, nil
 }

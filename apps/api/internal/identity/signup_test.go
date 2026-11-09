@@ -76,7 +76,7 @@ func newHarness(t *testing.T) *harness {
 	h := &harness{clock: &clock{t: time.Now().Truncate(time.Microsecond)}, inbox: &inbox{}}
 	svc, err := NewService(Config{
 		Pool: testdb.New(t), Mailer: h.inbox, Logger: quiet,
-		OTPKey: []byte("0123456789abcdef0123456789abcdef"),
+		OTPKey: []byte("0123456789abcdef0123456789abcdef"), SigningKey: testSeed,
 		Hasher: NewHasher(fastHash, 4), Now: h.clock.Now,
 	})
 	if err != nil {
@@ -131,12 +131,17 @@ func TestSignupFromDetailsToAccount(t *testing.T) {
 	_, err = h.svc.VerifyCode(ctx, c.ID, code)
 	wantProblem(t, err, ErrOTPExpired)
 
-	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, "Tolu-Adeyemi-1996")
+	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, "Tolu-Adeyemi-1996", phone(1))
 	wantProblem(t, err, ErrWeakPassword)
 
-	user, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword)
+	res, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, phone(1))
 	if err != nil {
 		t.Fatalf("complete: %v", err)
+	}
+	user := res.User
+	// The first device is trusted at once: there is no earlier device to protect.
+	if res.Device.CoolOffUntil != nil || res.AccessToken == "" || res.RefreshToken == "" {
+		t.Fatalf("session = %+v", res)
 	}
 	if user.Email != "tolu@example.com" || user.KycTier != 1 || user.PasswordHash == strongPassword {
 		t.Fatalf("user = %+v", user)
@@ -146,7 +151,7 @@ func TestSignupFromDetailsToAccount(t *testing.T) {
 	}
 
 	// The token is single use, and the email and phone are now taken.
-	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword)
+	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, phone(2))
 	wantProblem(t, err, ErrNotVerified)
 	_, err = h.svc.StartSignup(ctx, details("tolu@example.com", "+2348039999999"))
 	wantProblem(t, err, ErrEmailTaken)

@@ -102,6 +102,7 @@ The API refuses to start on a bad value and lists every problem at once.
 | `METRICS_TOKEN` | empty | Bearer token for `/metrics`. Required in production |
 | `BREVO_API_KEY` | empty | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production |
 | `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `no-reply@nem.bank` / `Nem Bank` | Sender; must be verified in Brevo |
+| `JWT_SIGNING_KEY` | fixed dev key | Base64 32-byte Ed25519 seed that signs access tokens. Required in production |
 | `OTP_KEY` | fixed dev key | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production |
 
 ## Database
@@ -138,6 +139,22 @@ The API refuses to start on a bad value and lists every problem at once.
   and the API agree.
 - **Email.** A `mailer.Mailer` interface: Brevo's HTTP API in production, a log mailer locally
   (the code appears in the API log).
+- **Sessions.** Finishing sign-up or logging in binds the device's Ed25519 public key and opens
+  a session: one per device, and one refresh-token family. Access tokens are EdDSA JWTs valid
+  for 10 minutes (`kid` header for key rotation; only `EdDSA` is accepted, which rules out
+  `alg: none` and HS256 key confusion). Every authenticated request also checks the session row,
+  so logout and device revocation work at once, not when the token expires.
+- **Refresh rotation with reuse detection.** Refresh tokens are opaque 256-bit values stored as
+  SHA-256. Each use spends the token and issues the next (30-day sliding expiry, 90-day cap per
+  session). A spent token presented again means it was copied, so the whole session is revoked
+  and an `identity.refresh_token_reused` event goes to the outbox. The token row is locked, so
+  two refreshes racing with one token cannot both win.
+- **Login (AUTH-7, AUTH-8).** Email or phone (`+234…` or local `080…`) plus password. Unknown
+  accounts are checked against a dummy argon2id hash, so timing does not reveal who has an
+  account. A login that binds a new device sets a 24-hour `cool_off_until` and writes
+  `identity.device_bound` to the outbox for the alert to the other devices.
+- **Bearer auth** is enforced by the request validator from each operation's `security`: a
+  missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
 
 ## Jobs and the outbox
 

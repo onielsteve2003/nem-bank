@@ -10,6 +10,20 @@ import (
 	"github.com/google/uuid"
 )
 
+type Device struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Name           string
+	Platform       string
+	PublicKey      []byte
+	HardwareBacked bool
+	AppVersion     *string
+	BoundAt        time.Time
+	LastSeenAt     time.Time
+	CoolOffUntil   *time.Time
+	RevokedAt      *time.Time
+}
+
 type OtpChallenge struct {
 	ID                uuid.UUID
 	Purpose           string
@@ -35,6 +49,26 @@ type OutboxEvent struct {
 	Payload       []byte
 	CreatedAt     time.Time
 	DispatchedAt  *time.Time
+}
+
+type RefreshToken struct {
+	ID        uuid.UUID
+	SessionID uuid.UUID
+	TokenHash []byte
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    *time.Time
+}
+
+type Session struct {
+	ID           uuid.UUID
+	UserID       uuid.UUID
+	DeviceID     uuid.UUID
+	CreatedAt    time.Time
+	LastActiveAt time.Time
+	ExpiresAt    time.Time
+	RevokedAt    *time.Time
+	RevokeReason *string
 }
 
 type Signup struct {

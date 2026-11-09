@@ -7,6 +7,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -25,6 +26,8 @@ type Config struct {
 	Logger *slog.Logger
 	// OTPKey keys the HMAC that one-time codes are stored under (32+ random bytes).
 	OTPKey []byte
+	// SigningKey is the 32-byte Ed25519 seed access tokens are signed with.
+	SigningKey []byte
 	// Hasher defaults to argon2id with DefaultArgon2 and 4 concurrent hashes.
 	Hasher *Hasher
 	// Now defaults to time.Now.
@@ -39,7 +42,12 @@ type Service struct {
 	log    *slog.Logger
 	otpKey []byte
 	hasher *Hasher
+	tokens *tokenSigner
 	now    func() time.Time
+
+	// dummyHash is verified against when a login names no account, so an unknown email
+	// costs the same argon2id time as a wrong password and response timing reveals nothing.
+	dummyHash func() (string, error)
 }
 
 // NewService checks the configuration and returns the service.
@@ -56,15 +64,28 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
+	tokens, err := newTokenSigner(cfg.SigningKey)
+	if err != nil {
+		return nil, err
+	}
+	hasher := cfg.Hasher
 	return &Service{
 		pool: cfg.Pool, q: identitydb.New(cfg.Pool), mail: cfg.Mailer, log: cfg.Logger,
-		otpKey: cfg.OTPKey, hasher: cfg.Hasher, now: cfg.Now,
+		otpKey: cfg.OTPKey, hasher: hasher, tokens: tokens, now: cfg.Now,
+		dummyHash: sync.OnceValues(func() (string, error) {
+			return hasher.Hash(context.Background(), "not-a-real-password")
+		}),
 	}, nil
 }
 
 // inTx runs fn in a transaction, committing only if it returns nil.
 func (s *Service) inTx(ctx context.Context, fn func(q *identitydb.Queries) error) error {
-	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error { return fn(s.q.WithTx(tx)) })
+	return s.inTxWith(ctx, func(_ pgx.Tx, q *identitydb.Queries) error { return fn(q) })
+}
+
+// inTxWith is inTx for callers that also write to the outbox in the same transaction.
+func (s *Service) inTxWith(ctx context.Context, fn func(tx pgx.Tx, q *identitydb.Queries) error) error {
+	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error { return fn(tx, s.q.WithTx(tx)) })
 	if err != nil {
 		return fmt.Errorf("identity tx: %w", err)
 	}

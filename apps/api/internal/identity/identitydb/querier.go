@@ -17,18 +17,38 @@ type Querier interface {
 	GetChallengeByTokenForUpdate(ctx context.Context, tokenHash []byte) (OtpChallenge, error)
 	// Row-locked so concurrent guesses are counted one at a time.
 	GetChallengeForUpdate(ctx context.Context, id uuid.UUID) (OtpChallenge, error)
+	GetLiveDevice(ctx context.Context, arg GetLiveDeviceParams) (Device, error)
+	GetLiveDeviceByKey(ctx context.Context, publicKey []byte) (Device, error)
+	// Locked so two refreshes with the same token are decided one at a time: exactly one
+	// rotates, the other sees used_at and is treated as reuse.
+	GetRefreshTokenForUpdate(ctx context.Context, tokenHash []byte) (RefreshToken, error)
+	GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 	GetSignup(ctx context.Context, id uuid.UUID) (Signup, error)
 	GetSignupForUpdate(ctx context.Context, id uuid.UUID) (Signup, error)
 	GetUser(ctx context.Context, id uuid.UUID) (User, error)
+	GetUserByEmail(ctx context.Context, email string) (User, error)
+	GetUserByPhone(ctx context.Context, phone string) (User, error)
 	InsertChallenge(ctx context.Context, arg InsertChallengeParams) (OtpChallenge, error)
+	InsertDevice(ctx context.Context, arg InsertDeviceParams) (Device, error)
+	InsertRefreshToken(ctx context.Context, arg InsertRefreshTokenParams) error
+	InsertSession(ctx context.Context, arg InsertSessionParams) (Session, error)
 	InsertSignup(ctx context.Context, arg InsertSignupParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) (User, error)
+	ListLiveDevices(ctx context.Context, userID uuid.UUID) ([]Device, error)
+	ListLiveSessions(ctx context.Context, userID uuid.UUID) ([]ListLiveSessionsRow, error)
 	MarkChallengeVerified(ctx context.Context, arg MarkChallengeVerifiedParams) error
+	MarkRefreshTokenUsed(ctx context.Context, id uuid.UUID) error
 	// The per-address limit: how many codes were started for this email in the window, and
 	// when the oldest of them leaves it (that is when the next one is allowed).
 	RecentChallengesTo(ctx context.Context, arg RecentChallengesToParams) (RecentChallengesToRow, error)
 	RecordWrongCode(ctx context.Context, id uuid.UUID) error
 	ResendChallenge(ctx context.Context, arg ResendChallengeParams) (OtpChallenge, error)
+	RevokeDevice(ctx context.Context, arg RevokeDeviceParams) (int64, error)
+	RevokeDeviceSessions(ctx context.Context, arg RevokeDeviceSessionsParams) error
+	RevokeSession(ctx context.Context, arg RevokeSessionParams) (int64, error)
+	RevokeUserSessions(ctx context.Context, arg RevokeUserSessionsParams) error
+	TouchDevice(ctx context.Context, id uuid.UUID) (Device, error)
+	TouchSession(ctx context.Context, id uuid.UUID) error
 }
 
 var _ Querier = (*Queries)(nil)

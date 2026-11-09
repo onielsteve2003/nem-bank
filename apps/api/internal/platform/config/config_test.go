@@ -49,6 +49,7 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		"BREVO_API_KEY":               "xkeysib-test",
 		"MAIL_FROM_EMAIL":             "hello@nem.example",
 		"OTP_KEY":                     "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
+		"JWT_SIGNING_KEY":             "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 	}))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -60,7 +61,7 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		cfg.OTLPEndpoint != "https://otlp-gateway.example/otlp" || cfg.TraceSampleRatio != 0.25 ||
 		cfg.SentryDSN != "https://key@o1.ingest.sentry.io/1" || cfg.MetricsToken != "scrape-secret" ||
 		cfg.BrevoAPIKey != "xkeysib-test" || cfg.MailFromEmail != "hello@nem.example" ||
-		string(cfg.OTPKey) != "0123456789abcdef0123456789abcdef" {
+		string(cfg.OTPKey) != "0123456789abcdef0123456789abcdef" || len(cfg.JWTSigningKey) != 32 {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }
@@ -93,6 +94,8 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"production without an otp key", map[string]string{"APP_ENV": "production"}, "OTP_KEY"},
 		{"otp key not base64", map[string]string{"OTP_KEY": "not base64!"}, "OTP_KEY"},
 		{"otp key too short", map[string]string{"OTP_KEY": "c2hvcnQ="}, "need at least 32"},
+		{"production without a jwt key", map[string]string{"APP_ENV": "production"}, "JWT_SIGNING_KEY"},
+		{"jwt key not a seed", map[string]string{"JWT_SIGNING_KEY": "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIz"}, "need exactly 32"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

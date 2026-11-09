@@ -47,6 +47,8 @@ type Config struct {
 
 	// OTPKey keys the HMAC one-time codes are stored under.
 	OTPKey []byte
+	// JWTSigningKey is the Ed25519 seed access tokens are signed with.
+	JWTSigningKey []byte
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
@@ -144,6 +146,14 @@ func Load(getenv func(string) string) (Config, error) {
 	cfg.OTPKey, err = secretKey(getenv("OTP_KEY"), cfg.Env, "nem-dev-otp-key")
 	if err != nil {
 		errs = append(errs, fmt.Errorf("OTP_KEY: %w", err))
+	}
+
+	cfg.JWTSigningKey, err = secretKey(getenv("JWT_SIGNING_KEY"), cfg.Env, "nem-dev-jwt-key")
+	if err == nil && len(cfg.JWTSigningKey) != 32 {
+		err = fmt.Errorf("decodes to %d bytes, need exactly 32 (an Ed25519 seed)", len(cfg.JWTSigningKey))
+	}
+	if err != nil {
+		errs = append(errs, fmt.Errorf("JWT_SIGNING_KEY: %w", err))
 	}
 
 	if len(errs) > 0 {

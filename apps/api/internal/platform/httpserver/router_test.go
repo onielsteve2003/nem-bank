@@ -19,9 +19,10 @@ func newTestRouter(t *testing.T, logs io.Writer) http.Handler {
 		logs = io.Discard
 	}
 	r, err := NewRouter(Options{
-		Version:     "test-1",
-		Logger:      slog.New(slog.NewJSONHandler(logs, &slog.HandlerOptions{Level: slog.LevelDebug})),
-		CORSOrigins: []string{"https://app.example"},
+		Version:       "test-1",
+		Logger:        slog.New(slog.NewJSONHandler(logs, &slog.HandlerOptions{Level: slog.LevelDebug})),
+		CORSOrigins:   []string{"https://app.example"},
+		Authenticator: fakeAuth{},
 	})
 	if err != nil {
 		t.Fatalf("new router: %v", err)
@@ -109,7 +110,7 @@ func TestAKnownPathWithTheWrongMethodIsA405(t *testing.T) {
 func TestNotImplementedOperationsUseTheProblemType(t *testing.T) {
 	t.Parallel()
 
-	rec := do(t, newTestRouter(t, nil), http.MethodGet, "/v1/accounts", nil)
+	rec := do(t, newTestRouter(t, nil), http.MethodGet, "/v1/accounts", map[string]string{"Authorization": "Bearer " + testToken})
 	p := decodeProblem(t, rec)
 	if rec.Code != http.StatusNotImplemented || p.Type != "https://nem.bank/problems/not_implemented" {
 		t.Fatalf("got %d %+v", rec.Code, p)

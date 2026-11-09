@@ -13,6 +13,7 @@ func send(t *testing.T, h http.Handler, method, path, body string) *httptest.Res
 	if body != "" {
 		req.Header.Set("Content-Type", "application/json")
 	}
+	req.Header.Set("Authorization", "Bearer "+testToken)
 	rec := httptest.NewRecorder()
 	h.ServeHTTP(rec, req)
 	return rec

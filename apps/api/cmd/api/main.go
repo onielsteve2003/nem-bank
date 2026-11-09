@@ -96,7 +96,9 @@ func run() error {
 	} else {
 		log.Warn("BREVO_API_KEY not set: emails are logged, not sent")
 	}
-	identitySvc, err := identity.NewService(identity.Config{Pool: pool, Mailer: mail, Logger: log, OTPKey: cfg.OTPKey})
+	identitySvc, err := identity.NewService(identity.Config{
+		Pool: pool, Mailer: mail, Logger: log, OTPKey: cfg.OTPKey, SigningKey: cfg.JWTSigningKey,
+	})
 	if err != nil {
 		return err
 	}
@@ -105,13 +107,14 @@ func run() error {
 	metrics.RegisterPool(pool)
 
 	router, err := httpserver.NewRouter(httpserver.Options{
-		Version:      version,
-		Logger:       log,
-		CORSOrigins:  cfg.CORSOrigins,
-		Readiness:    []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
-		Metrics:      metrics,
-		MetricsToken: cfg.MetricsToken,
-		Identity:     identity.NewAPI(identitySvc),
+		Version:       version,
+		Logger:        log,
+		CORSOrigins:   cfg.CORSOrigins,
+		Readiness:     []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
+		Metrics:       metrics,
+		MetricsToken:  cfg.MetricsToken,
+		Identity:      identity.NewAPI(identitySvc),
+		Authenticator: identitySvc,
 	})
 	if err != nil {
 		return err

@@ -38,6 +38,8 @@ type Options struct {
 	// Identity serves sign-up, sessions, devices and the PIN. Nil in tests that only
 	// exercise the platform routes.
 	Identity *identity.API
+	// Authenticator verifies bearer tokens; nil makes every protected operation a 401.
+	Authenticator Authenticator
 }
 
 // NewRouter returns the Gin engine with the middleware chain and every contract operation
@@ -53,13 +55,17 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load embedded openapi spec: %w", err)
 	}
-	validate, err := RequestValidator(spec)
+	validate, err := RequestValidator(spec, opts.Authenticator, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
 
 	gin.SetMode(gin.ReleaseMode)
 	r := gin.New()
+	// The strict handlers receive the *gin.Context as their context.Context. Without the
+	// fallback its Value, Done and Deadline ignore the request context, so handlers would
+	// lose the caller, cancellation and the trace parent of their database spans.
+	r.ContextWithFallback = true
 	// Request ID first so every later log line and problem carries it; recovery next so a
 	// panic anywhere below is still logged by AccessLog with a 500. CORS answers preflights
 	// before validation, which would reject an OPTIONS the contract does not declare.
