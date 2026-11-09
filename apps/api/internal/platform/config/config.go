@@ -52,6 +52,9 @@ type Config struct {
 	OTPKey []byte
 	// JWTSigningKey is the Ed25519 seed access tokens are signed with.
 	JWTSigningKey []byte
+	// StaffJWTSigningKey signs console (staff) tokens. A separate key keeps the realms
+	// apart: a leaked customer key cannot mint a staff token.
+	StaffJWTSigningKey []byte
 	// FieldKeys are the AES-256 keys for field encryption, by version; the highest
 	// encrypts. FieldIndexKey keys the blind indexes. See internal/platform/fieldcrypt.
 	FieldKeys     map[uint16][]byte
@@ -162,6 +165,17 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	if err != nil {
 		errs = append(errs, fmt.Errorf("JWT_SIGNING_KEY: %w", err))
+	}
+
+	cfg.StaffJWTSigningKey, err = secretKey(getenv("STAFF_JWT_SIGNING_KEY"), cfg.Env, "nem-dev-staff-jwt-key")
+	if err == nil && len(cfg.StaffJWTSigningKey) != 32 {
+		err = fmt.Errorf("decodes to %d bytes, need exactly 32 (an Ed25519 seed)", len(cfg.StaffJWTSigningKey))
+	}
+	if err == nil && string(cfg.StaffJWTSigningKey) == string(cfg.JWTSigningKey) {
+		err = errors.New("must differ from JWT_SIGNING_KEY")
+	}
+	if err != nil {
+		errs = append(errs, fmt.Errorf("STAFF_JWT_SIGNING_KEY: %w", err))
 	}
 
 	cfg.FieldKeys, err = fieldKeys(getenv("FIELD_ENCRYPTION_KEYS"), cfg.Env)

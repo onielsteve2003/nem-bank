@@ -8,7 +8,24 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type ApprovalRequest struct {
+	ID              uuid.UUID
+	Action          string
+	Status          string
+	MakerID         uuid.UUID
+	CheckerID       *uuid.UUID
+	Reason          string
+	Summary         string
+	Before          []byte
+	After           []byte
+	RejectionReason *string
+	CreatedAt       time.Time
+	DecidedAt       *time.Time
+	ExpiresAt       time.Time
+}
 
 type AuditLog struct {
 	Seq          int64
@@ -128,6 +145,36 @@ type Signup struct {
 	ExpiresAt         time.Time
 	CompletedAt       *time.Time
 	UserID            *uuid.UUID
+}
+
+type Staff struct {
+	ID              uuid.UUID
+	Name            string
+	Email           string
+	PasswordHash    string
+	Roles           []string
+	TotpSecret      []byte
+	TotpEnrolledAt  *time.Time
+	LastTotpCounter pgtype.Int8
+	LastLoginAt     *time.Time
+	DisabledAt      *time.Time
+	CreatedAt       time.Time
+}
+
+type StaffLoginChallenge struct {
+	ID        uuid.UUID
+	StaffID   uuid.UUID
+	ExpiresAt time.Time
+	Attempts  int32
+	UsedAt    *time.Time
+}
+
+type StaffSession struct {
+	ID        uuid.UUID
+	StaffID   uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	RevokedAt *time.Time
 }
 
 type User struct {

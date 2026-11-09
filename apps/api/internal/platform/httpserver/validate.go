@@ -18,6 +18,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"github.com/google/uuid"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
@@ -75,13 +76,19 @@ func signedOperation(op *openapi3.Operation) bool {
 // re-encodes it, and the signature covers the client's bytes. sig may be nil, and then
 // every signed operation is refused.
 func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
-	return requestValidator(spec, auth, sig, nil, log)
+	return requestValidator(spec, auth, nil, sig, nil, log)
 }
 
 // customerLimit runs once the caller is known; see limiter.byCustomer.
 type customerLimit func(ctx context.Context, c *gin.Context, signed bool) error
 
-func requestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, limit customerLimit, log *slog.Logger) (gin.HandlerFunc, error) {
+// staff verifies console (staffAuth) tokens; nil makes every staff operation a 401. Staff
+// operations that list x-roles are refused with 403 unless the caller holds one of them.
+func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig SignatureVerifier, limit customerLimit, log *slog.Logger) (gin.HandlerFunc, error) {
+	roles, err := operationRoles(spec)
+	if err != nil {
+		return nil, err
+	}
 	// Routes are matched on the path alone. The spec's `servers` name a localhost URL that
 	// would never match the host the API runs on in production.
 	spec.Servers = nil
@@ -95,15 +102,23 @@ func requestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifie
 		KeepValidatedValue: true,
 		AuthenticationFunc: func(ctx context.Context, in *openapi3filter.AuthenticationInput) error {
 			slot, _ := ctx.Value(authSlotKey{}).(*authSlot)
-			if slot == nil || in.SecuritySchemeName != "bearerAuth" || auth == nil {
-				// API keys arrive with the developer platform; until then they never pass.
+			// Each realm has its own verifier, so a customer token is never tried as a
+			// staff one. API keys arrive with the developer platform; until then they fail.
+			var verifier Authenticator
+			switch in.SecuritySchemeName {
+			case "bearerAuth":
+				verifier = auth
+			case "staffAuth":
+				verifier = staff
+			}
+			if slot == nil || verifier == nil {
 				return errors.New("security scheme not supported")
 			}
 			token, ok := bearerToken(in.RequestValidationInput.Request.Header.Get("Authorization"))
 			if !ok {
 				return errors.New("no bearer token")
 			}
-			authed, err := auth.Authenticate(ctx, token)
+			authed, err := verifier.Authenticate(ctx, token)
 			if err != nil {
 				slot.err = err
 				return err
@@ -157,6 +172,12 @@ func requestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifie
 		}
 		if slot.ctx != nil {
 			c.Request = c.Request.WithContext(slot.ctx)
+		}
+		if allowed := roles[route.Operation]; len(allowed) > 0 {
+			if p, ok := admin.PrincipalFrom(c.Request.Context()); !ok || !p.HasAny(allowed...) {
+				problem.Render(c, problem.Forbidden())
+				return
+			}
 		}
 		if limit != nil {
 			if err := limit(c.Request.Context(), c, signed); err != nil {
@@ -354,4 +375,30 @@ func schemaMessage(code, keyword string, schema *openapi3.Schema) string {
 	default:
 		return "The value is not valid."
 	}
+}
+
+// operationRoles reads each operation's x-roles: the staff roles allowed to call it, the
+// same list the console uses to hide what a role cannot open (RBAC, ADM-1).
+func operationRoles(spec *openapi3.T) (map[*openapi3.Operation][]admin.Role, error) {
+	out := map[*openapi3.Operation][]admin.Role{}
+	for path, item := range spec.Paths.Map() {
+		for method, op := range item.Operations() {
+			raw, ok := op.Extensions["x-roles"]
+			if !ok {
+				continue
+			}
+			list, ok := raw.([]any)
+			if !ok || len(list) == 0 {
+				return nil, fmt.Errorf("%s %s: x-roles must be a non-empty list", method, path)
+			}
+			for _, r := range list {
+				name, ok := r.(string)
+				if !ok {
+					return nil, fmt.Errorf("%s %s: x-roles holds a non-string", method, path)
+				}
+				out[op] = append(out[op], admin.Role(name))
+			}
+		}
+	}
+	return out, nil
 }

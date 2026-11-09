@@ -10,6 +10,7 @@ import (
 
 	"github.com/gin-gonic/gin"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
@@ -20,12 +21,16 @@ import (
 // over its Unimplemented twin, and operations no domain serves yet answer 501.
 type handlers struct {
 	*identity.API
+	*adminAPI
 	fallback
 	version string
 	now     func() time.Time
 }
 
 type fallback struct{ api.Unimplemented }
+
+// adminAPI names the staff operations' embedded field; both domains call their type API.
+type adminAPI = admin.API
 
 var _ api.StrictServerInterface = (*handlers)(nil)
 

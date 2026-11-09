@@ -104,6 +104,7 @@ The API refuses to start on a bad value and lists every problem at once.
 | `BREVO_API_KEY` | empty | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production |
 | `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `no-reply@nem.bank` / `Nem Bank` | Sender; must be verified in Brevo |
 | `JWT_SIGNING_KEY` | fixed dev key | Base64 32-byte Ed25519 seed that signs access tokens. Required in production |
+| `STAFF_JWT_SIGNING_KEY` | fixed dev key | A different 32-byte Ed25519 seed for console (staff) tokens; refused if it equals `JWT_SIGNING_KEY`. Required in production |
 | `FIELD_ENCRYPTION_KEYS` | fixed dev key | `1:<base64 32 bytes>,2:<...>`: AES-256 keys by version for BVN/NIN/ID numbers; the highest encrypts. Keep old versions until `Rewrap` reports 0. Required in production |
 | `FIELD_INDEX_KEY` | fixed dev key | Base64, 32+ bytes: HMAC key for the blind indexes (one owner per BVN). Never rotated with the field keys. Required in production |
 | `OTP_KEY` | fixed dev key | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production |
@@ -205,6 +206,32 @@ The API refuses to start on a bad value and lists every problem at once.
   sets one; `X-Forwarded-For` is ignored because a caller could set it.
 - **Bearer auth** is enforced by the request validator from each operation's `security`: a
   missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
+
+## Staff realm and maker-checker
+
+Bank staff are a separate realm from customers (`internal/admin`): their own `staff` table,
+sessions, signing key and token audience (`console`). A customer token gets a 401 on every
+`/v1/admin` route, and a staff token gets a 401 on every customer route.
+
+- **Login is always two steps (ADM-1).** `POST /v1/admin/auth/login` checks the password
+  (argon2id) and returns a 5-minute challenge. `POST /v1/admin/auth/totp` takes a 6-digit
+  RFC 6238 code (HMAC-SHA1, 30 s, one step of clock skew) and returns an 8-hour session with
+  no refresh. The first login also returns an `otpauth://` URI to scan. Each time step works
+  once, five wrong codes end the challenge, and the TOTP secret is AES-256-GCM encrypted.
+- **Accounts are created by an operator**, never through the API, so a stolen console
+  session cannot create another insider:
+  `STAFF_PASSWORD='...' go run ./cmd/api create-staff -name "Aisha Bello" -email aisha@nem.bank -roles compliance`
+- **RBAC comes from the contract.** The validator reads each operation's `x-roles` and returns
+  403 unless the caller holds one of them. The console hides pages from the same list. Roles
+  are loaded from the database on every request, so removing a role works at once.
+- **Maker-checker (ADM-10).** A domain registers an action (`RegisterAction`) with an
+  `Apply` function and, optionally, the roles allowed to approve it. `Propose` records a
+  request inside the domain's own transaction. `Approve` locks the request, refuses the maker
+  (403 `same_staff`, also a database CHECK), an expired request (409 `approval_expired`, after
+  72 hours) or the wrong role, then runs `Apply` and closes the request in **one
+  transaction**. If the change fails, the request stays pending. The approval and the change
+  are written to the audit log. The same checker sending the same decision again gets the
+  same answer and nothing is applied twice.
 
 ## Field encryption and the audit log
 

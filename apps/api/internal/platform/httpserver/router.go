@@ -10,6 +10,7 @@ import (
 	"github.com/gin-gonic/gin"
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
@@ -40,6 +41,10 @@ type Options struct {
 	Identity *identity.API
 	// Authenticator verifies bearer tokens; nil makes every protected operation a 401.
 	Authenticator Authenticator
+	// Admin serves staff login and maker-checker; nil in tests that skip the console.
+	Admin *admin.API
+	// StaffAuthenticator verifies console tokens; nil makes every staff operation a 401.
+	StaffAuthenticator Authenticator
 	// Signatures verifies device signatures on money-moving requests; nil refuses them all.
 	Signatures SignatureVerifier
 	// RateLimits are the request limits; nil means DefaultRateLimits.
@@ -68,7 +73,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 		limits = *opts.RateLimits
 	}
 	lim := newLimiter(limits, opts.Now)
-	validate, err := requestValidator(spec, opts.Authenticator, opts.Signatures, lim.byCustomer, opts.Logger)
+	validate, err := requestValidator(spec, opts.Authenticator, opts.StaffAuthenticator, opts.Signatures, lim.byCustomer, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -114,7 +119,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

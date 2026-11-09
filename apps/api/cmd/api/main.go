@@ -12,10 +12,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/httpserver"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
@@ -30,6 +32,13 @@ func main() {
 	// itself: `api healthcheck` probes /healthz on the local port and exits 0 or 1.
 	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
 		if err := healthcheck(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
+	if len(os.Args) > 1 && os.Args[1] == "create-staff" {
+		if err := createStaff(os.Args[2:]); err != nil {
 			fmt.Fprintln(os.Stderr, err)
 			os.Exit(1)
 		}
@@ -103,20 +112,33 @@ func run() error {
 		return err
 	}
 
+	keyring, err := fieldcrypt.New(cfg.FieldKeys, cfg.FieldIndexKey)
+	if err != nil {
+		return err
+	}
+	adminSvc, err := admin.NewService(admin.Config{
+		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
+	})
+	if err != nil {
+		return err
+	}
+
 	metrics := observability.NewMetrics()
 	metrics.RegisterPool(pool)
 
 	router, err := httpserver.NewRouter(httpserver.Options{
-		Version:        version,
-		Logger:         log,
-		CORSOrigins:    cfg.CORSOrigins,
-		ClientIPHeader: cfg.ClientIPHeader,
-		Readiness:      []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
-		Metrics:        metrics,
-		MetricsToken:   cfg.MetricsToken,
-		Identity:       identity.NewAPI(identitySvc),
-		Authenticator:  identitySvc,
-		Signatures:     identitySvc,
+		Version:            version,
+		Logger:             log,
+		CORSOrigins:        cfg.CORSOrigins,
+		ClientIPHeader:     cfg.ClientIPHeader,
+		Readiness:          []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
+		Metrics:            metrics,
+		MetricsToken:       cfg.MetricsToken,
+		Identity:           identity.NewAPI(identitySvc),
+		Authenticator:      identitySvc,
+		Signatures:         identitySvc,
+		Admin:              admin.NewAPI(adminSvc),
+		StaffAuthenticator: adminSvc,
 	})
 	if err != nil {
 		return err

@@ -11,6 +11,22 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type ApprovalRequest struct {
+	ID              uuid.UUID
+	Action          string
+	Status          string
+	MakerID         uuid.UUID
+	CheckerID       pgtype.UUID
+	Reason          string
+	Summary         string
+	Before          []byte
+	After           []byte
+	RejectionReason *string
+	CreatedAt       time.Time
+	DecidedAt       pgtype.Timestamptz
+	ExpiresAt       time.Time
+}
+
 type AuditLog struct {
 	Seq          int64
 	ID           uuid.UUID
@@ -129,6 +145,36 @@ type Signup struct {
 	ExpiresAt         time.Time
 	CompletedAt       pgtype.Timestamptz
 	UserID            pgtype.UUID
+}
+
+type Staff struct {
+	ID              uuid.UUID
+	Name            string
+	Email           string
+	PasswordHash    string
+	Roles           []string
+	TotpSecret      []byte
+	TotpEnrolledAt  pgtype.Timestamptz
+	LastTotpCounter pgtype.Int8
+	LastLoginAt     pgtype.Timestamptz
+	DisabledAt      pgtype.Timestamptz
+	CreatedAt       time.Time
+}
+
+type StaffLoginChallenge struct {
+	ID        uuid.UUID
+	StaffID   uuid.UUID
+	ExpiresAt time.Time
+	Attempts  int32
+	UsedAt    pgtype.Timestamptz
+}
+
+type StaffSession struct {
+	ID        uuid.UUID
+	StaffID   uuid.UUID
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	RevokedAt pgtype.Timestamptz
 }
 
 type User struct {
