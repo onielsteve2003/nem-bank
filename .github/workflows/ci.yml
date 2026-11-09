@@ -100,6 +100,10 @@ jobs:
       - name: Vulnerabilities (govulncheck)
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
 
+      # The image Render deploys; building it here catches a broken Dockerfile before deploy.
+      - name: Docker image builds
+        run: docker build --build-arg VERSION=${{ github.sha }} -t nem-api:ci .
+
   secrets:
     name: Secret scan (gitleaks)
     runs-on: ubuntu-latest

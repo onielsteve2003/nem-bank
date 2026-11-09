@@ -56,8 +56,8 @@ func AccessLog(log *slog.Logger) gin.HandlerFunc {
 			level = slog.LevelError
 		case status >= 400:
 			level = slog.LevelWarn
-		case route == healthPath:
-			// The uptime monitor pings this every few minutes; keep it out of normal logs.
+		case isProbe(route):
+			// Uptime monitors and the platform ping these constantly; keep them out of normal logs.
 			level = slog.LevelDebug
 		}
 		log.LogAttrs(c.Request.Context(), level, "http request",

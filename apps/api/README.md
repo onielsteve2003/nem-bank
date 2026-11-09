@@ -37,6 +37,25 @@ task dev        # hot reload on http://localhost:8080; applies migrations on sta
 curl localhost:8080/v1/health
 ```
 
+## Health probes and Docker
+
+| Path | Meaning |
+|---|---|
+| `GET /healthz` | Liveness: 200 while the process serves HTTP. Never checks dependencies, so a database outage does not get a healthy process restarted. |
+| `GET /readyz` | Readiness: pings the database (3 s timeout). 200 when every check passes, 503 with the failing check names otherwise. Error details go to the log, not the public body. |
+| `GET /v1/health` | The contract's health operation (version and server time) for app clients. |
+
+The `Dockerfile` is multi-stage: a Go build stage with cached modules, then
+`gcr.io/distroless/static-debian12:nonroot` (static binary, no shell, uid 65532).
+Distroless has no curl, so `HEALTHCHECK` runs `/api healthcheck`, which probes `/healthz`.
+
+```sh
+docker build --build-arg VERSION=$(git rev-parse --short HEAD) -t nem-api apps/api
+docker run --rm -p 8080:8080 -e DATABASE_URL=... -e CORS_ALLOWED_ORIGINS=https://... nem-api
+```
+
+CI builds the image on every push.
+
 `task --list` shows everything else: `run`, `build`, `test` (with `-race`), `lint`, `fmt`, `tidy`.
 
 ## Configuration

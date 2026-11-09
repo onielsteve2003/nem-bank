@@ -20,6 +20,8 @@ type Options struct {
 	Version     string
 	Logger      *slog.Logger
 	CORSOrigins []string
+	// Readiness lists the dependencies /readyz checks (the database in production).
+	Readiness []ReadinessCheck
 	// Now is the clock; nil means time.Now.
 	Now func() time.Time
 }
@@ -55,6 +57,9 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 		problem.Render(c, problem.New(http.StatusMethodNotAllowed, problem.CodeMethodNotAllowed,
 			"This endpoint does not support "+c.Request.Method+"."))
 	})
+
+	r.GET(LivenessPath, liveness)
+	r.GET(ReadinessPath, readiness(opts.Readiness, opts.Logger))
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", validate)

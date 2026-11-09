@@ -4,9 +4,12 @@ package main
 import (
 	"context"
 	"fmt"
+	"net/http"
 	"os"
 	"os/signal"
+	"strconv"
 	"syscall"
+	"time"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
@@ -18,6 +21,15 @@ import (
 var version = "dev"
 
 func main() {
+	// The distroless image has no shell or curl, so Docker's HEALTHCHECK runs the binary
+	// itself: `api healthcheck` probes /healthz on the local port and exits 0 or 1.
+	if len(os.Args) > 1 && os.Args[1] == "healthcheck" {
+		if err := healthcheck(); err != nil {
+			fmt.Fprintln(os.Stderr, err)
+			os.Exit(1)
+		}
+		return
+	}
 	if err := run(); err != nil {
 		fmt.Fprintln(os.Stderr, err)
 		os.Exit(1)
@@ -50,10 +62,39 @@ func run() error {
 		Version:     version,
 		Logger:      log,
 		CORSOrigins: cfg.CORSOrigins,
+		Readiness:   []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
 	})
 	if err != nil {
 		return err
 	}
 	log.Info("starting nem api", "env", string(cfg.Env))
 	return httpserver.NewServer(cfg.Addr(), router, log, cfg.ShutdownTimeout).Run(ctx)
+}
+
+func healthcheck() error {
+	// Same PORT the server reads; parsed to a number so the probe can only ever hit loopback.
+	port := 8080
+	if v := os.Getenv("PORT"); v != "" {
+		p, err := strconv.Atoi(v)
+		if err != nil || p < 1 || p > 65535 {
+			return fmt.Errorf("healthcheck: PORT %q is not a port number", v)
+		}
+		port = p
+	}
+	url := "http://127.0.0.1:" + strconv.Itoa(port) + httpserver.LivenessPath
+	ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+	defer cancel()
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, url, nil) //nolint:gosec // loopback host, numeric port: not caller-controlled
+	if err != nil {
+		return fmt.Errorf("healthcheck: %w", err)
+	}
+	resp, err := http.DefaultClient.Do(req) //nolint:gosec // same loopback request as above
+	if err != nil {
+		return fmt.Errorf("healthcheck: %w", err)
+	}
+	defer func() { _ = resp.Body.Close() }()
+	if resp.StatusCode != http.StatusOK {
+		return fmt.Errorf("healthcheck: status %d", resp.StatusCode)
+	}
+	return nil
 }
