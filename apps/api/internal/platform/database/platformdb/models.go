@@ -3,3 +3,20 @@
 //   sqlc v1.31.1
 
 package platformdb
+
+import (
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
+)
+
+type OutboxEvent struct {
+	ID            uuid.UUID
+	Topic         string
+	AggregateType string
+	AggregateID   string
+	Payload       []byte
+	CreatedAt     time.Time
+	DispatchedAt  pgtype.Timestamptz
+}
