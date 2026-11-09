@@ -95,7 +95,7 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"otp key not base64", map[string]string{"OTP_KEY": "not base64!"}, "OTP_KEY"},
 		{"otp key too short", map[string]string{"OTP_KEY": "c2hvcnQ="}, "need at least 32"},
 		{"production without a jwt key", map[string]string{"APP_ENV": "production"}, "JWT_SIGNING_KEY"},
-		{"jwt key not a seed", map[string]string{"JWT_SIGNING_KEY": "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIz"}, "need exactly 32"},
+		{"jwt key not a seed", map[string]string{"JWT_SIGNING_KEY": "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWYwMTIz"}, "need exactly 32"}, // gitleaks:allow (a deliberately wrong-length test key)
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

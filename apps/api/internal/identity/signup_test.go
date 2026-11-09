@@ -131,7 +131,7 @@ func TestSignupFromDetailsToAccount(t *testing.T) {
 	_, err = h.svc.VerifyCode(ctx, c.ID, code)
 	wantProblem(t, err, ErrOTPExpired)
 
-	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, "Tolu-Adeyemi-1996", "", phone(1))
+	_, err = h.svc.CompleteSignup(ctx, started.SignupID, v.Token, "Tolu-Adeyemi-1996", "", phone(1)) // gitleaks:allow (a deliberately weak test password)
 	wantProblem(t, err, ErrWeakPassword)
 
 	res, err := h.svc.CompleteSignup(ctx, started.SignupID, v.Token, strongPassword, "", phone(1))

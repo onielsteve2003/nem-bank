@@ -1,2 +1,8 @@
 # Public RFC 6238 test vector in the TOTP tests, not a credential (allowed inline since).
 b99e74540422d692e093e2298ff75de2aacde2e0:apps/console/src/lib/totp.test.ts:generic-api-key:6
+# Test fixtures in the identity tests (T23.1-T23.3): a deliberately weak password and a
+# deliberately wrong-length key. Allowed inline since; these cover the commits before that.
+d5d2a8e29da18bd087863ae620a0d0d55b145617:apps/api/internal/identity/signup_test.go:generic-api-key:134
+4730f02307481cef6a21e032f31351e9157ed2b4:apps/api/internal/identity/signup_test.go:generic-api-key:134
+4730f02307481cef6a21e032f31351e9157ed2b4:apps/api/internal/platform/config/config_test.go:generic-api-key:98
+e7f5ea0e8dbf5f65f0f396538b7df9a82614656b:apps/api/internal/identity/signup_test.go:generic-api-key:134
