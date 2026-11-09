@@ -11,6 +11,18 @@ import (
 	"github.com/jackc/pgx/v5/pgtype"
 )
 
+type AccountHold struct {
+	ID          uuid.UUID
+	AccountID   uuid.UUID
+	Currency    string
+	AmountMinor int64
+	Reference   string
+	Status      string
+	EntryID     pgtype.UUID
+	CreatedAt   time.Time
+	ClosedAt    *time.Time
+}
+
 type ApprovalRequest struct {
 	ID              uuid.UUID
 	Action          string

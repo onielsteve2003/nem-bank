@@ -6,12 +6,38 @@ package ledgerdb
 
 import (
 	"context"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	CloseHold(ctx context.Context, arg CloseHoldParams) error
+	GetAccount(ctx context.Context, id uuid.UUID) (LedgerAccount, error)
+	GetEntryByIdempotencyKey(ctx context.Context, idempotencyKey pgtype.Text) (JournalEntry, error)
+	GetHold(ctx context.Context, id uuid.UUID) (AccountHold, error)
 	// The bank's account of a kind in a currency (seeded by migration 00009).
 	GetSystemAccount(ctx context.Context, arg GetSystemAccountParams) (LedgerAccount, error)
+	// ON CONFLICT keeps the transaction usable when the operation already posted: no row
+	// comes back and the engine reports ErrDuplicateEntry.
+	InsertEntry(ctx context.Context, arg InsertEntryParams) (JournalEntry, error)
+	InsertHold(ctx context.Context, arg InsertHoldParams) (AccountHold, error)
+	InsertPosting(ctx context.Context, arg InsertPostingParams) (Posting, error)
+	// Accounts whose cached balances disagree with the postings and active holds. Always
+	// empty while every write goes through the engine; the invariant tests and the
+	// reconciliation job read it.
+	ListDrift(ctx context.Context) ([]ListDriftRow, error)
+	ListEntryPostings(ctx context.Context, entryID uuid.UUID) ([]Posting, error)
 	ListSystemAccounts(ctx context.Context) ([]LedgerAccount, error)
+	// Row-locks the accounts in ID order. Every writer locks in the same order, so two
+	// entries touching the same accounts queue instead of deadlocking (the Sort runs below
+	// the lock, so rows are locked as they come out sorted).
+	LockAccounts(ctx context.Context, ids []uuid.UUID) ([]LedgerAccount, error)
+	// Holds are locked after their accounts, in ID order, by every writer.
+	LockHolds(ctx context.Context, ids []uuid.UUID) ([]AccountHold, error)
+	// Writes the cached balances. The version check is a second guard behind the row lock:
+	// a writer that read a stale row updates nothing and the engine refuses the entry.
+	SetAccountBalances(ctx context.Context, arg SetAccountBalancesParams) (int64, error)
 }
 
 var _ Querier = (*Queries)(nil)
