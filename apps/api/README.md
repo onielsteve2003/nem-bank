@@ -252,6 +252,16 @@ money:
   partner settlement and demo funding in NGN, USD, GBP and EUR; card settlement in NGN and
   USD; interest expense, interest income, the EMTL levy and ajo escrow in NGN.
 
+`internal/ledger/money` is the only way the API handles an amount: `int64` minor units plus
+a currency. Mixing currencies is an error, and so is any result past `int64` (no
+wrap-around). Anything that can leave a fraction takes an explicit `Rounding` (`HalfUp`,
+`Floor` and `Ceil` match `@nem/shared`; `HalfEven` is for interest). `Allocate` and `Split`
+use the largest-remainder method, so the shares always add back up to the total. JSON is
+the contract's `{"amount_minor": "150000", "currency": "NGN"}`, read strictly. Native fuzz
+tests check these invariants against `math/big`:
+`go test -run '^$' -fuzz FuzzAllocate ./internal/ledger/money` (also `FuzzMulDiv`,
+`FuzzParseMajor`, `FuzzJSON`, `FuzzAddSub`).
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers
