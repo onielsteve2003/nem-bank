@@ -296,6 +296,24 @@ tests check these invariants against `math/big`:
   Postings are timed with `clock_timestamp()` under the account lock, so "the last posting
   before midnight" is always the latest balance.
 
+## Transfers
+
+`internal/transfers` (migration 00014). A transfer is a state machine,
+`created → risk_checked → processing → completed | failed → reversed` plus
+`pending_step_up`, `delayed`, `held_for_review`, `rejected` and `cancelled`. Every step
+is a row in the append-only `transfer_events` timeline. The allowed moves live in Go
+(`CanMove`) and again in a trigger that refuses any other `UPDATE` of the status. A test
+tries all 121 pairs against the trigger to prove the two tables agree.
+
+The internal rail (Nem to Nem, by account number) is instant: the transfer, its
+timeline, the journal entry and both customers' transaction lines commit in **one
+database transaction**, so a transfer is either completed with the money moved or never
+happened. A refused transfer (insufficient funds, own account, unknown number, a wallet
+as the source) leaves no row behind. A double tap with the same `Idempotency-Key`
+replays the first response. Under duress (SEC-5) a transfer looks sent but moves
+nothing, and the real PIN marks it "Stopped by Nem" in the same transaction that ends
+duress. Other banks and saved beneficiaries answer 501 until their rails exist.
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers

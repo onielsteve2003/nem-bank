@@ -82,3 +82,7 @@ LIMIT @lim;
 -- The customer-facing lines behind an account's entries, for statement narrations.
 SELECT entry_id, type, narration, reference FROM transactions
 WHERE account_id = @account_id AND entry_id = ANY(@entry_ids::uuid[]);
+
+-- name: GetCurrentAccountByNumber :one
+-- A Nem current account by its NUBAN: where internal transfers land.
+SELECT * FROM customer_accounts WHERE account_number = $1 AND kind = 'ngn_current';

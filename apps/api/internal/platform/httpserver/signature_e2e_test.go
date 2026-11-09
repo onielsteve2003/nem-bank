@@ -25,13 +25,19 @@ import (
 // signedPost sends a money-moving POST signed the way the app's HTTP client signs it.
 func signedPost(t *testing.T, h http.Handler, key ed25519.PrivateKey, deviceID uuid.UUID, token, target, body, nonce string) *httptest.ResponseRecorder {
 	t.Helper()
+	return signedPostKey(t, h, key, deviceID, token, target, body, nonce, uuid.Must(uuid.NewV7()).String())
+}
+
+// signedPostKey is signedPost with a chosen Idempotency-Key, to replay a double tap.
+func signedPostKey(t *testing.T, h http.Handler, key ed25519.PrivateKey, deviceID uuid.UUID, token, target, body, nonce, idemKey string) *httptest.ResponseRecorder {
+	t.Helper()
 	ts := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	sum := sha256.Sum256([]byte(body))
 	payload := strings.Join([]string{"POST", target, ts, nonce, hex.EncodeToString(sum[:])}, "\n")
 	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, target, bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Idempotency-Key", uuid.Must(uuid.NewV7()).String())
+	req.Header.Set("Idempotency-Key", idemKey)
 	req.Header.Set("X-Device-Id", deviceID.String())
 	req.Header.Set("X-Device-Signature", base64.RawURLEncoding.EncodeToString(ed25519.Sign(key, []byte(payload))))
 	req.Header.Set("X-Signature-Timestamp", ts)

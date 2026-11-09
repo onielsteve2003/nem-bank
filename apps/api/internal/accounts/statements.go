@@ -465,6 +465,9 @@ func deref[T any](p *T) T {
 	return *p
 }
 
+// FormatAmount prints minor units as major units with thousands separators (1,234.56).
+func FormatAmount(minorUnits int64) string { return formatAmount(minorUnits) }
+
 // formatAmount prints minor units as major units with thousands separators: 123456 →
 // "1,234.56". Statements avoid currency symbols such as ₦ that PDF core fonts lack.
 func formatAmount(minorUnits int64) string {

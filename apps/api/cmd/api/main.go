@@ -12,8 +12,12 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
+
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
@@ -24,6 +28,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
 // version is set at build time with -ldflags "-X main.version=...".
@@ -107,14 +112,28 @@ func run() error {
 	} else {
 		log.Warn("BREVO_API_KEY not set: emails are logged, not sent")
 	}
+	var transfersSvc *transfers.Service
 	identitySvc, err := identity.NewService(identity.Config{
 		Pool: pool, Mailer: mail, Logger: log, OTPKey: cfg.OTPKey, SigningKey: cfg.JWTSigningKey,
 		OnCustomerCreated: accounts.OpenCurrentAccount,
+		// Set below: transfers needs identity, and identity calls back into transfers.
+		OnDuressEnded: func(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error {
+			return transfersSvc.StopDuressTransfers(ctx, tx, userID)
+		},
 	})
 	if err != nil {
 		return err
 	}
-	accountsSvc, err := accounts.NewService(accounts.Config{Pool: pool, Customers: identitySvc, Logger: log})
+	accountsSvc, err := accounts.NewService(accounts.Config{
+		Pool: pool, Customers: identitySvc, Logger: log,
+		Timelines: func(ctx context.Context, id uuid.UUID) ([]api.TimelineEvent, error) {
+			return transfersSvc.Timeline(ctx, id)
+		},
+	})
+	if err != nil {
+		return err
+	}
+	transfersSvc, err = transfers.NewService(transfers.Config{Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Logger: log})
 	if err != nil {
 		return err
 	}
@@ -148,6 +167,7 @@ func run() error {
 		Signatures:         identitySvc,
 		Idempotency:        idem,
 		Accounts:           accounts.NewAPI(accountsSvc),
+		Transfers:          transfers.NewAPI(transfersSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})

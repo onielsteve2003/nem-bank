@@ -30,6 +30,9 @@ var lagos = time.FixedZone("WAT", 60*60)
 
 // Line is one transaction line for Record: one account's side of a business movement.
 type Line struct {
+	// ID is the line's ID when the caller needs it in advance (a transfer points at its
+	// line); zero means a new one.
+	ID        uuid.UUID
 	UserID    uuid.UUID
 	AccountID uuid.UUID
 	// Type is a contract TransactionType ("transfer_out", "deposit", ...).
@@ -63,9 +66,12 @@ func Record(ctx context.Context, tx pgx.Tx, l Line) (accountsdb.Transaction, err
 	if !l.Amount.IsPositive() {
 		return accountsdb.Transaction{}, errors.New("accounts: a transaction amount is positive; direction gives the sign")
 	}
-	id, err := uuid.NewV7()
-	if err != nil {
-		return accountsdb.Transaction{}, fmt.Errorf("transaction id: %w", err)
+	id := l.ID
+	if id == uuid.Nil {
+		var err error
+		if id, err = uuid.NewV7(); err != nil {
+			return accountsdb.Transaction{}, fmt.Errorf("transaction id: %w", err)
+		}
 	}
 	cp, err := json.Marshal(l.Counterparty)
 	if err != nil {

@@ -323,3 +323,38 @@ func isUnique(err error) bool {
 	var pgErr *pgconn.PgError
 	return errors.As(err, &pgErr) && pgErr.Code == "23505"
 }
+
+// Owned is one of the customer's accounts with its balances, or ErrAccountNotFound.
+func (s *Service) Owned(ctx context.Context, userID, accountID uuid.UUID) (accountsdb.GetCustomerAccountRow, error) {
+	return s.own(ctx, userID, accountID)
+}
+
+// ErrNoSuchNuban is the mock bank's 404 for an account number no Nem customer has.
+var ErrNoSuchNuban = problem.New(http.StatusNotFound, "account_not_found", "No Nem account has that number")
+
+// Recipient is a Nem customer's current account, found by its number.
+type Recipient struct {
+	accountsdb.CustomerAccount
+	Name   string
+	Nemtag *string
+}
+
+// ResolveNuban finds the Nem current account with this number.
+func (s *Service) ResolveNuban(ctx context.Context, number string) (Recipient, error) {
+	acc, err := s.q.GetCurrentAccountByNumber(ctx, number)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return Recipient{}, ErrNoSuchNuban
+	}
+	if err != nil {
+		return Recipient{}, fmt.Errorf("load account by number: %w", err)
+	}
+	prof, err := s.customers.CustomerProfile(ctx, acc.UserID)
+	if err != nil {
+		return Recipient{}, err
+	}
+	return Recipient{CustomerAccount: acc, Name: prof.Name, Nemtag: prof.Nemtag}, nil
+}
+
+// Decoy is the duress view of a balance (SEC-5): what a person forcing the customer can
+// see, and so the most a transfer made under duress can appear to send.
+func Decoy(m money.Money) money.Money { return decoy(m) }

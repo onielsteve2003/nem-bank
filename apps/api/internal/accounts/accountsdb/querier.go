@@ -15,6 +15,8 @@ type Querier interface {
 	AccountsWithoutSnapshot(ctx context.Context, arg AccountsWithoutSnapshotParams) ([]uuid.UUID, error)
 	CompleteStatement(ctx context.Context, arg CompleteStatementParams) error
 	FailStatement(ctx context.Context, id uuid.UUID) error
+	// A Nem current account by its NUBAN: where internal transfers land.
+	GetCurrentAccountByNumber(ctx context.Context, accountNumber string) (CustomerAccount, error)
 	GetCustomerAccount(ctx context.Context, arg GetCustomerAccountParams) (GetCustomerAccountRow, error)
 	GetCustomerAccountByCurrency(ctx context.Context, arg GetCustomerAccountByCurrencyParams) (CustomerAccount, error)
 	GetStatement(ctx context.Context, arg GetStatementParams) (GetStatementRow, error)

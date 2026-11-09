@@ -37,6 +37,9 @@ type Config struct {
 	// a new customer is never left without an account (the accounts domain opens the NGN
 	// account here). Nil does nothing.
 	OnCustomerCreated func(ctx context.Context, tx pgx.Tx, c NewCustomer) error
+	// OnDuressEnded runs inside the PIN check that ends duress mode (the real PIN after the
+	// duress one), so transfers accepted under duress are stopped atomically. Nil does nothing.
+	OnDuressEnded func(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error
 }
 
 // NewCustomer is the customer a completed sign-up created.
@@ -58,6 +61,7 @@ type Service struct {
 	now    func() time.Time
 
 	onCustomerCreated func(ctx context.Context, tx pgx.Tx, c NewCustomer) error
+	onDuressEnded     func(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error
 
 	// dummyHash is verified against when a login names no account, so an unknown email
 	// costs the same argon2id time as a wrong password and response timing reveals nothing.
@@ -86,6 +90,7 @@ func NewService(cfg Config) (*Service, error) {
 	return &Service{
 		pool: cfg.Pool, q: identitydb.New(cfg.Pool), mail: cfg.Mailer, log: cfg.Logger,
 		otpKey: cfg.OTPKey, hasher: hasher, tokens: tokens, now: cfg.Now, onCustomerCreated: cfg.OnCustomerCreated,
+		onDuressEnded: cfg.OnDuressEnded,
 		dummyHash: sync.OnceValues(func() (string, error) {
 			return hasher.Hash(context.Background(), "not-a-real-password")
 		}),

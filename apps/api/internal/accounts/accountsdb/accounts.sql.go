@@ -12,6 +12,27 @@ import (
 	"github.com/google/uuid"
 )
 
+const getCurrentAccountByNumber = `-- name: GetCurrentAccountByNumber :one
+SELECT account_id, user_id, currency, kind, account_number, nickname, status, opened_at FROM customer_accounts WHERE account_number = $1 AND kind = 'ngn_current'
+`
+
+// A Nem current account by its NUBAN: where internal transfers land.
+func (q *Queries) GetCurrentAccountByNumber(ctx context.Context, accountNumber string) (CustomerAccount, error) {
+	row := q.db.QueryRow(ctx, getCurrentAccountByNumber, accountNumber)
+	var i CustomerAccount
+	err := row.Scan(
+		&i.AccountID,
+		&i.UserID,
+		&i.Currency,
+		&i.Kind,
+		&i.AccountNumber,
+		&i.Nickname,
+		&i.Status,
+		&i.OpenedAt,
+	)
+	return i, err
+}
+
 const getCustomerAccount = `-- name: GetCustomerAccount :one
 SELECT c.account_id, c.user_id, c.currency, c.kind, c.account_number, c.nickname, c.status, c.opened_at, l.balance_minor, l.available_minor
 FROM customer_accounts c

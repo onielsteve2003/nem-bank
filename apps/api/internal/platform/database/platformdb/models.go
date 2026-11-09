@@ -298,6 +298,41 @@ type Transaction struct {
 	UpdatedAt          time.Time
 }
 
+type Transfer struct {
+	ID                   uuid.UUID
+	UserID               uuid.UUID
+	Reference            string
+	Status               string
+	Rail                 string
+	SourceAccountID      uuid.UUID
+	DestinationAccountID pgtype.UUID
+	Recipient            []byte
+	Currency             string
+	AmountMinor          int64
+	FeeMinor             int64
+	Narration            string
+	Category             pgtype.Text
+	Risk                 []byte
+	StepUpID             pgtype.UUID
+	ReleaseAt            pgtype.Timestamptz
+	HoldID               pgtype.UUID
+	TransactionID        uuid.UUID
+	EntryID              pgtype.UUID
+	Reversal             []byte
+	DuressBlocked        bool
+	CreatedAt            time.Time
+	UpdatedAt            time.Time
+}
+
+type TransferEvent struct {
+	TransferID uuid.UUID
+	Seq        int32
+	Status     string
+	Label      string
+	Detail     pgtype.Text
+	At         time.Time
+}
+
 type User struct {
 	ID                uuid.UUID
 	FirstName         string

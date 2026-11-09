@@ -15,6 +15,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
 // handlers implements the contract's strict server. Each domain's API is embedded, so its
@@ -24,6 +25,7 @@ type handlers struct {
 	*identity.API
 	*adminAPI
 	*accountsAPI
+	*transfersAPI
 	fallback
 	version string
 	now     func() time.Time
@@ -33,8 +35,9 @@ type fallback struct{ api.Unimplemented }
 
 // adminAPI and accountsAPI name the embedded fields; every domain calls its type API.
 type (
-	adminAPI    = admin.API
-	accountsAPI = accounts.API
+	adminAPI     = admin.API
+	accountsAPI  = accounts.API
+	transfersAPI = transfers.API
 )
 
 var _ api.StrictServerInterface = (*handlers)(nil)

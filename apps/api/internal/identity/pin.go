@@ -171,6 +171,12 @@ func (s *Service) VerifyPin(ctx context.Context, pin string) (PinResult, error) 
 			if err := q.RecordPinSuccess(ctx, identitydb.RecordPinSuccessParams{ID: u.ID, DuressSince: since}); err != nil {
 				return fmt.Errorf("record pin success: %w", err)
 			}
+			if genuine && u.DuressSince != nil && s.onDuressEnded != nil {
+				// The real PIN ends duress: what was "sent" under it is stopped in this tx.
+				if err := s.onDuressEnded(ctx, tx, u.ID); err != nil {
+					return fmt.Errorf("end duress: %w", err)
+				}
+			}
 			out = PinResult{Valid: true, AttemptsLeft: PinMaxAttempts}
 			return nil
 		}
@@ -342,6 +348,7 @@ func (s *Service) RemoveDuressPin(ctx context.Context, stepUp string) error {
 // money: the name on the account, the KYC tier and whether the decoy view is on.
 type CustomerProfile struct {
 	Name     string
+	Nemtag   *string
 	KycTier  int
 	InDuress bool
 }
@@ -353,6 +360,6 @@ func (s *Service) CustomerProfile(ctx context.Context, userID uuid.UUID) (Custom
 		return CustomerProfile{}, fmt.Errorf("load user: %w", err)
 	}
 	return CustomerProfile{
-		Name: u.FirstName + " " + u.LastName, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil,
+		Name: u.FirstName + " " + u.LastName, Nemtag: u.Nemtag, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil,
 	}, nil
 }
