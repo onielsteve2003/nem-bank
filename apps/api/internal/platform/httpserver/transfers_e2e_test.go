@@ -10,7 +10,10 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
@@ -23,6 +26,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/testdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 )
 
 // TestASignedInternalTransferIsSentOnce sends money through the whole stack: sign-up
@@ -49,12 +53,26 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if tr, err = transfers.NewService(transfers.Config{Pool: pool, Accounts: acc, Customers: idsvc, Logger: quiet}); err != nil {
+	// The sandbox rail calls back into this same router over real HTTP, as it does in
+	// production over loopback.
+	var h http.Handler
+	self := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) { h.ServeHTTP(w, r) }))
+	t.Cleanup(self.Close)
+	secret := []byte("e2e-sandbox-nip-secret-0123456789") // gitleaks:allow (test fixture)
+	sandbox, err := partners.NewSandboxNIP(partners.SandboxConfig{
+		Pool: pool, CallbackURL: self.URL + "/v1/partner-webhooks/sandbox_nip", Secret: secret, Logger: quiet,
+	})
+	if err != nil {
 		t.Fatal(err)
 	}
-	h, err := NewRouter(Options{
+	if tr, err = transfers.NewService(transfers.Config{Pool: pool, Accounts: acc, Customers: idsvc, Logger: quiet,
+		Sandbox: sandbox, WebhookSecrets: map[string][]byte{"sandbox_nip": secret}}); err != nil {
+		t.Fatal(err)
+	}
+	h, err = NewRouter(Options{
 		Version: "e2e", Logger: quiet, Identity: identity.NewAPI(idsvc), Authenticator: idsvc, Signatures: idsvc,
 		Idempotency: idempotency.NewStore(pool), Accounts: accounts.NewAPI(acc), Transfers: transfers.NewAPI(tr),
+		PartnerCallbacks: tr,
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -146,6 +164,52 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 	}
 	if banks := call[api.BankList](t, h, http.MethodGet, "/v1/banks", tolu.AccessToken, nil, http.StatusOK); len(banks.Data) < 20 {
 		t.Fatalf("banks = %d", len(banks.Data))
+	}
+
+	// To another bank: held, sent by the saga, settled by the sandbox's signed callback.
+	if _, err := pool.Exec(t.Context(), `UPDATE simulator_settings SET settings = '{"failure_rate_bps": 0, "timeout_rate_bps": 0,
+		"min_delay_seconds": 0, "max_delay_seconds": 0, "name_check": "realistic"}' WHERE name = 'bank_partner'`); err != nil {
+		t.Fatal(err)
+	}
+	ext := `{"source_account_id":"` + toluAcc.Id.String() + `","destination":{"kind":"bank","bank_code":"058",` +
+		`"account_number":"0123456789","account_name":"Chidi Okonkwo"},"amount":{"amount_minor":"100000","currency":"NGN"}}`
+	rec := signedPostKey(t, h, toluKey, tolu.Device.Id, tolu.AccessToken, "/v1/transfers", ext, "nonce-trf-000003", uuid.NewString())
+	if rec.Code != http.StatusCreated {
+		t.Fatalf("external transfer = %d: %s", rec.Code, rec.Body)
+	}
+	out := decode[api.Transfer](t, rec.Body.Bytes())
+	if out.Status != api.TransferStatusProcessing || out.Rail != api.Interbank || out.Recipient.Name != "Chidi Okonkwo" {
+		t.Fatalf("external = %+v", out)
+	}
+	held := call[api.Account](t, h, http.MethodGet, "/v1/accounts/"+toluAcc.Id.String(), tolu.AccessToken, nil, http.StatusOK)
+	if held.LedgerBalance.AmountMinor != "750000" || held.AvailableBalance.AmountMinor != "650000" {
+		t.Fatalf("while held: ledger %s, available %s", held.LedgerBalance.AmountMinor, held.AvailableBalance.AmountMinor)
+	}
+	if err := tr.SendExternal(t.Context(), out.Id); err != nil { // the River job, run inline
+		t.Fatal(err)
+	}
+	if err := sandbox.DeliverCallback(t.Context(), out.Reference); err != nil { // the sandbox's River job
+		t.Fatal(err)
+	}
+	done := call[api.Transfer](t, h, http.MethodGet, "/v1/transfers/"+out.Id.String(), tolu.AccessToken, nil, http.StatusOK)
+	if done.Status != api.TransferStatusCompleted || done.Timeline[len(done.Timeline)-1].Label != "Received by Guaranty Trust Bank" {
+		t.Fatalf("after the callback = %+v", done)
+	}
+	paid := call[api.Account](t, h, http.MethodGet, "/v1/accounts/"+toluAcc.Id.String(), tolu.AccessToken, nil, http.StatusOK)
+	if paid.LedgerBalance.AmountMinor != "650000" || paid.AvailableBalance.AmountMinor != "650000" {
+		t.Fatalf("after settling: ledger %s, available %s", paid.LedgerBalance.AmountMinor, paid.AvailableBalance.AmountMinor)
+	}
+
+	// The webhook refuses anything not signed with the partner's secret.
+	forged := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/partner-webhooks/sandbox_nip",
+		strings.NewReader(`{"event_type":"transfer.settled","reference":"`+out.Reference+`","occurred_at":"2026-11-09T10:00:00Z"}`))
+	forged.Header.Set("Content-Type", "application/json")
+	forged.Header.Set("Partner-Signature", partners.Sign([]byte("guessed"), time.Now(), []byte("{}")))
+	forged.Header.Set("Partner-Event-Id", "forged-1")
+	frec := httptest.NewRecorder()
+	h.ServeHTTP(frec, forged)
+	if frec.Code != http.StatusUnauthorized {
+		t.Fatalf("forged callback = %d: %s", frec.Code, frec.Body)
 	}
 }
 

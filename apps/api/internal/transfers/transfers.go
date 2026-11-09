@@ -21,6 +21,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
+	"github.com/riverqueue/river"
+	"github.com/riverqueue/river/riverdriver/riverpgxv5"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
@@ -108,7 +110,14 @@ type Config struct {
 	// Sandbox is the simulated rail, whose settings staff change from the console; nil
 	// builds one on Pool with no callbacks.
 	Sandbox *partners.SandboxNIP
-	Logger  *slog.Logger
+	// WebhookSecrets verify partner callbacks, by partner name. A partner without one
+	// cannot call back (its transfers settle by status query).
+	WebhookSecrets map[string][]byte
+	// SagaTimeout is how long an interbank transfer waits for the partner before its money
+	// is given back; default DefaultSagaTimeout. PollAfter is the first status check's
+	// delay, doubling after; default DefaultPollAfter.
+	SagaTimeout, PollAfter time.Duration
+	Logger                 *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
 }
@@ -121,8 +130,12 @@ type Service struct {
 	customers Customers
 	partner   partners.BankPartner
 	sandbox   *partners.SandboxNIP
+	secrets   map[string][]byte
+	insert    *river.Client[pgx.Tx]
 	log       *slog.Logger
-	now       func() time.Time
+	// sagaTimeout and pollAfter pace the interbank saga.
+	sagaTimeout, pollAfter time.Duration
+	now                    func() time.Time
 }
 
 // NewService checks the configuration and returns the service.
@@ -143,9 +156,21 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Partner == nil {
 		cfg.Partner = cfg.Sandbox
 	}
+	if cfg.SagaTimeout <= 0 {
+		cfg.SagaTimeout = DefaultSagaTimeout
+	}
+	if cfg.PollAfter <= 0 {
+		cfg.PollAfter = DefaultPollAfter
+	}
+	// Insert-only: the process's jobs.Runner works the saga's jobs (Register).
+	insert, err := river.NewClient(riverpgxv5.New(cfg.Pool), &river.Config{Logger: cfg.Logger})
+	if err != nil {
+		return nil, fmt.Errorf("transfers job client: %w", err)
+	}
 	return &Service{
 		pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers,
-		partner: cfg.Partner, sandbox: cfg.Sandbox, log: cfg.Logger, now: cfg.Now,
+		partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
+		log: cfg.Logger, now: cfg.Now, sagaTimeout: cfg.SagaTimeout, pollAfter: cfg.PollAfter,
 	}, nil
 }
 
@@ -164,7 +189,8 @@ type View struct {
 	Timeline []transfersdb.TransferEvent
 }
 
-// Create sends money. On the internal rail it completes before it returns.
+// Create sends money. On the internal rail it completes before it returns; on the
+// interbank rail the money is held and the saga (saga.go) takes it on from processing.
 func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 	p, ok := identity.PrincipalFrom(ctx)
 	if !ok {
@@ -188,21 +214,17 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 	if err != nil {
 		return View{}, err
 	}
-	if dest.UserID == p.UserID {
+	if dest.internal() && dest.nem.UserID == p.UserID {
 		return View{}, errOwnAccount
 	}
 
 	narration := strings.TrimSpace(r.Narration)
 	if narration == "" {
-		narration = "Transfer to " + dest.Name
+		narration = "Transfer to " + dest.party.Name
 	}
 	category := "transfers"
 	if r.Category != nil {
 		category = *r.Category
-	}
-	recipient := api.TransferParty{
-		Name: dest.Name, Nemtag: dest.Nemtag, BankCode: accounts.BankCode, BankName: accounts.BankName,
-		AccountNumberMasked: accounts.MaskNumber(dest.AccountNumber),
 	}
 	ids, err := newIDs(2)
 	if err != nil {
@@ -214,10 +236,10 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 		return View{}, err
 	}
 	party := api.Counterparty{
-		Name: recipient.Name, Nemtag: recipient.Nemtag, BankName: &recipient.BankName,
-		AccountNumberMasked: &recipient.AccountNumberMasked,
+		Name: dest.party.Name, Nemtag: dest.party.Nemtag, BankName: &dest.party.BankName,
+		AccountNumberMasked: &dest.party.AccountNumberMasked,
 	}
-	recipientJSON, err := json.Marshal(recipient)
+	recipientJSON, err := json.Marshal(dest.party)
 	if err != nil {
 		return View{}, fmt.Errorf("recipient: %w", err)
 	}
@@ -231,12 +253,33 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 		}); err != nil {
 			return err
 		}
-		t, err := q.InsertTransfer(ctx, transfersdb.InsertTransferParams{
+		in := transfersdb.InsertTransferParams{
 			ID: id, UserID: p.UserID, Reference: reference, Rail: "internal", SourceAccountID: src.AccountID,
-			DestinationAccountID: &dest.AccountID, Recipient: recipientJSON, Currency: string(money.NGN),
-			AmountMinor: r.Amount.Amount(), Narration: narration, Category: &category, TransactionID: lineID,
-			DuressBlocked: sender.InDuress,
-		})
+			Recipient: recipientJSON, Currency: string(money.NGN), AmountMinor: r.Amount.Amount(), Narration: narration,
+			Category: &category, TransactionID: lineID, DuressBlocked: sender.InDuress,
+		}
+		if dest.internal() {
+			in.DestinationAccountID = &dest.nem.AccountID
+		} else {
+			deadline := s.now().Add(s.sagaTimeout)
+			partner := s.partner.Name()
+			in.Rail, in.Partner, in.SagaDeadline = "interbank", &partner, &deadline
+			in.BankCode, in.AccountNumber = &dest.bank.Code, &dest.account.AccountNumber
+			if !sender.InDuress {
+				// The money is set aside now and only leaves when the partner settles.
+				hold, err := ledger.PlaceHold(ctx, tx, ledger.Hold{
+					Account: src.AccountID, Amount: r.Amount, Reference: id.String(), Reason: "pending_transfer",
+				})
+				if errors.Is(err, ledger.ErrInsufficientFunds) {
+					return insufficient(r.Amount)
+				}
+				if err != nil {
+					return fmt.Errorf("hold transfer: %w", err)
+				}
+				in.HoldID = &hold.ID
+			}
+		}
+		t, err := q.InsertTransfer(ctx, in)
 		if err != nil {
 			return fmt.Errorf("insert transfer: %w", err)
 		}
@@ -259,14 +302,20 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 			if accounts.Decoy(bal.Available).Amount() < r.Amount.Amount() {
 				return insufficient(r.Amount)
 			}
-			_, err = s.move(ctx, q, t, Processing, "Sent to "+accounts.BankName, nil, nil)
+			_, err = s.move(ctx, q, t, Processing, "Sent to "+dest.party.BankName, nil, nil)
 			return err
+		}
+		if !dest.internal() {
+			if _, err := s.move(ctx, q, t, Processing, "Sent to "+dest.party.BankName, nil, nil); err != nil {
+				return err
+			}
+			return s.startSaga(ctx, tx, t)
 		}
 
 		posted, err := ledger.Post(ctx, tx, ledger.Entry{
 			Kind: "transfer_internal", Reference: reference, IdempotencyKey: "transfer:" + id.String(),
 			Metadata: map[string]any{"transfer_id": id.String()},
-			Legs:     []ledger.Leg{ledger.Debit(src.AccountID, r.Amount), ledger.Credit(dest.AccountID, r.Amount)},
+			Legs:     []ledger.Leg{ledger.Debit(src.AccountID, r.Amount), ledger.Credit(dest.nem.AccountID, r.Amount)},
 		})
 		if errors.Is(err, ledger.ErrInsufficientFunds) {
 			return insufficient(r.Amount)
@@ -280,7 +329,7 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 		senderNumber := accounts.MaskNumber(src.AccountNumber)
 		bankName := accounts.BankName
 		if _, err := accounts.Record(ctx, tx, accounts.Line{
-			UserID: dest.UserID, AccountID: dest.AccountID, Type: "transfer_in", Direction: "credit", Status: "completed",
+			UserID: dest.nem.UserID, AccountID: dest.nem.AccountID, Type: "transfer_in", Direction: "credit", Status: "completed",
 			Amount: r.Amount, Entry: &posted, Narration: narration, Reference: reference, Category: "transfers",
 			Counterparty: api.Counterparty{Name: sender.Name, Nemtag: sender.Nemtag, BankName: &bankName, AccountNumberMasked: &senderNumber},
 		}); err != nil {
@@ -292,7 +341,7 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 		_, err = jobs.Write(ctx, tx, jobs.Event{
 			Topic: "transfer.completed", AggregateType: "transfer", AggregateID: id.String(),
 			Payload: map[string]any{
-				"transfer_id": id, "user_id": p.UserID, "recipient_user_id": dest.UserID, "rail": "internal",
+				"transfer_id": id, "user_id": p.UserID, "recipient_user_id": dest.nem.UserID, "rail": "internal",
 				"amount_minor": r.Amount.Amount(), "currency": string(money.NGN),
 			},
 		})
@@ -304,31 +353,71 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 	return s.view(ctx, p.UserID, id)
 }
 
-// resolve finds where the money goes. Only Nem accounts exist until the interbank rail
-// (T25.3/T25.4) and saved beneficiaries (T25.6) arrive.
-func (s *Service) resolve(ctx context.Context, d api.TransferDestination) (accounts.Recipient, error) {
+// target is where a transfer goes: a Nem account (internal) or an account at another bank
+// that name enquiry found (interbank).
+type target struct {
+	nem     *accounts.Recipient
+	bank    partners.Bank
+	account partners.AccountName
+	party   api.TransferParty
+}
+
+func (d target) internal() bool { return d.nem != nil }
+
+func nemTarget(r accounts.Recipient) target {
+	return target{nem: &r, party: api.TransferParty{
+		Name: r.Name, Nemtag: r.Nemtag, BankCode: accounts.BankCode, BankName: accounts.BankName,
+		AccountNumberMasked: accounts.MaskNumber(r.AccountNumber),
+	}}
+}
+
+// resolve finds where the money goes. Saved beneficiaries arrive in T25.6.
+func (s *Service) resolve(ctx context.Context, d api.TransferDestination) (target, error) {
 	kind, err := d.Discriminator()
 	if err != nil {
-		return accounts.Recipient{}, fmt.Errorf("destination: %w", err)
+		return target{}, fmt.Errorf("destination: %w", err)
 	}
 	switch kind {
 	case "nem":
 		n, err := d.AsNemDestination()
 		if err != nil {
-			return accounts.Recipient{}, fmt.Errorf("destination: %w", err)
+			return target{}, fmt.Errorf("destination: %w", err)
 		}
-		return s.accounts.ResolveNuban(ctx, n.AccountNumber)
+		r, err := s.accounts.ResolveNuban(ctx, n.AccountNumber)
+		if err != nil {
+			return target{}, err
+		}
+		return nemTarget(r), nil
 	case "bank":
 		b, err := d.AsBankDestination()
 		if err != nil {
-			return accounts.Recipient{}, fmt.Errorf("destination: %w", err)
+			return target{}, fmt.Errorf("destination: %w", err)
 		}
 		if b.BankCode == accounts.BankCode {
-			return s.accounts.ResolveNuban(ctx, b.AccountNumber)
+			r, err := s.accounts.ResolveNuban(ctx, b.AccountNumber)
+			if err != nil {
+				return target{}, err
+			}
+			return nemTarget(r), nil
 		}
-		return accounts.Recipient{}, errRailNotReady.WithDetail("Transfers to other banks are not available yet.")
+		bank, ok := partners.BankByCode(b.BankCode)
+		if !ok {
+			return target{}, errUnknownBank
+		}
+		// The name the bank holds, not the one typed: the customer saw it (and the CoP
+		// verdict) on the review screen, and it is what their statement should say.
+		acct, err := s.partner.NameEnquiry(ctx, bank.Code, b.AccountNumber)
+		if errors.Is(err, partners.ErrAccountNotFound) {
+			return target{}, errNoSuchAccountElsewhere
+		}
+		if err != nil {
+			return target{}, fmt.Errorf("name enquiry: %w", err)
+		}
+		return target{bank: bank, account: acct, party: api.TransferParty{
+			Name: acct.Name, BankCode: bank.Code, BankName: bank.Name, AccountNumberMasked: accounts.MaskNumber(acct.AccountNumber),
+		}}, nil
 	default:
-		return accounts.Recipient{}, errRailNotReady.WithDetail("Sending to a saved beneficiary is not available yet.")
+		return target{}, errRailNotReady.WithDetail("Sending to a saved beneficiary is not available yet.")
 	}
 }
 

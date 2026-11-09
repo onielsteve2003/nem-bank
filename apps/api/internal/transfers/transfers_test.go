@@ -62,7 +62,10 @@ type fixture struct {
 	n     atomic.Int32
 }
 
-func newFixture(t *testing.T) *fixture {
+func newFixture(t *testing.T) *fixture { return newFixtureWith(t, nil) }
+
+// newFixtureWith lets a test change the service's configuration (partner, clock, saga).
+func newFixtureWith(t *testing.T, tweak func(*Config)) *fixture {
 	t.Helper()
 	pool := testdb.New(t)
 	quiet := slog.New(slog.NewTextHandler(io.Discard, nil))
@@ -75,7 +78,11 @@ func newFixture(t *testing.T) *fixture {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if f.svc, err = NewService(Config{Pool: pool, Accounts: f.accts, Customers: f.profs, Logger: quiet}); err != nil {
+	cfg := Config{Pool: pool, Accounts: f.accts, Customers: f.profs, Logger: quiet}
+	if tweak != nil {
+		tweak(&cfg)
+	}
+	if f.svc, err = NewService(cfg); err != nil {
 		t.Fatal(err)
 	}
 	return f
@@ -228,12 +235,14 @@ func TestRefusedTransfersLeaveNothingBehind(t *testing.T) {
 		req  Request
 		code string
 	}{
-		"insufficient":  {Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100_001)}, "insufficient_funds"},
-		"own account":   {Request{SourceAccountID: tolu.account, Destination: toNem(tolu.number), Amount: ngn(100)}, "validation_failed"},
-		"unknown":       {Request{SourceAccountID: tolu.account, Destination: toNem("0000014579"), Amount: ngn(100)}, "account_not_found"},
-		"wallet source": {Request{SourceAccountID: usd.AccountID, Destination: toNem(ada.number), Amount: money.New(100, money.USD)}, "validation_failed"},
-		"other bank":    {Request{SourceAccountID: tolu.account, Destination: toBank("058", "0000014579"), Amount: ngn(100)}, problem.CodeNotImplemented},
-		"not my source": {Request{SourceAccountID: ada.account, Destination: toNem(tolu.number), Amount: ngn(100)}, problem.CodeNotFound},
+		"insufficient":                      {Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100_001)}, "insufficient_funds"},
+		"own account":                       {Request{SourceAccountID: tolu.account, Destination: toNem(tolu.number), Amount: ngn(100)}, "validation_failed"},
+		"unknown":                           {Request{SourceAccountID: tolu.account, Destination: toNem("0000014579"), Amount: ngn(100)}, "account_not_found"},
+		"wallet source":                     {Request{SourceAccountID: usd.AccountID, Destination: toNem(ada.number), Amount: money.New(100, money.USD)}, "validation_failed"},
+		"no such account at the other bank": {Request{SourceAccountID: tolu.account, Destination: toBank("058", "1234560000"), Amount: ngn(100)}, "account_not_found"},
+		"unknown bank":                      {Request{SourceAccountID: tolu.account, Destination: toBank("999", "0123456789"), Amount: ngn(100)}, problem.CodeValidationFailed},
+		"insufficient for another bank":     {Request{SourceAccountID: tolu.account, Destination: toBank("058", "0123456789"), Amount: ngn(100_001)}, "insufficient_funds"},
+		"not my source":                     {Request{SourceAccountID: ada.account, Destination: toNem(tolu.number), Amount: ngn(100)}, problem.CodeNotFound},
 	} {
 		_, err := f.svc.Create(tolu.ctx, tc.req)
 		var p *problem.Error

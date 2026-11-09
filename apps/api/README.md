@@ -316,7 +316,32 @@ happened. A refused transfer (insufficient funds, own account, unknown number, a
 as the source) leaves no row behind. A double tap with the same `Idempotency-Key`
 replays the first response. Under duress (SEC-5) a transfer looks sent but moves
 nothing, and the real PIN marks it "Stopped by Nem" in the same transaction that ends
-duress. Other banks and saved beneficiaries answer 501 until their rails exist.
+duress. Saved beneficiaries answer 501 until T25.6.
+
+**Payees.** `POST /v1/payees/resolve` finds a Nem user by account number, @nemtag or phone,
+or asks another bank whose account a number is (name enquiry). For a bank account it runs
+**Confirmation of Payee** (`internal/transfers/cop`): names are compared word by word with
+Jaro-Winkler, ignoring order, case and titles; `match` needs every typed word exactly, so
+one typo shows as `close_match`. Lookups are capped at 60 an hour per customer, so the
+endpoint cannot be used to harvest names.
+
+**Other banks** (`internal/transfers/partners`, migrations 00015–00016). Partners sit
+behind `BankPartner`: name enquiry, a send that is idempotent by Nem's reference, and a
+status query. `sandbox_nip` simulates NIBSS Instant Payment in Postgres: each payment is
+drawn to settle, fail or time out from the console's Bank Partner Simulator settings, and
+a River job posts a signed callback at settle time. `paystack_test` is a real adapter for
+Paystack test mode (test keys only, outcomes by status query).
+
+An interbank transfer is a **saga**. Create holds the money and queues the send and a
+deadline check in the same transaction; the send job hands it to the partner with the
+transfer's row locked; status checks back off from 20 s to 2 min. The partner's answer,
+by callback or status check, either posts the held money to `partner_settlement`
+(capturing the hold in the same entry) or releases the hold and records the reversal.
+No answer by the deadline (15 min) is a reversal too, and a settlement that arrives after
+that is raised as `transfer.late_settlement` for reconciliation instead of moving money
+again. Callbacks to `POST /v1/partner-webhooks/{partner}` are checked in the request
+validator: HMAC-SHA256 over the raw body with a timestamp (±5 min), then recorded by
+`Partner-Event-Id` in the same transaction as their effect, so a repeat changes nothing.
 
 ## Field encryption and the audit log
 

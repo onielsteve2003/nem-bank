@@ -13,7 +13,7 @@ import (
 )
 
 const getTransfer = `-- name: GetTransfer :one
-SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at FROM transfers WHERE id = $1 AND user_id = $2
+SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline FROM transfers WHERE id = $1 AND user_id = $2
 `
 
 type GetTransferParams struct {
@@ -48,12 +48,17 @@ func (q *Queries) GetTransfer(ctx context.Context, arg GetTransferParams) (Trans
 		&i.DuressBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.BankCode,
+		&i.AccountNumber,
+		&i.Partner,
+		&i.PartnerReference,
+		&i.SagaDeadline,
 	)
 	return i, err
 }
 
 const getTransferByID = `-- name: GetTransferByID :one
-SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at FROM transfers WHERE id = $1
+SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline FROM transfers WHERE id = $1
 `
 
 func (q *Queries) GetTransferByID(ctx context.Context, id uuid.UUID) (Transfer, error) {
@@ -83,19 +88,95 @@ func (q *Queries) GetTransferByID(ctx context.Context, id uuid.UUID) (Transfer, 
 		&i.DuressBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.BankCode,
+		&i.AccountNumber,
+		&i.Partner,
+		&i.PartnerReference,
+		&i.SagaDeadline,
 	)
 	return i, err
+}
+
+const getTransferByReference = `-- name: GetTransferByReference :one
+SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline FROM transfers WHERE reference = $1
+`
+
+func (q *Queries) GetTransferByReference(ctx context.Context, reference string) (Transfer, error) {
+	row := q.db.QueryRow(ctx, getTransferByReference, reference)
+	var i Transfer
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Reference,
+		&i.Status,
+		&i.Rail,
+		&i.SourceAccountID,
+		&i.DestinationAccountID,
+		&i.Recipient,
+		&i.Currency,
+		&i.AmountMinor,
+		&i.FeeMinor,
+		&i.Narration,
+		&i.Category,
+		&i.Risk,
+		&i.StepUpID,
+		&i.ReleaseAt,
+		&i.HoldID,
+		&i.TransactionID,
+		&i.EntryID,
+		&i.Reversal,
+		&i.DuressBlocked,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.BankCode,
+		&i.AccountNumber,
+		&i.Partner,
+		&i.PartnerReference,
+		&i.SagaDeadline,
+	)
+	return i, err
+}
+
+const insertPartnerWebhookEvent = `-- name: InsertPartnerWebhookEvent :one
+INSERT INTO partner_webhook_events (partner, event_id, event_type, reference, outcome)
+VALUES ($1, $2, $3, $4, $5)
+ON CONFLICT (partner, event_id) DO NOTHING
+RETURNING partner
+`
+
+type InsertPartnerWebhookEventParams struct {
+	Partner   string
+	EventID   string
+	EventType string
+	Reference string
+	Outcome   string
+}
+
+// No row back means the event was handled before.
+func (q *Queries) InsertPartnerWebhookEvent(ctx context.Context, arg InsertPartnerWebhookEventParams) (string, error) {
+	row := q.db.QueryRow(ctx, insertPartnerWebhookEvent,
+		arg.Partner,
+		arg.EventID,
+		arg.EventType,
+		arg.Reference,
+		arg.Outcome,
+	)
+	var partner string
+	err := row.Scan(&partner)
+	return partner, err
 }
 
 const insertTransfer = `-- name: InsertTransfer :one
 INSERT INTO transfers (
   id, user_id, reference, rail, source_account_id, destination_account_id, recipient, currency, amount_minor,
-  fee_minor, narration, category, transaction_id, duress_blocked
+  fee_minor, narration, category, transaction_id, duress_blocked, hold_id, bank_code, account_number, partner,
+  saga_deadline
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8,
-  $9, $10, $11, $12, $13, $14
+  $9, $10, $11, $12, $13, $14, $15,
+  $16, $17, $18, $19
 )
-RETURNING id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at
+RETURNING id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline
 `
 
 type InsertTransferParams struct {
@@ -113,6 +194,11 @@ type InsertTransferParams struct {
 	Category             *string
 	TransactionID        uuid.UUID
 	DuressBlocked        bool
+	HoldID               *uuid.UUID
+	BankCode             *string
+	AccountNumber        *string
+	Partner              *string
+	SagaDeadline         *time.Time
 }
 
 func (q *Queries) InsertTransfer(ctx context.Context, arg InsertTransferParams) (Transfer, error) {
@@ -131,6 +217,11 @@ func (q *Queries) InsertTransfer(ctx context.Context, arg InsertTransferParams) 
 		arg.Category,
 		arg.TransactionID,
 		arg.DuressBlocked,
+		arg.HoldID,
+		arg.BankCode,
+		arg.AccountNumber,
+		arg.Partner,
+		arg.SagaDeadline,
 	)
 	var i Transfer
 	err := row.Scan(
@@ -157,6 +248,11 @@ func (q *Queries) InsertTransfer(ctx context.Context, arg InsertTransferParams) 
 		&i.DuressBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.BankCode,
+		&i.AccountNumber,
+		&i.Partner,
+		&i.PartnerReference,
+		&i.SagaDeadline,
 	)
 	return i, err
 }
@@ -217,7 +313,7 @@ func (q *Queries) ListTransferEvents(ctx context.Context, ids []uuid.UUID) ([]Tr
 }
 
 const listTransfers = `-- name: ListTransfers :many
-SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at FROM transfers
+SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline FROM transfers
 WHERE user_id = $1
   AND ($2::text IS NULL OR status = $2)
   AND ($3::uuid = '00000000-0000-0000-0000-000000000000'
@@ -273,6 +369,11 @@ func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([
 			&i.DuressBlocked,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.BankCode,
+			&i.AccountNumber,
+			&i.Partner,
+			&i.PartnerReference,
+			&i.SagaDeadline,
 		); err != nil {
 			return nil, err
 		}
@@ -285,7 +386,7 @@ func (q *Queries) ListTransfers(ctx context.Context, arg ListTransfersParams) ([
 }
 
 const lockDuressTransfers = `-- name: LockDuressTransfers :many
-SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at FROM transfers
+SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline FROM transfers
 WHERE user_id = $1 AND duress_blocked AND status = 'processing'
 ORDER BY id
 FOR UPDATE
@@ -325,6 +426,11 @@ func (q *Queries) LockDuressTransfers(ctx context.Context, userID uuid.UUID) ([]
 			&i.DuressBlocked,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.BankCode,
+			&i.AccountNumber,
+			&i.Partner,
+			&i.PartnerReference,
+			&i.SagaDeadline,
 		); err != nil {
 			return nil, err
 		}
@@ -336,11 +442,82 @@ func (q *Queries) LockDuressTransfers(ctx context.Context, userID uuid.UUID) ([]
 	return items, nil
 }
 
+const lockTransfer = `-- name: LockTransfer :one
+SELECT id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline FROM transfers WHERE id = $1 FOR UPDATE
+`
+
+// The saga's steps (send, status check, callback) take this lock, so two answers for the
+// same transfer are judged one after the other, never both on the same old status.
+func (q *Queries) LockTransfer(ctx context.Context, id uuid.UUID) (Transfer, error) {
+	row := q.db.QueryRow(ctx, lockTransfer, id)
+	var i Transfer
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.Reference,
+		&i.Status,
+		&i.Rail,
+		&i.SourceAccountID,
+		&i.DestinationAccountID,
+		&i.Recipient,
+		&i.Currency,
+		&i.AmountMinor,
+		&i.FeeMinor,
+		&i.Narration,
+		&i.Category,
+		&i.Risk,
+		&i.StepUpID,
+		&i.ReleaseAt,
+		&i.HoldID,
+		&i.TransactionID,
+		&i.EntryID,
+		&i.Reversal,
+		&i.DuressBlocked,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+		&i.BankCode,
+		&i.AccountNumber,
+		&i.Partner,
+		&i.PartnerReference,
+		&i.SagaDeadline,
+	)
+	return i, err
+}
+
+const setPartnerReference = `-- name: SetPartnerReference :exec
+UPDATE transfers SET partner_reference = $1, updated_at = clock_timestamp()
+WHERE id = $2 AND partner_reference IS NULL
+`
+
+type SetPartnerReferenceParams struct {
+	PartnerReference *string
+	ID               uuid.UUID
+}
+
+func (q *Queries) SetPartnerReference(ctx context.Context, arg SetPartnerReferenceParams) error {
+	_, err := q.db.Exec(ctx, setPartnerReference, arg.PartnerReference, arg.ID)
+	return err
+}
+
+const setTransferReversal = `-- name: SetTransferReversal :exec
+UPDATE transfers SET reversal = $1, updated_at = clock_timestamp() WHERE id = $2 AND reversal IS NULL
+`
+
+type SetTransferReversalParams struct {
+	Reversal []byte
+	ID       uuid.UUID
+}
+
+func (q *Queries) SetTransferReversal(ctx context.Context, arg SetTransferReversalParams) error {
+	_, err := q.db.Exec(ctx, setTransferReversal, arg.Reversal, arg.ID)
+	return err
+}
+
 const setTransferStatus = `-- name: SetTransferStatus :one
 UPDATE transfers
 SET status = $1, entry_id = coalesce($2, entry_id), updated_at = clock_timestamp()
 WHERE id = $3 AND status = $4
-RETURNING id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at
+RETURNING id, user_id, reference, status, rail, source_account_id, destination_account_id, recipient, currency, amount_minor, fee_minor, narration, category, risk, step_up_id, release_at, hold_id, transaction_id, entry_id, reversal, duress_blocked, created_at, updated_at, bank_code, account_number, partner, partner_reference, saga_deadline
 `
 
 type SetTransferStatusParams struct {
@@ -384,6 +561,11 @@ func (q *Queries) SetTransferStatus(ctx context.Context, arg SetTransferStatusPa
 		&i.DuressBlocked,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.BankCode,
+		&i.AccountNumber,
+		&i.Partner,
+		&i.PartnerReference,
+		&i.SagaDeadline,
 	)
 	return i, err
 }

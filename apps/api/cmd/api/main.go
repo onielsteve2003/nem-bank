@@ -149,6 +149,7 @@ func run() error {
 	}
 	transfersSvc, err = transfers.NewService(transfers.Config{
 		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
+		WebhookSecrets: map[string][]byte{sandbox.Name(): cfg.SandboxNIPSecret},
 	})
 	if err != nil {
 		return err
@@ -181,6 +182,7 @@ func run() error {
 		Identity:           identity.NewAPI(identitySvc),
 		Authenticator:      identitySvc,
 		Signatures:         identitySvc,
+		PartnerCallbacks:   transfersSvc,
 		Idempotency:        idem,
 		Accounts:           accounts.NewAPI(accountsSvc),
 		Transfers:          transfers.NewAPI(transfersSvc),
@@ -197,7 +199,7 @@ func run() error {
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber()},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances},
-		Workers:      []func(*river.Workers){sandbox.Register},
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register},
 	})
 	if err != nil {
 		return err

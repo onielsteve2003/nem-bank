@@ -45,8 +45,27 @@ type SignatureVerifier interface {
 	VerifyRequestSignature(ctx context.Context, r identity.SignedRequest) error
 }
 
+// PartnerVerifier checks a partner callback's Partner-Signature over the raw body.
+// Failures should be *problem.Error values (401s).
+type PartnerVerifier interface {
+	VerifyPartnerCallback(ctx context.Context, partner, signature string, body []byte) error
+}
+
+// partnerSignedOperation reports whether the operation is a partner callback: it lists the
+// Partner-Signature header.
+func partnerSignedOperation(op *openapi3.Operation) bool {
+	for _, p := range op.Parameters {
+		if p.Value != nil && p.Value.In == openapi3.ParameterInHeader && strings.EqualFold(p.Value.Name, "Partner-Signature") {
+			return true
+		}
+	}
+	return false
+}
+
 // maxSignedBody bounds the body read for hashing. Money requests are a few hundred bytes.
 const maxSignedBody = 64 << 10
+
+var errPartnerSignature = problem.New(http.StatusUnauthorized, "invalid_signature", "The callback signature is not valid.")
 
 var errBodyTooLarge = problem.New(http.StatusRequestEntityTooLarge, "payload_too_large", "This request is too large.")
 
@@ -76,7 +95,7 @@ func signedOperation(op *openapi3.Operation) bool {
 // re-encodes it, and the signature covers the client's bytes. sig may be nil, and then
 // every signed operation is refused.
 func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
-	return requestValidator(spec, auth, nil, sig, nil, nil, log)
+	return requestValidator(spec, auth, nil, sig, nil, nil, nil, log)
 }
 
 // customerLimit runs once the caller is known; see limiter.byCustomer.
@@ -84,7 +103,10 @@ type customerLimit func(ctx context.Context, c *gin.Context, signed bool) error
 
 // staff verifies console (staffAuth) tokens; nil makes every staff operation a 401. Staff
 // operations that list x-roles are refused with 403 unless the caller holds one of them.
-func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig SignatureVerifier, idem IdempotencyStore, limit customerLimit, log *slog.Logger) (gin.HandlerFunc, error) {
+//
+// Partner callbacks are checked by partner on the raw body once their headers are valid;
+// partner may be nil, and then every callback is refused.
+func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig SignatureVerifier, idem IdempotencyStore, limit customerLimit, partner PartnerVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
 	roles, err := operationRoles(spec)
 	if err != nil {
 		return nil, err
@@ -139,8 +161,9 @@ func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig Signature
 			return
 		}
 		signed, keyed := signedOperation(route.Operation), keyedOperation(route.Operation)
+		fromPartner := partnerSignedOperation(route.Operation)
 		var raw []byte
-		if (signed || keyed) && c.Request.Body != nil {
+		if (signed || keyed || fromPartner) && c.Request.Body != nil {
 			raw, err = io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, maxSignedBody))
 			if err != nil {
 				var tooLarge *http.MaxBytesError
@@ -187,6 +210,17 @@ func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig Signature
 		}
 		if signed {
 			if err := verifySignature(c, sig, raw); err != nil {
+				problem.Write(c, log, err)
+				return
+			}
+		}
+		if fromPartner {
+			// The MAC covers the bytes the partner sent, before anything re-encodes them.
+			var err error = errPartnerSignature
+			if partner != nil {
+				err = partner.VerifyPartnerCallback(c.Request.Context(), pathParams["partner"], c.GetHeader("Partner-Signature"), raw)
+			}
+			if err != nil {
 				problem.Write(c, log, err)
 				return
 			}

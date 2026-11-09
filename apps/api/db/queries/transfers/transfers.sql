@@ -1,10 +1,12 @@
 -- name: InsertTransfer :one
 INSERT INTO transfers (
   id, user_id, reference, rail, source_account_id, destination_account_id, recipient, currency, amount_minor,
-  fee_minor, narration, category, transaction_id, duress_blocked
+  fee_minor, narration, category, transaction_id, duress_blocked, hold_id, bank_code, account_number, partner,
+  saga_deadline
 ) VALUES (
   @id, @user_id, @reference, @rail, @source_account_id, sqlc.narg('destination_account_id'), @recipient, @currency,
-  @amount_minor, @fee_minor, @narration, sqlc.narg('category'), @transaction_id, @duress_blocked
+  @amount_minor, @fee_minor, @narration, sqlc.narg('category'), @transaction_id, @duress_blocked, sqlc.narg('hold_id'),
+  sqlc.narg('bank_code'), sqlc.narg('account_number'), sqlc.narg('partner'), sqlc.narg('saga_deadline')
 )
 RETURNING *;
 
@@ -46,3 +48,25 @@ SELECT * FROM transfers
 WHERE user_id = $1 AND duress_blocked AND status = 'processing'
 ORDER BY id
 FOR UPDATE;
+
+-- name: LockTransfer :one
+-- The saga's steps (send, status check, callback) take this lock, so two answers for the
+-- same transfer are judged one after the other, never both on the same old status.
+SELECT * FROM transfers WHERE id = $1 FOR UPDATE;
+
+-- name: GetTransferByReference :one
+SELECT * FROM transfers WHERE reference = $1;
+
+-- name: SetPartnerReference :exec
+UPDATE transfers SET partner_reference = @partner_reference, updated_at = clock_timestamp()
+WHERE id = @id AND partner_reference IS NULL;
+
+-- name: SetTransferReversal :exec
+UPDATE transfers SET reversal = @reversal, updated_at = clock_timestamp() WHERE id = @id AND reversal IS NULL;
+
+-- name: InsertPartnerWebhookEvent :one
+-- No row back means the event was handled before.
+INSERT INTO partner_webhook_events (partner, event_id, event_type, reference, outcome)
+VALUES (@partner, @event_id, @event_type, @reference, @outcome)
+ON CONFLICT (partner, event_id) DO NOTHING
+RETURNING partner;

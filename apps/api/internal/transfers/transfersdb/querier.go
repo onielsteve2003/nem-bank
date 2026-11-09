@@ -13,6 +13,9 @@ import (
 type Querier interface {
 	GetTransfer(ctx context.Context, arg GetTransferParams) (Transfer, error)
 	GetTransferByID(ctx context.Context, id uuid.UUID) (Transfer, error)
+	GetTransferByReference(ctx context.Context, reference string) (Transfer, error)
+	// No row back means the event was handled before.
+	InsertPartnerWebhookEvent(ctx context.Context, arg InsertPartnerWebhookEventParams) (string, error)
 	InsertTransfer(ctx context.Context, arg InsertTransferParams) (Transfer, error)
 	InsertTransferEvent(ctx context.Context, arg InsertTransferEventParams) error
 	// The timelines of a page of transfers in one query.
@@ -20,6 +23,11 @@ type Querier interface {
 	ListTransfers(ctx context.Context, arg ListTransfersParams) ([]Transfer, error)
 	// Transfers accepted under duress that are still "on their way".
 	LockDuressTransfers(ctx context.Context, userID uuid.UUID) ([]Transfer, error)
+	// The saga's steps (send, status check, callback) take this lock, so two answers for the
+	// same transfer are judged one after the other, never both on the same old status.
+	LockTransfer(ctx context.Context, id uuid.UUID) (Transfer, error)
+	SetPartnerReference(ctx context.Context, arg SetPartnerReferenceParams) error
+	SetTransferReversal(ctx context.Context, arg SetTransferReversalParams) error
 	// Moves a transfer on from the state the caller saw. The transition trigger refuses an
 	// illegal move; the status guard turns a lost race into no row instead of a double move.
 	SetTransferStatus(ctx context.Context, arg SetTransferStatusParams) (Transfer, error)

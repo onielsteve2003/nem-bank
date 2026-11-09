@@ -174,6 +174,15 @@ type OutboxEvent struct {
 	DispatchedAt  *time.Time
 }
 
+type PartnerWebhookEvent struct {
+	Partner    string
+	EventID    string
+	EventType  string
+	Reference  string
+	Outcome    string
+	ReceivedAt time.Time
+}
+
 type Posting struct {
 	ID                uuid.UUID
 	EntryID           uuid.UUID
@@ -343,6 +352,11 @@ type Transfer struct {
 	DuressBlocked        bool
 	CreatedAt            time.Time
 	UpdatedAt            time.Time
+	BankCode             pgtype.Text
+	AccountNumber        pgtype.Text
+	Partner              pgtype.Text
+	PartnerReference     pgtype.Text
+	SagaDeadline         *time.Time
 }
 
 type TransferEvent struct {

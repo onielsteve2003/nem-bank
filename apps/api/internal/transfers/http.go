@@ -195,3 +195,17 @@ func (a *API) SetBankPartnerSimulator(ctx context.Context, req api.SetBankPartne
 	}
 	return api.SetBankPartnerSimulator200JSONResponse(simulatorJSON(s)), nil
 }
+
+// ReceivePartnerWebhook is POST /v1/partner-webhooks/{partner}. The request validator has
+// already checked Partner-Signature over the raw body (VerifyPartnerCallback), so the body
+// is the partner's. A repeat of a handled event is answered 200 like the first, so the
+// partner stops retrying.
+func (a *API) ReceivePartnerWebhook(ctx context.Context, req api.ReceivePartnerWebhookRequestObject) (api.ReceivePartnerWebhookResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	if _, err := a.svc.HandlePartnerCallback(ctx, string(req.Partner), req.Params.PartnerEventId, *req.Body); err != nil {
+		return nil, err
+	}
+	return api.ReceivePartnerWebhook200Response{}, nil
+}
