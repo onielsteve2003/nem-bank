@@ -233,6 +233,25 @@ sessions, signing key and token audience (`console`). A customer token gets a 40
   are written to the audit log. The same checker sending the same decision again gets the
   same answer and nothing is applied twice.
 
+## Ledger
+
+Double-entry, in signed integer minor units (credits positive, debits negative), in
+`ledger_accounts`, `journal_entries` and `postings` (migration 00009). The database
+enforces the rules itself, so a bug above it fails the transaction instead of corrupting
+money:
+
+- At COMMIT, a deferred constraint trigger checks that every entry has at least two
+  postings and **nets to zero in each currency**. A conversion therefore has to go through
+  the per-currency FX position accounts.
+- A composite foreign key keeps each posting in its account's currency.
+- Entries and postings are append-only (corrections are reversing entries), and postings
+  can only be added in the transaction that created their entry.
+- No customer deposit account goes below zero, `available ≤ balance`, one account per kind
+  and currency per customer, and a `manual_adjustment` needs a maker-checker approval.
+- The bank's own accounts are seeded with fixed IDs: suspense, fee income, FX position,
+  partner settlement and demo funding in NGN, USD, GBP and EUR; card settlement in NGN and
+  USD; interest expense, interest income, the EMTL levy and ajo escrow in NGN.
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers

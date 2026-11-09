@@ -66,6 +66,17 @@ type DeviceChallenge struct {
 	UsedAt    *time.Time
 }
 
+type JournalEntry struct {
+	ID             uuid.UUID
+	Kind           string
+	Reference      string
+	IdempotencyKey pgtype.Text
+	ApprovalID     pgtype.UUID
+	Metadata       []byte
+	CreatedAt      time.Time
+	XactID         pgtype.Uint64
+}
+
 type KycIdentifier struct {
 	UserID     uuid.UUID
 	Kind       string
@@ -75,6 +86,19 @@ type KycIdentifier struct {
 	Last4      string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+}
+
+type LedgerAccount struct {
+	ID             uuid.UUID
+	OwnerType      string
+	OwnerID        pgtype.UUID
+	Kind           string
+	Currency       string
+	Name           string
+	BalanceMinor   int64
+	AvailableMinor int64
+	Version        int64
+	CreatedAt      time.Time
 }
 
 type OtpChallenge struct {
@@ -103,6 +127,16 @@ type OutboxEvent struct {
 	Payload       []byte
 	CreatedAt     time.Time
 	DispatchedAt  *time.Time
+}
+
+type Posting struct {
+	ID                uuid.UUID
+	EntryID           uuid.UUID
+	AccountID         uuid.UUID
+	AmountMinor       int64
+	Currency          string
+	BalanceAfterMinor int64
+	CreatedAt         time.Time
 }
 
 type RefreshToken struct {
