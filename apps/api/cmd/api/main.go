@@ -115,6 +115,7 @@ func run() error {
 		MetricsToken:  cfg.MetricsToken,
 		Identity:      identity.NewAPI(identitySvc),
 		Authenticator: identitySvc,
+		Signatures:    identitySvc,
 	})
 	if err != nil {
 		return err

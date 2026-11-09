@@ -40,6 +40,8 @@ type Options struct {
 	Identity *identity.API
 	// Authenticator verifies bearer tokens; nil makes every protected operation a 401.
 	Authenticator Authenticator
+	// Signatures verifies device signatures on money-moving requests; nil refuses them all.
+	Signatures SignatureVerifier
 }
 
 // NewRouter returns the Gin engine with the middleware chain and every contract operation
@@ -55,7 +57,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	if err != nil {
 		return nil, fmt.Errorf("load embedded openapi spec: %w", err)
 	}
-	validate, err := RequestValidator(spec, opts.Authenticator, opts.Logger)
+	validate, err := RequestValidator(spec, opts.Authenticator, opts.Signatures, opts.Logger)
 	if err != nil {
 		return nil, err
 	}

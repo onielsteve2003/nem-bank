@@ -172,6 +172,19 @@ The API refuses to start on a bad value and lists every problem at once.
   app's "send again" uses `/v1/auth/otp/resend` unchanged. Error codes match the app's mock
   bank (`invalid_pin`, `pin_locked`, `invalid_otp`, `invalid_signature`, `otp_expired`).
   10 step-ups per customer per hour.
+- **Device-signed requests (AUTH-6).** Every operation whose contract lists
+  `X-Device-Signature` (transfers, conversions, bill payments, savings moves, ...) is checked
+  by the validator once auth and the contract pass. The signature is Ed25519 over
+  `METHOD\npath?query\ntimestamp\nnonce\nhex(sha256(body))`, hashed over the body bytes as they
+  arrived, the same string as `signingPayload` in the app. It must come from the device of the
+  caller's own session, be timestamped within ±5 minutes, and carry a nonce that device has
+  not used (`signed_request_nonces`; a row lives until its timestamp leaves the window and the
+  device clears its expired rows on its next signature). A nonce is stored only after the
+  signature checks out. Failures are `403 invalid_signature`, not 401: the session is fine,
+  and the app refreshes and retries on any 401, which would ask for Face ID twice.
+- **Quick login (AUTH-5).** `POST /v1/auth/device-challenge` gives a bound device a random
+  nonce (2 minutes); `POST /v1/auth/login/device` opens a session when the device key signed
+  it. One attempt per challenge: a wrong signature spends it too.
 - **Bearer auth** is enforced by the request validator from each operation's `security`: a
   missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
 

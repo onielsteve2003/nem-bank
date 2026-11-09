@@ -1,10 +1,13 @@
 package httpserver
 
 import (
+	"bytes"
 	"context"
 	"errors"
 	"fmt"
+	"io"
 	"log/slog"
+	"net/http"
 	"strconv"
 	"strings"
 
@@ -13,8 +16,10 @@ import (
 	"github.com/getkin/kin-openapi/routers"
 	"github.com/getkin/kin-openapi/routers/gorillamux"
 	"github.com/gin-gonic/gin"
+	"github.com/google/uuid"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
@@ -33,6 +38,28 @@ type authSlot struct {
 
 type authSlotKey struct{}
 
+// SignatureVerifier checks the device signature on a money-moving request. ctx carries
+// the authenticated caller. Failures should be *problem.Error values.
+type SignatureVerifier interface {
+	VerifyRequestSignature(ctx context.Context, r identity.SignedRequest) error
+}
+
+// maxSignedBody bounds the body read for hashing. Money requests are a few hundred bytes.
+const maxSignedBody = 64 << 10
+
+var errBodyTooLarge = problem.New(http.StatusRequestEntityTooLarge, "payload_too_large", "This request is too large.")
+
+// signedOperation reports whether the contract requires a device signature: the
+// operation lists the X-Device-Signature header (the money-moving ones).
+func signedOperation(op *openapi3.Operation) bool {
+	for _, p := range op.Parameters {
+		if p.Value != nil && p.Value.In == openapi3.ParameterInHeader && strings.EqualFold(p.Value.Name, "X-Device-Signature") {
+			return true
+		}
+	}
+	return false
+}
+
 // RequestValidator checks every request against the contract (path, query and header
 // parameters, and the JSON body) before a handler runs. Failures become one 400 problem
 // with code validation_failed and a field error per violation, in the contract's shape.
@@ -42,7 +69,12 @@ type authSlotKey struct{}
 // failure is a 401 and wins over body errors, so an anonymous caller learns nothing about
 // the shape of a protected request. auth may be nil, and then every protected operation is
 // a 401.
-func RequestValidator(spec *openapi3.T, auth Authenticator, log *slog.Logger) (gin.HandlerFunc, error) {
+//
+// Operations that need a device signature are checked by sig once the request is valid
+// (so the caller and the headers are known). The body is hashed as it arrived: validation
+// re-encodes it, and the signature covers the client's bytes. sig may be nil, and then
+// every signed operation is refused.
+func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
 	// Routes are matched on the path alone. The spec's `servers` name a localhost URL that
 	// would never match the host the API runs on in production.
 	spec.Servers = nil
@@ -84,6 +116,21 @@ func RequestValidator(spec *openapi3.T, auth Authenticator, log *slog.Logger) (g
 			c.Next()
 			return
 		}
+		signed := signedOperation(route.Operation)
+		var raw []byte
+		if signed && c.Request.Body != nil {
+			raw, err = io.ReadAll(http.MaxBytesReader(c.Writer, c.Request.Body, maxSignedBody))
+			if err != nil {
+				var tooLarge *http.MaxBytesError
+				if errors.As(err, &tooLarge) {
+					problem.Render(c, errBodyTooLarge)
+				} else {
+					problem.Render(c, problem.Validation(problem.Field("/", "malformed", "The body could not be read.")))
+				}
+				return
+			}
+			c.Request.Body = io.NopCloser(bytes.NewReader(raw))
+		}
 		in := &openapi3filter.RequestValidationInput{
 			Request:    c.Request,
 			PathParams: pathParams,
@@ -104,8 +151,36 @@ func RequestValidator(spec *openapi3.T, auth Authenticator, log *slog.Logger) (g
 		if slot.ctx != nil {
 			c.Request = c.Request.WithContext(slot.ctx)
 		}
+		if signed {
+			if err := verifySignature(c, sig, raw); err != nil {
+				problem.Write(c, log, err)
+				return
+			}
+		}
 		c.Next()
 	}, nil
+}
+
+// verifySignature hands the signed parts of the request to sig. The headers have passed
+// the contract (present, well-formed), so only the device ID needs parsing.
+func verifySignature(c *gin.Context, sig SignatureVerifier, body []byte) error {
+	if sig == nil {
+		return identity.ErrRequestSignature
+	}
+	h := c.Request.Header
+	deviceID, err := uuid.Parse(h.Get("X-Device-Id"))
+	if err != nil {
+		return identity.ErrRequestSignature
+	}
+	return sig.VerifyRequestSignature(c.Request.Context(), identity.SignedRequest{
+		DeviceID:  deviceID,
+		Signature: h.Get("X-Device-Signature"),
+		Timestamp: h.Get("X-Signature-Timestamp"),
+		Nonce:     h.Get("X-Nonce"),
+		Method:    c.Request.Method,
+		Target:    c.Request.URL.RequestURI(),
+		Body:      body,
+	})
 }
 
 // renderUnauthorized sends the authenticator's own 401 (session_revoked, ...) when it gave

@@ -19,8 +19,10 @@ type Querier interface {
 	GetChallengeByTokenForUpdate(ctx context.Context, tokenHash []byte) (OtpChallenge, error)
 	// Row-locked so concurrent guesses are counted one at a time.
 	GetChallengeForUpdate(ctx context.Context, id uuid.UUID) (OtpChallenge, error)
+	GetDeviceChallengeForUpdate(ctx context.Context, id uuid.UUID) (DeviceChallenge, error)
 	GetDuressSince(ctx context.Context, id uuid.UUID) (*time.Time, error)
 	GetLiveDevice(ctx context.Context, arg GetLiveDeviceParams) (Device, error)
+	GetLiveDeviceByID(ctx context.Context, id uuid.UUID) (Device, error)
 	GetLiveDeviceByKey(ctx context.Context, publicKey []byte) (Device, error)
 	// Locked so two refreshes with the same token are decided one at a time: exactly one
 	// rotates, the other sees used_at and is treated as reuse.
@@ -36,6 +38,9 @@ type Querier interface {
 	GetUserForUpdate(ctx context.Context, id uuid.UUID) (User, error)
 	InsertChallenge(ctx context.Context, arg InsertChallengeParams) (OtpChallenge, error)
 	InsertDevice(ctx context.Context, arg InsertDeviceParams) (Device, error)
+	InsertDeviceChallenge(ctx context.Context, arg InsertDeviceChallengeParams) (DeviceChallenge, error)
+	// Zero rows means the nonce was already used: a replay.
+	InsertNonce(ctx context.Context, arg InsertNonceParams) (int64, error)
 	InsertRefreshToken(ctx context.Context, arg InsertRefreshTokenParams) error
 	InsertSession(ctx context.Context, arg InsertSessionParams) (Session, error)
 	InsertSignup(ctx context.Context, arg InsertSignupParams) error
@@ -44,6 +49,8 @@ type Querier interface {
 	ListLiveSessions(ctx context.Context, userID uuid.UUID) ([]ListLiveSessionsRow, error)
 	MarkChallengeVerified(ctx context.Context, arg MarkChallengeVerifiedParams) error
 	MarkRefreshTokenUsed(ctx context.Context, id uuid.UUID) error
+	PruneDeviceChallenges(ctx context.Context, arg PruneDeviceChallengesParams) error
+	PruneDeviceNonces(ctx context.Context, arg PruneDeviceNoncesParams) error
 	// The per-address limit: how many codes were started for this email in the window, and
 	// when the oldest of them leaves it (that is when the next one is allowed).
 	RecentChallengesTo(ctx context.Context, arg RecentChallengesToParams) (RecentChallengesToRow, error)
@@ -63,6 +70,7 @@ type Querier interface {
 	SetPinHash(ctx context.Context, arg SetPinHashParams) error
 	TouchDevice(ctx context.Context, id uuid.UUID) (Device, error)
 	TouchSession(ctx context.Context, id uuid.UUID) error
+	UseDeviceChallenge(ctx context.Context, id uuid.UUID) error
 }
 
 var _ Querier = (*Queries)(nil)

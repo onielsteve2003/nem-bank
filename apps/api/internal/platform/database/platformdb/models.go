@@ -25,6 +25,15 @@ type Device struct {
 	RevokedAt      pgtype.Timestamptz
 }
 
+type DeviceChallenge struct {
+	ID        uuid.UUID
+	DeviceID  uuid.UUID
+	Nonce     string
+	CreatedAt time.Time
+	ExpiresAt time.Time
+	UsedAt    pgtype.Timestamptz
+}
+
 type OtpChallenge struct {
 	ID                uuid.UUID
 	Purpose           string
@@ -71,6 +80,12 @@ type Session struct {
 	ExpiresAt    time.Time
 	RevokedAt    pgtype.Timestamptz
 	RevokeReason pgtype.Text
+}
+
+type SignedRequestNonce struct {
+	DeviceID  uuid.UUID
+	Nonce     string
+	ExpiresAt time.Time
 }
 
 type Signup struct {

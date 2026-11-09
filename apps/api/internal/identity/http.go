@@ -294,3 +294,22 @@ func (a *API) VerifyStepUp(ctx context.Context, req api.VerifyStepUpRequestObjec
 		StepUpToken: tok.Token, Purpose: api.StepUpPurpose(tok.Purpose), ExpiresAt: tok.ExpiresAt.UTC(),
 	}, nil
 }
+
+// CreateDeviceChallenge is POST /v1/auth/device-challenge.
+func (a *API) CreateDeviceChallenge(ctx context.Context, req api.CreateDeviceChallengeRequestObject) (api.CreateDeviceChallengeResponseObject, error) {
+	c, err := a.svc.CreateDeviceChallenge(ctx, req.Body.DeviceId)
+	if err != nil {
+		return nil, err
+	}
+	return api.CreateDeviceChallenge201JSONResponse{ChallengeId: c.ID, Nonce: c.Nonce, ExpiresAt: c.ExpiresAt.UTC()}, nil
+}
+
+// LoginWithDevice is POST /v1/auth/login/device.
+func (a *API) LoginWithDevice(ctx context.Context, req api.LoginWithDeviceRequestObject) (api.LoginWithDeviceResponseObject, error) {
+	b := req.Body
+	r, err := a.svc.LoginWithDevice(ctx, b.DeviceId, b.ChallengeId, b.Signature)
+	if err != nil {
+		return nil, err
+	}
+	return api.LoginWithDevice200JSONResponse(a.sessionJSON(r)), nil
+}
