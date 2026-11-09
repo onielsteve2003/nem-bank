@@ -1,0 +1,7 @@
+# Default gitleaks rules plus one path allowlist.
+[extend]
+useDefault = true
+
+[allowlist]
+description = "Generated Go server: base64 of the compressed embedded spec and example UUIDs trip generic-api-key. Its source, packages/contracts/openapi.yaml, is still scanned."
+paths = ['''apps/api/internal/api/api\.gen\.go''']
