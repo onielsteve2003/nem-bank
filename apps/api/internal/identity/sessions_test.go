@@ -218,6 +218,7 @@ func TestLogoutAndRevocationEndSessionsAtOnce(t *testing.T) {
 		t.Fatalf("revoked device's token: err = %v", err)
 	}
 	wantProblem(t, h.svc.RevokeDevice(phoneCtx, second.Device.ID), ErrDeviceNotFound)
+	wantProblem(t, h.svc.RevokeDevice(phoneCtx, s.Device.ID), ErrRevokeCurrent)
 	wantProblem(t, h.svc.RevokeSession(phoneCtx, uuid.Must(uuid.NewV7())), ErrSessionNotFound)
 
 	if err := h.svc.Logout(phoneCtx, false); err != nil {

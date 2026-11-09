@@ -32,7 +32,9 @@ var (
 	ErrDeviceRequired     = problem.Validation(problem.Field("/device", "required", "Send device_id from a trusted device or device to link this one."))
 	ErrDeviceKeyInUse     = problem.New(http.StatusConflict, "device_key_in_use", "This device key is linked to another account.")
 	ErrDeviceNotFound     = problem.NotFound("Device")
-	ErrSessionNotFound    = problem.NotFound("Session")
+	ErrRevokeCurrent      = problem.New(http.StatusConflict, "invalid_state", "You cannot remove the device you are using").
+				WithDetail("Log out instead, or remove it from another device.")
+	ErrSessionNotFound = problem.NotFound("Session")
 )
 
 // DeviceRegistration is a device asking to be bound (contract DeviceRegistration).
@@ -384,11 +386,15 @@ func (s *Service) Devices(ctx context.Context) ([]identitydb.Device, Principal, 
 	return ds, p, nil
 }
 
-// RevokeDevice unbinds a device and ends its sessions (SEC-2).
+// RevokeDevice unbinds another device and ends its sessions (SEC-2). The current device
+// is refused, as in the app: removing it would also strand its key with no way back in.
 func (s *Service) RevokeDevice(ctx context.Context, deviceID uuid.UUID) error {
 	p, err := principal(ctx)
 	if err != nil {
 		return err
+	}
+	if deviceID == p.DeviceID {
+		return ErrRevokeCurrent
 	}
 	return s.inTx(ctx, func(q *identitydb.Queries) error {
 		n, err := q.RevokeDevice(ctx, identitydb.RevokeDeviceParams{ID: deviceID, UserID: p.UserID})
