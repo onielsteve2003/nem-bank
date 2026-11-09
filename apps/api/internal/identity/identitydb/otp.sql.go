@@ -21,6 +21,33 @@ func (q *Queries) ConsumeChallenge(ctx context.Context, id uuid.UUID) error {
 	return err
 }
 
+const getChallenge = `-- name: GetChallenge :one
+SELECT id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose FROM otp_challenges WHERE id = $1
+`
+
+func (q *Queries) GetChallenge(ctx context.Context, id uuid.UUID) (OtpChallenge, error) {
+	row := q.db.QueryRow(ctx, getChallenge, id)
+	var i OtpChallenge
+	err := row.Scan(
+		&i.ID,
+		&i.Purpose,
+		&i.SubjectID,
+		&i.Destination,
+		&i.CodeHash,
+		&i.AttemptsLeft,
+		&i.Sends,
+		&i.ExpiresAt,
+		&i.ResendAvailableAt,
+		&i.VerifiedAt,
+		&i.TokenHash,
+		&i.TokenExpiresAt,
+		&i.ConsumedAt,
+		&i.CreatedAt,
+		&i.StepUpPurpose,
+	)
+	return i, err
+}
+
 const getChallengeByTokenForUpdate = `-- name: GetChallengeByTokenForUpdate :one
 SELECT id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose FROM otp_challenges WHERE token_hash = $1 FOR UPDATE
 `
@@ -78,8 +105,8 @@ func (q *Queries) GetChallengeForUpdate(ctx context.Context, id uuid.UUID) (OtpC
 
 const insertChallenge = `-- name: InsertChallenge :one
 INSERT INTO otp_challenges (id, purpose, subject_id, destination, code_hash, attempts_left,
-                            expires_at, resend_available_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                            expires_at, resend_available_at, step_up_purpose)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING id, purpose, subject_id, destination, code_hash, attempts_left, sends, expires_at, resend_available_at, verified_at, token_hash, token_expires_at, consumed_at, created_at, step_up_purpose
 `
 
@@ -92,6 +119,7 @@ type InsertChallengeParams struct {
 	AttemptsLeft      int16
 	ExpiresAt         time.Time
 	ResendAvailableAt time.Time
+	StepUpPurpose     *string
 }
 
 func (q *Queries) InsertChallenge(ctx context.Context, arg InsertChallengeParams) (OtpChallenge, error) {
@@ -104,6 +132,7 @@ func (q *Queries) InsertChallenge(ctx context.Context, arg InsertChallengeParams
 		arg.AttemptsLeft,
 		arg.ExpiresAt,
 		arg.ResendAvailableAt,
+		arg.StepUpPurpose,
 	)
 	var i OtpChallenge
 	err := row.Scan(
@@ -164,6 +193,31 @@ type RecentChallengesToRow struct {
 func (q *Queries) RecentChallengesTo(ctx context.Context, arg RecentChallengesToParams) (RecentChallengesToRow, error) {
 	row := q.db.QueryRow(ctx, recentChallengesTo, arg.Destination, arg.Since)
 	var i RecentChallengesToRow
+	err := row.Scan(&i.N, &i.Oldest)
+	return i, err
+}
+
+const recentStepUpsFor = `-- name: RecentStepUpsFor :one
+SELECT count(*)::int AS n, coalesce(min(created_at), now())::timestamptz AS oldest
+FROM otp_challenges
+WHERE purpose = 'step_up' AND subject_id = $1 AND created_at > $2::timestamptz
+`
+
+type RecentStepUpsForParams struct {
+	SubjectID uuid.UUID
+	Since     time.Time
+}
+
+type RecentStepUpsForRow struct {
+	N      int32
+	Oldest time.Time
+}
+
+// Step-ups are signed-in and per customer, so they have their own limit instead of the
+// per-address one: a PIN-approved card reveal must not use up the sign-up code budget.
+func (q *Queries) RecentStepUpsFor(ctx context.Context, arg RecentStepUpsForParams) (RecentStepUpsForRow, error) {
+	row := q.db.QueryRow(ctx, recentStepUpsFor, arg.SubjectID, arg.Since)
+	var i RecentStepUpsForRow
 	err := row.Scan(&i.N, &i.Oldest)
 	return i, err
 }

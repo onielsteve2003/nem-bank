@@ -101,7 +101,7 @@ func (s *Service) StartSignup(ctx context.Context, d SignupDetails) (SignupStart
 		}); err != nil {
 			return fmt.Errorf("insert signup: %w", err)
 		}
-		c, code, err = s.createChallenge(ctx, q, PurposeSignup, signupID, d.Email)
+		c, code, err = s.createChallenge(ctx, q, PurposeSignup, signupID, d.Email, nil)
 		return err
 	})
 	if err != nil {

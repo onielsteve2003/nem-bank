@@ -133,6 +133,29 @@ func TestSignUpThroughTheAPIAndUseTheSession(t *testing.T) {
 		t.Fatalf("reset without header: %+v", pReset)
 	}
 
+	// Step-up by PIN, then the gated reset with X-Step-Up-Token.
+	st := call[api.StepUpChallenge](t, h, http.MethodPost, "/v1/auth/step-up", rotated.AccessToken,
+		map[string]string{"purpose": "pin_reset"}, http.StatusCreated)
+	if st.Otp == nil || st.Otp.ChallengeId != st.StepUpId || len(st.Methods) != 2 {
+		t.Fatalf("step-up = %+v", st)
+	}
+	tok := call[api.StepUpToken](t, h, http.MethodPost, "/v1/auth/step-up/"+st.StepUpId.String()+"/verify",
+		rotated.AccessToken, map[string]string{"pin": "2580"}, http.StatusOK)
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, "/v1/users/me/pin/reset",
+		bytes.NewBufferString(`{"pin":"4815"}`))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+rotated.AccessToken)
+	req.Header.Set("X-Step-Up-Token", tok.StepUpToken)
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	if rec.Code != http.StatusNoContent {
+		t.Fatalf("reset with step-up = %d: %s", rec.Code, rec.Body)
+	}
+	if v := call[api.PinVerification](t, h, http.MethodPost, "/v1/users/me/pin/verify", rotated.AccessToken,
+		map[string]string{"pin": "4815"}, http.StatusOK); !v.Valid {
+		t.Fatal("the reset PIN does not verify")
+	}
+
 	call[struct{}](t, h, http.MethodPost, "/v1/auth/logout", rotated.AccessToken, nil, http.StatusNoContent)
 	p := call[api.Problem](t, h, http.MethodGet, "/v1/users/me", rotated.AccessToken, nil, http.StatusUnauthorized)
 	if p.Code != "session_revoked" {

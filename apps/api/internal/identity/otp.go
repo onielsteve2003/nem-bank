@@ -28,6 +28,7 @@ const (
 	otpPerAddress   = 5 // new challenges per address per window
 	otpAddressLimit = time.Hour
 	verifiedTTL     = 15 * time.Minute // how long the verification token stays usable
+	stepUpTokenTTL  = 5 * time.Minute
 )
 
 // Purpose says what a code unlocks; a token from one purpose never works for another.
@@ -119,9 +120,12 @@ func (s *Service) checkAddressLimit(ctx context.Context, q *identitydb.Queries, 
 
 // createChallenge stores a new code inside the caller's transaction and returns it with
 // the plain code for sending. The caller sends only after its transaction commits.
-func (s *Service) createChallenge(ctx context.Context, q *identitydb.Queries, purpose Purpose, subject uuid.UUID, destination string) (identitydb.OtpChallenge, string, error) {
-	if err := s.checkAddressLimit(ctx, q, destination); err != nil {
-		return identitydb.OtpChallenge{}, "", err
+func (s *Service) createChallenge(ctx context.Context, q *identitydb.Queries, purpose Purpose, subject uuid.UUID, destination string, stepUpPurpose *string) (identitydb.OtpChallenge, string, error) {
+	// Step-ups have their own per-customer limit (StartStepUp).
+	if purpose != PurposeStepUp {
+		if err := s.checkAddressLimit(ctx, q, destination); err != nil {
+			return identitydb.OtpChallenge{}, "", err
+		}
 	}
 	id, err := newID()
 	if err != nil {
@@ -135,7 +139,7 @@ func (s *Service) createChallenge(ctx context.Context, q *identitydb.Queries, pu
 	c, err := q.InsertChallenge(ctx, identitydb.InsertChallengeParams{
 		ID: id, Purpose: string(purpose), SubjectID: subject, Destination: destination,
 		CodeHash: s.codeMAC(id, code), AttemptsLeft: otpAttempts,
-		ExpiresAt: now.Add(otpTTL), ResendAvailableAt: now.Add(otpResendAfter),
+		ExpiresAt: now.Add(otpTTL), ResendAvailableAt: now.Add(otpResendAfter), StepUpPurpose: stepUpPurpose,
 	})
 	if err != nil {
 		return identitydb.OtpChallenge{}, "", fmt.Errorf("insert otp challenge: %w", err)
@@ -192,23 +196,34 @@ func (s *Service) VerifyCode(ctx context.Context, challengeID uuid.UUID, code st
 			wrong = ErrOTPInvalid.WithDetailf("%d attempt%s left.", left, plural)
 			return nil
 		}
-		token, err := newToken()
-		if err != nil {
-			return err
-		}
-		out = Verified{Token: token, ExpiresAt: now.Add(verifiedTTL)}
-		if err := q.MarkChallengeVerified(ctx, identitydb.MarkChallengeVerifiedParams{
-			ID: c.ID, TokenHash: hashToken(token), TokenExpiresAt: &out.ExpiresAt,
-		}); err != nil {
-			return fmt.Errorf("mark otp verified: %w", err)
-		}
-		return nil
+		out, err = s.markVerified(ctx, q, c)
+		return err
 	})
 	if err != nil {
 		return Verified{}, err
 	}
 	if wrong != nil {
 		return Verified{}, wrong
+	}
+	return out, nil
+}
+
+// markVerified issues the single-use token a passed challenge earns. Step-up tokens last
+// 5 minutes (they authorise one sensitive action now); others last verifiedTTL.
+func (s *Service) markVerified(ctx context.Context, q *identitydb.Queries, c identitydb.OtpChallenge) (Verified, error) {
+	token, err := newToken()
+	if err != nil {
+		return Verified{}, err
+	}
+	ttl := verifiedTTL
+	if c.Purpose == string(PurposeStepUp) {
+		ttl = stepUpTokenTTL
+	}
+	out := Verified{Token: token, ExpiresAt: s.now().Add(ttl)}
+	if err := q.MarkChallengeVerified(ctx, identitydb.MarkChallengeVerifiedParams{
+		ID: c.ID, TokenHash: hashToken(token), TokenExpiresAt: &out.ExpiresAt,
+	}); err != nil {
+		return Verified{}, fmt.Errorf("mark challenge verified: %w", err)
 	}
 	return out, nil
 }

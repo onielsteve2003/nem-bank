@@ -71,8 +71,9 @@ func (h *harness) withPin(t *testing.T) (context.Context, AuthResult) {
 	return authed, res
 }
 
-// stepUp stands in for the step-up flow, which is not built yet: it stores a verified
-// step-up challenge for purpose and returns its token.
+// stepUp stores a passed step-up for any user and purpose and returns its token, so the
+// PIN tests can cover cases the real flow (stepup_test.go) cannot create, like a token
+// earned by another customer.
 func (h *harness) stepUp(t *testing.T, userID uuid.UUID, purpose string) string {
 	t.Helper()
 	token, err := newToken()

@@ -7,8 +7,8 @@ WHERE destination = @destination AND created_at > @since::timestamptz;
 
 -- name: InsertChallenge :one
 INSERT INTO otp_challenges (id, purpose, subject_id, destination, code_hash, attempts_left,
-                            expires_at, resend_available_at)
-VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                            expires_at, resend_available_at, step_up_purpose)
+VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
 RETURNING *;
 
 -- name: GetChallengeForUpdate :one
@@ -34,3 +34,13 @@ SELECT * FROM otp_challenges WHERE token_hash = $1 FOR UPDATE;
 
 -- name: ConsumeChallenge :exec
 UPDATE otp_challenges SET consumed_at = now() WHERE id = $1;
+
+-- name: GetChallenge :one
+SELECT * FROM otp_challenges WHERE id = $1;
+
+-- name: RecentStepUpsFor :one
+-- Step-ups are signed-in and per customer, so they have their own limit instead of the
+-- per-address one: a PIN-approved card reveal must not use up the sign-up code budget.
+SELECT count(*)::int AS n, coalesce(min(created_at), now())::timestamptz AS oldest
+FROM otp_challenges
+WHERE purpose = 'step_up' AND subject_id = @subject_id AND created_at > @since::timestamptz;

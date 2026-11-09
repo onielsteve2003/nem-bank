@@ -263,3 +263,34 @@ func (a *API) RemoveDuressPin(ctx context.Context, req api.RemoveDuressPinReques
 	}
 	return api.RemoveDuressPin204Response{}, nil
 }
+
+// StartStepUp is POST /v1/auth/step-up.
+func (a *API) StartStepUp(ctx context.Context, req api.StartStepUpRequestObject) (api.StartStepUpResponseObject, error) {
+	st, err := a.svc.StartStepUp(ctx, string(req.Body.Purpose))
+	if err != nil {
+		return nil, err
+	}
+	methods := make([]api.StepUpMethod, len(st.Methods))
+	for i, m := range st.Methods {
+		methods[i] = api.StepUpMethod(m)
+	}
+	otp := challengeJSON(st.Challenge)
+	return api.StartStepUp201JSONResponse{
+		StepUpId: st.ID, Purpose: api.StepUpPurpose(st.Purpose), Methods: methods,
+		Otp: &otp, ExpiresAt: st.ExpiresAt.UTC(),
+	}, nil
+}
+
+// VerifyStepUp is POST /v1/auth/step-up/{step_up_id}/verify.
+func (a *API) VerifyStepUp(ctx context.Context, req api.VerifyStepUpRequestObject) (api.VerifyStepUpResponseObject, error) {
+	b := req.Body
+	tok, err := a.svc.VerifyStepUp(ctx, req.StepUpId, StepUpProof{
+		OTPCode: b.OtpCode, Pin: b.Pin, Signature: b.Signature, SecurityAnswer: b.SecurityAnswer,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return api.VerifyStepUp200JSONResponse{
+		StepUpToken: tok.Token, Purpose: api.StepUpPurpose(tok.Purpose), ExpiresAt: tok.ExpiresAt.UTC(),
+	}, nil
+}

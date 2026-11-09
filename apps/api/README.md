@@ -158,12 +158,20 @@ The API refuses to start on a bad value and lists every problem at once.
   `packages/shared/src/pin.ts`. Five wrong tries lock it for 30 minutes, then 2 h, 8 h and 24 h
   for each lockout in a row; a correct PIN resets the count. The user row is locked through
   the check, so parallel guesses cannot skip the counter. Changing the PIN later needs a
-  `pin_reset` step-up token, which is single-use and bound to that purpose.
+  `pin_reset` step-up token (see Step-up below).
 - **Duress PIN (SEC-5).** Verifies exactly like the real PIN (same response; both hashes are
   always checked, so timing matches too), switches the account into duress mode and writes
   `security.duress_triggered` to the outbox for staff only. While in duress, attempts to
   remove the duress PIN or reset the PIN report success but change nothing. The real PIN ends
   duress mode. `InDuress` is what transfers and balances will read.
+- **Step-up.** `POST /v1/auth/step-up` starts a fresh check for one purpose (`pin_reset`,
+  `card_reveal`, `transfer`, ...) and emails a code; `.../{step_up_id}/verify` takes any one
+  proof: the PIN, the email code, or a device signature (Face ID unlocks the Ed25519 key and
+  signs the `step_up_id`; checked against the device's bound key). The token lasts 5 minutes,
+  works once, and only for its purpose. The step-up is itself an email-code challenge, so the
+  app's "send again" uses `/v1/auth/otp/resend` unchanged. Error codes match the app's mock
+  bank (`invalid_pin`, `pin_locked`, `invalid_otp`, `invalid_signature`, `otp_expired`).
+  10 step-ups per customer per hour.
 - **Bearer auth** is enforced by the request validator from each operation's `security`: a
   missing or bad token is a `401` with `WWW-Authenticate`, before any body validation.
 

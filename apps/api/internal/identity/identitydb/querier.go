@@ -15,6 +15,7 @@ type Querier interface {
 	CompleteSignup(ctx context.Context, arg CompleteSignupParams) error
 	ConsumeChallenge(ctx context.Context, id uuid.UUID) error
 	EmailOrPhoneTaken(ctx context.Context, arg EmailOrPhoneTakenParams) (EmailOrPhoneTakenRow, error)
+	GetChallenge(ctx context.Context, id uuid.UUID) (OtpChallenge, error)
 	GetChallengeByTokenForUpdate(ctx context.Context, tokenHash []byte) (OtpChallenge, error)
 	// Row-locked so concurrent guesses are counted one at a time.
 	GetChallengeForUpdate(ctx context.Context, id uuid.UUID) (OtpChallenge, error)
@@ -46,6 +47,9 @@ type Querier interface {
 	// The per-address limit: how many codes were started for this email in the window, and
 	// when the oldest of them leaves it (that is when the next one is allowed).
 	RecentChallengesTo(ctx context.Context, arg RecentChallengesToParams) (RecentChallengesToRow, error)
+	// Step-ups are signed-in and per customer, so they have their own limit instead of the
+	// per-address one: a PIN-approved card reveal must not use up the sign-up code budget.
+	RecentStepUpsFor(ctx context.Context, arg RecentStepUpsForParams) (RecentStepUpsForRow, error)
 	RecordPinFailure(ctx context.Context, arg RecordPinFailureParams) error
 	// duress_since is set on a duress PIN and cleared by the real one.
 	RecordPinSuccess(ctx context.Context, arg RecordPinSuccessParams) error
