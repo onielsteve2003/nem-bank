@@ -12,11 +12,13 @@ import (
 	"syscall"
 	"time"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/httpserver"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 )
 
@@ -88,6 +90,17 @@ func run() error {
 		}
 	}
 
+	var mail mailer.Mailer = mailer.Log{Logger: log}
+	if cfg.BrevoAPIKey != "" {
+		mail = mailer.Brevo{APIKey: cfg.BrevoAPIKey, FromEmail: cfg.MailFromEmail, FromName: cfg.MailFromName}
+	} else {
+		log.Warn("BREVO_API_KEY not set: emails are logged, not sent")
+	}
+	identitySvc, err := identity.NewService(identity.Config{Pool: pool, Mailer: mail, Logger: log, OTPKey: cfg.OTPKey})
+	if err != nil {
+		return err
+	}
+
 	metrics := observability.NewMetrics()
 	metrics.RegisterPool(pool)
 
@@ -98,6 +111,7 @@ func run() error {
 		Readiness:    []httpserver.ReadinessCheck{{Name: "database", Pinger: pool}},
 		Metrics:      metrics,
 		MetricsToken: cfg.MetricsToken,
+		Identity:     identity.NewAPI(identitySvc),
 	})
 	if err != nil {
 		return err

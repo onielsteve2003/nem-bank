@@ -2,6 +2,8 @@
 package config
 
 import (
+	"crypto/sha256"
+	"encoding/base64"
 	"errors"
 	"fmt"
 	"log/slog"
@@ -37,6 +39,14 @@ type Config struct {
 	TraceSampleRatio float64
 	SentryDSN        string
 	MetricsToken     string
+
+	// Email. Without a Brevo key, mail is logged instead of sent (refused in production).
+	BrevoAPIKey   string
+	MailFromEmail string
+	MailFromName  string
+
+	// OTPKey keys the HMAC one-time codes are stored under.
+	OTPKey []byte
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
@@ -124,10 +134,44 @@ func Load(getenv func(string) string) (Config, error) {
 		errs = append(errs, errors.New("METRICS_TOKEN: required in production"))
 	}
 
+	cfg.BrevoAPIKey = get("BREVO_API_KEY", "")
+	if cfg.BrevoAPIKey == "" && cfg.Env == EnvProduction {
+		errs = append(errs, errors.New("BREVO_API_KEY: required in production (the log mailer would put codes in logs)"))
+	}
+	cfg.MailFromEmail = get("MAIL_FROM_EMAIL", "no-reply@nem.bank")
+	cfg.MailFromName = get("MAIL_FROM_NAME", "Nem Bank")
+
+	cfg.OTPKey, err = secretKey(getenv("OTP_KEY"), cfg.Env, "nem-dev-otp-key")
+	if err != nil {
+		errs = append(errs, fmt.Errorf("OTP_KEY: %w", err))
+	}
+
 	if len(errs) > 0 {
 		return Config{}, fmt.Errorf("invalid config: %w", errors.Join(errs...))
 	}
 	return cfg, nil
+}
+
+// secretKey decodes a base64 key of 32+ bytes (`openssl rand -base64 32`). Outside
+// production a missing key falls back to a fixed, publicly known development key, so
+// local runs need no setup and nothing signed with it is ever trusted in production.
+func secretKey(raw string, env Env, devLabel string) ([]byte, error) {
+	raw = strings.TrimSpace(raw)
+	if raw == "" {
+		if env == EnvProduction {
+			return nil, errors.New("required in production")
+		}
+		sum := sha256.Sum256([]byte(devLabel))
+		return sum[:], nil
+	}
+	key, err := base64.StdEncoding.DecodeString(raw)
+	if err != nil {
+		return nil, errors.New("not valid base64")
+	}
+	if len(key) < 32 {
+		return nil, fmt.Errorf("decodes to %d bytes, need at least 32", len(key))
+	}
+	return key, nil
 }
 
 // parseOrigins accepts a comma-separated list of exact origins. Wildcards are refused:

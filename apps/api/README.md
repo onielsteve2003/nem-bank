@@ -100,6 +100,9 @@ The API refuses to start on a bad value and lists every problem at once.
 | `TRACE_SAMPLE_RATIO` | `1` | Share of new traces kept, 0 to 1. Sampled parents are always kept |
 | `SENTRY_DSN` | empty | Error tracking (Sentry free). Empty turns it off |
 | `METRICS_TOKEN` | empty | Bearer token for `/metrics`. Required in production |
+| `BREVO_API_KEY` | empty | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production |
+| `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `no-reply@nem.bank` / `Nem Bank` | Sender; must be verified in Brevo |
+| `OTP_KEY` | fixed dev key | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production |
 
 ## Database
 
@@ -113,6 +116,28 @@ The API refuses to start on a bad value and lists every problem at once.
   No ORM: money paths stay explicit, reviewable SQL.
 - The compose database listens on host port **5433**, so a Postgres installed natively on
   5432 does not get in the way. `task db:reset` wipes it.
+
+## Identity
+
+`internal/identity` owns customers and how they prove who they are.
+
+- **Sign-up (AUTH-1, AUTH-2).** `POST /v1/auth/signup` checks the details (18+ in Lagos time,
+  NDPA consent, email and phone not already registered) and emails a 6-digit code. The details
+  wait in `signups` until the email is verified and a password is set, so an unverified
+  address never becomes an account. `POST /v1/auth/otp/verify` returns a single-use
+  verification token for the final step.
+- **One-time codes.** Drawn from `crypto/rand`, stored only as an HMAC-SHA256 under `OTP_KEY`
+  (bound to the challenge ID), so a database leak cannot be brute-forced into live codes.
+  10-minute expiry, 5 attempts (counted under a row lock, so parallel guesses cannot race),
+  60-second resend cooldown, 5 sends per challenge, 5 new codes per address per hour.
+  Refusals are `429` with `Retry-After`.
+- **Passwords (AUTH-3).** argon2id (19 MiB, t=2, p=1, OWASP's baseline) in PHC format, so the
+  parameters can rise later without breaking stored hashes. A semaphore caps concurrent hashes
+  so a burst of logins cannot exhaust a 512 MB instance. Strength rules are a Go port of
+  `packages/shared/src/password.ts` and are tested against the same vectors, so the app's meter
+  and the API agree.
+- **Email.** A `mailer.Mailer` interface: Brevo's HTTP API in production, a log mailer locally
+  (the code appears in the API log).
 
 ## Jobs and the outbox
 

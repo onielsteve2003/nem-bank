@@ -8,7 +8,25 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
+
+type OtpChallenge struct {
+	ID                uuid.UUID
+	Purpose           string
+	SubjectID         uuid.UUID
+	Destination       string
+	CodeHash          []byte
+	AttemptsLeft      int16
+	Sends             int16
+	ExpiresAt         time.Time
+	ResendAvailableAt time.Time
+	VerifiedAt        *time.Time
+	TokenHash         []byte
+	TokenExpiresAt    *time.Time
+	ConsumedAt        *time.Time
+	CreatedAt         time.Time
+}
 
 type OutboxEvent struct {
 	ID            uuid.UUID
@@ -18,4 +36,41 @@ type OutboxEvent struct {
 	Payload       []byte
 	CreatedAt     time.Time
 	DispatchedAt  *time.Time
+}
+
+type Signup struct {
+	ID                uuid.UUID
+	FirstName         string
+	LastName          string
+	Email             string
+	Phone             string
+	DateOfBirth       pgtype.Date
+	TermsVersion      string
+	PrivacyVersion    string
+	ConsentAcceptedAt time.Time
+	CreatedAt         time.Time
+	ExpiresAt         time.Time
+	CompletedAt       *time.Time
+	UserID            pgtype.UUID
+}
+
+type User struct {
+	ID                uuid.UUID
+	FirstName         string
+	LastName          string
+	PreferredName     pgtype.Text
+	Email             string
+	Phone             string
+	DateOfBirth       pgtype.Date
+	Nemtag            pgtype.Text
+	NemtagChangedAt   *time.Time
+	PasswordHash      string
+	KycTier           int16
+	KycStatus         string
+	IsDemo            bool
+	TermsVersion      string
+	PrivacyVersion    string
+	ConsentAcceptedAt time.Time
+	CreatedAt         time.Time
+	UpdatedAt         time.Time
 }

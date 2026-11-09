@@ -46,6 +46,9 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		"TRACE_SAMPLE_RATIO":          "0.25",
 		"SENTRY_DSN":                  "https://key@o1.ingest.sentry.io/1",
 		"METRICS_TOKEN":               "scrape-secret",
+		"BREVO_API_KEY":               "xkeysib-test",
+		"MAIL_FROM_EMAIL":             "hello@nem.example",
+		"OTP_KEY":                     "MDEyMzQ1Njc4OWFiY2RlZjAxMjM0NTY3ODlhYmNkZWY=",
 	}))
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -55,7 +58,9 @@ func TestLoadReadsEveryVariable(t *testing.T) {
 		cfg.ShutdownTimeout != 5*time.Second || !slices.Equal(cfg.CORSOrigins, want) ||
 		cfg.DatabaseURL != "postgres://u:p@db.example/nem?sslmode=require" || cfg.DBMaxConns != 4 || cfg.MigrateOnStart ||
 		cfg.OTLPEndpoint != "https://otlp-gateway.example/otlp" || cfg.TraceSampleRatio != 0.25 ||
-		cfg.SentryDSN != "https://key@o1.ingest.sentry.io/1" || cfg.MetricsToken != "scrape-secret" {
+		cfg.SentryDSN != "https://key@o1.ingest.sentry.io/1" || cfg.MetricsToken != "scrape-secret" ||
+		cfg.BrevoAPIKey != "xkeysib-test" || cfg.MailFromEmail != "hello@nem.example" ||
+		string(cfg.OTPKey) != "0123456789abcdef0123456789abcdef" {
 		t.Fatalf("unexpected config: %+v", cfg)
 	}
 }
@@ -84,6 +89,10 @@ func TestLoadRejectsBadValues(t *testing.T) {
 		{"otlp endpoint not a url", map[string]string{"OTEL_EXPORTER_OTLP_ENDPOINT": "grafana"}, "OTEL_EXPORTER_OTLP_ENDPOINT"},
 		{"sample ratio above one", map[string]string{"TRACE_SAMPLE_RATIO": "1.5"}, "TRACE_SAMPLE_RATIO"},
 		{"production without a metrics token", map[string]string{"APP_ENV": "production"}, "METRICS_TOKEN"},
+		{"production without a brevo key", map[string]string{"APP_ENV": "production"}, "BREVO_API_KEY"},
+		{"production without an otp key", map[string]string{"APP_ENV": "production"}, "OTP_KEY"},
+		{"otp key not base64", map[string]string{"OTP_KEY": "not base64!"}, "OTP_KEY"},
+		{"otp key too short", map[string]string{"OTP_KEY": "c2hvcnQ="}, "need at least 32"},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {

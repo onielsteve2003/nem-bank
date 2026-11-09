@@ -11,6 +11,7 @@ import (
 	"go.opentelemetry.io/contrib/instrumentation/github.com/gin-gonic/gin/otelgin"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
@@ -34,6 +35,9 @@ type Options struct {
 	MetricsToken string
 	// Now is the clock; nil means time.Now.
 	Now func() time.Time
+	// Identity serves sign-up, sessions, devices and the PIN. Nil in tests that only
+	// exercise the platform routes.
+	Identity *identity.API
 }
 
 // NewRouter returns the Gin engine with the middleware chain and every contract operation
@@ -86,7 +90,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", validate)
-	h := &handlers{version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

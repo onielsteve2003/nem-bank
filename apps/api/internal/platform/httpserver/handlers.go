@@ -11,16 +11,21 @@ import (
 	"github.com/gin-gonic/gin"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
-// handlers implements the contract's strict server. Operations not overridden here fall
-// through to api.Unimplemented and answer 501 until their domain is built.
+// handlers implements the contract's strict server. Each domain's API is embedded, so its
+// methods are promoted; fallback sits one level deeper, so a domain method always wins
+// over its Unimplemented twin, and operations no domain serves yet answer 501.
 type handlers struct {
-	api.Unimplemented
+	*identity.API
+	fallback
 	version string
 	now     func() time.Time
 }
+
+type fallback struct{ api.Unimplemented }
 
 var _ api.StrictServerInterface = (*handlers)(nil)
 

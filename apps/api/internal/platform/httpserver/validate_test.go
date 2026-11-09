@@ -91,7 +91,7 @@ func TestValidRequestsReachTheUnimplementedHandlerAs501(t *testing.T) {
 
 	h := newTestRouter(t, nil)
 	cases := []struct{ name, method, path, body string }{
-		{"json body", http.MethodPost, "/v1/auth/signup", validSignup},
+		{"json body", http.MethodPut, "/v1/security/question", `{"question":"First school?","answer":"Corona"}`},
 		// OpenAPI 3.1 `type: [string, 'null']` must accept null.
 		{"3.1 nullable field", http.MethodPatch, "/v1/beneficiaries/0190f5a2-7b1c-7c3d-8e4f-123456789abc", `{"nickname":null}`},
 		{"query parameters", http.MethodGet, "/v1/beneficiaries?limit=5&favourite=true", ""},
