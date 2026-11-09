@@ -198,6 +198,18 @@ func TestASignedInternalTransferIsSentOnce(t *testing.T) {
 	if _, err := pool.Exec(t.Context(), `DELETE FROM self_limits`); err != nil {
 		t.Fatal(err)
 	}
+	// A payment link's pay page opens without signing in and shows only the payee's name.
+	link := call[api.PaymentLink](t, h, http.MethodPost, "/v1/payment-links", tolu.AccessToken,
+		json.RawMessage(`{"account_id":"`+toluAcc.Id.String()+`","title":"Cake","amount_mode":"fixed","amount":{"amount_minor":"200000","currency":"NGN"}}`), http.StatusCreated)
+	if pub := call[api.PublicPaymentLink](t, h, http.MethodGet, "/v1/public/payment-links/"+link.Slug, "", nil, http.StatusOK); pub.PayeeName == "" || pub.Status != "active" || !pub.Demo {
+		t.Fatalf("pay page = %+v", pub)
+	}
+	// A receive QR round-trips through decode.
+	qr := call[api.QrCode](t, h, http.MethodGet, "/v1/qr/me?account_id="+toluAcc.Id.String()+"&amount_minor=50000", tolu.AccessToken, nil, http.StatusOK)
+	dec := call[api.DecodedQr](t, h, http.MethodPost, "/v1/qr/decode", tolu.AccessToken, api.QrDecodeRequest{Payload: qr.Payload}, http.StatusOK)
+	if !dec.Valid || dec.Amount == nil || dec.Amount.AmountMinor != "50000" || qr.KeyId != "qr1" {
+		t.Fatalf("qr = %+v, decoded = %+v", qr, dec)
+	}
 	// Saving the payee: the bank's name is kept, a second save is a 409, the list shows it.
 	ben := `{"destination":{"kind":"bank","bank_code":"058","account_number":"0123456789","account_name":"chidi"},"nickname":"Chidi"}`
 	saved := call[api.Beneficiary](t, h, http.MethodPost, "/v1/beneficiaries", tolu.AccessToken, json.RawMessage(ben), http.StatusCreated)

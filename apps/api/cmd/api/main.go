@@ -3,6 +3,8 @@ package main
 
 import (
 	"context"
+	"crypto/hmac"
+	"crypto/sha256"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -152,8 +154,13 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// The QR key is derived from the token signing seed under its own label, so no second
+	// secret has to be provisioned and neither key reveals the other.
+	qrMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
+	qrMAC.Write([]byte("nem receive-qr signing key v1"))
 	transfersSvc, err = transfers.NewService(transfers.Config{
-		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, StepUps: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
+		QRKey: qrMAC.Sum(nil),
+		Pool:  pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, StepUps: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
 		WebhookSecrets: map[string][]byte{sandbox.Name(): cfg.SandboxNIPSecret},
 	})
 	if err != nil {

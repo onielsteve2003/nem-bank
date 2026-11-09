@@ -2,12 +2,12 @@
 INSERT INTO transfers (
   id, user_id, reference, rail, source_account_id, destination_account_id, recipient, currency, amount_minor,
   fee_minor, narration, category, transaction_id, duress_blocked, hold_id, bank_code, account_number, partner,
-  saga_deadline, limit_day, beneficiary_id, release_at
+  saga_deadline, limit_day, beneficiary_id, release_at, money_request_id, payment_link_id
 ) VALUES (
   @id, @user_id, @reference, @rail, @source_account_id, sqlc.narg('destination_account_id'), @recipient, @currency,
   @amount_minor, @fee_minor, @narration, sqlc.narg('category'), @transaction_id, @duress_blocked, sqlc.narg('hold_id'),
   sqlc.narg('bank_code'), sqlc.narg('account_number'), sqlc.narg('partner'), sqlc.narg('saga_deadline'), @limit_day,
-  sqlc.narg('beneficiary_id'), sqlc.narg('release_at')
+  sqlc.narg('beneficiary_id'), sqlc.narg('release_at'), sqlc.narg('money_request_id'), sqlc.narg('payment_link_id')
 )
 RETURNING *;
 

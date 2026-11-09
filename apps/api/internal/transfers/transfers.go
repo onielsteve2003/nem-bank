@@ -110,6 +110,9 @@ type Config struct {
 	Limits *limits.Service
 	// StepUps spends the step-up that skips a cooling-off; nil means none is ever valid.
 	StepUps limits.StepUps
+	// QRKey signs receive QR payloads (at least 32 bytes); nil makes a random one, so codes
+	// only verify in the process that made them (tests).
+	QRKey []byte
 	// Partner carries money to other banks; nil means Sandbox.
 	Partner partners.BankPartner
 	// Sandbox is the simulated rail, whose settings staff change from the console; nil
@@ -135,6 +138,7 @@ type Service struct {
 	customers Customers
 	limits    *limits.Service
 	stepUps   limits.StepUps
+	qrKey     []byte
 	partner   partners.BankPartner
 	sandbox   *partners.SandboxNIP
 	secrets   map[string][]byte
@@ -163,6 +167,15 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Partner == nil {
 		cfg.Partner = cfg.Sandbox
 	}
+	if cfg.QRKey == nil {
+		cfg.QRKey = make([]byte, 32)
+		if _, err := rand.Read(cfg.QRKey); err != nil {
+			return nil, fmt.Errorf("qr key: %w", err)
+		}
+	}
+	if len(cfg.QRKey) < 32 {
+		return nil, errors.New("transfers: QRKey must be at least 32 bytes")
+	}
 	if cfg.Limits == nil {
 		l, err := limits.NewService(limits.Config{Pool: cfg.Pool, Customers: cfg.Customers, Now: cfg.Now})
 		if err != nil {
@@ -183,7 +196,7 @@ func NewService(cfg Config) (*Service, error) {
 	}
 	return &Service{
 		pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers,
-		limits: cfg.Limits, stepUps: cfg.StepUps, partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
+		limits: cfg.Limits, stepUps: cfg.StepUps, qrKey: cfg.QRKey, partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
 		log: cfg.Logger, now: cfg.Now, sagaTimeout: cfg.SagaTimeout, pollAfter: cfg.PollAfter,
 	}, nil
 }

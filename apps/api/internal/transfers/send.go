@@ -45,6 +45,8 @@ type Request struct {
 	SaveBeneficiary bool
 	// StepUpToken (purpose transfer) sends at once what the cooling-off would delay.
 	StepUpToken string
+	// MoneyRequestID or PaymentLinkID is what the transfer pays, if anything.
+	MoneyRequestID, PaymentLinkID *uuid.UUID
 }
 
 // View is a transfer with its timeline.
@@ -248,7 +250,7 @@ func (s *Service) commit(ctx context.Context, tx pgx.Tx, pl plan) (uuid.UUID, er
 		ID: id, UserID: pl.userID, Reference: reference, Rail: dest.rail(), SourceAccountID: pl.src.AccountID,
 		Recipient: recipientJSON, Currency: string(money.NGN), AmountMinor: pl.req.Amount.Amount(), FeeMinor: pl.fee.Amount(),
 		Narration: pl.narration, Category: &pl.category, TransactionID: lineID, DuressBlocked: pl.sender.InDuress,
-		LimitDay: &day,
+		LimitDay: &day, MoneyRequestID: pl.req.MoneyRequestID, PaymentLinkID: pl.req.PaymentLinkID,
 	}
 	if dest.saved != nil {
 		in.BeneficiaryID = &dest.saved.ID

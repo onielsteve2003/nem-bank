@@ -13,37 +13,57 @@ import (
 type Querier interface {
 	// One runner at a time per schedule; a schedule another runner holds is skipped, not waited on.
 	ClaimDueSchedule(ctx context.Context, arg ClaimDueScheduleParams) (ScheduledTransfer, error)
+	CountLinkPayment(ctx context.Context, arg CountLinkPaymentParams) error
 	DeleteBeneficiary(ctx context.Context, arg DeleteBeneficiaryParams) (int64, error)
+	// Pending requests past their expiry, for one customer, before they are read.
+	ExpireMoneyRequests(ctx context.Context, arg ExpireMoneyRequestsParams) error
 	FindBeneficiary(ctx context.Context, arg FindBeneficiaryParams) (Beneficiary, error)
 	GetBeneficiary(ctx context.Context, arg GetBeneficiaryParams) (Beneficiary, error)
+	// Either side may read it.
+	GetMoneyRequest(ctx context.Context, arg GetMoneyRequestParams) (MoneyRequest, error)
+	GetPaymentLink(ctx context.Context, arg GetPaymentLinkParams) (PaymentLink, error)
+	GetPaymentLinkBySlug(ctx context.Context, slug string) (PaymentLink, error)
 	GetSchedule(ctx context.Context, arg GetScheduleParams) (ScheduledTransfer, error)
+	GetSplitBill(ctx context.Context, arg GetSplitBillParams) (SplitBill, error)
 	GetTransfer(ctx context.Context, arg GetTransferParams) (Transfer, error)
 	GetTransferByID(ctx context.Context, id uuid.UUID) (Transfer, error)
 	GetTransferByReference(ctx context.Context, reference string) (Transfer, error)
 	// Saving one twice returns no row: the caller says it is already saved.
 	InsertBeneficiary(ctx context.Context, arg InsertBeneficiaryParams) (Beneficiary, error)
+	InsertMoneyRequest(ctx context.Context, arg InsertMoneyRequestParams) (MoneyRequest, error)
 	// No row back means the event was handled before.
 	InsertPartnerWebhookEvent(ctx context.Context, arg InsertPartnerWebhookEventParams) (string, error)
+	InsertPaymentLink(ctx context.Context, arg InsertPaymentLinkParams) (PaymentLink, error)
 	InsertSchedule(ctx context.Context, arg InsertScheduleParams) (ScheduledTransfer, error)
+	InsertSplitBill(ctx context.Context, arg InsertSplitBillParams) (SplitBill, error)
 	InsertTransfer(ctx context.Context, arg InsertTransferParams) (Transfer, error)
 	InsertTransferEvent(ctx context.Context, arg InsertTransferEventParams) error
 	// Favourites first, then most recently paid, then by name (the mock's order). A customer
 	// has tens of these, so pages are by offset.
 	ListBeneficiaries(ctx context.Context, arg ListBeneficiariesParams) ([]Beneficiary, error)
 	ListDueSchedules(ctx context.Context, arg ListDueSchedulesParams) ([]ListDueSchedulesRow, error)
+	ListMoneyRequests(ctx context.Context, arg ListMoneyRequestsParams) ([]MoneyRequest, error)
+	ListPaymentLinks(ctx context.Context, arg ListPaymentLinksParams) ([]PaymentLink, error)
 	// Next run first; ended schedules last, newest first.
 	ListSchedules(ctx context.Context, arg ListSchedulesParams) ([]ScheduledTransfer, error)
+	ListSplitBills(ctx context.Context, arg ListSplitBillsParams) ([]SplitBill, error)
+	ListSplitRequests(ctx context.Context, splitIds []uuid.UUID) ([]MoneyRequest, error)
 	// The timelines of a page of transfers in one query.
 	ListTransferEvents(ctx context.Context, ids []uuid.UUID) ([]TransferEvent, error)
 	ListTransfers(ctx context.Context, arg ListTransfersParams) ([]Transfer, error)
 	// Transfers accepted under duress that are still "on their way".
 	LockDuressTransfers(ctx context.Context, userID uuid.UUID) ([]Transfer, error)
+	LockMoneyRequest(ctx context.Context, arg LockMoneyRequestParams) (MoneyRequest, error)
+	LockPaymentLinkBySlug(ctx context.Context, slug string) (PaymentLink, error)
 	LockSchedule(ctx context.Context, arg LockScheduleParams) (ScheduledTransfer, error)
 	// The saga's steps (send, status check, callback) take this lock, so two answers for the
 	// same transfer are judged one after the other, never both on the same old status.
 	LockTransfer(ctx context.Context, id uuid.UUID) (Transfer, error)
 	// Paid once, the beneficiary is no longer new.
 	MarkBeneficiaryPaid(ctx context.Context, arg MarkBeneficiaryPaidParams) error
+	// Pending shares not reminded in the last day get reminded now.
+	RemindSplitRequests(ctx context.Context, arg RemindSplitRequestsParams) ([]MoneyRequest, error)
+	RespondMoneyRequest(ctx context.Context, arg RespondMoneyRequestParams) (MoneyRequest, error)
 	SaveSchedule(ctx context.Context, arg SaveScheduleParams) (ScheduledTransfer, error)
 	SetPartnerReference(ctx context.Context, arg SetPartnerReferenceParams) error
 	// A transfer that waited (cooling-off, step-up) gets the partner's full time from when it goes.
@@ -54,6 +74,7 @@ type Querier interface {
 	// illegal move; the status guard turns a lost race into no row instead of a double move.
 	SetTransferStatus(ctx context.Context, arg SetTransferStatusParams) (Transfer, error)
 	UpdateBeneficiary(ctx context.Context, arg UpdateBeneficiaryParams) (Beneficiary, error)
+	UpdatePaymentLink(ctx context.Context, arg UpdatePaymentLinkParams) (PaymentLink, error)
 }
 
 var _ Querier = (*Queries)(nil)

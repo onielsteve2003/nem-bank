@@ -376,6 +376,20 @@ raises `schedule.run_skipped`; a fault is retried next minute. Runs missed while
 skipped on resume. Reads that need the pool (customer profiles, accounts) are done before a
 transaction opens, never inside one, so concurrent transfers cannot starve the pool.
 
+**Requests, split bills, payment links and QR** (migration 00019). A money request asks one
+Nem customer (by @nemtag) for an amount; it is pending until paid, declined, cancelled or
+past its expiry (1–30 days). Paying it, or paying a payment link, is a normal transfer
+(limits, fees, cooling-off) committed in the same transaction that marks the request paid
+or counts the link's takings, with the request or link row locked. A split bill is one
+request per participant: equal shares give the odd kobo to the creator (or the first
+friend), custom shares follow `@nem/shared`'s rules; reminders go at most once a day per
+unpaid person, else 429 with when the next is due. Payment links pay into the owner's naira
+account through `/v1/public/payment-links/{slug}` (open without sign-in, payee's name only;
+paying needs the payer signed in and device-signed). **QR codes** are
+`nem1.<base64url claims>.<base64url HMAC-SHA256>` with key id `qr1`; fixed-amount codes
+expire after 15 min. The QR key is derived from `JWT_SIGNING_KEY` under its own label, so
+an edited code (another account, another amount) fails as `bad_signature`.
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers

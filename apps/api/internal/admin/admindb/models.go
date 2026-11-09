@@ -169,6 +169,22 @@ type LedgerAccount struct {
 	CreatedAt      time.Time
 }
 
+type MoneyRequest struct {
+	ID             uuid.UUID
+	RequesterID    uuid.UUID
+	PayerID        uuid.UUID
+	Currency       string
+	AmountMinor    int64
+	Note           string
+	Status         string
+	SplitBillID    *uuid.UUID
+	TransferID     *uuid.UUID
+	CreatedAt      time.Time
+	ExpiresAt      time.Time
+	RespondedAt    *time.Time
+	LastRemindedAt *time.Time
+}
+
 type OtpChallenge struct {
 	ID                uuid.UUID
 	Purpose           string
@@ -204,6 +220,23 @@ type PartnerWebhookEvent struct {
 	Reference  string
 	Outcome    string
 	ReceivedAt time.Time
+}
+
+type PaymentLink struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	AccountID          uuid.UUID
+	Slug               string
+	Title              string
+	Note               *string
+	AmountMode         string
+	Currency           string
+	AmountMinor        pgtype.Int8
+	Status             string
+	ExpiresAt          *time.Time
+	PaymentsCount      int32
+	TotalReceivedMinor int64
+	CreatedAt          time.Time
 }
 
 type Posting struct {
@@ -306,6 +339,17 @@ type SimulatorSetting struct {
 	Settings  []byte
 	UpdatedAt time.Time
 	UpdatedBy *uuid.UUID
+}
+
+type SplitBill struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	Title      string
+	Currency   string
+	TotalMinor int64
+	Split      string
+	SelfMinor  pgtype.Int8
+	CreatedAt  time.Time
 }
 
 type Staff struct {
@@ -411,6 +455,8 @@ type Transfer struct {
 	SagaDeadline         *time.Time
 	LimitDay             pgtype.Date
 	BeneficiaryID        *uuid.UUID
+	MoneyRequestID       *uuid.UUID
+	PaymentLinkID        *uuid.UUID
 }
 
 type TransferEvent struct {
