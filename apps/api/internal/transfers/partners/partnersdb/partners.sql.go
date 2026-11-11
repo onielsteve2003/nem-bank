@@ -102,6 +102,50 @@ func (q *Queries) InsertSandboxPayment(ctx context.Context, arg InsertSandboxPay
 	return i, err
 }
 
+const listSettledSandboxPayments = `-- name: ListSettledSandboxPayments :many
+SELECT reference, amount_minor, currency, settle_at FROM sandbox_nip_payments
+WHERE outcome = 'settled' AND settle_at >= $1 AND settle_at < $2
+ORDER BY settle_at, reference
+`
+
+type ListSettledSandboxPaymentsParams struct {
+	FromAt time.Time
+	ToAt   time.Time
+}
+
+type ListSettledSandboxPaymentsRow struct {
+	Reference   string
+	AmountMinor int64
+	Currency    string
+	SettleAt    time.Time
+}
+
+// The sandbox's settlement file: payments that settled in [from_at, to_at).
+func (q *Queries) ListSettledSandboxPayments(ctx context.Context, arg ListSettledSandboxPaymentsParams) ([]ListSettledSandboxPaymentsRow, error) {
+	rows, err := q.db.Query(ctx, listSettledSandboxPayments, arg.FromAt, arg.ToAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListSettledSandboxPaymentsRow{}
+	for rows.Next() {
+		var i ListSettledSandboxPaymentsRow
+		if err := rows.Scan(
+			&i.Reference,
+			&i.AmountMinor,
+			&i.Currency,
+			&i.SettleAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const markSandboxCallbackSent = `-- name: MarkSandboxCallbackSent :exec
 UPDATE sandbox_nip_payments SET callback_sent_at = now() WHERE reference = $1 AND callback_sent_at IS NULL
 `

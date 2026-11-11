@@ -23,3 +23,9 @@ SELECT * FROM sandbox_nip_payments WHERE reference = $1;
 
 -- name: MarkSandboxCallbackSent :exec
 UPDATE sandbox_nip_payments SET callback_sent_at = now() WHERE reference = $1 AND callback_sent_at IS NULL;
+
+-- name: ListSettledSandboxPayments :many
+-- The sandbox's settlement file: payments that settled in [from_at, to_at).
+SELECT reference, amount_minor, currency, settle_at FROM sandbox_nip_payments
+WHERE outcome = 'settled' AND settle_at >= @from_at AND settle_at < @to_at
+ORDER BY settle_at, reference;

@@ -41,6 +41,9 @@ type Querier interface {
 	// Favourites first, then most recently paid, then by name (the mock's order). A customer
 	// has tens of these, so pages are by offset.
 	ListBeneficiaries(ctx context.Context, arg ListBeneficiariesParams) ([]Beneficiary, error)
+	// Interbank transfers the ledger paid out in [from_at, to_at): the time is the timeline's
+	// 'completed' step.
+	ListCompletedInterbank(ctx context.Context, arg ListCompletedInterbankParams) ([]ListCompletedInterbankRow, error)
 	ListDueSchedules(ctx context.Context, arg ListDueSchedulesParams) ([]ListDueSchedulesRow, error)
 	ListMoneyRequests(ctx context.Context, arg ListMoneyRequestsParams) ([]MoneyRequest, error)
 	ListPaymentLinks(ctx context.Context, arg ListPaymentLinksParams) ([]PaymentLink, error)

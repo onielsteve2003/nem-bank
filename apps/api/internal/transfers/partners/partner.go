@@ -81,3 +81,18 @@ const (
 
 // ErrRejected means the partner refused the payment outright (not a later failure).
 var ErrRejected = errors.New("partners: payment refused")
+
+// Settlement is one line of a partner's settlement file: a payment that reached the
+// receiving bank.
+type Settlement struct {
+	Reference string
+	Amount    money.Money
+	SettledAt time.Time
+}
+
+// SettlementReporter is a partner that publishes a settlement file, which finance
+// reconciles against the ledger. The sandbox has one; Paystack's test mode does not.
+type SettlementReporter interface {
+	// SettlementReport lists the payments that settled in [from, to).
+	SettlementReport(ctx context.Context, from, to time.Time) ([]Settlement, error)
+}

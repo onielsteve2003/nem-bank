@@ -13,6 +13,8 @@ type Querier interface {
 	GetSimulatorSettings(ctx context.Context, name string) ([]byte, error)
 	// A resend of a reference the sandbox already has writes nothing (no row comes back).
 	InsertSandboxPayment(ctx context.Context, arg InsertSandboxPaymentParams) (SandboxNipPayment, error)
+	// The sandbox's settlement file: payments that settled in [from_at, to_at).
+	ListSettledSandboxPayments(ctx context.Context, arg ListSettledSandboxPaymentsParams) ([]ListSettledSandboxPaymentsRow, error)
 	MarkSandboxCallbackSent(ctx context.Context, reference string) error
 	SetSimulatorSettings(ctx context.Context, arg SetSimulatorSettingsParams) ([]byte, error)
 }

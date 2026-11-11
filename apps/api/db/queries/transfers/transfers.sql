@@ -156,3 +156,13 @@ LIMIT @lim;
 SELECT * FROM scheduled_transfers
 WHERE id = @id AND status = 'active' AND next_run_at <= @now
 FOR UPDATE SKIP LOCKED;
+
+-- name: ListCompletedInterbank :many
+-- Interbank transfers the ledger paid out in [from_at, to_at): the time is the timeline's
+-- 'completed' step.
+SELECT t.reference, t.amount_minor, t.currency
+FROM transfers t
+JOIN transfer_events e ON e.transfer_id = t.id AND e.status = 'completed'
+WHERE t.rail = 'interbank' AND t.partner = @partner AND t.status = 'completed'
+  AND e.at >= @from_at AND e.at < @to_at
+ORDER BY e.at, t.reference;

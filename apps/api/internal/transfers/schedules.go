@@ -271,10 +271,27 @@ type runWorker struct {
 func (w *runWorker) Work(ctx context.Context, _ *river.Job[RunArgs]) error { return w.s.RunDue(ctx) }
 
 // PeriodicJobs are the transfers domain's clocks (jobs.Options.Periodic): due schedules
-// are looked for every minute.
+// are looked for every minute, and the previous Lagos day is reconciled with the partner
+// at 02:00 WAT (01:00 UTC).
 func (s *Service) PeriodicJobs() []*river.PeriodicJob {
-	return []*river.PeriodicJob{river.NewPeriodicJob(river.PeriodicInterval(time.Minute),
-		func() (river.JobArgs, *river.InsertOpts) { return RunArgs{}, nil }, &river.PeriodicJobOpts{RunOnStart: true})}
+	return []*river.PeriodicJob{
+		river.NewPeriodicJob(river.PeriodicInterval(time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) { return RunArgs{}, nil }, &river.PeriodicJobOpts{RunOnStart: true}),
+		river.NewPeriodicJob(dailyAt{hour: 1},
+			func() (river.JobArgs, *river.InsertOpts) { return ReconcileArgs{}, nil }, nil),
+	}
+}
+
+// dailyAt schedules a job at the same UTC hour every day.
+type dailyAt struct{ hour int }
+
+func (d dailyAt) Next(t time.Time) time.Time {
+	t = t.UTC()
+	next := time.Date(t.Year(), t.Month(), t.Day(), d.hour, 0, 0, 0, time.UTC)
+	if !next.After(t) {
+		next = next.AddDate(0, 0, 1)
+	}
+	return next
 }
 
 // RunDue runs the schedules that are due. A schedule whose run fails for a database or

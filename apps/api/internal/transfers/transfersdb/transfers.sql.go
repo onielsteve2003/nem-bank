@@ -629,6 +629,49 @@ func (q *Queries) ListBeneficiaries(ctx context.Context, arg ListBeneficiariesPa
 	return items, nil
 }
 
+const listCompletedInterbank = `-- name: ListCompletedInterbank :many
+SELECT t.reference, t.amount_minor, t.currency
+FROM transfers t
+JOIN transfer_events e ON e.transfer_id = t.id AND e.status = 'completed'
+WHERE t.rail = 'interbank' AND t.partner = $1 AND t.status = 'completed'
+  AND e.at >= $2 AND e.at < $3
+ORDER BY e.at, t.reference
+`
+
+type ListCompletedInterbankParams struct {
+	Partner *string
+	FromAt  time.Time
+	ToAt    time.Time
+}
+
+type ListCompletedInterbankRow struct {
+	Reference   string
+	AmountMinor int64
+	Currency    string
+}
+
+// Interbank transfers the ledger paid out in [from_at, to_at): the time is the timeline's
+// 'completed' step.
+func (q *Queries) ListCompletedInterbank(ctx context.Context, arg ListCompletedInterbankParams) ([]ListCompletedInterbankRow, error) {
+	rows, err := q.db.Query(ctx, listCompletedInterbank, arg.Partner, arg.FromAt, arg.ToAt)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCompletedInterbankRow{}
+	for rows.Next() {
+		var i ListCompletedInterbankRow
+		if err := rows.Scan(&i.Reference, &i.AmountMinor, &i.Currency); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDueSchedules = `-- name: ListDueSchedules :many
 SELECT id, user_id FROM scheduled_transfers
 WHERE status = 'active' AND next_run_at <= $1

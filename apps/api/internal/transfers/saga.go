@@ -96,6 +96,7 @@ func (s *Service) Register(w *river.Workers) {
 	river.AddWorker(w, &checkWorker{s: s})
 	river.AddWorker(w, &releaseWorker{s: s})
 	river.AddWorker(w, &runWorker{s: s})
+	river.AddWorker(w, &reconcileWorker{s: s})
 }
 
 // startSaga queues the send and the deadline check in Create's transaction.

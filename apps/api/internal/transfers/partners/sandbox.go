@@ -305,3 +305,19 @@ func draw(n int) int {
 	}
 	return int(v.Int64())
 }
+
+// SettlementReport is the sandbox's settlement file for [from, to).
+func (s *SandboxNIP) SettlementReport(ctx context.Context, from, to time.Time) ([]Settlement, error) {
+	if s.pool == nil {
+		return nil, nil
+	}
+	rows, err := partnersdb.New(s.pool).ListSettledSandboxPayments(ctx, partnersdb.ListSettledSandboxPaymentsParams{FromAt: from, ToAt: to})
+	if err != nil {
+		return nil, fmt.Errorf("list settled sandbox payments: %w", err)
+	}
+	out := make([]Settlement, len(rows))
+	for i, r := range rows {
+		out[i] = Settlement{Reference: r.Reference, Amount: money.New(r.AmountMinor, money.Currency(r.Currency)), SettledAt: r.SettleAt}
+	}
+	return out, nil
+}
