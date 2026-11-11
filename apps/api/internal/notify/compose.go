@@ -45,6 +45,8 @@ type payload struct {
 	Rate            string    `json:"rate"`
 	Platform        string    `json:"platform"`
 	DueDate         string    `json:"due_date"`
+	Tier            int       `json:"tier"`
+	Status          string    `json:"status"`
 }
 
 // Topics lists every event the notifications subscriber listens to. security.duress_triggered
@@ -57,7 +59,7 @@ var Topics = []string{
 	"credit.loan_disbursed", "credit.loan_repayment", "credit.loan_repaid", "credit.loan_overdue", "credit.loan_defaulted",
 	"savings.auto_saved", "savings.auto_save_skipped", "savings.lock_matured",
 	"statement.ready", "fx.alert_triggered",
-	"identity.device_bound", "identity.refresh_token_reused",
+	"identity.device_bound", "identity.refresh_token_reused", "kyc.updated",
 }
 
 // symbols are the currencies the bank holds; anything else prints its code.
@@ -147,6 +149,19 @@ func compose(d jobs.Delivery) ([]draft, error) {
 		add(p.UserID, "owner", "transactions", "Statement ready", "Your account statement is ready to download.", "nembank://statements")
 	case "fx.alert_triggered":
 		add(p.UserID, "owner", "product", "Rate alert", "Your rate alert fired at "+orDefault(p.Rate, "your target")+".", "nembank://fx")
+	case "kyc.updated":
+		// A submission going to review is the customer's own action: they need no alert for it.
+		const link = "nembank://me/verification"
+		switch {
+		case p.Status == "approved":
+			add(p.UserID, "owner", "security", "You are now Tier 3", "Your ID was approved. Higher limits and credit are unlocked.", link)
+		case p.Status == "rejected":
+			add(p.UserID, "owner", "security", "Your Tier 3 upgrade was not approved", "See why and try again with different documents.", link)
+		case p.Status == "resubmit":
+			add(p.UserID, "owner", "security", "We need a document again", "One of your photos could not be used. Send a new one to finish Tier 3.", link)
+		case p.Tier == 2 && p.Status != "pending_review":
+			add(p.UserID, "owner", "security", "You are now Tier 2", "Your identity was verified. Foreign wallets and USD cards are unlocked.", link)
+		}
 	case "identity.device_bound":
 		uid, err := uuid.Parse(d.AggregateID)
 		if err != nil {

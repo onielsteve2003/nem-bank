@@ -50,6 +50,7 @@ type handlers struct {
 	*forecastAPI
 	*assistantAPI
 	*prefillAPI
+	*kycAPI
 	*notifyAPI
 	*realtimeAPI
 	fallback
@@ -75,6 +76,7 @@ type (
 	forecastAPI  = forecast.API
 	assistantAPI = assistant.API
 	prefillAPI   = kyc.PrefillAPI
+	kycAPI       = kyc.API
 	notifyAPI    = notify.API
 	realtimeAPI  = realtime.API
 )

@@ -18,11 +18,11 @@ type AccountHold struct {
 	AmountMinor int64
 	Reference   string
 	Status      string
-	EntryID     pgtype.UUID
+	EntryID     *uuid.UUID
 	CreatedAt   time.Time
-	ClosedAt    pgtype.Timestamptz
+	ClosedAt    *time.Time
 	Reason      string
-	ExpiresAt   pgtype.Timestamptz
+	ExpiresAt   *time.Time
 }
 
 type AjoContribution struct {
@@ -30,8 +30,8 @@ type AjoContribution struct {
 	UserID   uuid.UUID
 	Status   string
 	Attempts int32
-	PaidAt   pgtype.Timestamptz
-	EntryID  pgtype.UUID
+	PaidAt   *time.Time
+	EntryID  *uuid.UUID
 }
 
 type AjoCycle struct {
@@ -54,7 +54,7 @@ type AjoGroup struct {
 	Frequency         string
 	MemberCount       int32
 	Rotation          string
-	StartDate         pgtype.Date
+	StartDate         time.Time
 	GracePeriodHours  int32
 	Status            string
 	CurrentCycle      int32
@@ -62,8 +62,8 @@ type AjoGroup struct {
 	InviteCode        string
 	InviteExpiresAt   time.Time
 	CreatedAt         time.Time
-	StartedAt         pgtype.Timestamptz
-	EndedAt           pgtype.Timestamptz
+	StartedAt         *time.Time
+	EndedAt           *time.Time
 }
 
 type AjoMember struct {
@@ -83,14 +83,14 @@ type ApprovalRequest struct {
 	Action          string
 	Status          string
 	MakerID         uuid.UUID
-	CheckerID       pgtype.UUID
+	CheckerID       *uuid.UUID
 	Reason          string
 	Summary         string
 	Before          []byte
 	After           []byte
 	RejectionReason *string
 	CreatedAt       time.Time
-	DecidedAt       pgtype.Timestamptz
+	DecidedAt       *time.Time
 	ExpiresAt       time.Time
 }
 
@@ -138,8 +138,8 @@ type Beneficiary struct {
 	BankName        string
 	AccountNumber   string
 	Favourite       bool
-	CoolingOffUntil pgtype.Timestamptz
-	LastPaidAt      pgtype.Timestamptz
+	CoolingOffUntil *time.Time
+	LastPaidAt      *time.Time
 	CreatedAt       time.Time
 }
 
@@ -159,13 +159,13 @@ type BillPayment struct {
 	Status          string
 	Token           *string
 	Units           *string
-	LimitDay        pgtype.Date
-	EntryID         pgtype.UUID
-	ReversalEntryID pgtype.UUID
-	TransactionID   pgtype.UUID
+	LimitDay        time.Time
+	EntryID         *uuid.UUID
+	ReversalEntryID *uuid.UUID
+	TransactionID   *uuid.UUID
 	FailureReason   *string
 	CreatedAt       time.Time
-	CompletedAt     pgtype.Timestamptz
+	CompletedAt     *time.Time
 }
 
 type Card struct {
@@ -193,7 +193,7 @@ type Card struct {
 	FrozenByPanic        bool
 	Physical             bool
 	CreatedAt            time.Time
-	TerminatedAt         pgtype.Timestamptz
+	TerminatedAt         *time.Time
 }
 
 type CardAuthorization struct {
@@ -201,7 +201,7 @@ type CardAuthorization struct {
 	CardID          uuid.UUID
 	UserID          uuid.UUID
 	AccountID       uuid.UUID
-	HoldID          pgtype.UUID
+	HoldID          *uuid.UUID
 	MerchantID      string
 	MerchantName    string
 	Mcc             string
@@ -213,10 +213,10 @@ type CardAuthorization struct {
 	BillingCurrency string
 	Status          string
 	DeclineReason   *string
-	TransactionID   pgtype.UUID
+	TransactionID   *uuid.UUID
 	AuthorizedAt    time.Time
-	ExpiresAt       pgtype.Timestamptz
-	SettledAt       pgtype.Timestamptz
+	ExpiresAt       *time.Time
+	SettledAt       *time.Time
 }
 
 type CategoryCorrection struct {
@@ -246,14 +246,14 @@ type CustomerAccount struct {
 
 type DailyBalance struct {
 	AccountID    uuid.UUID
-	AsOf         pgtype.Date
+	AsOf         time.Time
 	BalanceMinor int64
 	CreatedAt    time.Time
 }
 
 type DailyLimitUsage struct {
 	UserID    uuid.UUID
-	Day       pgtype.Date
+	Day       time.Time
 	UsedMinor int64
 	UpdatedAt time.Time
 }
@@ -268,8 +268,8 @@ type Device struct {
 	AppVersion     *string
 	BoundAt        time.Time
 	LastSeenAt     time.Time
-	CoolOffUntil   pgtype.Timestamptz
-	RevokedAt      pgtype.Timestamptz
+	CoolOffUntil   *time.Time
+	RevokedAt      *time.Time
 }
 
 type DeviceChallenge struct {
@@ -278,7 +278,7 @@ type DeviceChallenge struct {
 	Nonce     string
 	CreatedAt time.Time
 	ExpiresAt time.Time
-	UsedAt    pgtype.Timestamptz
+	UsedAt    *time.Time
 }
 
 type FxAlert struct {
@@ -289,7 +289,7 @@ type FxAlert struct {
 	TargetE8        int64
 	Status          string
 	CreatedAt       time.Time
-	TriggeredAt     pgtype.Timestamptz
+	TriggeredAt     *time.Time
 	TriggeredRateE8 pgtype.Int8
 }
 
@@ -339,7 +339,7 @@ type IdempotencyKey struct {
 	ResponseBody        []byte
 	LockedAt            time.Time
 	CreatedAt           time.Time
-	CompletedAt         pgtype.Timestamptz
+	CompletedAt         *time.Time
 }
 
 type JournalEntry struct {
@@ -347,10 +347,28 @@ type JournalEntry struct {
 	Kind           string
 	Reference      string
 	IdempotencyKey *string
-	ApprovalID     pgtype.UUID
+	ApprovalID     *uuid.UUID
 	Metadata       []byte
 	CreatedAt      time.Time
 	XactID         pgtype.Uint64
+}
+
+type KycDocument struct {
+	ID            uuid.UUID
+	UserID        uuid.UUID
+	Kind          string
+	Status        string
+	QualityIssues []string
+	ContentType   string
+	SizeBytes     int32
+	Sha256        []byte
+	Sample        bool
+	CreatedAt     time.Time
+}
+
+type KycDocumentBlob struct {
+	DocumentID uuid.UUID
+	Ciphertext []byte
 }
 
 type KycIdentifier struct {
@@ -364,10 +382,38 @@ type KycIdentifier struct {
 	UpdatedAt  time.Time
 }
 
+type KycIdentityCheck struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Kind           string
+	Verified       bool
+	NameResult     string
+	NameConfidence float32
+	DobMatch       pgtype.Bool
+	Provider       string
+	CreatedAt      time.Time
+}
+
+type KycSubmission struct {
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	TargetTier        int16
+	Status            string
+	IDType            string
+	IDExpiryDate      *time.Time
+	Address           []byte
+	DocumentIds       []uuid.UUID
+	SubmittedAt       time.Time
+	ReviewedAt        *time.Time
+	ReviewerID        *uuid.UUID
+	RejectionReason   *string
+	ResubmitDocuments []string
+}
+
 type LedgerAccount struct {
 	ID             uuid.UUID
 	OwnerType      string
-	OwnerID        pgtype.UUID
+	OwnerID        *uuid.UUID
 	Kind           string
 	Currency       string
 	Name           string
@@ -390,21 +436,21 @@ type Loan struct {
 	FeeMinor           int64
 	TotalMinor         int64
 	RebateMinor        int64
-	StartDate          pgtype.Date
+	StartDate          time.Time
 	Status             string
 	AutoRepay          bool
 	DisbursedAt        time.Time
-	ClosedAt           pgtype.Timestamptz
-	DefaultedAt        pgtype.Timestamptz
+	ClosedAt           *time.Time
+	DefaultedAt        *time.Time
 }
 
 type LoanInstallment struct {
 	LoanID            uuid.UUID
 	Number            int32
-	DueDate           pgtype.Date
+	DueDate           time.Time
 	AmountMinor       int64
 	PaidMinor         int64
-	OverdueNotifiedAt pgtype.Timestamptz
+	OverdueNotifiedAt *time.Time
 }
 
 type LoanOffer struct {
@@ -415,7 +461,7 @@ type LoanOffer struct {
 	AprBps         int32
 	InterestMinor  int64
 	FeeMinor       int64
-	StartDate      pgtype.Date
+	StartDate      time.Time
 	ExpiresAt      time.Time
 	CreatedAt      time.Time
 }
@@ -428,14 +474,14 @@ type LockedSaving struct {
 	TermDays              int32
 	RateBps               int32
 	EarlyBreakPenaltyBps  int32
-	StartDate             pgtype.Date
-	MaturityDate          pgtype.Date
+	StartDate             time.Time
+	MaturityDate          time.Time
 	ExpectedInterestMinor int64
 	AccruedInterestMinor  int64
 	AccruedDays           int32
 	Status                string
 	PaidOutMinor          pgtype.Int8
-	EndedAt               pgtype.Timestamptz
+	EndedAt               *time.Time
 	CreatedAt             time.Time
 }
 
@@ -455,12 +501,12 @@ type MoneyRequest struct {
 	AmountMinor    int64
 	Note           string
 	Status         string
-	SplitBillID    pgtype.UUID
-	TransferID     pgtype.UUID
+	SplitBillID    *uuid.UUID
+	TransferID     *uuid.UUID
 	CreatedAt      time.Time
 	ExpiresAt      time.Time
-	RespondedAt    pgtype.Timestamptz
-	LastRemindedAt pgtype.Timestamptz
+	RespondedAt    *time.Time
+	LastRemindedAt *time.Time
 }
 
 type Notification struct {
@@ -471,7 +517,7 @@ type Notification struct {
 	Body      string
 	DeepLink  *string
 	DedupeKey string
-	ReadAt    pgtype.Timestamptz
+	ReadAt    *time.Time
 	CreatedAt time.Time
 }
 
@@ -491,10 +537,10 @@ type OtpChallenge struct {
 	Sends             int16
 	ExpiresAt         time.Time
 	ResendAvailableAt time.Time
-	VerifiedAt        pgtype.Timestamptz
+	VerifiedAt        *time.Time
 	TokenHash         []byte
-	TokenExpiresAt    pgtype.Timestamptz
-	ConsumedAt        pgtype.Timestamptz
+	TokenExpiresAt    *time.Time
+	ConsumedAt        *time.Time
 	CreatedAt         time.Time
 	StepUpPurpose     *string
 }
@@ -506,7 +552,7 @@ type OutboxEvent struct {
 	AggregateID   string
 	Payload       []byte
 	CreatedAt     time.Time
-	DispatchedAt  pgtype.Timestamptz
+	DispatchedAt  *time.Time
 }
 
 type PartnerWebhookEvent struct {
@@ -529,7 +575,7 @@ type PaymentLink struct {
 	Currency           string
 	AmountMinor        pgtype.Int8
 	Status             string
-	ExpiresAt          pgtype.Timestamptz
+	ExpiresAt          *time.Time
 	PaymentsCount      int32
 	TotalReceivedMinor int64
 	CreatedAt          time.Time
@@ -572,13 +618,13 @@ type RefreshToken struct {
 	TokenHash []byte
 	CreatedAt time.Time
 	ExpiresAt time.Time
-	UsedAt    pgtype.Timestamptz
+	UsedAt    *time.Time
 }
 
 type RiskAssessment struct {
 	TransferID     uuid.UUID
 	UserID         uuid.UUID
-	DeviceID       pgtype.UUID
+	DeviceID       *uuid.UUID
 	BeneficiaryKey string
 	Mode           string
 	ModelVersion   string
@@ -591,8 +637,8 @@ type RiskAssessment struct {
 	Features       []byte
 	DurationUs     int64
 	Label          *string
-	LabeledBy      pgtype.UUID
-	LabeledAt      pgtype.Timestamptz
+	LabeledBy      *uuid.UUID
+	LabeledAt      *time.Time
 	LabelNote      *string
 	CreatedAt      time.Time
 }
@@ -611,9 +657,9 @@ type RoundUpSetting struct {
 	UserID       uuid.UUID
 	Enabled      bool
 	RoundToMinor int64
-	GoalID       pgtype.UUID
+	GoalID       *uuid.UUID
 	Sources      []string
-	EnabledSince pgtype.Timestamptz
+	EnabledSince *time.Time
 	UpdatedAt    time.Time
 }
 
@@ -628,7 +674,7 @@ type SandboxNipPayment struct {
 	FailureCode      *string
 	ReceivedAt       time.Time
 	SettleAt         time.Time
-	CallbackSentAt   pgtype.Timestamptz
+	CallbackSentAt   *time.Time
 }
 
 type SavingsGoal struct {
@@ -638,17 +684,17 @@ type SavingsGoal struct {
 	Name                string
 	Emoji               string
 	TargetMinor         int64
-	TargetDate          pgtype.Date
+	TargetDate          *time.Time
 	AutoSaveAmountMinor pgtype.Int8
 	AutoSaveFrequency   *string
-	AutoSaveSourceID    pgtype.UUID
-	AutoSaveNextAt      pgtype.Timestamptz
+	AutoSaveSourceID    *uuid.UUID
+	AutoSaveNextAt      *time.Time
 	InterestRateBps     int32
 	InterestEarnedMinor int64
-	InterestPaidTo      pgtype.Date
+	InterestPaidTo      time.Time
 	Status              string
 	CreatedAt           time.Time
-	ClosedAt            pgtype.Timestamptz
+	ClosedAt            *time.Time
 }
 
 type ScheduledTransfer struct {
@@ -662,8 +708,8 @@ type ScheduledTransfer struct {
 	Narration       string
 	Frequency       string
 	Status          string
-	NextRunAt       pgtype.Timestamptz
-	EndsOn          pgtype.Date
+	NextRunAt       *time.Time
+	EndsOn          *time.Time
 	RunCount        int32
 	LastRun         []byte
 	CreatedAt       time.Time
@@ -676,7 +722,7 @@ type SelfLimit struct {
 	SingleMinor        pgtype.Int8
 	PendingDailyMinor  pgtype.Int8
 	PendingSingleMinor pgtype.Int8
-	PendingEffectiveAt pgtype.Timestamptz
+	PendingEffectiveAt *time.Time
 	UpdatedAt          time.Time
 }
 
@@ -687,7 +733,7 @@ type Session struct {
 	CreatedAt    time.Time
 	LastActiveAt time.Time
 	ExpiresAt    time.Time
-	RevokedAt    pgtype.Timestamptz
+	RevokedAt    *time.Time
 	RevokeReason *string
 }
 
@@ -703,21 +749,21 @@ type Signup struct {
 	LastName          string
 	Email             string
 	Phone             string
-	DateOfBirth       pgtype.Date
+	DateOfBirth       time.Time
 	TermsVersion      string
 	PrivacyVersion    string
 	ConsentAcceptedAt time.Time
 	CreatedAt         time.Time
 	ExpiresAt         time.Time
-	CompletedAt       pgtype.Timestamptz
-	UserID            pgtype.UUID
+	CompletedAt       *time.Time
+	UserID            *uuid.UUID
 }
 
 type SimulatorSetting struct {
 	Name      string
 	Settings  []byte
 	UpdatedAt time.Time
-	UpdatedBy pgtype.UUID
+	UpdatedBy *uuid.UUID
 }
 
 type SplitBill struct {
@@ -738,10 +784,10 @@ type Staff struct {
 	PasswordHash    string
 	Roles           []string
 	TotpSecret      []byte
-	TotpEnrolledAt  pgtype.Timestamptz
+	TotpEnrolledAt  *time.Time
 	LastTotpCounter pgtype.Int8
-	LastLoginAt     pgtype.Timestamptz
-	DisabledAt      pgtype.Timestamptz
+	LastLoginAt     *time.Time
+	DisabledAt      *time.Time
 	CreatedAt       time.Time
 }
 
@@ -750,7 +796,7 @@ type StaffLoginChallenge struct {
 	StaffID   uuid.UUID
 	ExpiresAt time.Time
 	Attempts  int32
-	UsedAt    pgtype.Timestamptz
+	UsedAt    *time.Time
 }
 
 type StaffSession struct {
@@ -758,7 +804,7 @@ type StaffSession struct {
 	StaffID   uuid.UUID
 	CreatedAt time.Time
 	ExpiresAt time.Time
-	RevokedAt pgtype.Timestamptz
+	RevokedAt *time.Time
 }
 
 type Statement struct {
@@ -766,8 +812,8 @@ type Statement struct {
 	UserID              uuid.UUID
 	AccountID           uuid.UUID
 	Currency            string
-	PeriodFrom          pgtype.Date
-	PeriodTo            pgtype.Date
+	PeriodFrom          time.Time
+	PeriodTo            time.Time
 	Status              string
 	OpeningBalanceMinor pgtype.Int8
 	ClosingBalanceMinor pgtype.Int8
@@ -775,7 +821,7 @@ type Statement struct {
 	VerificationCode    *string
 	Pdf                 []byte
 	CreatedAt           time.Time
-	ReadyAt             pgtype.Timestamptz
+	ReadyAt             *time.Time
 }
 
 type Transaction struct {
@@ -783,7 +829,7 @@ type Transaction struct {
 	UserID             uuid.UUID
 	AccountID          uuid.UUID
 	Currency           string
-	EntryID            pgtype.UUID
+	EntryID            *uuid.UUID
 	Type               string
 	Direction          string
 	Status             string
@@ -797,8 +843,8 @@ type Transaction struct {
 	CategorySource     string
 	CategoryConfidence pgtype.Float4
 	Counterparty       []byte
-	TransferID         pgtype.UUID
-	CardID             pgtype.UUID
+	TransferID         *uuid.UUID
+	CardID             *uuid.UUID
 	CreatedAt          time.Time
 	UpdatedAt          time.Time
 }
@@ -810,7 +856,7 @@ type Transfer struct {
 	Status               string
 	Rail                 string
 	SourceAccountID      uuid.UUID
-	DestinationAccountID pgtype.UUID
+	DestinationAccountID *uuid.UUID
 	Recipient            []byte
 	Currency             string
 	AmountMinor          int64
@@ -818,11 +864,11 @@ type Transfer struct {
 	Narration            string
 	Category             *string
 	Risk                 []byte
-	StepUpID             pgtype.UUID
-	ReleaseAt            pgtype.Timestamptz
-	HoldID               pgtype.UUID
+	StepUpID             *uuid.UUID
+	ReleaseAt            *time.Time
+	HoldID               *uuid.UUID
 	TransactionID        uuid.UUID
-	EntryID              pgtype.UUID
+	EntryID              *uuid.UUID
 	Reversal             []byte
 	DuressBlocked        bool
 	CreatedAt            time.Time
@@ -831,11 +877,11 @@ type Transfer struct {
 	AccountNumber        *string
 	Partner              *string
 	PartnerReference     *string
-	SagaDeadline         pgtype.Timestamptz
-	LimitDay             pgtype.Date
-	BeneficiaryID        pgtype.UUID
-	MoneyRequestID       pgtype.UUID
-	PaymentLinkID        pgtype.UUID
+	SagaDeadline         *time.Time
+	LimitDay             *time.Time
+	BeneficiaryID        *uuid.UUID
+	MoneyRequestID       *uuid.UUID
+	PaymentLinkID        *uuid.UUID
 }
 
 type TransferEvent struct {
@@ -854,9 +900,9 @@ type User struct {
 	PreferredName     *string
 	Email             string
 	Phone             string
-	DateOfBirth       pgtype.Date
+	DateOfBirth       time.Time
 	Nemtag            *string
-	NemtagChangedAt   pgtype.Timestamptz
+	NemtagChangedAt   *time.Time
 	PasswordHash      string
 	KycTier           int16
 	KycStatus         string
@@ -869,7 +915,7 @@ type User struct {
 	PinHash           *string
 	PinFailures       int16
 	PinLockouts       int16
-	PinLockedUntil    pgtype.Timestamptz
+	PinLockedUntil    *time.Time
 	DuressPinHash     *string
-	DuressSince       pgtype.Timestamptz
+	DuressSince       *time.Time
 }

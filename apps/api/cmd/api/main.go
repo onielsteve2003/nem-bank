@@ -277,9 +277,16 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	// ID prefill reads sample IDs only. Photos come from the KYC document store (T30.2); until it
-	// exists there is no source, so the endpoint answers 503 and the customer types their details.
-	prefill := kyc.NewPrefiller(kyc.PrefillConfig{Gateway: assistant.NewGateway(llm...)})
+	// Identity checks run against the free sandbox provider; documents are stored encrypted in
+	// Postgres. ID prefill reads the same store, and only for uploads matching a sample hash.
+	kycSvc, err := kyc.NewService(kyc.Config{
+		Pool: pool, Identifiers: kyc.NewIdentifiers(keyring), Keyring: keyring, Limits: limitsSvc,
+		SampleHashes: cfg.KYCSampleIDHashes, Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+	prefill := kyc.NewPrefiller(kyc.PrefillConfig{Gateway: assistant.NewGateway(llm...), Documents: kycSvc})
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -332,6 +339,7 @@ func run() error {
 		Forecast:           forecast.NewAPI(forecastSvc),
 		Assistant:          assistant.NewAPI(assistantSvc),
 		KYCPrefill:         kyc.NewPrefillAPI(prefill),
+		KYC:                kyc.NewAPI(kycSvc),
 		Notify:             notify.NewAPI(notifySvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
@@ -344,7 +352,7 @@ func run() error {
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
-		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber()},
+		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub)},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
 		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register},
 		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs()),

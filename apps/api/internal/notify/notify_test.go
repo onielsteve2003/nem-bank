@@ -295,3 +295,26 @@ func asProblem(err error, target **problem.Error) bool {
 	}
 	return ok
 }
+
+func TestComposeKYCOutcomes(t *testing.T) {
+	uid := uuid.New()
+	for _, c := range []struct {
+		tier   int
+		status string
+		want   string
+	}{
+		{3, "approved", "You are now Tier 3"}, {2, "rejected", "Your Tier 3 upgrade was not approved"},
+		{2, "resubmit", "We need a document again"}, {2, "not_started", "You are now Tier 2"}, {2, "pending_review", ""},
+	} {
+		got, err := compose(delivery("kyc.updated", uid.String(), map[string]any{"user_id": uid, "tier": c.tier, "status": c.status}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		switch {
+		case c.want == "" && len(got) != 0:
+			t.Errorf("%s: a customer's own submission should not alert them, got %+v", c.status, got)
+		case c.want != "" && (len(got) != 1 || got[0].Title != c.want || got[0].UserID != uid):
+			t.Errorf("%d/%s: got %+v, want %q", c.tier, c.status, got, c.want)
+		}
+	}
+}

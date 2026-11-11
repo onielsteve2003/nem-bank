@@ -23,9 +23,12 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/testdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
@@ -41,6 +44,8 @@ type fxStack struct {
 	h    http.Handler
 	pool *pgxpool.Pool
 	fx   *fx.Service
+	kyc  *kyc.Service
+	note *notify.Service
 	key  ed25519.PrivateKey
 	user api.AuthSession
 }
@@ -86,9 +91,22 @@ func newFXStack(t *testing.T) *fxStack {
 	if err != nil {
 		t.Fatal(err)
 	}
+	keyring, err := fieldcrypt.New(map[uint16][]byte{1: bytes.Repeat([]byte{1}, fieldcrypt.KeySize)}, bytes.Repeat([]byte{0xEE}, 32)) // gitleaks:allow (test fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
+	kycSvc, err := kyc.NewService(kyc.Config{Pool: pool, Identifiers: kyc.NewIdentifiers(keyring), Keyring: keyring, Limits: lim, Logger: quiet})
+	if err != nil {
+		t.Fatal(err)
+	}
+	noteSvc, err := notify.NewService(notify.Config{Pool: pool, Logger: quiet})
+	if err != nil {
+		t.Fatal(err)
+	}
 	h, err := NewRouter(Options{
 		Version: "e2e", Logger: quiet, Identity: identity.NewAPI(idsvc), Authenticator: idsvc, Signatures: idsvc,
 		Idempotency: idempotency.NewStore(pool), Accounts: accounts.NewAPI(acc), Limits: limits.NewAPI(lim), FX: fx.NewAPI(fxsvc), Savings: savings.NewAPI(savingsSvc),
+		KYC: kyc.NewAPI(kycSvc), Notify: notify.NewAPI(noteSvc),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -107,7 +125,7 @@ func newFXStack(t *testing.T) *fxStack {
 		"signup_id": started.SignupId, "verification_token": verified.VerificationToken, "password": "Kitchen-Mango-River-7", // gitleaks:allow (test fixture)
 		"device": map[string]any{"name": "tolu's phone", "platform": "ios", "public_key": pub},
 	}, http.StatusCreated)
-	return &fxStack{h: h, pool: pool, fx: fxsvc, key: key, user: user}
+	return &fxStack{h: h, pool: pool, fx: fxsvc, kyc: kycSvc, note: noteSvc, key: key, user: user}
 }
 
 func TestRatesAndChartsAreServedFromTheHourlyReadings(t *testing.T) {

@@ -54,6 +54,10 @@ type Config struct {
 	GeminiAPIKey, GeminiModel string
 	GroqAPIKey, GroqModel     string
 
+	// KYCSampleIDHashes are SHA-256 digests (hex) of the demo's sample ID images. Only an upload
+	// matching one can be read by the optional AI ID prefill; empty means prefill never runs.
+	KYCSampleIDHashes []string
+
 	// OTPKey keys the HMAC one-time codes are stored under.
 	OTPKey []byte
 	// JWTSigningKey is the Ed25519 seed access tokens are signed with.
@@ -175,6 +179,11 @@ func Load(getenv func(string) string) (Config, error) {
 
 	cfg.GeminiAPIKey, cfg.GeminiModel = get("GEMINI_API_KEY", ""), get("GEMINI_MODEL", "")
 	cfg.GroqAPIKey, cfg.GroqModel = get("GROQ_API_KEY", ""), get("GROQ_MODEL", "")
+	for _, h := range strings.Split(get("KYC_SAMPLE_ID_SHA256", ""), ",") {
+		if h = strings.ToLower(strings.TrimSpace(h)); h != "" {
+			cfg.KYCSampleIDHashes = append(cfg.KYCSampleIDHashes, h)
+		}
+	}
 
 	cfg.OTPKey, err = secretKey(getenv("OTP_KEY"), cfg.Env, "nem-dev-otp-key")
 	if err != nil {

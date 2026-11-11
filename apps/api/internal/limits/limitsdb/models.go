@@ -353,6 +353,24 @@ type JournalEntry struct {
 	XactID         pgtype.Uint64
 }
 
+type KycDocument struct {
+	ID            uuid.UUID
+	UserID        uuid.UUID
+	Kind          string
+	Status        string
+	QualityIssues []string
+	ContentType   string
+	SizeBytes     int32
+	Sha256        []byte
+	Sample        bool
+	CreatedAt     time.Time
+}
+
+type KycDocumentBlob struct {
+	DocumentID uuid.UUID
+	Ciphertext []byte
+}
+
 type KycIdentifier struct {
 	UserID     uuid.UUID
 	Kind       string
@@ -362,6 +380,34 @@ type KycIdentifier struct {
 	Last4      string
 	CreatedAt  time.Time
 	UpdatedAt  time.Time
+}
+
+type KycIdentityCheck struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	Kind           string
+	Verified       bool
+	NameResult     string
+	NameConfidence float32
+	DobMatch       pgtype.Bool
+	Provider       string
+	CreatedAt      time.Time
+}
+
+type KycSubmission struct {
+	ID                uuid.UUID
+	UserID            uuid.UUID
+	TargetTier        int16
+	Status            string
+	IDType            string
+	IDExpiryDate      *time.Time
+	Address           []byte
+	DocumentIds       []uuid.UUID
+	SubmittedAt       time.Time
+	ReviewedAt        *time.Time
+	ReviewerID        pgtype.UUID
+	RejectionReason   pgtype.Text
+	ResubmitDocuments []string
 }
 
 type LedgerAccount struct {

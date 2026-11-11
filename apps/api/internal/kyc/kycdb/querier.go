@@ -6,13 +6,39 @@ package kycdb
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	CountFailedChecksSince(ctx context.Context, arg CountFailedChecksSinceParams) (int64, error)
+	CountUploadsSince(ctx context.Context, arg CountUploadsSinceParams) (int64, error)
+	DecideSubmission(ctx context.Context, arg DecideSubmissionParams) (KycSubmission, error)
+	GetDocument(ctx context.Context, arg GetDocumentParams) (KycDocument, error)
+	// For staff, who review any customer's documents.
+	GetDocumentAny(ctx context.Context, id uuid.UUID) (KycDocument, error)
+	GetDocumentBlob(ctx context.Context, documentID uuid.UUID) ([]byte, error)
 	GetIdentifier(ctx context.Context, arg GetIdentifierParams) (KycIdentifier, error)
+	GetSubmission(ctx context.Context, arg GetSubmissionParams) (KycSubmission, error)
+	GetSubmissionAny(ctx context.Context, id uuid.UUID) (KycSubmission, error)
+	GetUserKyc(ctx context.Context, userID uuid.UUID) (GetUserKycRow, error)
+	InsertDocument(ctx context.Context, arg InsertDocumentParams) error
+	InsertDocumentBlob(ctx context.Context, arg InsertDocumentBlobParams) error
+	InsertIdentityCheck(ctx context.Context, arg InsertIdentityCheckParams) error
+	InsertSubmission(ctx context.Context, arg InsertSubmissionParams) (KycSubmission, error)
+	LatestSubmission(ctx context.Context, userID uuid.UUID) (KycSubmission, error)
+	ListDocumentsByIDs(ctx context.Context, ids []uuid.UUID) ([]KycDocument, error)
 	ListIdentifiersToRewrap(ctx context.Context, arg ListIdentifiersToRewrapParams) ([]KycIdentifier, error)
+	ListIdentityChecks(ctx context.Context, userID uuid.UUID) ([]KycIdentityCheck, error)
+	// The review queue, oldest first so nobody waits longer than they must. The first page passes
+	// the zero time and the nil UUID.
+	ListSubmissions(ctx context.Context, arg ListSubmissionsParams) ([]KycSubmission, error)
+	LockSubmission(ctx context.Context, id uuid.UUID) (KycSubmission, error)
+	// The customer's KYC state and the facts a check compares against, locked for the change.
+	LockUserKyc(ctx context.Context, userID uuid.UUID) (LockUserKycRow, error)
 	// Only if nobody re-saved the row since it was read.
 	RewrapIdentifier(ctx context.Context, arg RewrapIdentifierParams) (int64, error)
+	SetUserKyc(ctx context.Context, arg SetUserKycParams) error
 	UpsertIdentifier(ctx context.Context, arg UpsertIdentifierParams) error
 }
 
