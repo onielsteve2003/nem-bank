@@ -138,3 +138,137 @@ func (a *API) RevealCard(ctx context.Context, req api.RevealCardRequestObject) (
 		},
 	}, nil
 }
+
+// UpdateCardControls is PATCH /v1/cards/{card_id}. The contract cannot tell an explicit null
+// from an absent field once generated, so removing a control uses a value that means
+// nothing otherwise: a spend limit of zero (a card that can never be charged is a frozen
+// one), a merchant lock with an empty merchant ID, an empty nickname.
+func (a *API) UpdateCardControls(ctx context.Context, req api.UpdateCardControlsRequestObject) (api.UpdateCardControlsResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	u := Update{Nickname: b.Nickname, Online: b.OnlineEnabled, International: b.InternationalEnabled}
+	limit, err := parseLimit(b.SpendLimit)
+	if err != nil {
+		return nil, err
+	}
+	if limit != nil {
+		if limit.Amount.Amount() == 0 {
+			u.ClearLimit = true
+		} else {
+			u.SpendLimit = limit
+		}
+	}
+	if b.MerchantLock != nil {
+		if b.MerchantLock.MerchantId == "" {
+			u.ClearLock = true
+		} else {
+			u.MerchantLock = parseLock(b.MerchantLock)
+		}
+	}
+	card, err := a.svc.UpdateControls(ctx, req.CardId, u)
+	if err != nil {
+		return nil, err
+	}
+	return api.UpdateCardControls200JSONResponse(CardJSON(card)), nil
+}
+
+// FreezeCard is POST /v1/cards/{card_id}/freeze.
+func (a *API) FreezeCard(ctx context.Context, req api.FreezeCardRequestObject) (api.FreezeCardResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	card, err := a.svc.Freeze(ctx, req.CardId)
+	if err != nil {
+		return nil, err
+	}
+	return api.FreezeCard200JSONResponse(CardJSON(card)), nil
+}
+
+// UnfreezeCard is POST /v1/cards/{card_id}/unfreeze.
+func (a *API) UnfreezeCard(ctx context.Context, req api.UnfreezeCardRequestObject) (api.UnfreezeCardResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	var token string
+	if req.Params.XStepUpToken != nil {
+		token = *req.Params.XStepUpToken
+	}
+	card, err := a.svc.Unfreeze(ctx, req.CardId, token)
+	if err != nil {
+		return nil, err
+	}
+	return api.UnfreezeCard200JSONResponse(CardJSON(card)), nil
+}
+
+// TerminateCard is POST /v1/cards/{card_id}/terminate (idempotent).
+func (a *API) TerminateCard(ctx context.Context, req api.TerminateCardRequestObject) (api.TerminateCardResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	card, err := a.svc.Terminate(ctx, req.CardId)
+	if err != nil {
+		return nil, err
+	}
+	return api.TerminateCard200JSONResponse(CardJSON(card)), nil
+}
+
+// ReplaceCard is POST /v1/cards/{card_id}/replace (signed, idempotent).
+func (a *API) ReplaceCard(ctx context.Context, req api.ReplaceCardRequestObject) (api.ReplaceCardResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	card, err := a.svc.Replace(ctx, req.CardId)
+	if err != nil {
+		return nil, err
+	}
+	return api.ReplaceCard201JSONResponse(CardJSON(card)), nil
+}
+
+// TransactionJSON is the contract's CardTransaction for an authorization.
+func TransactionJSON(r cardsdb.CardAuthorization) api.CardTransaction {
+	out := api.CardTransaction{
+		Id: r.ID, CardId: r.CardID, Amount: accounts.Money(moneyOf(r.AmountMinor, r.AmountCurrency)),
+		BillingAmount: accounts.Money(moneyOf(r.BillingMinor, r.BillingCurrency)), Status: api.CardTransactionStatus(r.Status),
+		TransactionId: r.TransactionID, AuthorizedAt: r.AuthorizedAt.UTC(),
+	}
+	out.Merchant.Id, out.Merchant.Name, out.Merchant.Mcc, out.Merchant.Country = &r.MerchantID, r.MerchantName, r.Mcc, r.Country
+	if r.DeclineReason != nil {
+		d := api.CardTransactionDeclineReason(*r.DeclineReason)
+		out.DeclineReason = &d
+	}
+	if r.SettledAt != nil {
+		t := r.SettledAt.UTC()
+		out.SettledAt = &t
+	}
+	return out
+}
+
+// SimulateCardCharge is POST /v1/admin/simulators/merchant/charges (Merchant Simulator,
+// ADM-11). It sends the processor the request a merchant's acquirer would, so a decline or a
+// hold here is the real thing, not a canned answer.
+func (a *API) SimulateCardCharge(ctx context.Context, req api.SimulateCardChargeRequestObject) (api.SimulateCardChargeResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	if b.Capture != nil && *b.Capture {
+		return nil, api.ErrNotImplemented // settling at once arrives with clearing (T27.3)
+	}
+	amount, err := money.ParseMinor(b.Amount.AmountMinor, string(b.Amount.Currency))
+	if err != nil {
+		return nil, problem.Validation(problem.Field("/amount", "invalid", "Enter a valid amount."))
+	}
+	if b.Pan == nil || b.Cvv == nil {
+		return nil, problem.Validation(problem.Field("/pan", "required", "Card number and CVV are required."))
+	}
+	row, err := a.svc.Authorize(ctx, ChargeRequest{
+		PAN: *b.Pan, CVV: *b.Cvv, Month: b.ExpiryMonth, Year: b.ExpiryYear, Amount: amount, Channel: string(b.Channel),
+		Merchant: Merchant{ID: b.Merchant.Id, Name: b.Merchant.Name, MCC: b.Merchant.Mcc, Country: b.Merchant.Country},
+	})
+	if err != nil {
+		return nil, err
+	}
+	return api.SimulateCardCharge201JSONResponse(TransactionJSON(row)), nil
+}

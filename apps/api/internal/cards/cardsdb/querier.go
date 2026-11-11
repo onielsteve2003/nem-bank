@@ -11,14 +11,26 @@ import (
 )
 
 type Querier interface {
+	// Charges that count against a single-use card: approved and settled.
+	CountCharges(ctx context.Context, cardID uuid.UUID) (int64, error)
 	CountLiveCards(ctx context.Context, userID uuid.UUID) (int64, error)
 	GetCard(ctx context.Context, arg GetCardParams) (Card, error)
+	// The processor's lookup: the merchant sends a number, never an ID.
+	GetCardByPanIndex(ctx context.Context, panIndex []byte) (Card, error)
+	InsertAuthorization(ctx context.Context, arg InsertAuthorizationParams) (CardAuthorization, error)
 	InsertCard(ctx context.Context, arg InsertCardParams) (Card, error)
 	// Terminated cards last, then newest first.
 	ListCards(ctx context.Context, userID uuid.UUID) ([]Card, error)
+	// Serialises everything that decides on one card (authorizations, controls, termination).
+	LockCard(ctx context.Context, id uuid.UUID) (Card, error)
 	// Serialises card issuing per customer, so two racing requests cannot both take the last slot.
 	LockUserCards(ctx context.Context, userID string) error
 	PanIndexTaken(ctx context.Context, panIndex []byte) (bool, error)
+	SetCardStatus(ctx context.Context, arg SetCardStatusParams) (Card, error)
+	// What the card has been charged since a moment: approved authorizations and settled ones.
+	// Declined and reversed attempts never count against a limit.
+	SpendSince(ctx context.Context, arg SpendSinceParams) (int64, error)
+	UpdateCardControls(ctx context.Context, arg UpdateCardControlsParams) (Card, error)
 }
 
 var _ Querier = (*Queries)(nil)

@@ -27,3 +27,25 @@ SELECT * FROM cards WHERE id = @id AND user_id = @user_id;
 -- Terminated cards last, then newest first.
 SELECT * FROM cards WHERE user_id = @user_id
 ORDER BY (status = 'terminated'), created_at DESC, id DESC;
+
+-- name: GetCardByPanIndex :one
+-- The processor's lookup: the merchant sends a number, never an ID.
+SELECT * FROM cards WHERE pan_index = @pan_index;
+
+-- name: LockCard :one
+-- Serialises everything that decides on one card (authorizations, controls, termination).
+SELECT * FROM cards WHERE id = @id FOR UPDATE;
+
+-- name: UpdateCardControls :one
+UPDATE cards
+SET nickname = @nickname, spend_limit_minor = @spend_limit_minor, spend_limit_period = @spend_limit_period,
+    online_enabled = @online_enabled, international_enabled = @international_enabled,
+    merchant_id = @merchant_id, merchant_name = @merchant_name
+WHERE id = @id
+RETURNING *;
+
+-- name: SetCardStatus :one
+UPDATE cards
+SET status = @status, frozen_by_panic = @frozen_by_panic, terminated_at = @terminated_at
+WHERE id = @id
+RETURNING *;

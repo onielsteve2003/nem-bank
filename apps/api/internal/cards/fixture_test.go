@@ -16,6 +16,8 @@ import (
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards/cardsdb"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
@@ -115,7 +117,7 @@ func newFixture(t *testing.T) *fixture {
 		t.Fatal(err)
 	}
 	if f.svc, err = NewService(Config{
-		Pool: pool, Accounts: f.accts, Customers: f.profs, StepUps: f.steps, Keyring: f.ring, Logger: quiet, Now: f.clk.Now,
+		Pool: pool, Accounts: f.accts, Customers: f.profs, StepUps: f.steps, Keyring: f.ring, Rates: rates{}, Logger: quiet, Now: f.clk.Now,
 	}); err != nil {
 		t.Fatal(err)
 	}
@@ -193,3 +195,68 @@ func wantProblem(t *testing.T, err error, code string) {
 		t.Fatalf("err = %v, want problem %q", err, code)
 	}
 }
+
+func (c *clock) advance(d time.Duration) {
+	c.mu.Lock()
+	defer c.mu.Unlock()
+	c.t = c.t.Add(d)
+}
+
+// rates is a fixed rate card: USD-NGN 1600 mid (1576 buy, 1624 sell) and GBP-NGN 2000 mid
+// (1970 buy, 2030 sell).
+type rates struct{}
+
+func (rates) Rates(context.Context) ([]fx.RateView, error) {
+	r := func(s string) fx.Rate {
+		v, err := fx.ParseRate(s)
+		if err != nil {
+			panic(err)
+		}
+		return v
+	}
+	return []fx.RateView{
+		{Pair: "USD-NGN", Base: money.USD, Quote: money.NGN, Mid: r("1600"), Buy: r("1576"), Sell: r("1624"), SpreadBPS: 150},
+		{Pair: "GBP-NGN", Base: money.GBP, Quote: money.NGN, Mid: r("2000"), Buy: r("1970"), Sell: r("2030"), SpreadBPS: 150},
+	}, nil
+}
+
+// issued is a card with the details a merchant would be given.
+type issued struct {
+	card cardsdb.Card
+	pan  string
+	cvv  string
+}
+
+// issue creates a card and reveals its details, as the app would before a purchase.
+func (f *fixture) issue(c customer, req IssueRequest) issued {
+	f.t.Helper()
+	card, err := f.svc.Issue(c.ctx, req)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	f.steps.reset()
+	s, err := f.svc.Reveal(c.ctx, card.ID, "good")
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	return issued{card: card, pan: s.PAN, cvv: s.CVV}
+}
+
+// charge is a request a merchant would send for this card.
+func (i issued) charge(amount money.Money, channel string) ChargeRequest {
+	return ChargeRequest{
+		PAN: i.pan, CVV: i.cvv, Month: int(i.card.ExpiryMonth), Year: int(i.card.ExpiryYear), Amount: amount, Channel: channel,
+		Merchant: Merchant{ID: "m_chicken", Name: "Chicken Republic", MCC: "5812", Country: "NG"},
+	}
+}
+
+func (f *fixture) available(account uuid.UUID) (ledgerBal, avail int64) {
+	f.t.Helper()
+	b, err := ledger.GetBalances(f.t.Context(), f.pool, account)
+	if err != nil {
+		f.t.Fatal(err)
+	}
+	return b.Ledger.Amount(), b.Available.Amount()
+}
+
+func naira(n int64) money.Money { return money.New(n*100, money.NGN) }

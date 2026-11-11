@@ -101,6 +101,29 @@ type Card struct {
 	TerminatedAt         *time.Time
 }
 
+type CardAuthorization struct {
+	ID              uuid.UUID
+	CardID          uuid.UUID
+	UserID          uuid.UUID
+	AccountID       uuid.UUID
+	HoldID          *uuid.UUID
+	MerchantID      string
+	MerchantName    string
+	Mcc             string
+	Country         string
+	Channel         string
+	AmountMinor     int64
+	AmountCurrency  string
+	BillingMinor    int64
+	BillingCurrency string
+	Status          string
+	DeclineReason   pgtype.Text
+	TransactionID   *uuid.UUID
+	AuthorizedAt    time.Time
+	ExpiresAt       *time.Time
+	SettledAt       *time.Time
+}
+
 type CustomerAccount struct {
 	AccountID     uuid.UUID
 	UserID        uuid.UUID

@@ -65,6 +65,44 @@ func (q *Queries) GetCard(ctx context.Context, arg GetCardParams) (Card, error) 
 	return i, err
 }
 
+const getCardByPanIndex = `-- name: GetCardByPanIndex :one
+SELECT id, user_id, account_id, currency, type, status, network, last4, pan_enc, pan_index, expiry_month, expiry_year, name_on_card, nickname, design, spend_limit_minor, spend_limit_period, online_enabled, international_enabled, merchant_id, merchant_name, frozen_by_panic, physical, created_at, terminated_at FROM cards WHERE pan_index = $1
+`
+
+// The processor's lookup: the merchant sends a number, never an ID.
+func (q *Queries) GetCardByPanIndex(ctx context.Context, panIndex []byte) (Card, error) {
+	row := q.db.QueryRow(ctx, getCardByPanIndex, panIndex)
+	var i Card
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Currency,
+		&i.Type,
+		&i.Status,
+		&i.Network,
+		&i.Last4,
+		&i.PanEnc,
+		&i.PanIndex,
+		&i.ExpiryMonth,
+		&i.ExpiryYear,
+		&i.NameOnCard,
+		&i.Nickname,
+		&i.Design,
+		&i.SpendLimitMinor,
+		&i.SpendLimitPeriod,
+		&i.OnlineEnabled,
+		&i.InternationalEnabled,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.FrozenByPanic,
+		&i.Physical,
+		&i.CreatedAt,
+		&i.TerminatedAt,
+	)
+	return i, err
+}
+
 const insertCard = `-- name: InsertCard :one
 INSERT INTO cards (
   id, user_id, account_id, currency, type, network, last4, pan_enc, pan_index, expiry_month, expiry_year,
@@ -209,6 +247,44 @@ func (q *Queries) ListCards(ctx context.Context, userID uuid.UUID) ([]Card, erro
 	return items, nil
 }
 
+const lockCard = `-- name: LockCard :one
+SELECT id, user_id, account_id, currency, type, status, network, last4, pan_enc, pan_index, expiry_month, expiry_year, name_on_card, nickname, design, spend_limit_minor, spend_limit_period, online_enabled, international_enabled, merchant_id, merchant_name, frozen_by_panic, physical, created_at, terminated_at FROM cards WHERE id = $1 FOR UPDATE
+`
+
+// Serialises everything that decides on one card (authorizations, controls, termination).
+func (q *Queries) LockCard(ctx context.Context, id uuid.UUID) (Card, error) {
+	row := q.db.QueryRow(ctx, lockCard, id)
+	var i Card
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Currency,
+		&i.Type,
+		&i.Status,
+		&i.Network,
+		&i.Last4,
+		&i.PanEnc,
+		&i.PanIndex,
+		&i.ExpiryMonth,
+		&i.ExpiryYear,
+		&i.NameOnCard,
+		&i.Nickname,
+		&i.Design,
+		&i.SpendLimitMinor,
+		&i.SpendLimitPeriod,
+		&i.OnlineEnabled,
+		&i.InternationalEnabled,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.FrozenByPanic,
+		&i.Physical,
+		&i.CreatedAt,
+		&i.TerminatedAt,
+	)
+	return i, err
+}
+
 const lockUserCards = `-- name: LockUserCards :exec
 SELECT pg_advisory_xact_lock(hashtextextended('cards:' || $1::text, 0))
 `
@@ -228,4 +304,118 @@ func (q *Queries) PanIndexTaken(ctx context.Context, panIndex []byte) (bool, err
 	var exists bool
 	err := row.Scan(&exists)
 	return exists, err
+}
+
+const setCardStatus = `-- name: SetCardStatus :one
+UPDATE cards
+SET status = $1, frozen_by_panic = $2, terminated_at = $3
+WHERE id = $4
+RETURNING id, user_id, account_id, currency, type, status, network, last4, pan_enc, pan_index, expiry_month, expiry_year, name_on_card, nickname, design, spend_limit_minor, spend_limit_period, online_enabled, international_enabled, merchant_id, merchant_name, frozen_by_panic, physical, created_at, terminated_at
+`
+
+type SetCardStatusParams struct {
+	Status        string
+	FrozenByPanic bool
+	TerminatedAt  *time.Time
+	ID            uuid.UUID
+}
+
+func (q *Queries) SetCardStatus(ctx context.Context, arg SetCardStatusParams) (Card, error) {
+	row := q.db.QueryRow(ctx, setCardStatus,
+		arg.Status,
+		arg.FrozenByPanic,
+		arg.TerminatedAt,
+		arg.ID,
+	)
+	var i Card
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Currency,
+		&i.Type,
+		&i.Status,
+		&i.Network,
+		&i.Last4,
+		&i.PanEnc,
+		&i.PanIndex,
+		&i.ExpiryMonth,
+		&i.ExpiryYear,
+		&i.NameOnCard,
+		&i.Nickname,
+		&i.Design,
+		&i.SpendLimitMinor,
+		&i.SpendLimitPeriod,
+		&i.OnlineEnabled,
+		&i.InternationalEnabled,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.FrozenByPanic,
+		&i.Physical,
+		&i.CreatedAt,
+		&i.TerminatedAt,
+	)
+	return i, err
+}
+
+const updateCardControls = `-- name: UpdateCardControls :one
+UPDATE cards
+SET nickname = $1, spend_limit_minor = $2, spend_limit_period = $3,
+    online_enabled = $4, international_enabled = $5,
+    merchant_id = $6, merchant_name = $7
+WHERE id = $8
+RETURNING id, user_id, account_id, currency, type, status, network, last4, pan_enc, pan_index, expiry_month, expiry_year, name_on_card, nickname, design, spend_limit_minor, spend_limit_period, online_enabled, international_enabled, merchant_id, merchant_name, frozen_by_panic, physical, created_at, terminated_at
+`
+
+type UpdateCardControlsParams struct {
+	Nickname             *string
+	SpendLimitMinor      *int64
+	SpendLimitPeriod     *string
+	OnlineEnabled        bool
+	InternationalEnabled bool
+	MerchantID           *string
+	MerchantName         *string
+	ID                   uuid.UUID
+}
+
+func (q *Queries) UpdateCardControls(ctx context.Context, arg UpdateCardControlsParams) (Card, error) {
+	row := q.db.QueryRow(ctx, updateCardControls,
+		arg.Nickname,
+		arg.SpendLimitMinor,
+		arg.SpendLimitPeriod,
+		arg.OnlineEnabled,
+		arg.InternationalEnabled,
+		arg.MerchantID,
+		arg.MerchantName,
+		arg.ID,
+	)
+	var i Card
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Currency,
+		&i.Type,
+		&i.Status,
+		&i.Network,
+		&i.Last4,
+		&i.PanEnc,
+		&i.PanIndex,
+		&i.ExpiryMonth,
+		&i.ExpiryYear,
+		&i.NameOnCard,
+		&i.Nickname,
+		&i.Design,
+		&i.SpendLimitMinor,
+		&i.SpendLimitPeriod,
+		&i.OnlineEnabled,
+		&i.InternationalEnabled,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.FrozenByPanic,
+		&i.Physical,
+		&i.CreatedAt,
+		&i.TerminatedAt,
+	)
+	return i, err
 }

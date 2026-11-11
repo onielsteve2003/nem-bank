@@ -184,7 +184,7 @@ func run() error {
 		return err
 	}
 	cardsSvc, err := cards.NewService(cards.Config{
-		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, StepUps: identitySvc, Keyring: keyring, Logger: log,
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, StepUps: identitySvc, Keyring: keyring, Rates: fxSvc, Logger: log,
 	})
 	if err != nil {
 		return err

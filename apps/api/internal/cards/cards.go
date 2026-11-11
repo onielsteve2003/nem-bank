@@ -99,7 +99,9 @@ type Config struct {
 	Customers Customers
 	StepUps   StepUps
 	Keyring   *fieldcrypt.Keyring
-	Logger    *slog.Logger
+	// Rates prices charges in a currency other than the card's; nil refuses them.
+	Rates  Rater
+	Logger *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
 }
@@ -112,6 +114,7 @@ type Service struct {
 	customers Customers
 	stepUps   StepUps
 	keyring   *fieldcrypt.Keyring
+	rates     Rater
 	log       *slog.Logger
 	now       func() time.Time
 }
@@ -123,7 +126,7 @@ func NewService(cfg Config) (*Service, error) {
 	}
 	s := &Service{
 		pool: cfg.Pool, q: cardsdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers, stepUps: cfg.StepUps,
-		keyring: cfg.Keyring, log: cfg.Logger.With("component", "cards"), now: cfg.Now,
+		keyring: cfg.Keyring, rates: cfg.Rates, log: cfg.Logger.With("component", "cards"), now: cfg.Now,
 	}
 	if s.now == nil {
 		s.now = time.Now
@@ -164,6 +167,7 @@ type plan struct {
 	lock          *MerchantLock
 	name          string
 	international bool
+	online        bool
 }
 
 func cleanNickname(s string) (*string, error) {
@@ -227,7 +231,7 @@ func (s *Service) prepare(ctx context.Context, userID uuid.UUID, in IssueRequest
 		userID: userID, accountID: acc.AccountID, currency: acc.Currency, cardType: in.Type, design: design, nickname: nick,
 		limit: in.SpendLimit, lock: in.MerchantLock, name: strings.ToUpper(profile.Name),
 		// Dollar cards work abroad from the start; naira cards are home-only until switched on.
-		international: acc.Currency == string(money.USD),
+		international: acc.Currency == string(money.USD), online: true,
 	}, nil
 }
 
@@ -266,7 +270,7 @@ func (s *Service) insert(ctx context.Context, tx pgx.Tx, p plan) (cardsdb.Card, 
 	arg := cardsdb.InsertCardParams{
 		ID: id, UserID: p.userID, AccountID: p.accountID, Currency: p.currency, Type: p.cardType, Network: network,
 		Last4: pan[len(pan)-4:], PanEnc: enc, PanIndex: index, ExpiryMonth: int32(expiry.Month()), ExpiryYear: int32(expiry.Year()), //nolint:gosec // a month and a year, both tiny
-		NameOnCard: p.name, Nickname: p.nickname, Design: p.design, OnlineEnabled: true, InternationalEnabled: p.international,
+		NameOnCard: p.name, Nickname: p.nickname, Design: p.design, OnlineEnabled: p.online, InternationalEnabled: p.international,
 		CreatedAt: now,
 	}
 	if p.limit != nil {
@@ -403,4 +407,8 @@ func (s *Service) Reveal(ctx context.Context, id uuid.UUID, stepUpToken string) 
 		CardID: card.ID, PAN: string(pan), CVV: s.cvvFor(string(pan), card.ExpiryMonth, card.ExpiryYear),
 		Month: int(card.ExpiryMonth), Year: int(card.ExpiryYear), VisibleUntil: now.Add(RevealWindow),
 	}, nil
+}
+
+func moneyOf(minor int64, currency string) money.Money {
+	return money.New(minor, money.Currency(currency))
 }
