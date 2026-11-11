@@ -318,3 +318,25 @@ func TestComposeKYCOutcomes(t *testing.T) {
 		}
 	}
 }
+
+func TestComposeDisputeAndSupport(t *testing.T) {
+	uid, did, cid := uuid.New(), uuid.New(), uuid.New()
+	for status, want := range map[string]string{
+		"submitted": "", "withdrawn": "", "under_review": "Dispute under review", "awaiting_customer": "We need more from you",
+		"resolved_refunded": "Dispute resolved: refunded", "resolved_declined": "Dispute closed",
+	} {
+		got, err := compose(delivery("dispute.updated", did.String(), map[string]any{"user_id": uid, "dispute_id": did, "case_number": "DSP-10000001", "status": status}))
+		if err != nil {
+			t.Fatal(err)
+		}
+		if (want == "") != (len(got) == 0) || (want != "" && got[0].Title != want) {
+			t.Errorf("%s: got %+v, want %q", status, got, want)
+		}
+	}
+	for sender, wantOne := range map[string]bool{"agent": true, "customer": false, "system": false} {
+		got, _ := compose(delivery("support.message", cid.String(), map[string]any{"user_id": uid, "conversation_id": cid, "sender": sender}))
+		if (len(got) == 1) != wantOne {
+			t.Errorf("%s message: got %+v", sender, got)
+		}
+	}
+}

@@ -46,6 +46,10 @@ type payload struct {
 	Platform        string    `json:"platform"`
 	DueDate         string    `json:"due_date"`
 	Tier            int       `json:"tier"`
+	CaseNumber      string    `json:"case_number"`
+	DisputeID       uuid.UUID `json:"dispute_id"`
+	ConversationID  uuid.UUID `json:"conversation_id"`
+	Sender          string    `json:"sender"`
 	Status          string    `json:"status"`
 }
 
@@ -58,7 +62,7 @@ var Topics = []string{
 	"card.settled", "card.declined",
 	"credit.loan_disbursed", "credit.loan_repayment", "credit.loan_repaid", "credit.loan_overdue", "credit.loan_defaulted",
 	"savings.auto_saved", "savings.auto_save_skipped", "savings.lock_matured",
-	"statement.ready", "fx.alert_triggered",
+	"statement.ready", "fx.alert_triggered", "dispute.updated", "support.message",
 	"identity.device_bound", "identity.refresh_token_reused", "kyc.updated",
 }
 
@@ -149,6 +153,23 @@ func compose(d jobs.Delivery) ([]draft, error) {
 		add(p.UserID, "owner", "transactions", "Statement ready", "Your account statement is ready to download.", "nembank://statements")
 	case "fx.alert_triggered":
 		add(p.UserID, "owner", "product", "Rate alert", "Your rate alert fired at "+orDefault(p.Rate, "your target")+".", "nembank://fx")
+	case "dispute.updated":
+		link := "nembank://disputes/" + p.DisputeID.String()
+		switch p.Status {
+		case "under_review":
+			add(p.UserID, "owner", "support", "Dispute under review", "We are looking at "+p.CaseNumber+".", link)
+		case "awaiting_customer":
+			add(p.UserID, "owner", "support", "We need more from you", "Open "+p.CaseNumber+" to see what we need.", link)
+		case "resolved_refunded":
+			add(p.UserID, "owner", "support", "Dispute resolved: refunded", p.CaseNumber+" was resolved in your favour. The refund is in your account.", link)
+		case "resolved_declined":
+			add(p.UserID, "owner", "support", "Dispute closed", p.CaseNumber+" was closed without a refund. Open it to see why.", link)
+		}
+	case "support.message":
+		// The customer's own messages and the automatic welcome need no alert.
+		if p.Sender == "agent" {
+			add(p.UserID, "owner", "support", "New message from support", "Open the chat to read it.", "nembank://support/"+p.ConversationID.String())
+		}
 	case "kyc.updated":
 		// A submission going to review is the customer's own action: they need no alert for it.
 		const link = "nembank://me/verification"

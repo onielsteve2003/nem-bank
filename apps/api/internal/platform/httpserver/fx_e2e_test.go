@@ -32,6 +32,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/testdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/support"
 )
 
 // staticRates is a rates provider that always answers with the same dollar-based reading.
@@ -46,6 +47,7 @@ type fxStack struct {
 	fx   *fx.Service
 	kyc  *kyc.Service
 	note *notify.Service
+	help *support.Service
 	key  ed25519.PrivateKey
 	user api.AuthSession
 }
@@ -103,10 +105,14 @@ func newFXStack(t *testing.T) *fxStack {
 	if err != nil {
 		t.Fatal(err)
 	}
+	helpSvc, err := support.NewService(support.Config{Pool: pool, FilesKey: bytes.Repeat([]byte{3}, 32), Logger: quiet}) // gitleaks:allow (test fixture)
+	if err != nil {
+		t.Fatal(err)
+	}
 	h, err := NewRouter(Options{
 		Version: "e2e", Logger: quiet, Identity: identity.NewAPI(idsvc), Authenticator: idsvc, Signatures: idsvc,
 		Idempotency: idempotency.NewStore(pool), Accounts: accounts.NewAPI(acc), Limits: limits.NewAPI(lim), FX: fx.NewAPI(fxsvc), Savings: savings.NewAPI(savingsSvc),
-		KYC: kyc.NewAPI(kycSvc), Notify: notify.NewAPI(noteSvc),
+		KYC: kyc.NewAPI(kycSvc), Notify: notify.NewAPI(noteSvc), Support: support.NewAPI(helpSvc),
 	})
 	if err != nil {
 		t.Fatal(err)
@@ -125,7 +131,7 @@ func newFXStack(t *testing.T) *fxStack {
 		"signup_id": started.SignupId, "verification_token": verified.VerificationToken, "password": "Kitchen-Mango-River-7", // gitleaks:allow (test fixture)
 		"device": map[string]any{"name": "tolu's phone", "platform": "ios", "public_key": pub},
 	}, http.StatusCreated)
-	return &fxStack{h: h, pool: pool, fx: fxsvc, kyc: kycSvc, note: noteSvc, key: key, user: user}
+	return &fxStack{h: h, pool: pool, fx: fxsvc, kyc: kycSvc, note: noteSvc, help: helpSvc, key: key, user: user}
 }
 
 func TestRatesAndChartsAreServedFromTheHourlyReadings(t *testing.T) {

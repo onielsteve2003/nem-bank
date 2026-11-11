@@ -111,6 +111,18 @@ type AssistantMessage struct {
 	CreatedAt      time.Time
 }
 
+type Attachment struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	Purpose     string
+	FileName    string
+	ContentType string
+	SizeBytes   int32
+	Caption     *string
+	Data        []byte
+	CreatedAt   time.Time
+}
+
 type AuditLog struct {
 	Seq          int64
 	ID           uuid.UUID
@@ -279,6 +291,33 @@ type DeviceChallenge struct {
 	CreatedAt time.Time
 	ExpiresAt time.Time
 	UsedAt    pgtype.Timestamptz
+}
+
+type Dispute struct {
+	ID                  uuid.UUID
+	UserID              uuid.UUID
+	TransactionID       uuid.UUID
+	CaseNumber          string
+	Reason              string
+	Description         string
+	Status              string
+	ResolutionNote      *string
+	RefundMinor         pgtype.Int8
+	RefundCurrency      *string
+	RefundTransactionID pgtype.UUID
+	EvidenceIds         []uuid.UUID
+	ReviewerID          pgtype.UUID
+	CreatedAt           time.Time
+	ResolvedAt          pgtype.Timestamptz
+}
+
+type DisputeEvent struct {
+	ID        uuid.UUID
+	DisputeID uuid.UUID
+	Status    string
+	Label     string
+	Detail    *string
+	At        time.Time
 }
 
 type FxAlert struct {
@@ -822,6 +861,29 @@ type Statement struct {
 	Pdf                 []byte
 	CreatedAt           time.Time
 	ReadyAt             pgtype.Timestamptz
+}
+
+type SupportConversation struct {
+	ID            uuid.UUID
+	UserID        uuid.UUID
+	Subject       string
+	Status        string
+	AgentID       pgtype.UUID
+	AgentName     *string
+	TransactionID pgtype.UUID
+	LastMessageAt time.Time
+	CreatedAt     time.Time
+}
+
+type SupportMessage struct {
+	ID             uuid.UUID
+	ConversationID uuid.UUID
+	Sender         string
+	SenderName     *string
+	Body           string
+	AttachmentIds  []uuid.UUID
+	CreatedAt      time.Time
+	ReadAt         pgtype.Timestamptz
 }
 
 type Transaction struct {

@@ -28,6 +28,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/scam"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/support"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
@@ -51,6 +52,7 @@ type handlers struct {
 	*assistantAPI
 	*prefillAPI
 	*kycAPI
+	*supportAPI
 	*notifyAPI
 	*realtimeAPI
 	fallback
@@ -77,6 +79,7 @@ type (
 	assistantAPI = assistant.API
 	prefillAPI   = kyc.PrefillAPI
 	kycAPI       = kyc.API
+	supportAPI   = support.API
 	notifyAPI    = notify.API
 	realtimeAPI  = realtime.API
 )
