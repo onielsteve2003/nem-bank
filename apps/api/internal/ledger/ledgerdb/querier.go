@@ -30,6 +30,8 @@ type Querier interface {
 	InsertEntry(ctx context.Context, arg InsertEntryParams) (JournalEntry, error)
 	InsertHold(ctx context.Context, arg InsertHoldParams) (AccountHold, error)
 	InsertPosting(ctx context.Context, arg InsertPostingParams) (Posting, error)
+	// A bank system account (such as an ajo escrow pot): owner_id is NULL.
+	InsertSystemLedgerAccount(ctx context.Context, arg InsertSystemLedgerAccountParams) error
 	// An account's postings in [since, until), oldest first, with their entry: statement lines.
 	ListAccountPostings(ctx context.Context, arg ListAccountPostingsParams) ([]ListAccountPostingsRow, error)
 	// What makes up ledger minus available on one account (ACC-3), newest first.

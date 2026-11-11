@@ -12,6 +12,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/ajo"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
@@ -37,6 +38,7 @@ type handlers struct {
 	*cardsAPI
 	*billsAPI
 	*savingsAPI
+	*ajoAPI
 	*realtimeAPI
 	fallback
 	version string
@@ -55,6 +57,7 @@ type (
 	cardsAPI     = cards.API
 	billsAPI     = bills.API
 	savingsAPI   = savings.API
+	ajoAPI       = ajo.API
 	realtimeAPI  = realtime.API
 )
 

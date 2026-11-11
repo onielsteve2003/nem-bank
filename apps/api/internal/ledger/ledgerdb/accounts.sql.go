@@ -66,6 +66,29 @@ func (q *Queries) InsertCustomerLedgerAccount(ctx context.Context, arg InsertCus
 	return err
 }
 
+const insertSystemLedgerAccount = `-- name: InsertSystemLedgerAccount :exec
+INSERT INTO ledger_accounts (id, owner_type, owner_id, kind, currency, name)
+VALUES ($1, 'system', NULL, $2, $3, $4)
+`
+
+type InsertSystemLedgerAccountParams struct {
+	ID       uuid.UUID
+	Kind     string
+	Currency string
+	Name     string
+}
+
+// A bank system account (such as an ajo escrow pot): owner_id is NULL.
+func (q *Queries) InsertSystemLedgerAccount(ctx context.Context, arg InsertSystemLedgerAccountParams) error {
+	_, err := q.db.Exec(ctx, insertSystemLedgerAccount,
+		arg.ID,
+		arg.Kind,
+		arg.Currency,
+		arg.Name,
+	)
+	return err
+}
+
 const listSystemAccounts = `-- name: ListSystemAccounts :many
 SELECT id, owner_type, owner_id, kind, currency, name, balance_minor, available_minor, version, created_at FROM ledger_accounts WHERE owner_type = 'system' ORDER BY kind, currency
 `

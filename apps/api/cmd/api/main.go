@@ -21,6 +21,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/ajo"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
@@ -204,6 +205,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	ajoSvc, err := ajo.NewService(ajo.Config{Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Logger: log})
+	if err != nil {
+		return err
+	}
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -243,6 +248,7 @@ func run() error {
 		Cards:              cards.NewAPI(cardsSvc),
 		Bills:              bills.NewAPI(billsSvc),
 		Savings:            savings.NewAPI(savingsSvc),
+		Ajo:                ajo.NewAPI(ajoSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
@@ -256,8 +262,8 @@ func run() error {
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber()},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register},
-		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs()),
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register},
+		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs()),
 	})
 	if err != nil {
 		return err

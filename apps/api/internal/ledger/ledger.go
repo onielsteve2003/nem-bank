@@ -63,3 +63,18 @@ func OpenCustomerAccount(ctx context.Context, db ledgerdb.DBTX, owner uuid.UUID,
 	}
 	return id, nil
 }
+
+// OpenEscrowAccount opens an extra system ledger account inside tx: an ajo group's pot.
+func OpenEscrowAccount(ctx context.Context, db ledgerdb.DBTX, kind, currency, name string) (uuid.UUID, error) {
+	id, err := uuid.NewV7()
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("account id: %w", err)
+	}
+	err = ledgerdb.New(db).InsertSystemLedgerAccount(ctx, ledgerdb.InsertSystemLedgerAccountParams{
+		ID: id, Kind: kind, Currency: currency, Name: name,
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("open escrow account: %w", err)
+	}
+	return id, nil
+}

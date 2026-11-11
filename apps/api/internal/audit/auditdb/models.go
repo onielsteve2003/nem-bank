@@ -25,6 +25,59 @@ type AccountHold struct {
 	ExpiresAt   pgtype.Timestamptz
 }
 
+type AjoContribution struct {
+	CycleID  uuid.UUID
+	UserID   uuid.UUID
+	Status   string
+	Attempts int32
+	PaidAt   pgtype.Timestamptz
+	EntryID  pgtype.UUID
+}
+
+type AjoCycle struct {
+	ID                uuid.UUID
+	GroupID           uuid.UUID
+	CycleNumber       int32
+	DueAt             time.Time
+	PayoutToUserID    uuid.UUID
+	PayoutAmountMinor int64
+	PayoutStatus      string
+	CreatedAt         time.Time
+}
+
+type AjoGroup struct {
+	ID                uuid.UUID
+	Name              string
+	AccountID         uuid.UUID
+	CreatedByID       uuid.UUID
+	ContributionMinor int64
+	Frequency         string
+	MemberCount       int32
+	Rotation          string
+	StartDate         pgtype.Date
+	GracePeriodHours  int32
+	Status            string
+	CurrentCycle      int32
+	TotalCycles       int32
+	InviteCode        string
+	InviteExpiresAt   time.Time
+	CreatedAt         time.Time
+	StartedAt         pgtype.Timestamptz
+	EndedAt           pgtype.Timestamptz
+}
+
+type AjoMember struct {
+	GroupID             uuid.UUID
+	UserID              uuid.UUID
+	SourceAccountID     uuid.UUID
+	Position            pgtype.Int4
+	Status              string
+	HasReceivedPayout   bool
+	ContributionsPaid   int32
+	MissedContributions int32
+	JoinedAt            time.Time
+}
+
 type ApprovalRequest struct {
 	ID              uuid.UUID
 	Action          string

@@ -11,3 +11,8 @@ SELECT * FROM ledger_accounts WHERE owner_type = 'system' ORDER BY kind, currenc
 -- only ever move through the posting engine.
 INSERT INTO ledger_accounts (id, owner_type, owner_id, kind, currency, name)
 VALUES (@id, 'customer', @owner_id, @kind, @currency, @name);
+
+-- name: InsertSystemLedgerAccount :exec
+-- A bank system account (such as an ajo escrow pot): owner_id is NULL.
+INSERT INTO ledger_accounts (id, owner_type, owner_id, kind, currency, name)
+VALUES (@id, 'system', NULL, @kind, @currency, @name);
