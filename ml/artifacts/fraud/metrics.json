@@ -1,0 +1,142 @@
+{
+  "summary": {
+    "model": "fraud-lgbm-v1",
+    "test_rows": 78393,
+    "test_fraud": 406,
+    "pr_auc_model": 0.9403,
+    "pr_auc_rules": 0.3268,
+    "beats_baseline": true
+  },
+  "test": {
+    "model": {
+      "rows": 78393,
+      "fraud": 406,
+      "pr_auc": 0.9403,
+      "roc_auc": 0.9994,
+      "precision_at_100": 1.0,
+      "precision_at_n_fraud": 0.8547,
+      "recall_at_1pct_alerts": 0.9754
+    },
+    "rules": {
+      "rows": 78393,
+      "fraud": 406,
+      "pr_auc": 0.3268,
+      "roc_auc": 0.9046,
+      "precision_at_100": 0.3,
+      "precision_at_n_fraud": 0.3842,
+      "recall_at_1pct_alerts": 0.6182
+    }
+  },
+  "test_by_source": {
+    "nigeria": {
+      "model": {
+        "rows": 43320,
+        "fraud": 372,
+        "pr_auc": 0.9314,
+        "roc_auc": 0.9989,
+        "precision_at_100": 1.0,
+        "precision_at_n_fraud": 0.8414,
+        "recall_at_1pct_alerts": 0.8844
+      },
+      "rules": {
+        "rows": 43320,
+        "fraud": 372,
+        "pr_auc": 0.3138,
+        "roc_auc": 0.892,
+        "precision_at_100": 0.28,
+        "precision_at_n_fraud": 0.371,
+        "recall_at_1pct_alerts": 0.4032
+      }
+    },
+    "paysim": {
+      "model": {
+        "rows": 35073,
+        "fraud": 34,
+        "pr_auc": 1.0,
+        "roc_auc": 1.0,
+        "precision_at_100": 0.34,
+        "precision_at_n_fraud": 1.0,
+        "recall_at_1pct_alerts": 1.0
+      },
+      "rules": {
+        "rows": 35073,
+        "fraud": 34,
+        "pr_auc": 0.7075,
+        "roc_auc": 0.9995,
+        "precision_at_100": 0.34,
+        "precision_at_n_fraud": 0.5294,
+        "recall_at_1pct_alerts": 1.0
+      }
+    }
+  },
+  "test_by_scenario": {
+    "ato": {
+      "fraud_rows": 157,
+      "model_caught_step_up_or_hold": 0.9745,
+      "model_caught_hold": 0.8025,
+      "rules_caught_step_up_or_hold": 0.1146
+    },
+    "mule_cashout": {
+      "fraud_rows": 167,
+      "model_caught_step_up_or_hold": 1.0,
+      "model_caught_hold": 1.0,
+      "rules_caught_step_up_or_hold": 0.6287
+    },
+    "apush": {
+      "fraud_rows": 48,
+      "model_caught_step_up_or_hold": 1.0,
+      "model_caught_hold": 0.3542,
+      "rules_caught_step_up_or_hold": 0.3125
+    },
+    "paysim_drain": {
+      "fraud_rows": 34,
+      "model_caught_step_up_or_hold": 1.0,
+      "model_caught_hold": 1.0,
+      "rules_caught_step_up_or_hold": 0.5294
+    }
+  },
+  "operating_points_test": {
+    "model_step_up": {
+      "threshold": 0.005749,
+      "alert_rate": 0.01267,
+      "precision": 0.4048,
+      "recall": 0.9901
+    },
+    "model_hold": {
+      "threshold": 0.232286,
+      "alert_rate": 0.00499,
+      "precision": 0.8798,
+      "recall": 0.8473
+    },
+    "rules_step_up": {
+      "threshold": 0.27027,
+      "alert_rate": 0.00523,
+      "precision": 0.3805,
+      "recall": 0.3842
+    },
+    "rules_hold": {
+      "threshold": 0.567568,
+      "alert_rate": 3e-05,
+      "precision": 1.0,
+      "recall": 0.0049
+    }
+  },
+  "feature_importance_gain": {
+    "account_age_days": 41562.5,
+    "new_beneficiary": 35400.4,
+    "amount_to_balance": 24866.4,
+    "hour_of_day": 9554.5,
+    "prior_count": 7609.1,
+    "amount_zscore": 5465.2,
+    "velocity_1h": 5165.6,
+    "log_amount": 3342.9,
+    "new_device": 2272.3,
+    "velocity_24h": 214.1
+  },
+  "split_rows": {
+    "train": 236112,
+    "val": 78545,
+    "test": 78393
+  },
+  "best_iteration": 81
+}

@@ -25,6 +25,14 @@ Two sources share one event table (`src/nemml/schema.py`):
 
 Everything is seeded: the same seed gives the same table, and `manifest.json` carries a content fingerprint.
 
+## Fraud model (AI-1)
+
+```
+uv run nemml fraud         # trains, evaluates and writes ml/artifacts/fraud/
+```
+
+Writes `model.txt` (LightGBM text format, loaded by `leaves` in Go), `export.json` (feature order, thresholds, rules table, model hash), `golden.json` (inputs with expected scores for Go parity tests), `metrics.json` and `model_card.md`.
+
 ## Layout
 
 ```
@@ -34,6 +42,7 @@ src/nemml/
   nigeria.py    Nigerian behaviour and fraud scenarios
   features.py   point-in-time fraud features (history before the row only)
   rules.py      the hand-written rules baseline
+  fraud.py      train, evaluate, export, model card
   dataset.py    builds and fingerprints the training table
   cli.py        `nemml` command
 tests/          reproducibility, schema, leakage and feature tests

@@ -6,3 +6,4 @@
 
 # Generated Go server code: collapsed in GitHub diffs.
 apps/api/internal/api/*.gen.go linguist-generated=true
+ml/artifacts/** -text

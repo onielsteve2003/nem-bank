@@ -1,0 +1,78 @@
+{
+  "model": "fraud-lgbm-v1",
+  "format": "lightgbm-text",
+  "file": "model.txt",
+  "features": [
+    "log_amount",
+    "amount_zscore",
+    "amount_to_balance",
+    "velocity_1h",
+    "velocity_24h",
+    "new_beneficiary",
+    "new_device",
+    "hour_of_day",
+    "account_age_days",
+    "prior_count"
+  ],
+  "missing_value": "NaN (unknown device or account age; the model has learned a default direction)",
+  "output": "probability of fraud, 0-1",
+  "thresholds": {
+    "step_up": 0.005749,
+    "hold": 0.232286
+  },
+  "decision": "score < step_up: allow; step_up <= score < hold: step_up; score >= hold: hold",
+  "rules": [
+    {
+      "code": "velocity_burst",
+      "points": 30,
+      "description": "4 or more transfers in the last hour"
+    },
+    {
+      "code": "velocity_day",
+      "points": 15,
+      "description": "15 or more transfers in 24 hours"
+    },
+    {
+      "code": "unusual_amount",
+      "points": 25,
+      "description": "Amount far above this customer's usual (z-score > 3)"
+    },
+    {
+      "code": "drains_balance",
+      "points": 25,
+      "description": "Moves more than 50% of the balance"
+    },
+    {
+      "code": "new_beneficiary_large",
+      "points": 20,
+      "description": "First payment to this person and over NGN 50,000"
+    },
+    {
+      "code": "new_beneficiary_young_account",
+      "points": 20,
+      "description": "First payment to this person from an account under 90 days old"
+    },
+    {
+      "code": "new_device",
+      "points": 20,
+      "description": "First transfer from a new device"
+    },
+    {
+      "code": "night_large",
+      "points": 15,
+      "description": "Over NGN 50,000 between midnight and 5am"
+    },
+    {
+      "code": "young_account",
+      "points": 15,
+      "description": "Account under 30 days old and over NGN 10,000"
+    }
+  ],
+  "trained_with": {
+    "nemml": "0.1.0",
+    "lightgbm": "4.7.0",
+    "seed": 7
+  },
+  "dataset_fingerprint": "9ef01027958c8718-552559",
+  "model_sha256": "6ce25de069b3075b8dc32bd0989fc5ebf1479995690fcdd9ed1cac95418cbaee"
+}

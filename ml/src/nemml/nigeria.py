@@ -84,6 +84,9 @@ def simulate_nigeria(
             ben = [f"ng:N{i}_{k}" if new_ben[k] else pool[ben_idx[k]] for k in range(n)]
             swapped = ts / 24 >= swap_day if swap_day is not None else np.zeros(n, bool)
             dev = np.where(swapped, device_b, device_a)
+            # Honest people also use a borrowed phone, a browser or a new SIM now and then.
+            odd = rng.random(n) < 0.02
+            dev = np.where(odd, [f"ng:D{i}_x{k}" for k in range(n)], dev)
             balance = income[i] * rng.uniform(0.15, 1.6, size=n)
             amount = np.minimum(amount, balance * 0.95)
             rows.append(
@@ -103,18 +106,44 @@ def simulate_nigeria(
                 )
             )
 
+        # Honest bursts: paying staff, ajo members or several vendors in one go.
+        if rng.random() < 0.06:
+            for _ in range(int(rng.integers(1, 4))):
+                k = int(rng.integers(4, 9))
+                t = rng.uniform(warmup_h, hours - 2) + np.sort(rng.uniform(0, 0.9, size=k))
+                bal = income[i] * rng.uniform(0.6, 1.6)
+                rows.append(
+                    pd.DataFrame(
+                        {
+                            "source": "nigeria",
+                            "customer_id": cid,
+                            "ts_hours": t,
+                            "amount_ngn": np.round(rng.lognormal(np.log(typical[i]), 0.5, size=k), 2),
+                            "balance_before_ngn": bal,
+                            "beneficiary_id": rng.choice(pool, size=k),
+                            "device_id": device_a,
+                            "account_open_ts_hours": open_ts[i],
+                            "is_fraud": 0,
+                            "scenario": "benign",
+                        }
+                    )
+                )
+
         # Attacks -----------------------------------------------------------
         if rng.random() < attack_rate_per_customer * (days - WARMUP_DAYS):
             kind = rng.choice(["ato", "apush", "mule_cashout"], p=[0.40, 0.40, 0.20])
             t0 = rng.uniform(warmup_h, hours - 6)
             balance = income[i] * rng.uniform(0.3, 1.6)
             if kind == "ato":
-                k = int(rng.integers(1, 7))
-                at_night = rng.random() < 0.6
+                slow = rng.random() < 0.25  # low and slow: a couple of daytime transfers
+                k = int(rng.integers(1, 3)) if slow else int(rng.integers(1, 7))
+                at_night = rng.random() < 0.6 and not slow
+                if slow:
+                    t0 = np.floor(t0 / 24) * 24 + rng.uniform(9, 19)
                 if at_night:
                     t0 = np.floor(t0 / 24) * 24 + rng.uniform(0, 5)
                 t = t0 + np.sort(rng.uniform(0, 1.0, size=k))
-                share = rng.uniform(0.4, 0.95)
+                share = rng.uniform(0.08, 0.3) if slow else rng.uniform(0.4, 0.95)
                 amt = np.full(k, balance * share / k)
                 frame = _attack_frame(
                     cid,
@@ -122,12 +151,13 @@ def simulate_nigeria(
                     amt,
                     balance,
                     rng.choice(mule_pool, size=k).tolist(),
-                    [f"ng:ATTACKER{i}"] * k,
+                    # 80% on a device never seen before; 20% got the victim to approve on theirs.
+                    [f"ng:ATTACKER{i}" if rng.random() < 0.8 else device_a] * k,
                     open_ts[i],
                     "ato",
                 )
             elif kind == "apush":
-                amt = max(typical[i] * rng.uniform(4, 20), 20_000.0)
+                amt = max(typical[i] * rng.uniform(2, 20), 20_000.0)
                 amt = min(amt, balance * 0.95)
                 hour_of_day = rng.choice(np.arange(8, 21))
                 t = np.array([np.floor(t0 / 24) * 24 + hour_of_day + rng.random()])
@@ -145,7 +175,7 @@ def simulate_nigeria(
                 k = int(rng.integers(4, 11))
                 t = t0 + np.sort(rng.uniform(0, 2.0, size=k))
                 amt = np.round(rng.uniform(0.1, 0.3, size=k) * balance, -2) + 5_000
-                # A mule is a freshly opened account with no honest history.
+                # A mule has no honest history; most are weeks-old accounts, some are older.
                 frame = _attack_frame(
                     f"ng:MULE{i}",
                     t,
@@ -153,7 +183,7 @@ def simulate_nigeria(
                     amt.sum() * 1.1,
                     [f"ng:CASH{i}_{j}" for j in range(k)],
                     [f"ng:D{i}_m"] * k,
-                    t0 - 24 * rng.uniform(1, 12),
+                    t0 - 24 * (rng.uniform(15, 120) if rng.random() < 0.3 else rng.uniform(1, 12)),
                     "mule_cashout",
                 )
             rows.append(frame)
