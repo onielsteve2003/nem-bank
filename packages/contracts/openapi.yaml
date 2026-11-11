@@ -4787,6 +4787,27 @@ paths:
                 $ref: '#/components/schemas/ReconciliationReport'
         '404':
           $ref: '#/components/responses/NotFound'
+  /v1/admin/fx/pnl:
+    get:
+      tags: [admin-ledger]
+      operationId: getFxPnlReport
+      summary: FX profit and loss
+      description: Spread income on customer conversions in the period, per currency, with each FX position account's balance now (FX-5, ADM-2).
+      security:
+        - staffAuth: []
+      x-roles: [finance, admin]
+      parameters:
+        - $ref: '#/components/parameters/FromDate'
+        - $ref: '#/components/parameters/ToDate'
+      responses:
+        '200':
+          description: The report.
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/FxPnlReport'
+        '422':
+          $ref: '#/components/responses/UnprocessableEntity'
   /v1/admin/ledger/adjustments:
     post:
       tags: [admin-ledger]
@@ -11278,6 +11299,41 @@ components:
           maxLength: 500
 
     # ------------------------------------------------------------ admin: dashboard and customers
+    FxPnlLine:
+      type: object
+      required:
+        [currency, conversions, bought_from_customers, sold_to_customers, spread_income, position]
+      properties:
+        currency:
+          $ref: '#/components/schemas/CurrencyCode'
+        conversions:
+          type: integer
+          minimum: 0
+        bought_from_customers:
+          $ref: '#/components/schemas/Money'
+        sold_to_customers:
+          $ref: '#/components/schemas/Money'
+        spread_income:
+          description: In naira, measured against the mid rate each quote was made from.
+          $ref: '#/components/schemas/Money'
+        position:
+          description: The bank's FX position account balance in this currency now.
+          $ref: '#/components/schemas/Money'
+    FxPnlReport:
+      type: object
+      required: [period_from, period_to, spread_income, lines]
+      properties:
+        period_from:
+          $ref: '#/components/schemas/Date'
+        period_to:
+          $ref: '#/components/schemas/Date'
+        spread_income:
+          description: Total across currencies, in naira.
+          $ref: '#/components/schemas/Money'
+        lines:
+          type: array
+          items:
+            $ref: '#/components/schemas/FxPnlLine'
     CurrencyVolume:
       type: object
       required: [currency, inflow, outflow, count]

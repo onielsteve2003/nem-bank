@@ -37,6 +37,11 @@ type Querier interface {
 	// The last reading in each @step_seconds bucket since @since, oldest first. A bucket is
 	// reported at its start, so the points sit on an even grid for the chart.
 	RateHistory(ctx context.Context, arg RateHistoryParams) ([]RateHistoryRow, error)
+	// Completed conversions in [@from, @to), per foreign currency. The spread is what the
+	// customer gave up against the mid rate the quote was made from, in kobo: selling foreign
+	// the bank pays less than mid, buying it charges more. Money is integer arithmetic on
+	// numeric, rounded down so income is never overstated.
+	SpreadByCurrency(ctx context.Context, arg SpreadByCurrencyParams) ([]SpreadByCurrencyRow, error)
 	// Fires every waiting alert on the pair the new mid rate has reached. Once only: the status
 	// check keeps a second run from firing it again.
 	TriggerAlerts(ctx context.Context, arg TriggerAlertsParams) ([]FxAlert, error)

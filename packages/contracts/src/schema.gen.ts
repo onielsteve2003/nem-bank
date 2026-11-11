@@ -3625,6 +3625,26 @@ export interface paths {
     patch?: never;
     trace?: never;
   };
+  '/v1/admin/fx/pnl': {
+    parameters: {
+      query?: never;
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    /**
+     * FX profit and loss
+     * @description Spread income on customer conversions in the period, per currency, with each FX position account's balance now (FX-5, ADM-2).
+     */
+    get: operations['getFxPnlReport'];
+    put?: never;
+    post?: never;
+    delete?: never;
+    options?: never;
+    head?: never;
+    patch?: never;
+    trace?: never;
+  };
   '/v1/admin/ledger/adjustments': {
     parameters: {
       query?: never;
@@ -6933,6 +6953,23 @@ export interface components {
     };
     ReasonRequest: {
       reason: string;
+    };
+    FxPnlLine: {
+      currency: components['schemas']['CurrencyCode'];
+      conversions: number;
+      bought_from_customers: components['schemas']['Money'];
+      sold_to_customers: components['schemas']['Money'];
+      /** @description In naira, measured against the mid rate each quote was made from. */
+      spread_income: components['schemas']['Money'];
+      /** @description The bank's FX position account balance in this currency now. */
+      position: components['schemas']['Money'];
+    };
+    FxPnlReport: {
+      period_from: components['schemas']['Date'];
+      period_to: components['schemas']['Date'];
+      /** @description Total across currencies, in naira. */
+      spread_income: components['schemas']['Money'];
+      lines: components['schemas']['FxPnlLine'][];
     };
     CurrencyVolume: {
       currency: components['schemas']['CurrencyCode'];
@@ -13749,6 +13786,32 @@ export interface operations {
         };
       };
       404: components['responses']['NotFound'];
+    };
+  };
+  getFxPnlReport: {
+    parameters: {
+      query?: {
+        /** @description Inclusive start date. */
+        from?: components['parameters']['FromDate'];
+        /** @description Inclusive end date. */
+        to?: components['parameters']['ToDate'];
+      };
+      header?: never;
+      path?: never;
+      cookie?: never;
+    };
+    requestBody?: never;
+    responses: {
+      /** @description The report. */
+      200: {
+        headers: {
+          [name: string]: unknown;
+        };
+        content: {
+          'application/json': components['schemas']['FxPnlReport'];
+        };
+      };
+      422: components['responses']['UnprocessableEntity'];
     };
   };
   requestLedgerAdjustment: {

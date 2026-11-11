@@ -165,6 +165,11 @@ func (Unimplemented) DecideFraudCase(context.Context, DecideFraudCaseRequestObje
 	return nil, ErrNotImplemented
 }
 
+// GetFxPnlReport is not implemented yet.
+func (Unimplemented) GetFxPnlReport(context.Context, GetFxPnlReportRequestObject) (GetFxPnlReportResponseObject, error) {
+	return nil, ErrNotImplemented
+}
+
 // ListKycReviews is not implemented yet.
 func (Unimplemented) ListKycReviews(context.Context, ListKycReviewsRequestObject) (ListKycReviewsResponseObject, error) {
 	return nil, ErrNotImplemented

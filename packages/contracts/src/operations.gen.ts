@@ -635,6 +635,14 @@ export const OPERATIONS = {
     signed: false,
     roles: ['compliance', 'admin'],
   },
+  getFxPnlReport: {
+    method: 'GET',
+    path: '/v1/admin/fx/pnl',
+    auth: 'staff',
+    idempotent: false,
+    signed: false,
+    roles: ['finance', 'admin'],
+  },
   getFxRateHistory: {
     method: 'GET',
     path: '/v1/fx/rates/{pair}/history',
