@@ -21,6 +21,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
@@ -168,6 +169,15 @@ func run() error {
 		return err
 	}
 
+	fxSvc, err := fx.NewService(fx.Config{
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, Logger: log,
+		// open.er-api.com has the naira; Frankfurter (ECB) is the fallback for the majors.
+		Sources: []fx.RatesSource{fx.NewOpenERAPI("", nil), fx.NewFrankfurter("", nil)},
+	})
+	if err != nil {
+		return err
+	}
+
 	keyring, err := fieldcrypt.New(cfg.FieldKeys, cfg.FieldIndexKey)
 	if err != nil {
 		return err
@@ -207,6 +217,7 @@ func run() error {
 		Transfers:          transfers.NewAPI(transfersSvc),
 		Realtime:           realtimeSvc,
 		Limits:             limits.NewAPI(limitsSvc),
+		FX:                 fx.NewAPI(fxSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
@@ -219,9 +230,9 @@ func run() error {
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub)},
-		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register},
-		Periodic:     transfersSvc.PeriodicJobs(),
+		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register},
+		Periodic:     append(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs()...),
 	})
 	if err != nil {
 		return err

@@ -121,6 +121,14 @@ type DeviceChallenge struct {
 	UsedAt    *time.Time
 }
 
+type FxRate struct {
+	ID     uuid.UUID
+	Pair   string
+	MidE8  int64
+	Source string
+	AsOf   time.Time
+}
+
 type IdempotencyKey struct {
 	Scope               string
 	Key                 uuid.UUID

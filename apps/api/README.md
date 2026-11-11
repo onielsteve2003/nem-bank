@@ -390,6 +390,27 @@ paying needs the payer signed in and device-signed). **QR codes** are
 expire after 15 min. The QR key is derived from `JWT_SIGNING_KEY` under its own label, so
 an edited code (another account, another amount) fails as `bad_signature`.
 
+## FX rates
+
+`internal/fx` (FR-FX). Rates are whole numbers of 1e-8 (`fx.Rate`), never floats, so a
+conversion is an exact integer multiply and divide with the rounding named at each call.
+
+- **Ingestion (T26.1).** A River periodic job (`fx_rates_ingest`, hourly and once at start)
+  reads `open.er-api.com` (has the naira), then falls back to Frankfurter (ECB data: GBP and
+  EUR only, no naira). Both quote against the dollar, so `X-NGN` is worked out as
+  NGN-per-USD ÷ X-per-USD. A provider with no naira borrows the naira price of the dollar
+  from the last good reading, up to 48 hours old; with none it is refused rather than
+  guessed. The three pairs are written in one transaction, so they share a timestamp.
+- **Guard.** A reading that moved more than 25% since a reading under six hours old is
+  refused (a provider glitch should not reprice every customer); the guard lapses after the
+  window so a real market move is still accepted.
+- **Serving.** `GET /v1/fx/rates` returns mid, buy (mid less spread, rounded down) and sell
+  (mid plus spread, rounded up), 1.5% by default (`fx.Config.SpreadBPS`, per pair through
+  `Spreads`). A reading older than two hours is reported with source `cache`.
+  `GET /v1/fx/rates/{pair}/history`
+  returns the last reading in each bucket (1D hourly, 1W 6-hourly, 1M daily, 1Y weekly).
+- Readings are kept 400 days (pruned with the hourly housekeeping).
+
 ## Field encryption and the audit log
 
 - **Identity numbers** (`internal/kyc`, `kyc_identifiers`): BVN, NIN and ID document numbers
