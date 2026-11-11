@@ -121,6 +121,34 @@ type DeviceChallenge struct {
 	UsedAt    pgtype.Timestamptz
 }
 
+type FxConversion struct {
+	ID                  uuid.UUID
+	UserID              uuid.UUID
+	QuoteID             uuid.UUID
+	EntryID             uuid.UUID
+	DebitTransactionID  uuid.UUID
+	CreditTransactionID uuid.UUID
+	Status              string
+	CreatedAt           time.Time
+}
+
+type FxQuote struct {
+	ID            uuid.UUID
+	UserID        uuid.UUID
+	FromAccountID uuid.UUID
+	ToAccountID   uuid.UUID
+	SellCurrency  string
+	SellMinor     int64
+	BuyCurrency   string
+	BuyMinor      int64
+	RateE8        int64
+	MidE8         int64
+	SpreadBps     int32
+	FeeMinor      int64
+	CreatedAt     time.Time
+	ExpiresAt     time.Time
+}
+
 type FxRate struct {
 	ID     uuid.UUID
 	Pair   string

@@ -14,9 +14,11 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"net/http"
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts/accountsdb"
@@ -40,6 +42,9 @@ const (
 	// staleAfter is when a stored rate is reported as "cache": the hourly job has missed
 	// at least one run, so the number is older than the app is told to expect.
 	staleAfter = 2 * time.Hour
+	// maxQuoteAge is the oldest reading a conversion may be priced on. Past it, converting
+	// would trade at a rate nobody has seen for a day, so quotes are refused instead.
+	maxQuoteAge = 24 * time.Hour
 	// anchorMaxAge is how old the last naira reading may be when it stands in for a
 	// provider that has no naira.
 	anchorMaxAge = 48 * time.Hour
@@ -49,10 +54,28 @@ const (
 	maxJumpBPS = 2_500
 	// retainRates is how long readings are kept: the one-year chart plus slack.
 	retainRates = 400 * 24 * time.Hour
+	// retainQuotes is how long unused quotes are kept for support to look at.
+	retainQuotes = 24 * time.Hour
 )
 
-// Problems.
+// Problems. Codes match the mock bank where it has them.
 var (
+	errRatesUnavailable = problem.New(http.StatusServiceUnavailable, "rates_unavailable", "Exchange rates are unavailable right now").
+				WithDetail("Try again in a few minutes.")
+	errSameCurrency = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Pick two different currencies")
+	errViaNaira     = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Convert through naira (NGN)").
+			WithDetail("Foreign wallets convert to and from your naira account.")
+	errAmountChoice = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Give either the amount to sell or the amount to buy")
+	errTooSmall     = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "The amount is too small to convert")
+	errTooLarge     = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "The amount is too large to convert")
+	errNotActive    = problem.New(http.StatusForbidden, "account_not_active", "This account cannot be used right now")
+	// ErrQuoteNotFound is the 404 for a quote the caller did not make.
+	ErrQuoteNotFound = problem.NotFound("Quote")
+	errQuoteExpired  = problem.New(http.StatusConflict, "quote_expired", "This rate has expired").
+				WithDetail("Get a fresh quote to convert.")
+	errQuoteUsed  = problem.New(http.StatusConflict, "quote_used", "This quote has already been used")
+	errMaxBalance = problem.New(http.StatusUnprocessableEntity, "max_balance_exceeded", "This would take you over your balance limit").
+			WithDetail("Upgrade your KYC tier to hold more naira.")
 	errNoAnchor = errors.New("fx: provider has no naira rate and there is no recent one to carry")
 )
 
@@ -238,4 +261,21 @@ func (s *Service) History(ctx context.Context, pair, rng string) ([]Point, error
 		points[i] = Point{At: time.Unix(row.Bucket*step, 0).UTC(), Rate: Rate(row.MidE8)}
 	}
 	return points, nil
+}
+
+// latest is the freshest reading of a pair, or errRatesUnavailable when there is none or
+// it is too old to trade on.
+func (s *Service) latest(ctx context.Context, q *fxdb.Queries, pair string) (fxdb.LatestRateRow, error) {
+	row, err := q.LatestRate(ctx, pair)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return fxdb.LatestRateRow{}, errRatesUnavailable
+	}
+	if err != nil {
+		return fxdb.LatestRateRow{}, fmt.Errorf("latest rate: %w", err)
+	}
+	if s.now().Sub(row.AsOf) > maxQuoteAge {
+		s.log.Error("fx rates are stale: refusing to quote", "pair", pair, "as_of", row.AsOf)
+		return fxdb.LatestRateRow{}, errRatesUnavailable
+	}
+	return row, nil
 }

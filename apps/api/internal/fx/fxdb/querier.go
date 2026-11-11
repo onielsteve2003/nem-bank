@@ -7,13 +7,25 @@ package fxdb
 import (
 	"context"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 type Querier interface {
+	GetConversionByQuote(ctx context.Context, quoteID uuid.UUID) (uuid.UUID, error)
+	GetQuote(ctx context.Context, arg GetQuoteParams) (FxQuote, error)
+	InsertConversion(ctx context.Context, arg InsertConversionParams) (FxConversion, error)
+	InsertQuote(ctx context.Context, arg InsertQuoteParams) (FxQuote, error)
 	// A reading is unique per pair and instant; a repeated insert (a retried job) is a no-op.
 	InsertRate(ctx context.Context, arg InsertRateParams) error
 	LatestRate(ctx context.Context, pair string) (LatestRateRow, error)
 	LatestRates(ctx context.Context) ([]LatestRatesRow, error)
+	// The customer's conversions, newest first, keyset paged on (created_at, id).
+	ListConversions(ctx context.Context, arg ListConversionsParams) ([]ListConversionsRow, error)
+	// Held for the whole conversion, so two requests for one quote take turns.
+	LockQuote(ctx context.Context, arg LockQuoteParams) (FxQuote, error)
+	// Expired quotes nobody converted. Converted ones stay: the conversion history needs them.
+	PruneQuotes(ctx context.Context, before time.Time) (int64, error)
 	PruneRates(ctx context.Context, before time.Time) (int64, error)
 	// The last reading in each @step_seconds bucket since @since, oldest first. A bucket is
 	// reported at its start, so the points sit on an even grid for the chart.

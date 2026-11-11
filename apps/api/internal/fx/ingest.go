@@ -124,13 +124,16 @@ func (s *Service) checkJump(ctx context.Context, pair string, mid Rate, now time
 	return nil
 }
 
-// Prune drops readings past the chart's reach.
+// Prune drops readings past the chart's reach, and quotes nobody used a day after they expired.
 // It runs with the hourly housekeeping (jobs.Options.Housekeeping).
 func (s *Service) Prune(ctx context.Context) error {
 	now := s.now()
 	var errs []error
 	if _, err := s.q.PruneRates(ctx, now.Add(-retainRates)); err != nil {
 		errs = append(errs, fmt.Errorf("prune rates: %w", err))
+	}
+	if _, err := s.q.PruneQuotes(ctx, now.Add(-retainQuotes)); err != nil {
+		errs = append(errs, fmt.Errorf("prune quotes: %w", err))
 	}
 	return errors.Join(errs...)
 }

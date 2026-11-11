@@ -9,7 +9,13 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
+	"strings"
 	"testing"
+	"time"
+
+	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5"
 
 	"github.com/jackc/pgx/v5/pgxpool"
 
@@ -17,6 +23,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
@@ -129,4 +136,107 @@ func TestRatesAndChartsAreServedFromTheHourlyReadings(t *testing.T) {
 	// A pair the bank does not quote is a 404; a bad range never reaches the handler.
 	call[api.Problem](t, s.h, http.MethodGet, "/v1/fx/rates/NGN-USD/history?range=1D", s.user.AccessToken, nil, http.StatusNotFound)
 	call[api.Problem](t, s.h, http.MethodGet, fmt.Sprintf("/v1/fx/rates/USD-NGN/history?range=%s", "9Y"), s.user.AccessToken, nil, http.StatusBadRequest)
+}
+
+// TestASignedConversionIsMadeOnceAtTheQuotedRate walks the whole path: a Tier 2 customer
+// opens a dollar wallet, gets a 60-second quote, and converts with a device-signed request.
+// The double tap replays the first answer instead of converting twice (FX-1, FX-4).
+func TestASignedConversionIsMadeOnceAtTheQuotedRate(t *testing.T) {
+	t.Parallel()
+	s := newFXStack(t)
+	if err := s.fx.Ingest(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	tok := s.user.AccessToken
+
+	// Wallets need Tier 2; verification itself arrives with the KYC task.
+	if _, err := s.pool.Exec(t.Context(), `UPDATE users SET kyc_tier = 2`); err != nil {
+		t.Fatal(err)
+	}
+	opened := postJSON(t, s.h, "/v1/accounts", tok, `{"currency":"USD"}`)
+	if opened.Code != http.StatusCreated {
+		t.Fatalf("open wallet = %d: %s", opened.Code, opened.Body)
+	}
+	wallet := decode[api.Account](t, opened.Body.Bytes())
+	ngn := call[api.AccountList](t, s.h, http.MethodGet, "/v1/accounts", tok, nil, http.StatusOK).Data[0]
+	if err := pgx.BeginFunc(t.Context(), s.pool, func(tx pgx.Tx) error {
+		src, err := ledger.SystemAccount(t.Context(), tx, ledger.KindDemoFunding, "USD")
+		if err != nil {
+			return err
+		}
+		amt := money.New(50_000, money.USD)
+		_, err = ledger.Post(t.Context(), tx, ledger.Entry{Kind: "demo_funding", Reference: "seed",
+			Legs: []ledger.Leg{ledger.Debit(src.ID, amt), ledger.Credit(wallet.Id, amt)}})
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	// A quote asks for exactly one amount.
+	both := api.FxQuoteRequest{FromAccountId: wallet.Id, ToAccountId: ngn.Id,
+		SellAmount: &api.Money{AmountMinor: "10000", Currency: "USD"}, BuyAmount: &api.Money{AmountMinor: "1", Currency: "NGN"}}
+	call[api.Problem](t, s.h, http.MethodPost, "/v1/fx/quotes", tok, both, http.StatusUnprocessableEntity)
+
+	quote := call[api.FxQuote](t, s.h, http.MethodPost, "/v1/fx/quotes", tok, api.FxQuoteRequest{
+		FromAccountId: wallet.Id, ToAccountId: ngn.Id, SellAmount: &api.Money{AmountMinor: "10000", Currency: "USD"}}, http.StatusCreated)
+	// $100.00 at 1612.45 less 1.5% = 1588.26325 -> ₦158,826.32 (the half kobo stays with the bank).
+	if quote.Rate != "1588.26325" || quote.MidRate != "1612.45" || quote.SpreadBps != 150 || quote.Buy.AmountMinor != "15882632" ||
+		quote.Buy.Currency != "NGN" || quote.Fee.AmountMinor != "0" || quote.Fee.Currency != "USD" {
+		t.Fatalf("quote = %+v", quote)
+	}
+	if left := time.Until(quote.ExpiresAt); left < 55*time.Second || left > 61*time.Second {
+		t.Fatalf("quote expires in %s", left)
+	}
+
+	body := `{"quote_id":"` + quote.QuoteId.String() + `"}`
+	key := uuid.NewString()
+	first := signedPostKey(t, s.h, s.key, s.user.Device.Id, tok, "/v1/fx/conversions", body, "nonce-fx-0000001", key)
+	if first.Code != http.StatusCreated {
+		t.Fatalf("convert = %d: %s", first.Code, first.Body)
+	}
+	second := signedPostKey(t, s.h, s.key, s.user.Device.Id, tok, "/v1/fx/conversions", body, "nonce-fx-0000002", key)
+	if second.Code != http.StatusCreated || second.Header().Get("Idempotent-Replayed") != "true" || second.Body.String() != first.Body.String() {
+		t.Fatalf("double tap = %d %q: %s", second.Code, second.Header().Get("Idempotent-Replayed"), second.Body)
+	}
+	conv := decode[api.FxConversion](t, first.Body.Bytes())
+	if conv.QuoteId != quote.QuoteId || conv.Status != api.FxConversionStatusCompleted || conv.Sell != quote.Sell || conv.Buy != quote.Buy || conv.Rate != quote.Rate {
+		t.Fatalf("conversion = %+v", conv)
+	}
+
+	// A different Idempotency-Key for the same quote is a different request, and the quote is spent.
+	third := signedPostKey(t, s.h, s.key, s.user.Device.Id, tok, "/v1/fx/conversions", body, "nonce-fx-0000003", uuid.NewString())
+	if third.Code != http.StatusConflict || !strings.Contains(third.Body.String(), "quote_used") {
+		t.Fatalf("second key = %d: %s", third.Code, third.Body)
+	}
+	// An unsigned conversion never reaches the handler.
+	if rec := postJSON(t, s.h, "/v1/fx/conversions", tok, body); rec.Code != http.StatusBadRequest && rec.Code != http.StatusUnauthorized && rec.Code != http.StatusForbidden {
+		t.Fatalf("unsigned convert = %d: %s", rec.Code, rec.Body)
+	}
+
+	if w := call[api.Account](t, s.h, http.MethodGet, "/v1/accounts/"+wallet.Id.String(), tok, nil, http.StatusOK); w.LedgerBalance.AmountMinor != "40000" {
+		t.Fatalf("wallet = %s, want one $100 debit", w.LedgerBalance.AmountMinor)
+	}
+	if n := call[api.Account](t, s.h, http.MethodGet, "/v1/accounts/"+ngn.Id.String(), tok, nil, http.StatusOK); n.LedgerBalance.AmountMinor != "15882632" {
+		t.Fatalf("naira = %s", n.LedgerBalance.AmountMinor)
+	}
+	detail := call[api.TransactionDetail](t, s.h, http.MethodGet, "/v1/transactions/"+conv.CreditTransactionId.String(), tok, nil, http.StatusOK)
+	if detail.Type != api.TransactionTypeFxConversion || detail.Amount.AmountMinor != "15882632" || detail.Counterparty.Name != "Nem FX" {
+		t.Fatalf("credit line = %+v", detail)
+	}
+
+	hist := call[api.FxConversionPage](t, s.h, http.MethodGet, "/v1/fx/conversions", tok, nil, http.StatusOK)
+	if len(hist.Data) != 1 || hist.Data[0].Id != conv.Id || hist.Page.NextCursor != nil {
+		t.Fatalf("history = %+v", hist)
+	}
+}
+
+func postJSON(t *testing.T, h http.Handler, target, token, body string) *httptest.ResponseRecorder {
+	t.Helper()
+	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, target, strings.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	req.Header.Set("Authorization", "Bearer "+token)
+	req.Header.Set("Idempotency-Key", uuid.NewString())
+	rec := httptest.NewRecorder()
+	h.ServeHTTP(rec, req)
+	return rec
 }

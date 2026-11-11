@@ -406,10 +406,31 @@ conversion is an exact integer multiply and divide with the rounding named at ea
   window so a real market move is still accepted.
 - **Serving.** `GET /v1/fx/rates` returns mid, buy (mid less spread, rounded down) and sell
   (mid plus spread, rounded up), 1.5% by default (`fx.Config.SpreadBPS`, per pair through
-  `Spreads`). A reading older than two hours is reported with source `cache`.
-  `GET /v1/fx/rates/{pair}/history`
+  `Spreads`). A reading older than two hours is reported with source `cache`; older than 24
+  hours quotes are refused with 503 `rates_unavailable`. `GET /v1/fx/rates/{pair}/history`
   returns the last reading in each bucket (1D hourly, 1W 6-hourly, 1M daily, 1Y weekly).
 - Readings are kept 400 days (pruned with the hourly housekeeping).
+
+## FX quotes and conversions
+
+- **Quote (T26.2).** `POST /v1/fx/quotes` takes two of the caller's own accounts (one must be
+  NGN; the demo converts through the naira, like the mock bank) and exactly one of
+  `sell_amount` or `buy_amount`. It locks a customer rate for 60 seconds and stores the
+  amounts, so the conversion posts exactly what was shown. Selling foreign currency pays
+  mid less the spread; buying it costs mid plus the spread, inverted (rounded down to eight
+  places). A fixed sell amount buys the product rounded **down**; a fixed buy amount costs the
+  quotient rounded **up**, so the odd fraction of a minor unit always stays with the bank. The
+  fee is zero: the spread is the bank's margin.
+- **Convert.** `POST /v1/fx/conversions` (Idempotency-Key and device signature) is one ledger
+  entry of four legs: the customer's sold currency goes to the bank's FX position account in
+  that currency, and the FX position in the bought currency pays the customer. Each currency
+  nets to zero by itself, so no rate is stored in the ledger. Both statement lines are written
+  in the same transaction. The quote row is locked for the transaction and a unique key on
+  `fx_conversions.quote_id` makes a quote single-use: a second request gets 409 `quote_used`,
+  an old one 409 `quote_expired`. Naira landing in the account is held to the KYC tier's
+  balance cap. Everything that reads through the pool happens before the transaction opens, so
+  concurrent conversions cannot starve the connection pool.
+- `GET /v1/fx/conversions` lists the history newest first with keyset pages.
 
 ## Field encryption and the audit log
 
