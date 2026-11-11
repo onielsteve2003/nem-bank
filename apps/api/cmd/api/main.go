@@ -21,6 +21,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
@@ -182,6 +183,12 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	cardsSvc, err := cards.NewService(cards.Config{
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, StepUps: identitySvc, Keyring: keyring, Logger: log,
+	})
+	if err != nil {
+		return err
+	}
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -218,6 +225,7 @@ func run() error {
 		Realtime:           realtimeSvc,
 		Limits:             limits.NewAPI(limitsSvc),
 		FX:                 fx.NewAPI(fxSvc),
+		Cards:              cards.NewAPI(cardsSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})

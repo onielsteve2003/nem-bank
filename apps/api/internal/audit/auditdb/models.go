@@ -73,6 +73,34 @@ type Beneficiary struct {
 	CreatedAt       time.Time
 }
 
+type Card struct {
+	ID                   uuid.UUID
+	UserID               uuid.UUID
+	AccountID            uuid.UUID
+	Currency             string
+	Type                 string
+	Status               string
+	Network              string
+	Last4                string
+	PanEnc               []byte
+	PanIndex             []byte
+	ExpiryMonth          int32
+	ExpiryYear           int32
+	NameOnCard           string
+	Nickname             *string
+	Design               string
+	SpendLimitMinor      pgtype.Int8
+	SpendLimitPeriod     *string
+	OnlineEnabled        bool
+	InternationalEnabled bool
+	MerchantID           *string
+	MerchantName         *string
+	FrozenByPanic        bool
+	Physical             bool
+	CreatedAt            time.Time
+	TerminatedAt         pgtype.Timestamptz
+}
+
 type CustomerAccount struct {
 	AccountID     uuid.UUID
 	UserID        uuid.UUID
