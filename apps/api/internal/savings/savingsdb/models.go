@@ -346,6 +346,49 @@ type LedgerAccount struct {
 	CreatedAt      time.Time
 }
 
+type Loan struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	OfferID            uuid.UUID
+	AccountID          uuid.UUID
+	RepaymentAccountID uuid.UUID
+	PrincipalMinor     int64
+	AprBps             int32
+	TenorDays          int32
+	InterestMinor      int64
+	FeeMinor           int64
+	TotalMinor         int64
+	RebateMinor        int64
+	StartDate          time.Time
+	Status             string
+	AutoRepay          bool
+	DisbursedAt        time.Time
+	ClosedAt           *time.Time
+	DefaultedAt        *time.Time
+}
+
+type LoanInstallment struct {
+	LoanID            uuid.UUID
+	Number            int32
+	DueDate           time.Time
+	AmountMinor       int64
+	PaidMinor         int64
+	OverdueNotifiedAt *time.Time
+}
+
+type LoanOffer struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	PrincipalMinor int64
+	TenorDays      int32
+	AprBps         int32
+	InterestMinor  int64
+	FeeMinor       int64
+	StartDate      time.Time
+	ExpiresAt      time.Time
+	CreatedAt      time.Time
+}
+
 type LockedSaving struct {
 	ID                    uuid.UUID
 	UserID                uuid.UUID
