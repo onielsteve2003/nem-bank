@@ -11,16 +11,26 @@ import (
 )
 
 type Querier interface {
+	// Settles or reverses an authorization. A capture may be for less than was authorized, so
+	// the amounts are the final ones.
+	CloseAuthorization(ctx context.Context, arg CloseAuthorizationParams) (CardAuthorization, error)
 	// Charges that count against a single-use card: approved and settled.
 	CountCharges(ctx context.Context, cardID uuid.UUID) (int64, error)
 	CountLiveCards(ctx context.Context, userID uuid.UUID) (int64, error)
+	GetAuthorization(ctx context.Context, id uuid.UUID) (CardAuthorization, error)
 	GetCard(ctx context.Context, arg GetCardParams) (Card, error)
 	// The processor's lookup: the merchant sends a number, never an ID.
 	GetCardByPanIndex(ctx context.Context, panIndex []byte) (Card, error)
 	InsertAuthorization(ctx context.Context, arg InsertAuthorizationParams) (CardAuthorization, error)
 	InsertCard(ctx context.Context, arg InsertCardParams) (Card, error)
+	// One card's attempts, newest first, by keyset.
+	ListCardAuthorizations(ctx context.Context, arg ListCardAuthorizationsParams) ([]CardAuthorization, error)
 	// Terminated cards last, then newest first.
 	ListCards(ctx context.Context, userID uuid.UUID) ([]Card, error)
+	// Approved authorizations whose hold has lapsed and was never settled.
+	ListDueAuthorizations(ctx context.Context, arg ListDueAuthorizationsParams) ([]uuid.UUID, error)
+	// Serialises capture, reversal and expiry of one authorization (taken after the card's lock).
+	LockAuthorization(ctx context.Context, id uuid.UUID) (CardAuthorization, error)
 	// Serialises everything that decides on one card (authorizations, controls, termination).
 	LockCard(ctx context.Context, id uuid.UUID) (Card, error)
 	// Serialises card issuing per customer, so two racing requests cannot both take the last slot.

@@ -12,6 +12,57 @@ import (
 	"github.com/google/uuid"
 )
 
+const closeAuthorization = `-- name: CloseAuthorization :one
+UPDATE card_authorizations
+SET status = $1, amount_minor = $2, billing_minor = $3, settled_at = $4
+WHERE id = $5
+RETURNING id, card_id, user_id, account_id, hold_id, merchant_id, merchant_name, mcc, country, channel, amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, transaction_id, authorized_at, expires_at, settled_at
+`
+
+type CloseAuthorizationParams struct {
+	Status       string
+	AmountMinor  int64
+	BillingMinor int64
+	SettledAt    *time.Time
+	ID           uuid.UUID
+}
+
+// Settles or reverses an authorization. A capture may be for less than was authorized, so
+// the amounts are the final ones.
+func (q *Queries) CloseAuthorization(ctx context.Context, arg CloseAuthorizationParams) (CardAuthorization, error) {
+	row := q.db.QueryRow(ctx, closeAuthorization,
+		arg.Status,
+		arg.AmountMinor,
+		arg.BillingMinor,
+		arg.SettledAt,
+		arg.ID,
+	)
+	var i CardAuthorization
+	err := row.Scan(
+		&i.ID,
+		&i.CardID,
+		&i.UserID,
+		&i.AccountID,
+		&i.HoldID,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.Mcc,
+		&i.Country,
+		&i.Channel,
+		&i.AmountMinor,
+		&i.AmountCurrency,
+		&i.BillingMinor,
+		&i.BillingCurrency,
+		&i.Status,
+		&i.DeclineReason,
+		&i.TransactionID,
+		&i.AuthorizedAt,
+		&i.ExpiresAt,
+		&i.SettledAt,
+	)
+	return i, err
+}
+
 const countCharges = `-- name: CountCharges :one
 SELECT count(*) FROM card_authorizations WHERE card_id = $1 AND status IN ('authorized', 'settled')
 `
@@ -24,13 +75,45 @@ func (q *Queries) CountCharges(ctx context.Context, cardID uuid.UUID) (int64, er
 	return count, err
 }
 
+const getAuthorization = `-- name: GetAuthorization :one
+SELECT id, card_id, user_id, account_id, hold_id, merchant_id, merchant_name, mcc, country, channel, amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, transaction_id, authorized_at, expires_at, settled_at FROM card_authorizations WHERE id = $1
+`
+
+func (q *Queries) GetAuthorization(ctx context.Context, id uuid.UUID) (CardAuthorization, error) {
+	row := q.db.QueryRow(ctx, getAuthorization, id)
+	var i CardAuthorization
+	err := row.Scan(
+		&i.ID,
+		&i.CardID,
+		&i.UserID,
+		&i.AccountID,
+		&i.HoldID,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.Mcc,
+		&i.Country,
+		&i.Channel,
+		&i.AmountMinor,
+		&i.AmountCurrency,
+		&i.BillingMinor,
+		&i.BillingCurrency,
+		&i.Status,
+		&i.DeclineReason,
+		&i.TransactionID,
+		&i.AuthorizedAt,
+		&i.ExpiresAt,
+		&i.SettledAt,
+	)
+	return i, err
+}
+
 const insertAuthorization = `-- name: InsertAuthorization :one
 INSERT INTO card_authorizations (
   id, card_id, user_id, account_id, hold_id, merchant_id, merchant_name, mcc, country, channel,
-  amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, authorized_at, expires_at
+  amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, transaction_id, authorized_at, expires_at
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9, $10,
-  $11, $12, $13, $14, $15, $16, $17, $18
+  $11, $12, $13, $14, $15, $16, $17, $18, $19
 )
 RETURNING id, card_id, user_id, account_id, hold_id, merchant_id, merchant_name, mcc, country, channel, amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, transaction_id, authorized_at, expires_at, settled_at
 `
@@ -52,6 +135,7 @@ type InsertAuthorizationParams struct {
 	BillingCurrency string
 	Status          string
 	DeclineReason   *string
+	TransactionID   *uuid.UUID
 	AuthorizedAt    time.Time
 	ExpiresAt       *time.Time
 }
@@ -74,9 +158,141 @@ func (q *Queries) InsertAuthorization(ctx context.Context, arg InsertAuthorizati
 		arg.BillingCurrency,
 		arg.Status,
 		arg.DeclineReason,
+		arg.TransactionID,
 		arg.AuthorizedAt,
 		arg.ExpiresAt,
 	)
+	var i CardAuthorization
+	err := row.Scan(
+		&i.ID,
+		&i.CardID,
+		&i.UserID,
+		&i.AccountID,
+		&i.HoldID,
+		&i.MerchantID,
+		&i.MerchantName,
+		&i.Mcc,
+		&i.Country,
+		&i.Channel,
+		&i.AmountMinor,
+		&i.AmountCurrency,
+		&i.BillingMinor,
+		&i.BillingCurrency,
+		&i.Status,
+		&i.DeclineReason,
+		&i.TransactionID,
+		&i.AuthorizedAt,
+		&i.ExpiresAt,
+		&i.SettledAt,
+	)
+	return i, err
+}
+
+const listCardAuthorizations = `-- name: ListCardAuthorizations :many
+SELECT id, card_id, user_id, account_id, hold_id, merchant_id, merchant_name, mcc, country, channel, amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, transaction_id, authorized_at, expires_at, settled_at FROM card_authorizations
+WHERE card_id = $1 AND user_id = $2
+  AND ($3::uuid = '00000000-0000-0000-0000-000000000000'
+       OR (authorized_at, id) < ($4::timestamptz, $3::uuid))
+ORDER BY authorized_at DESC, id DESC
+LIMIT $5
+`
+
+type ListCardAuthorizationsParams struct {
+	CardID  uuid.UUID
+	UserID  uuid.UUID
+	AfterID uuid.UUID
+	AfterAt time.Time
+	Lim     int32
+}
+
+// One card's attempts, newest first, by keyset.
+func (q *Queries) ListCardAuthorizations(ctx context.Context, arg ListCardAuthorizationsParams) ([]CardAuthorization, error) {
+	rows, err := q.db.Query(ctx, listCardAuthorizations,
+		arg.CardID,
+		arg.UserID,
+		arg.AfterID,
+		arg.AfterAt,
+		arg.Lim,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []CardAuthorization{}
+	for rows.Next() {
+		var i CardAuthorization
+		if err := rows.Scan(
+			&i.ID,
+			&i.CardID,
+			&i.UserID,
+			&i.AccountID,
+			&i.HoldID,
+			&i.MerchantID,
+			&i.MerchantName,
+			&i.Mcc,
+			&i.Country,
+			&i.Channel,
+			&i.AmountMinor,
+			&i.AmountCurrency,
+			&i.BillingMinor,
+			&i.BillingCurrency,
+			&i.Status,
+			&i.DeclineReason,
+			&i.TransactionID,
+			&i.AuthorizedAt,
+			&i.ExpiresAt,
+			&i.SettledAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listDueAuthorizations = `-- name: ListDueAuthorizations :many
+SELECT id FROM card_authorizations
+WHERE status = 'authorized' AND expires_at <= $1
+ORDER BY expires_at
+LIMIT $2
+`
+
+type ListDueAuthorizationsParams struct {
+	Now *time.Time
+	Lim int32
+}
+
+// Approved authorizations whose hold has lapsed and was never settled.
+func (q *Queries) ListDueAuthorizations(ctx context.Context, arg ListDueAuthorizationsParams) ([]uuid.UUID, error) {
+	rows, err := q.db.Query(ctx, listDueAuthorizations, arg.Now, arg.Lim)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []uuid.UUID{}
+	for rows.Next() {
+		var id uuid.UUID
+		if err := rows.Scan(&id); err != nil {
+			return nil, err
+		}
+		items = append(items, id)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const lockAuthorization = `-- name: LockAuthorization :one
+SELECT id, card_id, user_id, account_id, hold_id, merchant_id, merchant_name, mcc, country, channel, amount_minor, amount_currency, billing_minor, billing_currency, status, decline_reason, transaction_id, authorized_at, expires_at, settled_at FROM card_authorizations WHERE id = $1 FOR UPDATE
+`
+
+// Serialises capture, reversal and expiry of one authorization (taken after the card's lock).
+func (q *Queries) LockAuthorization(ctx context.Context, id uuid.UUID) (CardAuthorization, error) {
+	row := q.db.QueryRow(ctx, lockAuthorization, id)
 	var i CardAuthorization
 	err := row.Scan(
 		&i.ID,

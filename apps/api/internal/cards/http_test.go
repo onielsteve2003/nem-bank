@@ -63,9 +63,34 @@ func TestAPISimulatorChargeAndRevealShapes(t *testing.T) {
 		*declined.DeclineReason != api.CardTransactionDeclineReasonInsufficientFunds {
 		t.Fatalf("declined = %+v", declined)
 	}
-	// Settling at once arrives with clearing; until then it says so rather than half-working.
-	if _, err := a.SimulateCardCharge(t.Context(), charge("100", true)); err == nil {
-		t.Fatal("capture=true was accepted before clearing exists")
+	// capture=true settles in the same call; the hold becomes a posting.
+	resp, err = a.SimulateCardCharge(t.Context(), charge("100", true))
+	if err != nil {
+		t.Fatal(err)
+	}
+	sale := api.CardTransaction(resp.(api.SimulateCardCharge201JSONResponse))
+	if sale.Status != api.CardTransactionStatusSettled || sale.SettledAt == nil || sale.TransactionId == nil {
+		t.Fatalf("capture=true = %+v", sale)
+	}
+	// The pending ₦3,000 settles for less, then a second capture is a 409.
+	cap2 := api.Money{AmountMinor: "200000", Currency: "NGN"}
+	cr, err := a.CaptureSimulatedCharge(t.Context(), api.CaptureSimulatedChargeRequestObject{
+		AuthorizationId: approved.Id, Body: &api.CaptureSimulatedChargeJSONRequestBody{Amount: &cap2},
+	})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := api.CardTransaction(cr.(api.CaptureSimulatedCharge200JSONResponse)); got.Status != api.CardTransactionStatusSettled || got.Amount.AmountMinor != "200000" {
+		t.Fatalf("capture = %+v", got)
+	}
+	_, err = a.ReverseSimulatedCharge(t.Context(), api.ReverseSimulatedChargeRequestObject{AuthorizationId: approved.Id})
+	wantProblem(t, err, "authorization_closed")
+	list, err := a.ListCardTransactions(c.ctx, api.ListCardTransactionsRequestObject{CardId: card.card.ID})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got := list.(api.ListCardTransactions200JSONResponse); len(got.Data) != 3 || got.Data[0].Status != api.CardTransactionStatusSettled {
+		t.Fatalf("list = %+v", got.Data)
 	}
 
 	f.steps.reset()

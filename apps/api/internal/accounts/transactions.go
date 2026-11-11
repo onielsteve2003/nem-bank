@@ -107,7 +107,17 @@ func Record(ctx context.Context, tx pgx.Tx, l Line) (accountsdb.Transaction, err
 // Settle moves a pending line to its outcome: "completed" with the entry that moved the
 // money, or "failed"/"reversed".
 func Settle(ctx context.Context, tx pgx.Tx, id uuid.UUID, status string, entry *ledger.Posted, account uuid.UUID) (accountsdb.Transaction, error) {
+	return SettleAmount(ctx, tx, id, status, entry, account, nil)
+}
+
+// SettleAmount is Settle for a line whose final amount differs from the pending one: a card
+// merchant that captures less than it authorized.
+func SettleAmount(ctx context.Context, tx pgx.Tx, id uuid.UUID, status string, entry *ledger.Posted, account uuid.UUID, amount *money.Money) (accountsdb.Transaction, error) {
 	p := accountsdb.SettleTransactionParams{Status: status, ID: id}
+	if amount != nil {
+		minor := amount.Amount()
+		p.AmountMinor = &minor
+	}
 	if entry != nil {
 		p.EntryID = &entry.EntryID
 		p.BalanceAfterMinor = BalanceAfter(*entry, account)

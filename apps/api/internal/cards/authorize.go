@@ -11,6 +11,8 @@ import (
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards/cardsdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
@@ -216,6 +218,17 @@ func (s *Service) Authorize(ctx context.Context, req ChargeRequest) (cardsdb.Car
 				return fmt.Errorf("hold card funds: %w", err)
 			default:
 				row.HoldID, row.ExpiresAt, row.Status = &hold.ID, &expiresAt, AuthAuthorized
+				// The pending line the customer sees in their history; capture or reversal
+				// settles it (CARD-5).
+				line, err := accounts.Record(ctx, tx, accounts.Line{
+					UserID: locked.UserID, AccountID: locked.AccountID, Type: "card_payment", Direction: "debit", Status: "pending",
+					Amount: billed, Narration: req.Merchant.Name, Reference: id.String(), Category: categoryFor(req.Merchant.MCC),
+					Counterparty: api.Counterparty{Name: req.Merchant.Name, MerchantId: &req.Merchant.ID}, CardID: &locked.ID, At: now,
+				})
+				if err != nil {
+					return fmt.Errorf("record pending card line: %w", err)
+				}
+				row.TransactionID = &line.ID
 			}
 		}
 		if decline != "" {
@@ -244,4 +257,28 @@ func (s *Service) billingFor(ctx context.Context, amount money.Money, card money
 		return money.Money{}, err
 	}
 	return billing(amount, card, views)
+}
+
+// categoryFor files a charge by the merchant's category code, for the history and insights.
+func categoryFor(mcc string) string {
+	switch mcc {
+	case "5811", "5812", "5813", "5814":
+		return "food"
+	case "5411", "5422", "5441", "5499":
+		return "groceries"
+	case "4111", "4121", "4131", "5541", "5542":
+		return "transport"
+	case "4812", "4814":
+		return "airtime_data"
+	case "4900", "4899":
+		return "bills_utilities"
+	case "7832", "7841", "7922", "7993":
+		return "entertainment"
+	case "5912", "8011", "8062", "8099":
+		return "health"
+	case "8211", "8220", "8299":
+		return "education"
+	default:
+		return "shopping"
+	}
 }

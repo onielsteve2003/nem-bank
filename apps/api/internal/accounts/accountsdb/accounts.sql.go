@@ -527,14 +527,16 @@ func (q *Queries) NextWalletSerial(ctx context.Context) (int64, error) {
 const settleTransaction = `-- name: SettleTransaction :one
 UPDATE transactions
 SET status = $1, entry_id = coalesce($2, entry_id),
-    balance_after_minor = coalesce($3, balance_after_minor), updated_at = now()
-WHERE id = $4
+    amount_minor = coalesce($3, amount_minor),
+    balance_after_minor = coalesce($4, balance_after_minor), updated_at = now()
+WHERE id = $5
 RETURNING id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code, balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id, card_id, created_at, updated_at
 `
 
 type SettleTransactionParams struct {
 	Status            string
 	EntryID           *uuid.UUID
+	AmountMinor       *int64
 	BalanceAfterMinor *int64
 	ID                uuid.UUID
 }
@@ -545,6 +547,7 @@ func (q *Queries) SettleTransaction(ctx context.Context, arg SettleTransactionPa
 	row := q.db.QueryRow(ctx, settleTransaction,
 		arg.Status,
 		arg.EntryID,
+		arg.AmountMinor,
 		arg.BalanceAfterMinor,
 		arg.ID,
 	)

@@ -48,6 +48,7 @@ RETURNING *;
 -- with the status.
 UPDATE transactions
 SET status = @status, entry_id = coalesce(sqlc.narg('entry_id'), entry_id),
+    amount_minor = coalesce(sqlc.narg('amount_minor'), amount_minor),
     balance_after_minor = coalesce(sqlc.narg('balance_after_minor'), balance_after_minor), updated_at = now()
 WHERE id = @id
 RETURNING *;

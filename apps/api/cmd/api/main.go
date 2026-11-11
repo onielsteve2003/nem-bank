@@ -10,6 +10,7 @@ import (
 	"net/http"
 	"os"
 	"os/signal"
+	"slices"
 	"strconv"
 	"syscall"
 	"time"
@@ -239,8 +240,8 @@ func run() error {
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub)},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register},
-		Periodic:     append(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs()...),
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register},
+		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs()),
 	})
 	if err != nil {
 		return err

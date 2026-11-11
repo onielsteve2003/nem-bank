@@ -253,9 +253,6 @@ func (a *API) SimulateCardCharge(ctx context.Context, req api.SimulateCardCharge
 		return nil, api.ErrNotImplemented
 	}
 	b := req.Body
-	if b.Capture != nil && *b.Capture {
-		return nil, api.ErrNotImplemented // settling at once arrives with clearing (T27.3)
-	}
 	amount, err := money.ParseMinor(b.Amount.AmountMinor, string(b.Amount.Currency))
 	if err != nil {
 		return nil, problem.Validation(problem.Field("/amount", "invalid", "Enter a valid amount."))
@@ -270,5 +267,62 @@ func (a *API) SimulateCardCharge(ctx context.Context, req api.SimulateCardCharge
 	if err != nil {
 		return nil, err
 	}
+	// capture=true is a merchant that settles in the same breath (a card-present sale). A
+	// declined charge has nothing to settle.
+	if b.Capture != nil && *b.Capture && row.Status == AuthAuthorized {
+		if row, err = a.svc.Capture(ctx, row.ID, nil); err != nil {
+			return nil, err
+		}
+	}
 	return api.SimulateCardCharge201JSONResponse(TransactionJSON(row)), nil
+}
+
+// CaptureSimulatedCharge is POST /v1/admin/simulators/merchant/charges/{authorization_id}/capture:
+// the merchant settles an approved authorization, in full or for less (CARD-5).
+func (a *API) CaptureSimulatedCharge(ctx context.Context, req api.CaptureSimulatedChargeRequestObject) (api.CaptureSimulatedChargeResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	var amount *money.Money
+	if req.Body != nil && req.Body.Amount != nil {
+		m, err := money.ParseMinor(req.Body.Amount.AmountMinor, string(req.Body.Amount.Currency))
+		if err != nil {
+			return nil, problem.Validation(problem.Field("/amount", "invalid", "Enter a valid amount."))
+		}
+		amount = &m
+	}
+	row, err := a.svc.Capture(ctx, req.AuthorizationId, amount)
+	if err != nil {
+		return nil, err
+	}
+	return api.CaptureSimulatedCharge200JSONResponse(TransactionJSON(row)), nil
+}
+
+// ReverseSimulatedCharge is POST /v1/admin/simulators/merchant/charges/{authorization_id}/reverse:
+// the merchant cancels an approved authorization and the hold is released.
+func (a *API) ReverseSimulatedCharge(ctx context.Context, req api.ReverseSimulatedChargeRequestObject) (api.ReverseSimulatedChargeResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	row, err := a.svc.Reverse(ctx, req.AuthorizationId)
+	if err != nil {
+		return nil, err
+	}
+	return api.ReverseSimulatedCharge200JSONResponse(TransactionJSON(row)), nil
+}
+
+// ListCardTransactions is GET /v1/cards/{card_id}/transactions.
+func (a *API) ListCardTransactions(ctx context.Context, req api.ListCardTransactionsRequestObject) (api.ListCardTransactionsResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	rows, page, err := a.svc.Transactions(ctx, req.CardId, req.Params.Cursor, req.Params.Limit)
+	if err != nil {
+		return nil, err
+	}
+	out := api.ListCardTransactions200JSONResponse{Data: make([]api.CardTransaction, len(rows)), Page: page}
+	for i, r := range rows {
+		out.Data[i] = TransactionJSON(r)
+	}
+	return out, nil
 }
