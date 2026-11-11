@@ -1,0 +1,85 @@
+{
+ "weights": {
+  "low": 0.1,
+  "medium": 0.2,
+  "high": 0.45
+ },
+ "base": 0.02,
+ "likely_scam_at": 0.6,
+ "suspicious_at": 0.3,
+ "rules": [
+  {
+   "code": "asks_for_secret",
+   "severity": "high",
+   "pattern": "\\b(otp|one[- ]time (pass)?code|pin|cvv|token code|password)\\b",
+   "unless": "\\b(do not|don'?t|never|not) (share|disclose|reveal|give|tell)\\b",
+   "message": "It asks for a PIN, OTP or card code. No bank ever asks for these."
+  },
+  {
+   "code": "bvn_update",
+   "severity": "high",
+   "pattern": "\\b(bvn|nin)\\b.{0,60}\\b(update|link|verify|validate|block|expire)",
+   "message": "\"Update your BVN or NIN\" messages are a common scam."
+  },
+  {
+   "code": "impersonation",
+   "severity": "high",
+   "pattern": "\\b(cbn|efcc|central bank|customer care|account officer|nem (support|team)|head office)\\b",
+   "message": "It claims to be a bank or an agency. They never message you for money or codes."
+  },
+  {
+   "code": "wrong_transfer",
+   "severity": "high",
+   "pattern": "\\b(sent|transferred|paid)\\b.{0,40}\\b(by mistake|in error|wrongly)\\b|\\bsend (it|am) back\\b",
+   "message": "\"I sent money to you by mistake\" is a known trick. Let your bank reverse it, never refund it yourself."
+  },
+  {
+   "code": "advance_fee",
+   "severity": "high",
+   "pattern": "\\b(send|pay|transfer)\\b.{0,30}\\b(first|fee|charge|to claim|to receive|to unlock|to release)\\b|\\b(processing|clearance|customs|activation|release) fee\\b",
+   "message": "It asks you to pay first to receive money."
+  },
+  {
+   "code": "family_emergency",
+   "severity": "high",
+   "pattern": "\\b(this is my new (number|line)|my (phone|number) (got|was) (spoilt|stolen|lost)|i('m| am) stranded|i don stuck)\\b",
+   "message": "A \"new number\" or emergency from family is often a scam. Call their old number first."
+  },
+  {
+   "code": "threat",
+   "severity": "medium",
+   "pattern": "\\b(blocked|suspended|restricted|deactivated|frozen|arrest(ed)?)\\b",
+   "message": "It threatens you to rush you."
+  },
+  {
+   "code": "urgency",
+   "severity": "medium",
+   "pattern": "\\b(urgent(ly)?|immediately|within 24 ?h(ou)?rs?|right now|asap|sharp sharp|quick quick)\\b",
+   "message": "It pushes you to act fast."
+  },
+  {
+   "code": "prize",
+   "severity": "medium",
+   "pattern": "\\b(you('ve| have)? won|winner|prize|promo|giveaway|lottery|lucky draw)\\b",
+   "message": "Prizes you did not enter for are a classic scam."
+  },
+  {
+   "code": "investment",
+   "severity": "medium",
+   "pattern": "\\b(double your money|guaranteed (returns?|profit)|\\d{2,3}% (profit|returns?|interest)|forex|crypto|ponzi|invest(ment)? plan)\\b",
+   "message": "Guaranteed or doubled returns are a red flag."
+  },
+  {
+   "code": "job_or_loan",
+   "severity": "medium",
+   "pattern": "\\b(loan (is )?approved|job offer|you('ve| have) been (selected|shortlisted))\\b",
+   "message": "Loans or jobs you did not apply for often end in a fee."
+  },
+  {
+   "code": "secrecy",
+   "severity": "medium",
+   "pattern": "\\b(don'?t tell (anyone|anybody)|keep (this|it) (secret|between us)|no tell anybody)\\b",
+   "message": "It asks you to keep it secret."
+  }
+ ]
+}

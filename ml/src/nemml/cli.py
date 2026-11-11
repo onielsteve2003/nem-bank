@@ -1,4 +1,4 @@
-"""Command line: `nemml data`, `nemml fraud` and `nemml categories`."""
+"""Command line: `nemml data`, `nemml fraud` and `nemml categories` and `nemml scam`."""
 
 import argparse
 import json
@@ -24,7 +24,24 @@ def main(argv: list[str] | None = None) -> int:
     cats.add_argument("--seed", type=int, default=7)
     cats.add_argument("--out", default=None, help="artifact directory (default ml/artifacts/categories)")
 
+    scam = sub.add_parser("scam", help="train, evaluate and export the scam message classifier")
+    scam.add_argument("--seed", type=int, default=7)
+    scam.add_argument("--out", default=None, help="artifact directory (default ml/artifacts/scam)")
+
     args = parser.parse_args(argv)
+    if args.command == "scam":
+        from pathlib import Path
+
+        from nemml.scam import run as run_scam
+
+        result = run_scam(args.seed, Path(args.out) if args.out else None)
+        print(
+            json.dumps(
+                {k: result["metrics"][k] for k in ("thresholds", "test_nigeria", "test_sms")}, indent=2
+            )
+        )
+        print(f"wrote {result['out_dir']}")
+        return 0
     if args.command == "categories":
         from pathlib import Path
 

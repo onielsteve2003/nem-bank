@@ -39,6 +39,9 @@ select = ["E", "F", "I", "UP", "B"]
 "src/nemml/categories.py" = ["E501"]  # model card prose
 "src/nemml/categories_data.py" = ["E501"]  # word lists
 "src/nemml/merchants.py" = ["E501"]  # merchant lists
+"src/nemml/scam.py" = ["E501"]  # model card prose
+"src/nemml/scam_data.py" = ["E501"]  # message templates
+"src/nemml/scam_rules.py" = ["E501"]  # regular expressions
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

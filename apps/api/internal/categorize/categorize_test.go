@@ -5,6 +5,8 @@ import (
 	"math"
 	"os"
 	"testing"
+
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/textmodel"
 )
 
 func mustNew(t testing.TB) *Classifier {
@@ -38,36 +40,13 @@ func TestScoresMatchPython(t *testing.T) {
 		t.Fatalf("golden has %d cases, want 60", len(g.Cases))
 	}
 	for _, tc := range g.Cases {
-		words := splitWords(tc.Text)
-		var got []float64
-		if len(words) == 0 {
-			// No words: the model scores the intercepts alone, as Python does.
-			got = c.model.probabilities(nil)
-		} else {
-			got = c.model.probabilities(words)
-		}
+		got := c.model.Probabilities(tc.Text)
 		for k, want := range tc.Probabilities {
 			if math.Abs(got[k]-want) > g.Tolerance*0.01 { // golden is rounded to 6 places
-				t.Errorf("%q class %s: go %.6f, python %.6f", tc.Text, c.model.classes[k], got[k], want)
+				t.Errorf("%q class %s: go %.6f, python %.6f", tc.Text, c.model.Classes[k], got[k], want)
 			}
 		}
 	}
-}
-
-func splitWords(text string) []string {
-	var out []string
-	cur := ""
-	for _, r := range Normalize(text) + " " {
-		if r == ' ' {
-			if cur != "" {
-				out = append(out, cur)
-			}
-			cur = ""
-			continue
-		}
-		cur += string(r)
-	}
-	return out
 }
 
 func TestNormalizeMatchesPython(t *testing.T) {
@@ -76,8 +55,8 @@ func TestNormalizeMatchesPython(t *testing.T) {
 		"N1,500.00 Café":                  "n0 0 0 caf ",
 		"":                                "",
 	} {
-		if got := Normalize(in); got != want {
-			t.Errorf("Normalize(%q) = %q, want %q", in, got, want)
+		if got := textmodel.Normalize(in); got != want {
+			t.Errorf("textmodel.Normalize(%q) = %q, want %q", in, got, want)
 		}
 	}
 }

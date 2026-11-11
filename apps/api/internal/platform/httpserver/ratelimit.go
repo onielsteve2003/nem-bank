@@ -60,6 +60,8 @@ func DefaultRateLimits() RateLimits {
 		// people, useless for harvesting names.
 		CustomerRoutes: map[string]ratelimit.Rule{
 			"POST /v1/payees/resolve": perHour(60),
+			// A person checks a message now and then; a script probing the classifier checks hundreds.
+			"POST /v1/security/scam-check": perMin(20),
 		},
 	}
 }

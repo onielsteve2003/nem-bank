@@ -12,8 +12,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
-	"math"
 	"strings"
+
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/textmodel"
 )
 
 //go:embed model/model.json model/merchants.json
@@ -45,33 +46,10 @@ type entry struct {
 	category string
 }
 
-type textModel struct {
-	name      string
-	classes   []string
-	ngramLo   int
-	ngramHi   int
-	index     map[string]int
-	idf       []float64
-	coef      [][]float64 // term-major: coef[term][class]
-	intercept []float64
-	threshold float64
-}
-
 // Classifier is safe for concurrent use.
 type Classifier struct {
 	dict  []entry
-	model *textModel // nil: dictionary only
-}
-
-type modelFile struct {
-	Model     string      `json:"model"`
-	Classes   []string    `json:"classes"`
-	NGram     []int       `json:"ngram"`
-	Terms     []string    `json:"terms"`
-	IDF       []float64   `json:"idf"`
-	Coef      [][]float64 `json:"coef"`
-	Intercept []float64   `json:"intercept"`
-	Threshold float64     `json:"threshold"`
+	model *textmodel.Model // nil: dictionary only
 }
 
 // New loads the dictionary and the model. A model that will not load is an error; use
@@ -85,13 +63,17 @@ func New() (*Classifier, error) {
 	if err != nil {
 		return nil, fmt.Errorf("categorize: read model: %w", err)
 	}
-	var f modelFile
-	if err := json.Unmarshal(raw, &f); err != nil {
-		return nil, fmt.Errorf("categorize: parse model: %w", err)
-	}
-	m, err := buildModel(f)
+	m, err := textmodel.Load(raw)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("categorize: %w", err)
+	}
+	for _, class := range m.Classes {
+		if !ValidCategory(class) {
+			return nil, fmt.Errorf("categorize: model class %q is not a category", class)
+		}
+	}
+	if m.Threshold <= 0 || m.Threshold >= 1 {
+		return nil, errors.New("categorize: model threshold is not between 0 and 1")
 	}
 	c.model = m
 	return c, nil
@@ -118,80 +100,31 @@ func DictionaryOnly() (*Classifier, error) {
 	return c, nil
 }
 
-func buildModel(f modelFile) (*textModel, error) {
-	n := len(f.Terms)
-	if len(f.NGram) != 2 || len(f.IDF) != n || len(f.Coef) != n || len(f.Intercept) != len(f.Classes) || len(f.Classes) == 0 {
-		return nil, errors.New("categorize: model file is inconsistent")
-	}
-	for _, c := range f.Classes {
-		if !ValidCategory(c) {
-			return nil, fmt.Errorf("categorize: model class %q is not a category", c)
-		}
-	}
-	m := &textModel{
-		name: f.Model, classes: f.Classes, ngramLo: f.NGram[0], ngramHi: f.NGram[1], idf: f.IDF, coef: f.Coef,
-		intercept: f.Intercept, threshold: f.Threshold, index: make(map[string]int, n),
-	}
-	for i, t := range f.Terms {
-		m.index[t] = i
-		if len(f.Coef[i]) != len(f.Classes) {
-			return nil, fmt.Errorf("categorize: term %d has %d weights, want %d", i, len(f.Coef[i]), len(f.Classes))
-		}
-	}
-	if m.threshold <= 0 || m.threshold >= 1 {
-		return nil, errors.New("categorize: model threshold is not between 0 and 1")
-	}
-	return m, nil
-}
-
 // ModelLoaded reports whether the model is in use.
 func (c *Classifier) ModelLoaded() bool { return c.model != nil }
-
-// Normalize is the text the dictionary and the model read: ASCII lowercase letters, each run
-// of digits as a single "0", everything else a space. ml/src/nemml/merchants.py does the
-// same; the golden test keeps them equal.
-func Normalize(text string) string {
-	var b strings.Builder
-	prev := ' '
-	for _, r := range strings.ToLower(text) {
-		c := ' '
-		switch {
-		case r >= 'a' && r <= 'z':
-			c = r
-		case r >= '0' && r <= '9':
-			c = '0'
-		}
-		if c == '0' && prev == '0' {
-			continue
-		}
-		b.WriteRune(c)
-		prev = c
-	}
-	return b.String()
-}
 
 // Classify returns the dictionary's answer if there is one, else the model's if it is
 // confident. ok is false when neither has an opinion, and the caller keeps its own category.
 func (c *Classifier) Classify(text string) (Result, bool) {
-	words := strings.Fields(Normalize(text))
+	words := textmodel.Words(text)
 	if cat, kw, ok := c.lookup(words); ok {
 		return Result{Category: cat, Source: SourceRules, Reason: "Matches the merchant “" + kw + "”."}, true
 	}
 	if c.model == nil || len(words) == 0 {
 		return Result{}, false
 	}
-	probs := c.model.probabilities(words)
+	probs := c.model.ProbabilitiesOf(words)
 	best := 0
 	for i, p := range probs {
 		if p > probs[best] {
 			best = i
 		}
 	}
-	if probs[best] < c.model.threshold {
+	if probs[best] < c.model.Threshold {
 		return Result{}, false
 	}
 	return Result{
-		Category: c.model.classes[best], Source: SourceModel, Confidence: probs[best], ModelVersion: c.model.name,
+		Category: c.model.Classes[best], Source: SourceModel, Confidence: probs[best], ModelVersion: c.model.Name,
 		Reason: "The name looks like others filed under this category.",
 	}, true
 }
@@ -213,60 +146,6 @@ func (c *Classifier) lookup(words []string) (category, keyword string, ok bool) 
 		}
 	}
 	return "", "", false
-}
-
-// probabilities scores the already-normalized words: sklearn's char_wb n-grams, sublinear tf,
-// idf, L2 norm, then softmax over the class weights.
-func (m *textModel) probabilities(words []string) []float64 {
-	tf := map[int]int{}
-	add := func(g string) {
-		if i, ok := m.index[g]; ok {
-			tf[i]++
-		}
-	}
-	for _, word := range words {
-		w := []rune(" " + word + " ")
-		for n := m.ngramLo; n <= m.ngramHi; n++ {
-			offset := 0
-			add(string(w[:min(n, len(w))]))
-			for offset+n < len(w) {
-				offset++
-				add(string(w[offset:min(offset+n, len(w))]))
-			}
-			if offset == 0 {
-				break
-			}
-		}
-	}
-	vals := make(map[int]float64, len(tf))
-	norm := 0.0
-	for i, count := range tf {
-		v := (1 + math.Log(float64(count))) * m.idf[i]
-		vals[i] = v
-		norm += v * v
-	}
-	z := append([]float64(nil), m.intercept...)
-	if norm > 0 {
-		norm = math.Sqrt(norm)
-		for i, v := range vals {
-			for k := range z {
-				z[k] += v / norm * m.coef[i][k]
-			}
-		}
-	}
-	top := z[0]
-	for _, v := range z {
-		top = math.Max(top, v)
-	}
-	sum := 0.0
-	for k := range z {
-		z[k] = math.Exp(z[k] - top)
-		sum += z[k]
-	}
-	for k := range z {
-		z[k] /= sum
-	}
-	return z
 }
 
 // MerchantKey is how a merchant is keyed for a customer's rules: case and spacing never split

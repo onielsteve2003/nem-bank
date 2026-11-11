@@ -24,6 +24,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/scam"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
@@ -70,6 +71,8 @@ type Options struct {
 	Ajo *ajo.API
 	// Credit serves loans; nil answers 501 for its operations.
 	Credit *credit.API
+	// Scam serves the scam checker; nil answers 501 for its operation.
+	Scam *scam.API
 	// Realtime serves tickets and the WebSocket; nil answers 501 and mounts no socket.
 	Realtime *realtime.Service
 	// Admin serves staff login and maker-checker; nil in tests that skip the console.
@@ -159,7 +162,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

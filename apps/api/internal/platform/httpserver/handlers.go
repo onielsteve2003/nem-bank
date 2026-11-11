@@ -23,6 +23,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/scam"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
@@ -41,6 +42,7 @@ type handlers struct {
 	*savingsAPI
 	*ajoAPI
 	*creditAPI
+	*scamAPI
 	*realtimeAPI
 	fallback
 	version string
@@ -61,6 +63,7 @@ type (
 	savingsAPI   = savings.API
 	ajoAPI       = ajo.API
 	creditAPI    = credit.API
+	scamAPI      = scam.API
 	realtimeAPI  = realtime.API
 )
 

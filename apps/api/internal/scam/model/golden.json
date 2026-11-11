@@ -1,0 +1,518 @@
+{
+ "tolerance": 0.001,
+ "cases": [
+  {
+   "text": "I'm in chennai velachery:)",
+   "probabilities": [
+    0.996335,
+    0.003665
+   ],
+   "rules": []
+  },
+  {
+   "text": "CONGRATULATIONS! YOU HAVE BEEN SELECTED FOR THE CBN GRANT OF N20,000. PAY A PROCESSING FEE OF N15,000 TO CLAIM. ACT NOW!",
+   "probabilities": [
+    0.134754,
+    0.865246
+   ],
+   "rules": [
+    "impersonation",
+    "advance_fee",
+    "job_or_loan"
+   ]
+  },
+  {
+   "text": "Good afternoon loverboy ! How goes you day ? Any luck come your way? I think of you, sweetie and send my love across the sea to make you smile and happy",
+   "probabilities": [
+    0.993501,
+    0.006499
+   ],
+   "rules": []
+  },
+  {
+   "text": "One of the joys in lifeis waking up each daywith thoughts that somewhereSomeone cares enough tosend a warm morning greeting.. -",
+   "probabilities": [
+    0.989917,
+    0.010083
+   ],
+   "rules": []
+  },
+  {
+   "text": "\"Im at arestaurant eating squid! i will be out about 10:30 wanna dosomething or is that to late?\"",
+   "probabilities": [
+    0.949158,
+    0.050842
+   ],
+   "rules": []
+  },
+  {
+   "text": "There r many model..sony ericson also der.. &lt;#&gt; ..it luks good bt i forgot modl no",
+   "probabilities": [
+    0.99816,
+    0.00184
+   ],
+   "rules": []
+  },
+  {
+   "text": "As if i wasn't having enough trouble sleeping.",
+   "probabilities": [
+    0.998798,
+    0.001202
+   ],
+   "rules": []
+  },
+  {
+   "text": "Height of \"Oh shit....!!\" situation: A guy throws a luv letter on a gal but falls on her brothers head whos a gay,.;-):-D",
+   "probabilities": [
+    0.953038,
+    0.046962
+   ],
+   "rules": []
+  },
+  {
+   "text": "Been running but only managed 5 minutes and then needed oxygen! Might have to resort to the roller option!",
+   "probabilities": [
+    0.867258,
+    0.132742
+   ],
+   "rules": []
+  },
+  {
+   "text": "It's ok lar. U sleep early too... Nite...",
+   "probabilities": [
+    0.998089,
+    0.001911
+   ],
+   "rules": []
+  },
+  {
+   "text": "Ok c \u00fc then.",
+   "probabilities": [
+    0.997755,
+    0.002245
+   ],
+   "rules": []
+  },
+  {
+   "text": "Its normally hot mail. Com you see!",
+   "probabilities": [
+    0.996773,
+    0.003227
+   ],
+   "rules": []
+  },
+  {
+   "text": "Hey chief, can you give me a bell when you get this. Need to talk to you about this royal visit on the 1st june. ",
+   "probabilities": [
+    0.855364,
+    0.144636
+   ],
+   "rules": []
+  },
+  {
+   "text": "Thats cool. i am a gentleman and will treat you with dignity and respect.",
+   "probabilities": [
+    0.981241,
+    0.018759
+   ],
+   "rules": []
+  },
+  {
+   "text": "Get the door, I'm here",
+   "probabilities": [
+    0.999213,
+    0.000787
+   ],
+   "rules": []
+  },
+  {
+   "text": "R u sure they'll understand that! Wine * good idea just had a slurp!",
+   "probabilities": [
+    0.988553,
+    0.011447
+   ],
+   "rules": []
+  },
+  {
+   "text": "K...k...yesterday i was in cbe .",
+   "probabilities": [
+    0.99761,
+    0.00239
+   ],
+   "rules": []
+  },
+  {
+   "text": "No no:)this is kallis home ground.amla home town is durban:)",
+   "probabilities": [
+    0.99822,
+    0.00178
+   ],
+   "rules": []
+  },
+  {
+   "text": "Hello, You have won \u20a6500,000 in the 9mobile promo! Call 07012345678 to claim your prize, hurry. God bless you.",
+   "probabilities": [
+    0.009959,
+    0.990041
+   ],
+   "rules": [
+    "prize"
+   ]
+  },
+  {
+   "text": "Dad went out oredi... ",
+   "probabilities": [
+    0.993574,
+    0.006426
+   ],
+   "rules": []
+  },
+  {
+   "text": "I cant wait to see you! How were the photos were useful? :)",
+   "probabilities": [
+    0.997168,
+    0.002832
+   ],
+   "rules": []
+  },
+  {
+   "text": "No need for the drug anymore.",
+   "probabilities": [
+    0.997435,
+    0.002565
+   ],
+   "rules": []
+  },
+  {
+   "text": "Debit Alert: Acct 012***789 debited with NGN20,000 on 11-Nov-2026. Bal: NGN10,500.",
+   "probabilities": [
+    0.982201,
+    0.017799
+   ],
+   "rules": []
+  },
+  {
+   "text": "You should change your fb to jaykwon thuglyfe falconerf",
+   "probabilities": [
+    0.916802,
+    0.083198
+   ],
+   "rules": []
+  },
+  {
+   "text": "Don know. I did't msg him recently.",
+   "probabilities": [
+    0.988053,
+    0.011947
+   ],
+   "rules": []
+  },
+  {
+   "text": "PRIVATE! Your 2003 Account Statement for 07808247860 shows 800 un-redeemed S. I. M. points. Call 08719899229 Identifier Code: 40411 Expires 06/11/04",
+   "probabilities": [
+    0.023769,
+    0.976231
+   ],
+   "rules": []
+  },
+  {
+   "text": "Hello darling how are you today? I would love to have a chat, why dont you tell me what you look like and what you are in to sexy?",
+   "probabilities": [
+    0.366527,
+    0.633473
+   ],
+   "rules": []
+  },
+  {
+   "text": "Just wondering, the others just took off",
+   "probabilities": [
+    0.984727,
+    0.015273
+   ],
+   "rules": []
+  },
+  {
+   "text": "Hello, Abeg oga, your account don block. Click http://gtb-verify.com/login quick quick to verify your BVN. Reply YES to continue.",
+   "probabilities": [
+    0.008525,
+    0.991475
+   ],
+   "rules": [
+    "urgency"
+   ]
+  },
+  {
+   "text": "Debit Alert: Acct 012***789 debited with NGN50,000 on 11-Nov-2026. Bal: NGN2,500.",
+   "probabilities": [
+    0.982201,
+    0.017799
+   ],
+   "rules": []
+  },
+  {
+   "text": "Sorry da thangam.it's my mistake.",
+   "probabilities": [
+    0.994887,
+    0.005113
+   ],
+   "rules": []
+  },
+  {
+   "text": "dear customer, i dey come, wait for me at the junction. god bless you.",
+   "probabilities": [
+    0.984992,
+    0.015008
+   ],
+   "rules": []
+  },
+  {
+   "text": "Lemme know when you're here",
+   "probabilities": [
+    0.997245,
+    0.002755
+   ],
+   "rules": []
+  },
+  {
+   "text": "ATTENTION: YOUR MTN DATA BUNDLE OF 2GB EXPIRES ON 30-NOV-2026. DIAL *131# TO RENEW. ACT NOW!",
+   "probabilities": [
+    0.946954,
+    0.053046
+   ],
+   "rules": []
+  },
+  {
+   "text": "You do what all you like",
+   "probabilities": [
+    0.9893,
+    0.0107
+   ],
+   "rules": []
+  },
+  {
+   "text": "Yup ok...",
+   "probabilities": [
+    0.998971,
+    0.001029
+   ],
+   "rules": []
+  },
+  {
+   "text": "I'd say that's a good sign but, well, you know my track record at reading women",
+   "probabilities": [
+    0.997242,
+    0.002758
+   ],
+   "rules": []
+  },
+  {
+   "text": "Neva mind it's ok..",
+   "probabilities": [
+    0.996367,
+    0.003633
+   ],
+   "rules": []
+  },
+  {
+   "text": "Y dun cut too short leh. U dun like ah? She failed. She's quite sad.",
+   "probabilities": [
+    0.99805,
+    0.00195
+   ],
+   "rules": []
+  },
+  {
+   "text": "K, want us to come by now?",
+   "probabilities": [
+    0.974694,
+    0.025306
+   ],
+   "rules": []
+  },
+  {
+   "text": "Ha... Then we must walk to everywhere... Cannot take tram. My cousin said can walk to vic market from our hotel ",
+   "probabilities": [
+    0.961418,
+    0.038582
+   ],
+   "rules": []
+  },
+  {
+   "text": "Sorry that was my uncle. I.ll keep in touch",
+   "probabilities": [
+    0.997152,
+    0.002848
+   ],
+   "rules": []
+  },
+  {
+   "text": "I don't quite know what to do. I still can't get hold of anyone. I cud pick you up bout 7.30pm and we can see if they're in the pub?",
+   "probabilities": [
+    0.983967,
+    0.016033
+   ],
+   "rules": []
+  },
+  {
+   "text": "Its just the effect of irritation. Just ignore it",
+   "probabilities": [
+    0.994648,
+    0.005352
+   ],
+   "rules": []
+  },
+  {
+   "text": "I'm wif him now buying tix lar...",
+   "probabilities": [
+    0.998564,
+    0.001436
+   ],
+   "rules": []
+  },
+  {
+   "text": "The table's occupied, I'm waiting by the tree",
+   "probabilities": [
+    0.982315,
+    0.017685
+   ],
+   "rules": []
+  },
+  {
+   "text": "",
+   "probabilities": [
+    0.996889,
+    0.003111
+   ],
+   "rules": []
+  },
+  {
+   "text": "Your Nem Bank OTP is 482913. Do not share it with anyone.",
+   "probabilities": [
+    0.978103,
+    0.021897
+   ],
+   "rules": []
+  },
+  {
+   "text": "Send me your OTP right now",
+   "probabilities": [
+    0.88494,
+    0.11506
+   ],
+   "rules": [
+    "asks_for_secret",
+    "urgency"
+   ]
+  },
+  {
+   "text": "Dear customer, your account will be blocked. Update your BVN at bit.ly/abc",
+   "probabilities": [
+    0.043075,
+    0.956925
+   ],
+   "rules": [
+    "threat"
+   ]
+  },
+  {
+   "text": "I mistakenly sent N20,000 to you, please send am back",
+   "probabilities": [
+    0.129336,
+    0.870664
+   ],
+   "rules": [
+    "wrong_transfer"
+   ]
+  },
+  {
+   "text": "This is my new number, my phone got spoilt, urgent help",
+   "probabilities": [
+    0.700202,
+    0.299798
+   ],
+   "rules": [
+    "family_emergency",
+    "urgency"
+   ]
+  },
+  {
+   "text": "You have won N500,000 in the MTN promo, pay the processing fee to claim",
+   "probabilities": [
+    0.788768,
+    0.211232
+   ],
+   "rules": [
+    "advance_fee",
+    "prize"
+   ]
+  },
+  {
+   "text": "Double your money in 7 days, guaranteed returns of 100% profit",
+   "probabilities": [
+    0.05312,
+    0.94688
+   ],
+   "rules": [
+    "investment"
+   ]
+  },
+  {
+   "text": "See you at church on Sunday",
+   "probabilities": [
+    0.992004,
+    0.007996
+   ],
+   "rules": []
+  },
+  {
+   "text": "Please call me urgently, the meeting moved",
+   "probabilities": [
+    0.98356,
+    0.01644
+   ],
+   "rules": [
+    "urgency"
+   ]
+  },
+  {
+   "text": "Your loan is approved! Don't tell anybody",
+   "probabilities": [
+    0.997391,
+    0.002609
+   ],
+   "rules": [
+    "job_or_loan",
+    "secrecy"
+   ]
+  },
+  {
+   "text": "EFCC: your account is frozen",
+   "probabilities": [
+    0.853577,
+    0.146423
+   ],
+   "rules": [
+    "impersonation",
+    "threat"
+   ]
+  },
+  {
+   "text": "Caf\u00e9 Z\u00fcrich \u20a6500 PIN",
+   "probabilities": [
+    0.757069,
+    0.242931
+   ],
+   "rules": [
+    "asks_for_secret"
+   ]
+  },
+  {
+   "text": "12345 67890",
+   "probabilities": [
+    0.000413,
+    0.999587
+   ],
+   "rules": []
+  }
+ ]
+}

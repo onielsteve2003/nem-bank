@@ -5,6 +5,7 @@ import (
 	"context"
 	"crypto/hmac"
 	"crypto/sha256"
+	"errors"
 	"fmt"
 	"log/slog"
 	"net/http"
@@ -42,6 +43,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/risk"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/scam"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 )
@@ -228,6 +230,20 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	scamSvc, err := scam.NewService(scam.Config{
+		// A Nem account is one we hold; whether other banks' accounts exist is the bank partner's
+		// to say, so they stay "unknown". Customer reports of accounts arrive with support (T30.3).
+		KnownAccount: func(ctx context.Context, number string) (bool, error) {
+			_, err := accountsSvc.ResolveNuban(ctx, number)
+			if errors.Is(err, accounts.ErrNoSuchNuban) {
+				return false, nil
+			}
+			return err == nil, err
+		},
+	})
+	if err != nil {
+		return err
+	}
 	creditSvc, err := credit.NewService(credit.Config{Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Logger: log})
 	if err != nil {
 		return err
@@ -273,6 +289,7 @@ func run() error {
 		Savings:            savings.NewAPI(savingsSvc),
 		Ajo:                ajo.NewAPI(ajoSvc),
 		Credit:             credit.NewAPI(creditSvc),
+		Scam:               scam.NewAPI(scamSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})

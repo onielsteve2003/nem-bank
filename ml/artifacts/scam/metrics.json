@@ -1,0 +1,91 @@
+{
+  "model": "scam-tfidf-lr-v1",
+  "rows": {
+    "train": 3669,
+    "val": 1196,
+    "test": 1202
+  },
+  "sources": {
+    "sms": 5171,
+    "nigeria": 896
+  },
+  "thresholds": {
+    "suspicious": 0.27,
+    "likely_scam": 0.48
+  },
+  "test_all": {
+    "rules_baseline": {
+      "precision": 0.9897,
+      "recall": 0.4174,
+      "f1": 0.5872,
+      "n": 1202
+    },
+    "model_alone": {
+      "precision": 0.8811,
+      "recall": 0.9348,
+      "f1": 0.9072,
+      "n": 1202
+    },
+    "system": {
+      "precision": 0.8824,
+      "recall": 0.9783,
+      "f1": 0.9278,
+      "n": 1202
+    },
+    "model_pr_auc": 0.9347,
+    "spam": 230
+  },
+  "test_nigeria": {
+    "rules_baseline": {
+      "precision": 1.0,
+      "recall": 0.7857,
+      "f1": 0.88,
+      "n": 154
+    },
+    "model_alone": {
+      "precision": 0.8793,
+      "recall": 0.9107,
+      "f1": 0.8947,
+      "n": 154
+    },
+    "system": {
+      "precision": 0.8889,
+      "recall": 1.0,
+      "f1": 0.9412,
+      "n": 154
+    },
+    "model_pr_auc": 0.8727,
+    "spam": 112
+  },
+  "test_sms": {
+    "rules_baseline": {
+      "precision": 0.8889,
+      "recall": 0.0678,
+      "f1": 0.126,
+      "n": 1048
+    },
+    "model_alone": {
+      "precision": 0.8828,
+      "recall": 0.9576,
+      "f1": 0.9187,
+      "n": 1048
+    },
+    "system": {
+      "precision": 0.876,
+      "recall": 0.9576,
+      "f1": 0.915,
+      "n": 1048
+    },
+    "model_pr_auc": 0.9439,
+    "spam": 118
+  },
+  "legit_nigerian_messages_flagged": {
+    "rules_baseline": 0.0,
+    "system": 0.3333,
+    "n": 42,
+    "templates": 3,
+    "templates_flagged_by_system": 1
+  },
+  "has_sms_collection": true,
+  "beats_baseline": true
+}
