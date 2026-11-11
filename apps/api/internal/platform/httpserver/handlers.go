@@ -23,6 +23,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
@@ -49,6 +50,7 @@ type handlers struct {
 	*forecastAPI
 	*assistantAPI
 	*prefillAPI
+	*notifyAPI
 	*realtimeAPI
 	fallback
 	version string
@@ -73,6 +75,7 @@ type (
 	forecastAPI  = forecast.API
 	assistantAPI = assistant.API
 	prefillAPI   = kyc.PrefillAPI
+	notifyAPI    = notify.API
 	realtimeAPI  = realtime.API
 )
 

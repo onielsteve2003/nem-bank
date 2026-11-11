@@ -37,6 +37,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
@@ -292,6 +293,13 @@ func run() error {
 		return err
 	}
 
+	// Inbox, preferences, Expo push (free) and email. A missing mail key falls back to the log
+	// mailer above, so notification emails are logged, not sent, in local runs.
+	notifySvc, err := notify.NewService(notify.Config{Pool: pool, Mailer: mail, Hub: hub, Pusher: notify.Expo{}, Logger: log})
+	if err != nil {
+		return err
+	}
+
 	idem := idempotency.NewStore(pool)
 
 	metrics := observability.NewMetrics()
@@ -324,6 +332,7 @@ func run() error {
 		Forecast:           forecast.NewAPI(forecastSvc),
 		Assistant:          assistant.NewAPI(assistantSvc),
 		KYCPrefill:         kyc.NewPrefillAPI(prefill),
+		Notify:             notify.NewAPI(notifySvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
@@ -335,7 +344,7 @@ func run() error {
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
-		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber()},
+		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber()},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
 		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register},
 		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs()),

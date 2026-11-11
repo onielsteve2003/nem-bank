@@ -463,6 +463,24 @@ type MoneyRequest struct {
 	LastRemindedAt pgtype.Timestamptz
 }
 
+type Notification struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	Category  string
+	Title     string
+	Body      string
+	DeepLink  *string
+	DedupeKey string
+	ReadAt    pgtype.Timestamptz
+	CreatedAt time.Time
+}
+
+type NotificationPreference struct {
+	UserID     uuid.UUID
+	Categories []byte
+	UpdatedAt  time.Time
+}
+
 type OtpChallenge struct {
 	ID                uuid.UUID
 	Purpose           string
@@ -539,6 +557,13 @@ type PreparedAction struct {
 	Result         []byte
 	CreatedAt      time.Time
 	UpdatedAt      time.Time
+}
+
+type PushToken struct {
+	DeviceID      uuid.UUID
+	UserID        uuid.UUID
+	ExpoPushToken string
+	CreatedAt     time.Time
 }
 
 type RefreshToken struct {
