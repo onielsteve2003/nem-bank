@@ -89,6 +89,25 @@ func (q *Queries) GetDailyUsage(ctx context.Context, arg GetDailyUsageParams) (i
 	return column_1, err
 }
 
+const getLimitOverride = `-- name: GetLimitOverride :one
+SELECT max(daily_minor)::bigint AS daily_minor FROM limit_overrides
+WHERE user_id = $1 AND expires_at > $2::timestamptz
+HAVING count(*) > 0
+`
+
+type GetLimitOverrideParams struct {
+	UserID uuid.UUID
+	Now    time.Time
+}
+
+// The largest daily limit a live staff override gives this customer (ADM-10).
+func (q *Queries) GetLimitOverride(ctx context.Context, arg GetLimitOverrideParams) (int64, error) {
+	row := q.db.QueryRow(ctx, getLimitOverride, arg.UserID, arg.Now)
+	var daily_minor int64
+	err := row.Scan(&daily_minor)
+	return daily_minor, err
+}
+
 const getSelfLimits = `-- name: GetSelfLimits :one
 SELECT user_id, daily_minor, single_minor, pending_daily_minor, pending_single_minor, pending_effective_at, updated_at FROM self_limits WHERE user_id = $1
 `

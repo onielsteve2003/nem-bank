@@ -17,6 +17,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/assistant"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
@@ -39,6 +40,7 @@ import (
 type handlers struct {
 	*identity.API
 	*adminAPI
+	*consoleAPI
 	*accountsAPI
 	*transfersAPI
 	*limitsAPI
@@ -67,6 +69,7 @@ type fallback struct{ api.Unimplemented }
 // adminAPI and accountsAPI name the embedded fields; every domain calls its type API.
 type (
 	adminAPI     = admin.API
+	consoleAPI   = console.API
 	accountsAPI  = accounts.API
 	transfersAPI = transfers.API
 	limitsAPI    = limits.API

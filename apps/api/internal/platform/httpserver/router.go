@@ -17,6 +17,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/assistant"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
@@ -97,6 +98,9 @@ type Options struct {
 	Realtime *realtime.Service
 	// Admin serves staff login and maker-checker; nil in tests that skip the console.
 	Admin *admin.API
+	// Console serves the staff console's customer, queue, ledger, configuration and audit
+	// operations; nil answers 501 for them and 404 for KYC photo links.
+	Console *console.API
 	// StaffAuthenticator verifies console tokens; nil makes every staff operation a 401.
 	StaffAuthenticator Authenticator
 	// Signatures verifies device signatures on money-moving requests; nil refuses them all.
@@ -185,9 +189,14 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 		r.GET(support.FilesPath, lim.byAddress(), opts.Support.FilesHandler)
 	}
 
+	if opts.Console != nil {
+		// Signed KYC photo links, like attachment links: the signature is the credential.
+		r.GET(console.DocumentsPath, lim.byAddress(), opts.Console.DocumentsHandler)
+	}
+
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

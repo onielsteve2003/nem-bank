@@ -437,45 +437,60 @@ func (s *Service) Decide(ctx context.Context, d Decision) (supportdb.Dispute, er
 	if d.Outcome == "refund" && (d.Refund == nil || !d.Refund.IsPositive()) {
 		return supportdb.Dispute{}, problem.Validation(problem.Field("/refund_amount", "required", "Say how much to refund."))
 	}
-	now := s.now().UTC()
 	var out supportdb.Dispute
-	err := s.inTx(ctx, func(tx pgx.Tx, q *supportdb.Queries) error {
-		cur, err := q.LockDispute(ctx, d.DisputeID)
-		if errors.Is(err, pgx.ErrNoRows) {
-			return ErrDisputeNotFound
-		}
-		if err != nil {
-			return fmt.Errorf("lock dispute: %w", err)
-		}
-		if !slices.Contains(openStatuses, cur.Status) {
-			return ErrDisputeClosed
-		}
-		switch d.Outcome {
-		case "decline":
-			out, err = q.SetDisputeStatus(ctx, supportdb.SetDisputeStatusParams{ID: cur.ID, Status: "resolved_declined", ResolutionNote: &note, ResolvedAt: &now, ReviewerID: &d.Reviewer.ID})
-			if err == nil {
-				err = s.event(ctx, q, cur.ID, "resolved_declined", "Dispute closed without a refund", note, now)
-			}
-		case "request_info":
-			out, err = q.SetDisputeStatus(ctx, supportdb.SetDisputeStatusParams{ID: cur.ID, Status: "awaiting_customer", ResolutionNote: &note, ReviewerID: &d.Reviewer.ID})
-			if err == nil {
-				err = s.event(ctx, q, cur.ID, "awaiting_customer", "We need more from you", note, now)
-			}
-		case "refund":
-			out, err = s.refund(ctx, tx, q, cur, *d.Refund, note, d.Reviewer.ID, now)
-		}
-		if err != nil {
-			return err
-		}
-		if _, err := audit.Append(ctx, tx, audit.Input{
-			Actor: d.Reviewer.Actor, Action: "dispute." + d.Outcome, ResourceType: "dispute", ResourceID: cur.ID.String(),
-			Metadata: map[string]any{"case": cur.CaseNumber},
-		}, now); err != nil {
-			return err
-		}
-		return emitDispute(ctx, tx, out)
+	err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		var err error
+		out, err = s.DecideIn(ctx, tx, d)
+		return err
 	})
 	return out, err
+}
+
+// DecideIn is Decide inside the caller's transaction, for a ruling that waits for a second staff
+// member (maker-checker): the refund posts in the approval's own transaction, so the approval
+// is only "approved" if the money moved.
+func (s *Service) DecideIn(ctx context.Context, tx pgx.Tx, d Decision) (supportdb.Dispute, error) {
+	note := strings.TrimSpace(d.Note)
+	now := s.now().UTC()
+	q := s.q.WithTx(tx)
+	var out supportdb.Dispute
+	cur, err := q.LockDispute(ctx, d.DisputeID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return supportdb.Dispute{}, ErrDisputeNotFound
+	}
+	if err != nil {
+		return supportdb.Dispute{}, fmt.Errorf("lock dispute: %w", err)
+	}
+	if !slices.Contains(openStatuses, cur.Status) {
+		return supportdb.Dispute{}, ErrDisputeClosed
+	}
+	switch d.Outcome {
+	case "decline":
+		out, err = q.SetDisputeStatus(ctx, supportdb.SetDisputeStatusParams{ID: cur.ID, Status: "resolved_declined", ResolutionNote: &note, ResolvedAt: &now, ReviewerID: &d.Reviewer.ID})
+		if err == nil {
+			err = s.event(ctx, q, cur.ID, "resolved_declined", "Dispute closed without a refund", note, now)
+		}
+	case "request_info":
+		out, err = q.SetDisputeStatus(ctx, supportdb.SetDisputeStatusParams{ID: cur.ID, Status: "awaiting_customer", ResolutionNote: &note, ReviewerID: &d.Reviewer.ID})
+		if err == nil {
+			err = s.event(ctx, q, cur.ID, "awaiting_customer", "We need more from you", note, now)
+		}
+	case "refund":
+		out, err = s.refund(ctx, tx, q, cur, *d.Refund, note, d.Reviewer.ID, now)
+	}
+	if err != nil {
+		return supportdb.Dispute{}, err
+	}
+	if _, err := audit.Append(ctx, tx, audit.Input{
+		Actor: d.Reviewer.Actor, Action: "dispute." + d.Outcome, ResourceType: "dispute", ResourceID: cur.ID.String(),
+		Metadata: map[string]any{"case": cur.CaseNumber},
+	}, now); err != nil {
+		return supportdb.Dispute{}, err
+	}
+	if err := emitDispute(ctx, tx, out); err != nil {
+		return supportdb.Dispute{}, err
+	}
+	return out, nil
 }
 
 func (s *Service) refund(ctx context.Context, tx pgx.Tx, q *supportdb.Queries, cur supportdb.Dispute, amount money.Money, note string, reviewer uuid.UUID, now time.Time) (supportdb.Dispute, error) {

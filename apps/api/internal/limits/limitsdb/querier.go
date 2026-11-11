@@ -18,6 +18,8 @@ type Querier interface {
 	// sees what the first one used. No row means the limit would be exceeded.
 	ConsumeDailyLimit(ctx context.Context, arg ConsumeDailyLimitParams) (int64, error)
 	GetDailyUsage(ctx context.Context, arg GetDailyUsageParams) (int64, error)
+	// The largest daily limit a live staff override gives this customer (ADM-10).
+	GetLimitOverride(ctx context.Context, arg GetLimitOverrideParams) (int64, error)
 	GetSelfLimits(ctx context.Context, userID uuid.UUID) (SelfLimit, error)
 	ReleaseDailyLimit(ctx context.Context, arg ReleaseDailyLimitParams) error
 	SetPendingIncrease(ctx context.Context, arg SetPendingIncreaseParams) (SelfLimit, error)

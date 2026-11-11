@@ -3,6 +3,7 @@ package admin
 import (
 	"context"
 
+	"github.com/google/uuid"
 	openapi_types "github.com/oapi-codegen/runtime/types"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin/admindb"
@@ -148,4 +149,14 @@ func (a *API) RejectRequest(ctx context.Context, req api.RejectRequestRequestObj
 		return nil, err
 	}
 	return api.RejectRequest200JSONResponse(approvalJSON(r)), nil
+}
+
+// APIApproval is a maker-checker request in the contract's shape, for the domains that propose
+// one and answer 202 with it.
+func (s *Service) APIApproval(ctx context.Context, id uuid.UUID) (api.ApprovalRequest, error) {
+	a, err := s.Get(ctx, id)
+	if err != nil {
+		return api.ApprovalRequest{}, err
+	}
+	return approvalJSON(a), nil
 }

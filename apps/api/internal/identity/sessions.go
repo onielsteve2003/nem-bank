@@ -227,6 +227,9 @@ func (s *Service) Login(ctx context.Context, in LoginInput) (AuthResult, error) 
 	if !ok || user.ID == uuid.Nil {
 		return AuthResult{}, ErrInvalidCredentials
 	}
+	if user.FrozenAt != nil {
+		return AuthResult{}, ErrAccountFrozen
+	}
 
 	var out AuthResult
 	err = s.inTxWith(ctx, func(tx pgx.Tx, q *identitydb.Queries) error {
@@ -341,6 +344,12 @@ func (s *Service) Authenticate(ctx context.Context, bearer string) (context.Cont
 	}
 	if sess.UserID != p.UserID || sess.DeviceID != p.DeviceID || sess.RevokedAt != nil || !s.now().Before(sess.ExpiresAt) {
 		return nil, ErrSessionRevoked
+	}
+	// A freeze ends every live session at once; this also stops a token minted a moment before.
+	if frozen, err := s.q.IsUserFrozen(ctx, p.UserID); err != nil {
+		return nil, fmt.Errorf("check frozen: %w", err)
+	} else if frozen {
+		return nil, ErrAccountFrozen
 	}
 	return WithPrincipal(ctx, p), nil
 }

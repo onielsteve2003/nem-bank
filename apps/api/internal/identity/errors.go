@@ -23,7 +23,11 @@ var (
 	ErrResendTooSoon     = problem.New(http.StatusTooManyRequests, problem.CodeRateLimited, "Wait a moment before asking for another code.")
 	ErrEmailUnavailable  = problem.New(http.StatusServiceUnavailable, "email_unavailable", "We could not send the code. Try again shortly.")
 
-	ErrNotVerified   = problem.New(http.StatusForbidden, "invalid_otp", "Verify your email first")
-	ErrWeakPassword  = problem.New(http.StatusUnprocessableEntity, "weak_password", "Pick a stronger password")
+	ErrNotVerified  = problem.New(http.StatusForbidden, "invalid_otp", "Verify your email first")
+	ErrWeakPassword = problem.New(http.StatusUnprocessableEntity, "weak_password", "Pick a stronger password")
+	// ErrAccountFrozen answers a frozen customer (staff froze the account, ADM-3). It is only
+	// shown after the password was right, so it tells a stranger nothing.
+	ErrAccountFrozen = problem.New(http.StatusForbidden, "account_frozen", "This account is frozen").
+				WithDetail("Contact support to find out why and how to restore access.")
 	errSignupExpired = problem.New(http.StatusGone, "otp_expired", "This sign-up has expired. Start again.")
 )

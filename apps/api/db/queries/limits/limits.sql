@@ -45,3 +45,9 @@ RETURNING used_minor;
 UPDATE daily_limit_usage
 SET used_minor = greatest(used_minor - @amount_minor::bigint, 0), updated_at = now()
 WHERE user_id = @user_id AND day = @day;
+
+-- name: GetLimitOverride :one
+-- The largest daily limit a live staff override gives this customer (ADM-10).
+SELECT max(daily_minor)::bigint AS daily_minor FROM limit_overrides
+WHERE user_id = @user_id AND expires_at > @now::timestamptz
+HAVING count(*) > 0;

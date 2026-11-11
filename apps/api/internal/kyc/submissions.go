@@ -369,3 +369,17 @@ func (s *Service) Decide(ctx context.Context, d Decision) (kycdb.KycSubmission, 
 	})
 	return out, err
 }
+
+// LatestSubmission is a customer's most recent Tier 3 submission, for the staff customer view;
+// nil when they never submitted.
+func (s *Service) LatestSubmission(ctx context.Context, userID uuid.UUID) (*api.KycSubmission, error) {
+	row, err := s.q.LatestSubmission(ctx, userID)
+	if errors.Is(err, pgx.ErrNoRows) {
+		return nil, nil //nolint:nilnil // "never submitted" is a normal answer, not an error
+	}
+	if err != nil {
+		return nil, fmt.Errorf("load latest submission: %w", err)
+	}
+	out := SubmissionJSON(row)
+	return &out, nil
+}

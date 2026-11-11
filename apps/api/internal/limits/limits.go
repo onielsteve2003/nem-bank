@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -58,6 +59,7 @@ type Service struct {
 	pool      *pgxpool.Pool
 	customers Customers
 	stepUps   StepUps
+	mu        sync.RWMutex
 	rules     Rules
 	now       func() time.Time
 }
@@ -78,7 +80,19 @@ func NewService(cfg Config) (*Service, error) {
 }
 
 // Rules are the numbers the engine applies.
-func (s *Service) Rules() Rules { return s.rules }
+func (s *Service) Rules() Rules {
+	s.mu.RLock()
+	defer s.mu.RUnlock()
+	return s.rules
+}
+
+// SetRules swaps the numbers the engine applies, so an approved configuration change (ADM-8)
+// takes effect without a restart. Transfers already priced keep the price they were quoted.
+func (s *Service) SetRules(r Rules) {
+	s.mu.Lock()
+	defer s.mu.Unlock()
+	s.rules = r
+}
 
 // Status is where a customer stands against today's limits (contract LimitStatus).
 type Status struct {
@@ -122,7 +136,13 @@ func (s *Service) StatusFor(ctx context.Context, db limitsdb.DBTX, userID uuid.U
 	if err != nil {
 		return Status{}, err
 	}
-	st := Status{Tier: tier, Day: Day(s.now()), DailyMinor: s.rules.Tier(tier).DailyMinor, SingleMinor: own.SingleMinor, CoolOffActive: c.Active}
+	st := Status{Tier: tier, Day: Day(s.now()), DailyMinor: s.Rules().Tier(tier).DailyMinor, SingleMinor: own.SingleMinor, CoolOffActive: c.Active}
+	// A live staff override (ADM-10) raises the tier cap, never lowers it.
+	if o, err := limitsdb.New(db).GetLimitOverride(ctx, limitsdb.GetLimitOverrideParams{UserID: userID, Now: s.now()}); err == nil {
+		st.DailyMinor = max(st.DailyMinor, o)
+	} else if !errors.Is(err, pgx.ErrNoRows) {
+		return Status{}, fmt.Errorf("load limit override: %w", err)
+	}
 	if own.DailyMinor != nil && *own.DailyMinor < st.DailyMinor {
 		st.DailyMinor, st.SelfSet = *own.DailyMinor, true
 	}
@@ -191,7 +211,7 @@ type Pending struct {
 }
 
 func (s *Service) ownView(l limitsdb.SelfLimit, tier int) Own {
-	o := Own{DailyMinor: l.DailyMinor, SingleMinor: l.SingleMinor, KYCDailyCapMinor: s.rules.Tier(tier).DailyMinor}
+	o := Own{DailyMinor: l.DailyMinor, SingleMinor: l.SingleMinor, KYCDailyCapMinor: s.Rules().Tier(tier).DailyMinor}
 	if l.PendingEffectiveAt != nil {
 		o.Pending = &Pending{DailyMinor: l.PendingDailyMinor, SingleMinor: l.PendingSingleMinor, EffectiveAt: *l.PendingEffectiveAt}
 	}
@@ -236,7 +256,7 @@ func (s *Service) Set(ctx context.Context, daily, single *money.Money, stepUpTok
 	if err != nil {
 		return Own{}, err
 	}
-	capMinor := s.rules.Tier(prof.KycTier).DailyMinor
+	capMinor := s.Rules().Tier(prof.KycTier).DailyMinor
 	if (nextDaily != nil && *nextDaily > capMinor) || (nextSingle != nil && *nextSingle > capMinor) {
 		return Own{}, errAboveCap.WithDetailf("Your tier allows up to ₦%s a day.", accounts.FormatAmount(capMinor))
 	}
@@ -263,7 +283,7 @@ func (s *Service) Set(ctx context.Context, daily, single *money.Money, stepUpTok
 		}
 		out, err = q.SetPendingIncrease(ctx, limitsdb.SetPendingIncreaseParams{
 			UserID: p.UserID, PendingDailyMinor: nextDaily, PendingSingleMinor: nextSingle,
-			EffectiveAt: s.now().Add(s.rules.IncreaseDelay),
+			EffectiveAt: s.now().Add(s.Rules().IncreaseDelay),
 		})
 		return err
 	})

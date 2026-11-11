@@ -31,3 +31,6 @@ SELECT * FROM signups WHERE id = $1;
 SELECT id FROM users
 WHERE (sqlc.narg(nemtag)::text IS NOT NULL AND nemtag = sqlc.narg(nemtag))
    OR (sqlc.narg(phone)::text IS NOT NULL AND phone = sqlc.narg(phone) AND NOT is_dependant);
+
+-- name: IsUserFrozen :one
+SELECT (frozen_at IS NOT NULL)::bool AS frozen FROM users WHERE id = $1;

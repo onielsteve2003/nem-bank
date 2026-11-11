@@ -139,6 +139,13 @@ type AuditLog struct {
 	Hash         string
 }
 
+type BankConfig struct {
+	ID        int16
+	Version   int32
+	Value     []byte
+	UpdatedAt time.Time
+}
+
 type Beneficiary struct {
 	ID              uuid.UUID
 	UserID          uuid.UUID
@@ -359,6 +366,26 @@ type FamilyApproval struct {
 	DecidedAt       *time.Time
 }
 
+type FeatureFlag struct {
+	Key         string
+	Description string
+	Enabled     bool
+	PaidFeature bool
+	UpdatedAt   time.Time
+	UpdatedBy   *uuid.UUID
+}
+
+type FraudCase struct {
+	TransferID      uuid.UUID
+	Status          string
+	AssigneeID      *uuid.UUID
+	Label           *string
+	Note            *string
+	CustomerMessage *string
+	CreatedAt       time.Time
+	ClosedAt        *time.Time
+}
+
 type FxAlert struct {
 	ID              uuid.UUID
 	UserID          uuid.UUID
@@ -499,6 +526,16 @@ type LedgerAccount struct {
 	AvailableMinor int64
 	Version        int64
 	CreatedAt      time.Time
+}
+
+type LimitOverride struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	DailyMinor int64
+	Currency   string
+	ExpiresAt  time.Time
+	ApprovalID uuid.UUID
+	CreatedAt  time.Time
 }
 
 type Loan struct {
@@ -877,6 +914,14 @@ type StaffLoginChallenge struct {
 	UsedAt    *time.Time
 }
 
+type StaffNote struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	AuthorID  uuid.UUID
+	Body      string
+	CreatedAt time.Time
+}
+
 type StaffSession struct {
 	ID        uuid.UUID
 	StaffID   uuid.UUID
@@ -1021,4 +1066,6 @@ type User struct {
 	DuressSince       *time.Time
 	IsDependant       bool
 	GuardianID        *uuid.UUID
+	FrozenAt          *time.Time
+	FrozenReason      *string
 }

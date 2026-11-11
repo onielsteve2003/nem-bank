@@ -14,7 +14,9 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"maps"
 	"net/http"
+	"sync"
 	"time"
 
 	"github.com/google/uuid"
@@ -120,6 +122,7 @@ type Service struct {
 	limits    RuleSource
 	sources   []RatesSource
 	spreadBPS int
+	spreadMu  sync.RWMutex
 	spreads   map[string]int
 	quoteTTL  time.Duration
 	log       *slog.Logger
@@ -156,7 +159,23 @@ func NewService(cfg Config) (*Service, error) {
 	return s, nil
 }
 
+// SetSpreads replaces the per-pair spreads (ADM-8), so an approved change applies to the next
+// quote without a restart. A pair with no entry keeps the default spread.
+func (s *Service) SetSpreads(spreads map[string]int) error {
+	for pair, bps := range spreads {
+		if bps < 0 || bps >= 10_000 {
+			return fmt.Errorf("fx: spread for %s must be 0-9999 basis points, got %d", pair, bps)
+		}
+	}
+	s.spreadMu.Lock()
+	defer s.spreadMu.Unlock()
+	s.spreads = maps.Clone(spreads)
+	return nil
+}
+
 func (s *Service) spread(pair string) int {
+	s.spreadMu.RLock()
+	defer s.spreadMu.RUnlock()
 	if bps, ok := s.spreads[pair]; ok {
 		return bps
 	}

@@ -47,6 +47,7 @@ type Querier interface {
 	InsertSession(ctx context.Context, arg InsertSessionParams) (Session, error)
 	InsertSignup(ctx context.Context, arg InsertSignupParams) error
 	InsertUser(ctx context.Context, arg InsertUserParams) (User, error)
+	IsUserFrozen(ctx context.Context, id uuid.UUID) (bool, error)
 	ListLiveDevices(ctx context.Context, userID uuid.UUID) ([]Device, error)
 	ListLiveSessions(ctx context.Context, userID uuid.UUID) ([]ListLiveSessionsRow, error)
 	MarkChallengeVerified(ctx context.Context, arg MarkChallengeVerifiedParams) error

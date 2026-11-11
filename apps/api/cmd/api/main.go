@@ -29,6 +29,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
@@ -332,6 +333,23 @@ func run() error {
 	// A dependant's transfers answer to their parent's controls.
 	transfersSvc.SetFamily(familySvc)
 
+	// The staff console's cross-domain operations. KYC photo links are signed with a key derived
+	// from the token signing seed under its own label, like the QR and attachment keys. Starting
+	// it also registers the maker-checker actions, so it must come before the first request.
+	reviewMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
+	reviewMAC.Write([]byte("nem kyc review link signing key v1"))
+	consoleSvc, err := console.NewService(console.Config{
+		Pool: pool, Admin: adminSvc, KYC: kycSvc, Support: supportSvc, Transfers: transfersSvc, Accounts: accountsSvc,
+		Identity: identitySvc, FX: fxSvc, Limits: limitsSvc, LinkKey: reviewMAC.Sum(nil), Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+	// What staff approved stays in force across restarts.
+	if err := consoleSvc.ApplyLive(ctx); err != nil {
+		return err
+	}
+
 	idem := idempotency.NewStore(pool)
 
 	metrics := observability.NewMetrics()
@@ -369,6 +387,7 @@ func run() error {
 		Notify:             notify.NewAPI(notifySvc),
 		Family:             family.NewAPI(familySvc),
 		Admin:              admin.NewAPI(adminSvc),
+		Console:            console.NewAPI(consoleSvc),
 		StaffAuthenticator: adminSvc,
 	})
 	if err != nil {

@@ -51,7 +51,7 @@ func (q *Queries) GetStepUpChallengeByTokenForUpdate(ctx context.Context, tokenH
 }
 
 const getUserForUpdate = `-- name: GetUserForUpdate :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id FROM users WHERE id = $1 FOR UPDATE
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id, frozen_at, frozen_reason FROM users WHERE id = $1 FOR UPDATE
 `
 
 // PIN checks lock the user row, so parallel guesses are counted one at a time.
@@ -85,6 +85,8 @@ func (q *Queries) GetUserForUpdate(ctx context.Context, id uuid.UUID) (User, err
 		&i.DuressSince,
 		&i.IsDependant,
 		&i.GuardianID,
+		&i.FrozenAt,
+		&i.FrozenReason,
 	)
 	return i, err
 }
