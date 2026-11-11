@@ -28,6 +28,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/idempotency"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/testdb"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
 )
 
 // staticRates is a rates provider that always answers with the same dollar-based reading.
@@ -75,6 +76,10 @@ func newFXStack(t *testing.T) *fxStack {
 		}
 		snap.PerUSD[c] = r
 	}
+	savingsSvc, err := savings.NewService(savings.Config{Pool: pool, Accounts: acc, Logger: quiet})
+	if err != nil {
+		t.Fatal(err)
+	}
 	fxsvc, err := fx.NewService(fx.Config{
 		Pool: pool, Accounts: acc, Customers: idsvc, Limits: lim, Logger: quiet, Sources: []fx.RatesSource{staticRates{snap}},
 	})
@@ -83,7 +88,7 @@ func newFXStack(t *testing.T) *fxStack {
 	}
 	h, err := NewRouter(Options{
 		Version: "e2e", Logger: quiet, Identity: identity.NewAPI(idsvc), Authenticator: idsvc, Signatures: idsvc,
-		Idempotency: idempotency.NewStore(pool), Accounts: accounts.NewAPI(acc), Limits: limits.NewAPI(lim), FX: fx.NewAPI(fxsvc),
+		Idempotency: idempotency.NewStore(pool), Accounts: accounts.NewAPI(acc), Limits: limits.NewAPI(lim), FX: fx.NewAPI(fxsvc), Savings: savings.NewAPI(savingsSvc),
 	})
 	if err != nil {
 		t.Fatal(err)

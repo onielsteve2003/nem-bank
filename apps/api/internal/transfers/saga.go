@@ -298,7 +298,8 @@ func (s *Service) settle(ctx context.Context, tx pgx.Tx, t transfersdb.Transfer,
 	_, err = jobs.Write(ctx, tx, jobs.Event{
 		Topic: "transfer.completed", AggregateType: "transfer", AggregateID: t.ID.String(),
 		Payload: map[string]any{
-			"transfer_id": t.ID, "user_id": t.UserID, "rail": "interbank", "amount_minor": t.AmountMinor, "currency": t.Currency,
+			"transfer_id": t.ID, "user_id": t.UserID, "rail": "interbank", "source_account_id": t.SourceAccountID,
+			"amount_minor": t.AmountMinor, "currency": t.Currency,
 		},
 	})
 	return err

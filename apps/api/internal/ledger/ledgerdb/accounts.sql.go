@@ -7,6 +7,8 @@ package ledgerdb
 
 import (
 	"context"
+
+	"github.com/google/uuid"
 )
 
 const getSystemAccount = `-- name: GetSystemAccount :one
@@ -36,6 +38,32 @@ func (q *Queries) GetSystemAccount(ctx context.Context, arg GetSystemAccountPara
 		&i.CreatedAt,
 	)
 	return i, err
+}
+
+const insertCustomerLedgerAccount = `-- name: InsertCustomerLedgerAccount :exec
+INSERT INTO ledger_accounts (id, owner_type, owner_id, kind, currency, name)
+VALUES ($1, 'customer', $2, $3, $4, $5)
+`
+
+type InsertCustomerLedgerAccountParams struct {
+	ID       uuid.UUID
+	OwnerID  *uuid.UUID
+	Kind     string
+	Currency string
+	Name     string
+}
+
+// A customer extra ledger account (a savings goal, a lock): balances start at zero and
+// only ever move through the posting engine.
+func (q *Queries) InsertCustomerLedgerAccount(ctx context.Context, arg InsertCustomerLedgerAccountParams) error {
+	_, err := q.db.Exec(ctx, insertCustomerLedgerAccount,
+		arg.ID,
+		arg.OwnerID,
+		arg.Kind,
+		arg.Currency,
+		arg.Name,
+	)
+	return err
 }
 
 const listSystemAccounts = `-- name: ListSystemAccounts :many

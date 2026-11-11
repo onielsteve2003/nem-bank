@@ -382,6 +382,26 @@ type RefreshToken struct {
 	UsedAt    *time.Time
 }
 
+type RoundUp struct {
+	ID          uuid.UUID
+	UserID      uuid.UUID
+	GoalID      uuid.UUID
+	SourceRef   string
+	AmountMinor int64
+	EntryID     uuid.UUID
+	CreatedAt   time.Time
+}
+
+type RoundUpSetting struct {
+	UserID       uuid.UUID
+	Enabled      bool
+	RoundToMinor int64
+	GoalID       *uuid.UUID
+	Sources      []string
+	EnabledSince *time.Time
+	UpdatedAt    time.Time
+}
+
 type SandboxNipPayment struct {
 	Reference        string
 	PartnerReference string
@@ -394,6 +414,26 @@ type SandboxNipPayment struct {
 	ReceivedAt       time.Time
 	SettleAt         time.Time
 	CallbackSentAt   *time.Time
+}
+
+type SavingsGoal struct {
+	ID                  uuid.UUID
+	UserID              uuid.UUID
+	AccountID           uuid.UUID
+	Name                string
+	Emoji               string
+	TargetMinor         int64
+	TargetDate          pgtype.Date
+	AutoSaveAmountMinor pgtype.Int8
+	AutoSaveFrequency   *string
+	AutoSaveSourceID    *uuid.UUID
+	AutoSaveNextAt      *time.Time
+	InterestRateBps     int32
+	InterestEarnedMinor int64
+	InterestPaidTo      pgtype.Date
+	Status              string
+	CreatedAt           time.Time
+	ClosedAt            *time.Time
 }
 
 type ScheduledTransfer struct {

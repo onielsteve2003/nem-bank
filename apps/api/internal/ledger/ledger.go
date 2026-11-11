@@ -13,6 +13,7 @@ import (
 	"errors"
 	"fmt"
 
+	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/ledgerdb"
@@ -45,4 +46,20 @@ func SystemAccount(ctx context.Context, db ledgerdb.DBTX, kind, currency string)
 		return ledgerdb.LedgerAccount{}, fmt.Errorf("load system account: %w", err)
 	}
 	return a, nil
+}
+
+// OpenCustomerAccount opens an extra ledger account for a customer inside tx: a savings
+// goal's pot, a locked saving. The name is a label for the console, never the customer's.
+func OpenCustomerAccount(ctx context.Context, db ledgerdb.DBTX, owner uuid.UUID, kind, currency, name string) (uuid.UUID, error) {
+	id, err := uuid.NewV7()
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("account id: %w", err)
+	}
+	err = ledgerdb.New(db).InsertCustomerLedgerAccount(ctx, ledgerdb.InsertCustomerLedgerAccountParams{
+		ID: id, OwnerID: &owner, Kind: kind, Currency: currency, Name: name,
+	})
+	if err != nil {
+		return uuid.Nil, fmt.Errorf("open %s account: %w", kind, err)
+	}
+	return id, nil
 }

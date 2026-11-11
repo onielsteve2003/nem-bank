@@ -31,10 +31,16 @@ func signedPost(t *testing.T, h http.Handler, key ed25519.PrivateKey, deviceID u
 // signedPostKey is signedPost with a chosen Idempotency-Key, to replay a double tap.
 func signedPostKey(t *testing.T, h http.Handler, key ed25519.PrivateKey, deviceID uuid.UUID, token, target, body, nonce, idemKey string) *httptest.ResponseRecorder {
 	t.Helper()
+	return signedRequest(t, h, http.MethodPost, key, deviceID, token, target, body, nonce, idemKey)
+}
+
+// signedRequest signs any method the way the app does.
+func signedRequest(t *testing.T, h http.Handler, method string, key ed25519.PrivateKey, deviceID uuid.UUID, token, target, body, nonce, idemKey string) *httptest.ResponseRecorder {
+	t.Helper()
 	ts := time.Now().UTC().Format("2006-01-02T15:04:05.000Z")
 	sum := sha256.Sum256([]byte(body))
-	payload := strings.Join([]string{"POST", target, ts, nonce, hex.EncodeToString(sum[:])}, "\n")
-	req := httptest.NewRequestWithContext(t.Context(), http.MethodPost, target, bytes.NewBufferString(body))
+	payload := strings.Join([]string{method, target, ts, nonce, hex.EncodeToString(sum[:])}, "\n")
+	req := httptest.NewRequestWithContext(t.Context(), method, target, bytes.NewBufferString(body))
 	req.Header.Set("Content-Type", "application/json")
 	req.Header.Set("Authorization", "Bearer "+token)
 	req.Header.Set("Idempotency-Key", idemKey)

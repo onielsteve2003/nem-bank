@@ -22,6 +22,9 @@ type Querier interface {
 	GetHold(ctx context.Context, id uuid.UUID) (AccountHold, error)
 	// The bank's account of a kind in a currency (seeded by migration 00009).
 	GetSystemAccount(ctx context.Context, arg GetSystemAccountParams) (LedgerAccount, error)
+	// A customer extra ledger account (a savings goal, a lock): balances start at zero and
+	// only ever move through the posting engine.
+	InsertCustomerLedgerAccount(ctx context.Context, arg InsertCustomerLedgerAccountParams) error
 	// ON CONFLICT keeps the transaction usable when the operation already posted: no row
 	// comes back and the engine reports ErrDuplicateEntry.
 	InsertEntry(ctx context.Context, arg InsertEntryParams) (JournalEntry, error)

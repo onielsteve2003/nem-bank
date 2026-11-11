@@ -408,7 +408,7 @@ func (s *Service) completeInternal(ctx context.Context, tx pgx.Tx, t transfersdb
 	_, err = jobs.Write(ctx, tx, jobs.Event{
 		Topic: "transfer.completed", AggregateType: "transfer", AggregateID: t.ID.String(),
 		Payload: map[string]any{
-			"transfer_id": t.ID, "user_id": t.UserID, "recipient_user_id": dst.UserID, "rail": "internal",
+			"transfer_id": t.ID, "user_id": t.UserID, "recipient_user_id": dst.UserID, "rail": "internal", "source_account_id": t.SourceAccountID,
 			"amount_minor": t.AmountMinor, "currency": t.Currency,
 		},
 	})

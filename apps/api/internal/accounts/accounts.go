@@ -392,3 +392,15 @@ func (s *Service) RecipientByAccount(ctx context.Context, accountID uuid.UUID) (
 	}
 	return Recipient{CustomerAccount: acc, Name: prof.Name, Nemtag: prof.Nemtag}, nil
 }
+
+// Naira is the customer's NGN current account, where savings payouts land.
+func (s *Service) Naira(ctx context.Context, userID uuid.UUID) (accountsdb.CustomerAccount, error) {
+	a, err := s.q.GetCustomerAccountByCurrency(ctx, accountsdb.GetCustomerAccountByCurrencyParams{UserID: userID, Currency: string(money.NGN)})
+	if errors.Is(err, pgx.ErrNoRows) {
+		return accountsdb.CustomerAccount{}, ErrAccountNotFound
+	}
+	if err != nil {
+		return accountsdb.CustomerAccount{}, fmt.Errorf("load naira account: %w", err)
+	}
+	return a, nil
+}
