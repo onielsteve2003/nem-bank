@@ -270,6 +270,26 @@ type DailyLimitUsage struct {
 	UpdatedAt time.Time
 }
 
+type Dependant struct {
+	ID                       uuid.UUID
+	GuardianID               uuid.UUID
+	UserID                   uuid.UUID
+	AccountID                uuid.UUID
+	KidMode                  bool
+	DailySpendLimitMinor     int64
+	ApprovalThresholdMinor   int64
+	CanSendToBanks           bool
+	Paused                   bool
+	SetupCodeHash            []byte
+	SetupCodeExpiresAt       pgtype.Timestamptz
+	AllowanceAmountMinor     pgtype.Int8
+	AllowanceFrequency       *string
+	AllowanceDay             pgtype.Int2
+	AllowanceSourceAccountID *uuid.UUID
+	AllowanceNextRunAt       pgtype.Timestamptz
+	CreatedAt                time.Time
+}
+
 type Device struct {
 	ID             uuid.UUID
 	UserID         uuid.UUID
@@ -318,6 +338,25 @@ type DisputeEvent struct {
 	Label     string
 	Detail    *string
 	At        time.Time
+}
+
+type FamilyApproval struct {
+	ID              uuid.UUID
+	DependantID     uuid.UUID
+	GuardianID      uuid.UUID
+	UserID          uuid.UUID
+	SourceAccountID uuid.UUID
+	Destination     []byte
+	Recipient       []byte
+	AmountMinor     int64
+	Narration       string
+	Category        *string
+	Status          string
+	HoldID          *uuid.UUID
+	TransferID      *uuid.UUID
+	CreatedAt       time.Time
+	ExpiresAt       time.Time
+	DecidedAt       pgtype.Timestamptz
 }
 
 type FxAlert struct {
@@ -980,4 +1019,6 @@ type User struct {
 	PinLockedUntil    pgtype.Timestamptz
 	DuressPinHash     *string
 	DuressSince       pgtype.Timestamptz
+	IsDependant       bool
+	GuardianID        *uuid.UUID
 }

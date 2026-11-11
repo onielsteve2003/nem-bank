@@ -70,7 +70,7 @@ func userJSON(u identitydb.User) api.User {
 		Email: openapi_types.Email(u.Email), Phone: u.Phone,
 		DateOfBirth: openapi_types.Date{Time: u.DateOfBirth},
 		Nemtag:      u.Nemtag, KycTier: api.KycTier(u.KycTier), KycStatus: api.KycStatus(u.KycStatus),
-		IsDemo: u.IsDemo, CreatedAt: u.CreatedAt.UTC(), HasPin: u.PinHash != nil,
+		IsDemo: u.IsDemo, IsDependant: &u.IsDependant, CreatedAt: u.CreatedAt.UTC(), HasPin: u.PinHash != nil,
 	}
 	if u.NemtagChangedAt != nil {
 		// A tag can change once every 30 days (the contract's nemtag_changeable_at).

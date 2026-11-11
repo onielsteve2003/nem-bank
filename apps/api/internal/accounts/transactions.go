@@ -184,7 +184,17 @@ type Filter struct {
 
 // Transactions pages through the caller's history, newest first.
 func (s *Service) Transactions(ctx context.Context, f Filter) ([]accountsdb.Transaction, api.PageInfo, error) {
-	p, prof, err := s.caller(ctx)
+	p, _, err := s.caller(ctx)
+	if err != nil {
+		return nil, api.PageInfo{}, err
+	}
+	return s.TransactionsFor(ctx, p.UserID, f)
+}
+
+// TransactionsFor pages through one customer's history, newest first. The caller has decided
+// the viewer may see it (a guardian reading a dependant's activity, FAM-3); this method does not.
+func (s *Service) TransactionsFor(ctx context.Context, userID uuid.UUID, f Filter) ([]accountsdb.Transaction, api.PageInfo, error) {
+	prof, err := s.customers.CustomerProfile(ctx, userID)
 	if err != nil {
 		return nil, api.PageInfo{}, err
 	}
@@ -194,7 +204,7 @@ func (s *Service) Transactions(ctx context.Context, f Filter) ([]accountsdb.Tran
 	}
 	limit := pagination.Limit(f.Limit)
 	params := accountsdb.ListTransactionsParams{
-		UserID: p.UserID, AccountID: f.AccountID, Types: f.Types, Currency: f.Currency, Status: f.Status,
+		UserID: userID, AccountID: f.AccountID, Types: f.Types, Currency: f.Currency, Status: f.Status,
 		Category: f.Category, AfterID: after.ID, AfterAt: after.Time, Lim: int32(limit + 1), //nolint:gosec // limit ≤ pagination.MaxLimit
 	}
 	if len(params.Types) == 0 {

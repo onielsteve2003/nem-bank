@@ -101,6 +101,28 @@ type Customers interface {
 	CoolOff(ctx context.Context) (identity.CoolOff, error)
 }
 
+// Family applies a guardian's controls to a dependant's transfers (FAM-2).
+type Family interface {
+	// Screen runs on a planned transfer before anything is written. It returns nil for a
+	// customer who is not a dependant or a transfer inside the controls, and otherwise the
+	// problem to answer with (after setting the transfer aside for the guardian, when that is
+	// what the controls ask for).
+	Screen(ctx context.Context, c FamilyCheck) error
+}
+
+// FamilyCheck is a planned transfer, for Family.Screen.
+type FamilyCheck struct {
+	UserID  uuid.UUID
+	Request Request
+	// Amount is what the recipient gets; Total adds the fee.
+	Amount, Total money.Money
+	Interbank     bool
+	Recipient     api.TransferParty
+	// NoApproval is set for a scheduled run, which cannot wait for a guardian: above the
+	// approval threshold it is refused instead.
+	NoApproval bool
+}
+
 // Config holds the service's dependencies.
 type Config struct {
 	Pool      *pgxpool.Pool
@@ -142,6 +164,7 @@ type Service struct {
 	limits    *limits.Service
 	stepUps   limits.StepUps
 	risk      *risk.Service
+	family    Family
 	qrKey     []byte
 	partner   partners.BankPartner
 	sandbox   *partners.SandboxNIP
@@ -152,6 +175,10 @@ type Service struct {
 	sagaTimeout, pollAfter time.Duration
 	now                    func() time.Time
 }
+
+// SetFamily installs the family controls. They are set after construction because the family
+// service sends money through this one (SendAs), so neither can be built first.
+func (s *Service) SetFamily(f Family) { s.family = f }
 
 // NewService checks the configuration and returns the service.
 func NewService(cfg Config) (*Service, error) {

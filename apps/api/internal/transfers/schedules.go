@@ -329,6 +329,13 @@ func (s *Service) runSchedule(ctx context.Context, id, userID uuid.UUID) error {
 	if planErr != nil && !isRefusal(planErr) {
 		return planErr
 	}
+	if planErr == nil {
+		// A dependant's standing order obeys their guardian's controls like any other send.
+		planErr = s.screen(ctx, pl, true)
+		if planErr != nil && !isRefusal(planErr) {
+			return planErr
+		}
+	}
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		q := s.q.WithTx(tx)
 		sch, err := q.ClaimDueSchedule(ctx, transfersdb.ClaimDueScheduleParams{ID: id, Now: ptr(s.now())})

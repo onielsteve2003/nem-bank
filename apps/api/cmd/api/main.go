@@ -30,6 +30,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast/forecastdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
@@ -317,6 +318,20 @@ func run() error {
 		return err
 	}
 
+	// Setup codes for dependants are kept under a key derived from the token signing seed under
+	// its own label, like the QR and attachment keys.
+	codeMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
+	codeMAC.Write([]byte("nem dependant setup code key v1"))
+	familySvc, err := family.NewService(family.Config{
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, StepUps: identitySvc, Sender: transfersSvc,
+		Limits: limitsSvc, CodeKey: codeMAC.Sum(nil), Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+	// A dependant's transfers answer to their parent's controls.
+	transfersSvc.SetFamily(familySvc)
+
 	idem := idempotency.NewStore(pool)
 
 	metrics := observability.NewMetrics()
@@ -352,6 +367,7 @@ func run() error {
 		KYC:                kyc.NewAPI(kycSvc),
 		Support:            support.NewAPI(supportSvc),
 		Notify:             notify.NewAPI(notifySvc),
+		Family:             family.NewAPI(familySvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
@@ -365,8 +381,8 @@ func run() error {
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub), supportSvc.RealtimeSubscriber(hub)},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register},
-		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs()),
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register, familySvc.Register},
+		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs(), familySvc.PeriodicJobs()),
 	})
 	if err != nil {
 		return err

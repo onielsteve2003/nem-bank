@@ -51,6 +51,9 @@ type payload struct {
 	ConversationID  uuid.UUID `json:"conversation_id"`
 	Sender          string    `json:"sender"`
 	Status          string    `json:"status"`
+	GuardianID      uuid.UUID `json:"guardian_id"`
+	DependantName   string    `json:"dependant_name"`
+	Reason          string    `json:"reason"`
 }
 
 // Topics lists every event the notifications subscriber listens to. security.duress_triggered
@@ -64,6 +67,7 @@ var Topics = []string{
 	"savings.auto_saved", "savings.auto_save_skipped", "savings.lock_matured",
 	"statement.ready", "fx.alert_triggered", "dispute.updated", "support.message",
 	"identity.device_bound", "identity.refresh_token_reused", "kyc.updated",
+	"family.approval_requested", "family.approval_decided", "family.allowance_sent", "family.allowance_failed",
 }
 
 // symbols are the currencies the bank holds; anything else prints its code.
@@ -183,6 +187,24 @@ func compose(d jobs.Delivery) ([]draft, error) {
 		case p.Tier == 2 && p.Status != "pending_review":
 			add(p.UserID, "owner", "security", "You are now Tier 2", "Your identity was verified. Foreign wallets and USD cards are unlocked.", link)
 		}
+	case "family.approval_requested":
+		add(p.GuardianID, "guardian", "transactions", orDefault(p.DependantName, "Your dependant")+" needs your approval",
+			"They want to send "+amount+". Open Family to approve or decline.", "nembank://family/approvals")
+	case "family.approval_decided":
+		// The parent's own answer needs no alert for them; the dependant hears what was decided.
+		switch p.Status {
+		case "approved":
+			add(p.UserID, "dependant", "transactions", "Your transfer was approved", "Your parent approved the "+amount+" transfer. It is on its way.", "nembank://family/approvals")
+		case "declined":
+			add(p.UserID, "dependant", "transactions", "Your transfer was declined", "Your parent declined the "+amount+" transfer. The money is back in your account.", "nembank://family/approvals")
+		case "expired":
+			add(p.UserID, "dependant", "transactions", "Your request ran out of time", "Nobody answered the "+amount+" transfer in time. The money is back in your account.", "nembank://family/approvals")
+			add(p.GuardianID, "guardian", "transactions", "A request expired", orDefault(p.DependantName, "Your dependant")+"'s "+amount+" request was not answered in time.", "nembank://family/approvals")
+		}
+	case "family.allowance_sent":
+		add(p.UserID, "dependant", "transactions", "Allowance received", "Your allowance of "+amount+" has arrived.", "nembank://home")
+	case "family.allowance_failed":
+		add(p.GuardianID, "guardian", "transactions", "Allowance not sent", orDefault(p.DependantName, "Your dependant")+"'s allowance of "+amount+" could not be sent: "+orDefault(p.Reason, "please check your account")+".", "nembank://family")
 	case "identity.device_bound":
 		uid, err := uuid.Parse(d.AggregateID)
 		if err != nil {

@@ -18,6 +18,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
@@ -54,6 +55,7 @@ type handlers struct {
 	*kycAPI
 	*supportAPI
 	*notifyAPI
+	*familyAPI
 	*realtimeAPI
 	fallback
 	version string
@@ -81,6 +83,7 @@ type (
 	kycAPI       = kyc.API
 	supportAPI   = support.API
 	notifyAPI    = notify.API
+	familyAPI    = family.API
 	realtimeAPI  = realtime.API
 )
 

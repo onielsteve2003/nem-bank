@@ -184,6 +184,9 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 	if err != nil {
 		return View{}, err
 	}
+	if err := s.screen(ctx, pl, false); err != nil {
+		return View{}, err
+	}
 	var id uuid.UUID
 	if err := pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		id, err = s.commit(ctx, tx, pl)
@@ -192,6 +195,55 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 		return View{}, err
 	}
 	return s.view(ctx, p.UserID, id)
+}
+
+// screen asks the family controls whether a dependant may send this.
+func (s *Service) screen(ctx context.Context, pl plan, noApproval bool) error {
+	if s.family == nil || pl.sender.InDuress {
+		return nil
+	}
+	return s.family.Screen(ctx, FamilyCheck{
+		UserID: pl.userID, Request: pl.req, Amount: pl.req.Amount, Total: pl.total,
+		Interbank: !pl.dest.internal(), Recipient: pl.dest.party, NoApproval: noApproval,
+	})
+}
+
+// SendAs sends for a customer when no device of theirs is calling: a guardian approved a
+// dependant's transfer, or a standing instruction (an allowance) says so. The caller's
+// authority is the caller's own check; the family controls are not applied again. Before and
+// After run in the same database transaction, before the transfer is written and after it (with
+// its ID), so whatever they record (the approval, the allowance run) commits together with the
+// transfer or not at all. A cooling-off does not apply: the guardian's approval is the
+// confirmation it exists to get.
+func (s *Service) SendAs(ctx context.Context, userID uuid.UUID, r Request, h Hooks) (uuid.UUID, error) {
+	pl, err := s.prepare(ctx, userID, r, identity.CoolOff{})
+	if err != nil {
+		return uuid.Nil, err
+	}
+	pl.coolingOff = false
+	var id uuid.UUID
+	err = pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		if h.Before != nil {
+			if err := h.Before(ctx, tx); err != nil {
+				return err
+			}
+		}
+		var cerr error
+		if id, cerr = s.commit(ctx, tx, pl); cerr != nil {
+			return cerr
+		}
+		if h.After != nil {
+			return h.After(ctx, tx, id)
+		}
+		return nil
+	})
+	return id, err
+}
+
+// Hooks are what SendAs's caller records inside the transfer's transaction. Either may be nil.
+type Hooks struct {
+	Before func(ctx context.Context, tx pgx.Tx) error
+	After  func(ctx context.Context, tx pgx.Tx, transferID uuid.UUID) error
 }
 
 // commit writes a planned transfer in the caller's transaction and takes it as far as it

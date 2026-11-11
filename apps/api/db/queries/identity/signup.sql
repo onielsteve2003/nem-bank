@@ -1,7 +1,7 @@
 -- name: EmailOrPhoneTaken :one
 SELECT
-  EXISTS (SELECT 1 FROM users u WHERE u.email = @email::text) AS email_taken,
-  EXISTS (SELECT 1 FROM users u WHERE u.phone = @phone::text) AS phone_taken;
+  EXISTS (SELECT 1 FROM users u WHERE u.email = @email::text AND NOT u.is_dependant) AS email_taken,
+  EXISTS (SELECT 1 FROM users u WHERE u.phone = @phone::text AND NOT u.is_dependant) AS phone_taken;
 
 -- name: InsertSignup :exec
 INSERT INTO signups (id, first_name, last_name, email, phone, date_of_birth,
@@ -30,4 +30,4 @@ SELECT * FROM signups WHERE id = $1;
 -- A payee by @nemtag or phone (TRF-1). Both columns have unique indexes.
 SELECT id FROM users
 WHERE (sqlc.narg(nemtag)::text IS NOT NULL AND nemtag = sqlc.narg(nemtag))
-   OR (sqlc.narg(phone)::text IS NOT NULL AND phone = sqlc.narg(phone));
+   OR (sqlc.narg(phone)::text IS NOT NULL AND phone = sqlc.narg(phone) AND NOT is_dependant);

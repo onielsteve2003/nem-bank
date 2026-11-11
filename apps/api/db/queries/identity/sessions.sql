@@ -1,8 +1,8 @@
 -- name: GetUserByEmail :one
-SELECT * FROM users WHERE email = $1;
+SELECT * FROM users WHERE email = $1 AND NOT is_dependant;
 
 -- name: GetUserByPhone :one
-SELECT * FROM users WHERE phone = $1;
+SELECT * FROM users WHERE phone = $1 AND NOT is_dependant;
 
 -- name: InsertDevice :one
 INSERT INTO devices (id, user_id, name, platform, public_key, hardware_backed, app_version, cool_off_until)

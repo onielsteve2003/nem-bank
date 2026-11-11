@@ -28,8 +28,8 @@ func (q *Queries) CompleteSignup(ctx context.Context, arg CompleteSignupParams) 
 
 const emailOrPhoneTaken = `-- name: EmailOrPhoneTaken :one
 SELECT
-  EXISTS (SELECT 1 FROM users u WHERE u.email = $1::text) AS email_taken,
-  EXISTS (SELECT 1 FROM users u WHERE u.phone = $2::text) AS phone_taken
+  EXISTS (SELECT 1 FROM users u WHERE u.email = $1::text AND NOT u.is_dependant) AS email_taken,
+  EXISTS (SELECT 1 FROM users u WHERE u.phone = $2::text AND NOT u.is_dependant) AS phone_taken
 `
 
 type EmailOrPhoneTakenParams struct {
@@ -52,7 +52,7 @@ func (q *Queries) EmailOrPhoneTaken(ctx context.Context, arg EmailOrPhoneTakenPa
 const findCustomerByHandle = `-- name: FindCustomerByHandle :one
 SELECT id FROM users
 WHERE ($1::text IS NOT NULL AND nemtag = $1)
-   OR ($2::text IS NOT NULL AND phone = $2)
+   OR ($2::text IS NOT NULL AND phone = $2 AND NOT is_dependant)
 `
 
 type FindCustomerByHandleParams struct {
@@ -119,7 +119,7 @@ func (q *Queries) GetSignupForUpdate(ctx context.Context, id uuid.UUID) (Signup,
 }
 
 const getUser = `-- name: GetUser :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since FROM users WHERE id = $1
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id FROM users WHERE id = $1
 `
 
 func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
@@ -150,6 +150,8 @@ func (q *Queries) GetUser(ctx context.Context, id uuid.UUID) (User, error) {
 		&i.PinLockedUntil,
 		&i.DuressPinHash,
 		&i.DuressSince,
+		&i.IsDependant,
+		&i.GuardianID,
 	)
 	return i, err
 }
@@ -193,7 +195,7 @@ const insertUser = `-- name: InsertUser :one
 INSERT INTO users (id, first_name, last_name, email, phone, date_of_birth, password_hash,
                    terms_version, privacy_version, consent_accepted_at)
 VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
-RETURNING id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since
+RETURNING id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id
 `
 
 type InsertUserParams struct {
@@ -248,6 +250,8 @@ func (q *Queries) InsertUser(ctx context.Context, arg InsertUserParams) (User, e
 		&i.PinLockedUntil,
 		&i.DuressPinHash,
 		&i.DuressSince,
+		&i.IsDependant,
+		&i.GuardianID,
 	)
 	return i, err
 }
