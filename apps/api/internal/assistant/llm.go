@@ -36,10 +36,18 @@ type ToolCall struct {
 	Args json.RawMessage
 }
 
+// Image is a picture sent to a vision-capable model.
+type Image struct {
+	MIME string
+	Data []byte
+}
+
 // Message is one turn sent to a model.
 type Message struct {
 	Role Role
 	Text string
+	// Images ride along with a user turn (the optional ID prefill).
+	Images []Image
 	// Calls are the tool calls an assistant turn made.
 	Calls []ToolCall
 	// CallID and Name tie a tool turn to the call it answers.
@@ -61,6 +69,8 @@ type Request struct {
 	Messages  []Message
 	Tools     []ToolDef
 	MaxTokens int
+	// JSON asks for a single JSON object as the answer (no tools in the same call).
+	JSON bool
 }
 
 // Reply is what the model said: text, tool calls, or both.

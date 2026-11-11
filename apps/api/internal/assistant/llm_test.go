@@ -152,3 +152,49 @@ func TestGatewayFallsBackOnlyBeforeTheCustomerSawText(t *testing.T) {
 		t.Fatal("a gateway with only nil providers is not available")
 	}
 }
+
+func TestAdaptersSendImagesAndAskForJSON(t *testing.T) {
+	t.Parallel()
+	img := Image{MIME: "image/png", Data: []byte("png-bytes")}
+	req := Request{System: "read it", MaxTokens: 100, JSON: true, Messages: []Message{{Role: RoleUser, Text: "go", Images: []Image{img}}}}
+
+	var gBody map[string]any
+	gem := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&gBody)
+		sse(w, `{"candidates":[{"content":{"parts":[{"text":"{}"}]}}]}`)
+	}))
+	defer gem.Close()
+	if _, err := (&Gemini{APIKey: "k", BaseURL: gem.URL, Client: gem.Client()}).Generate(context.Background(), req, nil); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ := json.Marshal(gBody)
+	for _, want := range []string{`"inlineData"`, `"mimeType":"image/png"`, `"data":"cG5nLWJ5dGVz"`, `"responseMimeType":"application/json"`} {
+		if !strings.Contains(string(raw), want) {
+			t.Errorf("gemini request lacks %s: %s", want, raw)
+		}
+	}
+
+	var oBody map[string]any
+	groq := httptest.NewServer(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		_ = json.NewDecoder(r.Body).Decode(&oBody)
+		sse(w, `{"choices":[{"delta":{"content":"{}"}}]}`, `[DONE]`)
+	}))
+	defer groq.Close()
+	g := &Groq{APIKey: "k", BaseURL: groq.URL, Client: groq.Client()}
+	if _, err := g.Generate(context.Background(), req, nil); err != nil {
+		t.Fatal(err)
+	}
+	raw, _ = json.Marshal(oBody)
+	for _, want := range []string{"llama-4-scout", `"image_url"`, "data:image/png;base64,cG5nLWJ5dGVz", `"response_format":{"type":"json_object"}`} {
+		if !strings.Contains(string(raw), want) {
+			t.Errorf("groq request lacks %s: %s", want, raw)
+		}
+	}
+	// A text-only request keeps the text model, and the shared provider is never changed.
+	if _, err := g.Generate(context.Background(), Request{System: "s", Messages: []Message{{Role: RoleUser, Text: "hi"}}}, nil); err != nil {
+		t.Fatal(err)
+	}
+	if raw, _ = json.Marshal(oBody); !strings.Contains(string(raw), "llama-3.3-70b") || g.VisionModel != "" {
+		t.Errorf("text request used the wrong model or mutated the provider: %s", raw)
+	}
+}

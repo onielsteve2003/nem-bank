@@ -35,6 +35,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
@@ -275,6 +276,9 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// ID prefill reads sample IDs only. Photos come from the KYC document store (T30.2); until it
+	// exists there is no source, so the endpoint answers 503 and the customer types their details.
+	prefill := kyc.NewPrefiller(kyc.PrefillConfig{Gateway: assistant.NewGateway(llm...)})
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -319,6 +323,7 @@ func run() error {
 		Scam:               scam.NewAPI(scamSvc),
 		Forecast:           forecast.NewAPI(forecastSvc),
 		Assistant:          assistant.NewAPI(assistantSvc),
+		KYCPrefill:         kyc.NewPrefillAPI(prefill),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})

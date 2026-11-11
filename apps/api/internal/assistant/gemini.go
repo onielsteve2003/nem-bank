@@ -2,6 +2,7 @@ package assistant
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -21,8 +22,14 @@ type Gemini struct {
 // Name implements Provider.
 func (g *Gemini) Name() string { return "gemini" }
 
+type gInline struct {
+	MIMEType string `json:"mimeType"`
+	Data     string `json:"data"`
+}
+
 type gPart struct {
 	Text             string         `json:"text,omitempty"`
+	InlineData       *gInline       `json:"inlineData,omitempty"`
 	FunctionCall     *gFunctionCall `json:"functionCall,omitempty"`
 	FunctionResponse *gFunctionResp `json:"functionResponse,omitempty"`
 }
@@ -58,6 +65,9 @@ func (g *Gemini) Generate(ctx context.Context, req Request, onDelta func(string)
 		"systemInstruction": gContent{Parts: []gPart{{Text: req.System}}},
 		"contents":          geminiContents(req.Messages),
 		"generationConfig":  map[string]any{"maxOutputTokens": req.MaxTokens, "temperature": 0.3},
+	}
+	if req.JSON {
+		body["generationConfig"].(map[string]any)["responseMimeType"] = "application/json"
 	}
 	if len(req.Tools) > 0 {
 		decls := make([]map[string]any, len(req.Tools))
@@ -123,6 +133,9 @@ func geminiContents(msgs []Message) []gContent {
 		switch m.Role {
 		case RoleUser:
 			add("user", gPart{Text: m.Text})
+			for _, img := range m.Images {
+				out[len(out)-1].Parts = append(out[len(out)-1].Parts, gPart{InlineData: &gInline{MIMEType: img.MIME, Data: base64.StdEncoding.EncodeToString(img.Data)}})
+			}
 		case RoleAssistant:
 			c := gContent{Role: "model"}
 			if m.Text != "" {

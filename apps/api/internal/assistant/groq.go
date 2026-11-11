@@ -2,6 +2,7 @@ package assistant
 
 import (
 	"context"
+	"encoding/base64"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -13,8 +14,10 @@ import (
 // is out of quota or down.
 type Groq struct {
 	APIKey string
-	// Model defaults to llama-3.3-70b-versatile.
-	Model string
+	// Model defaults to llama-3.3-70b-versatile; VisionModel to a Llama 4 model that reads
+	// images, used for any request that carries one.
+	Model       string
+	VisionModel string
 	// BaseURL defaults to Groq's endpoint; tests point it at a local server.
 	BaseURL string
 	Client  httpDoer
@@ -25,7 +28,7 @@ func (g *Groq) Name() string { return "groq" }
 
 type oaMessage struct {
 	Role       string       `json:"role"`
-	Content    string       `json:"content,omitempty"`
+	Content    any          `json:"content,omitempty"` // a string, or parts when images ride along
 	ToolCalls  []oaToolCall `json:"tool_calls,omitempty"`
 	ToolCallID string       `json:"tool_call_id,omitempty"`
 }
@@ -56,7 +59,20 @@ func (g *Groq) Generate(ctx context.Context, req Request, onDelta func(string)) 
 	for _, m := range req.Messages {
 		switch m.Role {
 		case RoleUser:
-			msgs = append(msgs, oaMessage{Role: "user", Content: m.Text})
+			if len(m.Images) == 0 {
+				msgs = append(msgs, oaMessage{Role: "user", Content: m.Text})
+				break
+			}
+			parts := []map[string]any{{"type": "text", "text": m.Text}}
+			for _, img := range m.Images {
+				parts = append(parts, map[string]any{"type": "image_url", "image_url": map[string]string{"url": "data:" + img.MIME + ";base64," + base64.StdEncoding.EncodeToString(img.Data)}})
+			}
+			msgs = append(msgs, oaMessage{Role: "user", Content: parts})
+			// A local copy: the provider is shared between requests.
+			model = g.VisionModel
+			if model == "" {
+				model = "meta-llama/llama-4-scout-17b-16e-instruct"
+			}
 		case RoleAssistant:
 			om := oaMessage{Role: "assistant", Content: m.Text}
 			for _, c := range m.Calls {
@@ -70,6 +86,9 @@ func (g *Groq) Generate(ctx context.Context, req Request, onDelta func(string)) 
 		}
 	}
 	body := map[string]any{"model": model, "messages": msgs, "stream": true, "max_tokens": req.MaxTokens, "temperature": 0.3}
+	if req.JSON {
+		body["response_format"] = map[string]string{"type": "json_object"}
+	}
 	if len(req.Tools) > 0 {
 		tools := make([]map[string]any, len(req.Tools))
 		for i, t := range req.Tools {
