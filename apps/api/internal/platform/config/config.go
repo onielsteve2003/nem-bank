@@ -62,6 +62,9 @@ type Config struct {
 
 	// BankPartner carries interbank transfers: "sandbox_nip" (default) or "paystack_test".
 	BankPartner string
+	// RiskMode is what the fraud risk engine does (AI-1): "enforce" (default) stops transfers
+	// it flags, "shadow" scores and records them without stopping any, "off" skips scoring.
+	RiskMode string
 	// PaystackSecretKey is a Paystack test key, required for paystack_test.
 	PaystackSecretKey string
 	// SandboxNIPSecret signs the sandbox rail's callbacks and verifies them on the way in.
@@ -208,6 +211,12 @@ func Load(getenv func(string) string) (Config, error) {
 		}
 	default:
 		errs = append(errs, fmt.Errorf("BANK_PARTNER: %q is not sandbox_nip or paystack_test", cfg.BankPartner))
+	}
+	cfg.RiskMode = get("RISK_MODE", "enforce")
+	switch cfg.RiskMode {
+	case "enforce", "shadow", "off":
+	default:
+		errs = append(errs, fmt.Errorf("RISK_MODE: %q is not enforce, shadow or off", cfg.RiskMode))
 	}
 	cfg.SandboxNIPSecret, err = secretKey(getenv("SANDBOX_NIP_WEBHOOK_SECRET"), cfg.Env, "nem-dev-sandbox-nip-webhook")
 	if err != nil {

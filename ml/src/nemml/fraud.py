@@ -118,6 +118,14 @@ def run(cfg: DatasetConfig | None = None, out_dir: Path | None = None) -> dict:
     )
     best_iteration = int(booster.best_iteration)
     booster.save_model(str(out / "model.txt"), num_iteration=best_iteration)
+    # `leaves` (the pure-Go scorer) reads the v3 text format. LightGBM 4 writes "version=v4" for
+    # the same trees when there are no categorical features, so the header is the only change;
+    # the Go golden test (apps/api/internal/risk) proves the scores are identical.
+    model_path = out / "model.txt"
+    with open(model_path, newline="") as fh:
+        text = fh.read()
+    with open(model_path, "w", newline="") as fh:
+        fh.write(text.replace("version=v4", "version=v3", 1))
 
     # Scores. The rules baseline is scaled to 0-1 only so the two read alike.
     model_score = {k: booster.predict(x[k], num_iteration=best_iteration) for k in x}

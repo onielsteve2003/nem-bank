@@ -30,6 +30,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/pagination"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/risk"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/transfersdb"
 )
@@ -110,6 +111,8 @@ type Config struct {
 	Limits *limits.Service
 	// StepUps spends the step-up that skips a cooling-off; nil means none is ever valid.
 	StepUps limits.StepUps
+	// Risk scores every transfer before it goes (AI-1); nil means no risk checks.
+	Risk *risk.Service
 	// QRKey signs receive QR payloads (at least 32 bytes); nil makes a random one, so codes
 	// only verify in the process that made them (tests).
 	QRKey []byte
@@ -138,6 +141,7 @@ type Service struct {
 	customers Customers
 	limits    *limits.Service
 	stepUps   limits.StepUps
+	risk      *risk.Service
 	qrKey     []byte
 	partner   partners.BankPartner
 	sandbox   *partners.SandboxNIP
@@ -196,7 +200,7 @@ func NewService(cfg Config) (*Service, error) {
 	}
 	return &Service{
 		pool: cfg.Pool, q: transfersdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers,
-		limits: cfg.Limits, stepUps: cfg.StepUps, qrKey: cfg.QRKey, partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
+		limits: cfg.Limits, stepUps: cfg.StepUps, risk: cfg.Risk, qrKey: cfg.QRKey, partner: cfg.Partner, sandbox: cfg.Sandbox, secrets: cfg.WebhookSecrets, insert: insert,
 		log: cfg.Logger, now: cfg.Now, sagaTimeout: cfg.SagaTimeout, pollAfter: cfg.PollAfter,
 	}, nil
 }

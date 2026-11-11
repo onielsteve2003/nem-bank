@@ -166,3 +166,7 @@ JOIN transfer_events e ON e.transfer_id = t.id AND e.status = 'completed'
 WHERE t.rail = 'interbank' AND t.partner = @partner AND t.status = 'completed'
   AND e.at >= @from_at AND e.at < @to_at
 ORDER BY e.at, t.reference;
+
+-- name: SetTransferRisk :exec
+-- The assessment the customer and staff see on the transfer (contract RiskAssessment).
+UPDATE transfers SET risk = @risk, updated_at = clock_timestamp() WHERE id = @id;

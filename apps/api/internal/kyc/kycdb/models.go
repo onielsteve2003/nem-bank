@@ -497,6 +497,28 @@ type RefreshToken struct {
 	UsedAt    pgtype.Timestamptz
 }
 
+type RiskAssessment struct {
+	TransferID     uuid.UUID
+	UserID         uuid.UUID
+	DeviceID       pgtype.UUID
+	BeneficiaryKey string
+	Mode           string
+	ModelVersion   string
+	ModelUsed      bool
+	Score          float64
+	RulesScore     float64
+	Decision       string
+	Enforced       string
+	Reasons        []byte
+	Features       []byte
+	DurationUs     int64
+	Label          *string
+	LabeledBy      pgtype.UUID
+	LabeledAt      pgtype.Timestamptz
+	LabelNote      *string
+	CreatedAt      time.Time
+}
+
 type RoundUp struct {
 	ID          uuid.UUID
 	UserID      uuid.UUID

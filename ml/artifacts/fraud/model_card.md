@@ -63,4 +63,4 @@ Thresholds are chosen on validation data, then applied unchanged to the test set
 ## Safety
 A `hold` never rejects money silently: the customer sees why and staff can release it. The risk engine (T29.3) combines model and rules so the model can only add friction (step-up or hold); it cannot approve something the rules would block.
 
-Model file SHA-256: `6ce25de069b3075b8dc32bd0989fc5ebf1479995690fcdd9ed1cac95418cbaee`.
+Model file SHA-256: `780436df52d7ced62768b03f5c9945946718ef1443b43bfdc7bd9abdece21cac`.

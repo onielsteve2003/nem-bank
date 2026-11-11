@@ -1,0 +1,755 @@
+{
+ "tolerance": 1e-06,
+ "cases": [
+  {
+   "features": {
+    "log_amount": 10.292179,
+    "amount_zscore": null,
+    "amount_to_balance": 0.190605,
+    "velocity_1h": 3.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 2.0,
+    "account_age_days": 5.536061,
+    "prior_count": 3.0
+   },
+   "score": 0.99289178
+  },
+  {
+   "features": {
+    "log_amount": 9.21416,
+    "amount_zscore": 1.481672,
+    "amount_to_balance": 0.160545,
+    "velocity_1h": 4.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 1.0,
+    "account_age_days": 1288.789939,
+    "prior_count": 26.0
+   },
+   "score": 0.9748649
+  },
+  {
+   "features": {
+    "log_amount": 11.963286,
+    "amount_zscore": 2.588668,
+    "amount_to_balance": 0.131607,
+    "velocity_1h": 2.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 0.0,
+    "account_age_days": 80.1713,
+    "prior_count": 49.0
+   },
+   "score": 0.04862302
+  },
+  {
+   "features": {
+    "log_amount": 10.123771,
+    "amount_zscore": -0.062958,
+    "amount_to_balance": 0.146631,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 1.0,
+    "new_device": 1.0,
+    "hour_of_day": 6.0,
+    "account_age_days": 1061.400236,
+    "prior_count": 44.0
+   },
+   "score": 0.02812516
+  },
+  {
+   "features": {
+    "log_amount": 10.123771,
+    "amount_zscore": -0.061569,
+    "amount_to_balance": 0.146631,
+    "velocity_1h": 2.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 7.0,
+    "account_age_days": 1061.420507,
+    "prior_count": 46.0
+   },
+   "score": 0.49756866
+  },
+  {
+   "features": {
+    "log_amount": 9.210428,
+    "amount_zscore": 0.93813,
+    "amount_to_balance": 0.082766,
+    "velocity_1h": 3.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 14.0,
+    "account_age_days": 817.341328,
+    "prior_count": 22.0
+   },
+   "score": 0.93782911
+  },
+  {
+   "features": {
+    "log_amount": 10.550617,
+    "amount_zscore": null,
+    "amount_to_balance": 0.097412,
+    "velocity_1h": 2.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 3.0,
+    "account_age_days": 5.014537,
+    "prior_count": 2.0
+   },
+   "score": 0.99264747
+  },
+  {
+   "features": {
+    "log_amount": 12.752878,
+    "amount_zscore": 4.701096,
+    "amount_to_balance": 0.94574,
+    "velocity_1h": 0.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": null,
+    "hour_of_day": 0.0,
+    "account_age_days": null,
+    "prior_count": 50.0
+   },
+   "score": 0.80296425
+  },
+  {
+   "features": {
+    "log_amount": 8.867991,
+    "amount_zscore": null,
+    "amount_to_balance": 0.069106,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 4.0,
+    "account_age_days": 84.681038,
+    "prior_count": 0.0
+   },
+   "score": 0.40462415
+  },
+  {
+   "features": {
+    "log_amount": 10.509053,
+    "amount_zscore": 5.560545,
+    "amount_to_balance": 0.267992,
+    "velocity_1h": 0.0,
+    "velocity_24h": 1.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 19.0,
+    "account_age_days": 1368.627729,
+    "prior_count": 85.0
+   },
+   "score": 0.1295416
+  },
+  {
+   "features": {
+    "log_amount": 9.21044,
+    "amount_zscore": null,
+    "amount_to_balance": 0.097333,
+    "velocity_1h": 3.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 5.0,
+    "account_age_days": 84.699821,
+    "prior_count": 3.0
+   },
+   "score": 0.929816
+  },
+  {
+   "features": {
+    "log_amount": 9.961804,
+    "amount_zscore": null,
+    "amount_to_balance": 0.116101,
+    "velocity_1h": 2.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 6.0,
+    "account_age_days": 8.873471,
+    "prior_count": 2.0
+   },
+   "score": 0.99298361
+  },
+  {
+   "features": {
+    "log_amount": 8.879272,
+    "amount_zscore": 2.843387,
+    "amount_to_balance": 0.146912,
+    "velocity_1h": 1.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 6.0,
+    "account_age_days": 1320.084357,
+    "prior_count": 34.0
+   },
+   "score": 0.11850538
+  },
+  {
+   "features": {
+    "log_amount": 9.465991,
+    "amount_zscore": 3.468755,
+    "amount_to_balance": 0.301609,
+    "velocity_1h": 1.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 15.0,
+    "account_age_days": 507.267833,
+    "prior_count": 78.0
+   },
+   "score": 0.25805105
+  },
+  {
+   "features": {
+    "log_amount": 10.437519,
+    "amount_zscore": 2.569839,
+    "amount_to_balance": 0.050425,
+    "velocity_1h": 1.0,
+    "velocity_24h": 1.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 11.0,
+    "account_age_days": 2062.753544,
+    "prior_count": 78.0
+   },
+   "score": 0.02549053
+  },
+  {
+   "features": {
+    "log_amount": 11.077532,
+    "amount_zscore": null,
+    "amount_to_balance": 0.12879,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 18.0,
+    "account_age_days": 10.953316,
+    "prior_count": 0.0
+   },
+   "score": 0.99063955
+  },
+  {
+   "features": {
+    "log_amount": 12.351652,
+    "amount_zscore": null,
+    "amount_to_balance": 1.0,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 1.0,
+    "new_device": null,
+    "hour_of_day": 0.0,
+    "account_age_days": null,
+    "prior_count": 0.0
+   },
+   "score": 0.95456446
+  },
+  {
+   "features": {
+    "log_amount": 11.293537,
+    "amount_zscore": 0.288991,
+    "amount_to_balance": 0.117989,
+    "velocity_1h": 4.0,
+    "velocity_24h": 7.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 17.0,
+    "account_age_days": 107.3241,
+    "prior_count": 7.0
+   },
+   "score": 0.8957111
+  },
+  {
+   "features": {
+    "log_amount": 9.581973,
+    "amount_zscore": null,
+    "amount_to_balance": 0.122622,
+    "velocity_1h": 2.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 22.0,
+    "account_age_days": 8.364495,
+    "prior_count": 2.0
+   },
+   "score": 0.99224903
+  },
+  {
+   "features": {
+    "log_amount": 9.881505,
+    "amount_zscore": 2.629556,
+    "amount_to_balance": 0.404011,
+    "velocity_1h": 1.0,
+    "velocity_24h": 1.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 1.0,
+    "account_age_days": 550.850813,
+    "prior_count": 52.0
+   },
+   "score": 0.77849139
+  },
+  {
+   "features": {
+    "log_amount": 9.041621,
+    "amount_zscore": 1.734694,
+    "amount_to_balance": 0.14928,
+    "velocity_1h": 1.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 4.0,
+    "account_age_days": 490.178418,
+    "prior_count": 120.0
+   },
+   "score": 0.82588689
+  },
+  {
+   "features": {
+    "log_amount": 9.305741,
+    "amount_zscore": -0.203756,
+    "amount_to_balance": 0.088574,
+    "velocity_1h": 5.0,
+    "velocity_24h": 6.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 18.0,
+    "account_age_days": 84.190322,
+    "prior_count": 6.0
+   },
+   "score": 0.9792707
+  },
+  {
+   "features": {
+    "log_amount": 10.215655,
+    "amount_zscore": 1.395251,
+    "amount_to_balance": 0.236765,
+    "velocity_1h": 2.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 3.0,
+    "account_age_days": 1487.010461,
+    "prior_count": 57.0
+   },
+   "score": 0.97686198
+  },
+  {
+   "features": {
+    "log_amount": 11.600945,
+    "amount_zscore": null,
+    "amount_to_balance": 0.160454,
+    "velocity_1h": 3.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 16.0,
+    "account_age_days": 107.287612,
+    "prior_count": 3.0
+   },
+   "score": 0.98153031
+  },
+  {
+   "features": {
+    "log_amount": 10.257694,
+    "amount_zscore": null,
+    "amount_to_balance": 0.091616,
+    "velocity_1h": 3.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 1.0,
+    "new_device": 0.0,
+    "hour_of_day": 14.0,
+    "account_age_days": 7.752223,
+    "prior_count": 3.0
+   },
+   "score": 0.99306158
+  },
+  {
+   "features": {
+    "log_amount": 7.69609,
+    "amount_zscore": -1.579114,
+    "amount_to_balance": 0.041721,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 17.0,
+    "account_age_days": null,
+    "prior_count": 15.0
+   },
+   "score": 0.00011652
+  },
+  {
+   "features": {
+    "log_amount": 9.071999,
+    "amount_zscore": 0.014825,
+    "amount_to_balance": 0.054373,
+    "velocity_1h": 1.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 9.0,
+    "account_age_days": 962.084891,
+    "prior_count": 168.0
+   },
+   "score": 0.00012919
+  },
+  {
+   "features": {
+    "log_amount": 9.131864,
+    "amount_zscore": 0.685363,
+    "amount_to_balance": 0.050268,
+    "velocity_1h": 0.0,
+    "velocity_24h": 1.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 1.0,
+    "account_age_days": null,
+    "prior_count": 39.0
+   },
+   "score": 0.00011917
+  },
+  {
+   "features": {
+    "log_amount": 9.565095,
+    "amount_zscore": 1.1567,
+    "amount_to_balance": 0.269784,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 13.0,
+    "account_age_days": 94.144664,
+    "prior_count": 89.0
+   },
+   "score": 0.00012177
+  },
+  {
+   "features": {
+    "log_amount": 10.05442,
+    "amount_zscore": 0.687934,
+    "amount_to_balance": 0.090584,
+    "velocity_1h": 0.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 11.0,
+    "account_age_days": null,
+    "prior_count": 124.0
+   },
+   "score": 0.00011925
+  },
+  {
+   "features": {
+    "log_amount": 8.040754,
+    "amount_zscore": -0.333392,
+    "amount_to_balance": 0.014165,
+    "velocity_1h": 0.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 3.0,
+    "account_age_days": null,
+    "prior_count": 79.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 9.73061,
+    "amount_zscore": 0.609997,
+    "amount_to_balance": 0.058545,
+    "velocity_1h": 0.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 18.0,
+    "account_age_days": 525.936828,
+    "prior_count": 131.0
+   },
+   "score": 0.00011957
+  },
+  {
+   "features": {
+    "log_amount": 11.497835,
+    "amount_zscore": 1.477243,
+    "amount_to_balance": 0.129466,
+    "velocity_1h": 1.0,
+    "velocity_24h": 5.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 10.0,
+    "account_age_days": null,
+    "prior_count": 124.0
+   },
+   "score": 0.00013064
+  },
+  {
+   "features": {
+    "log_amount": 9.521908,
+    "amount_zscore": -0.350895,
+    "amount_to_balance": 0.058659,
+    "velocity_1h": 0.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 12.0,
+    "account_age_days": 1224.037274,
+    "prior_count": 257.0
+   },
+   "score": 0.00011957
+  },
+  {
+   "features": {
+    "log_amount": 8.015083,
+    "amount_zscore": -1.105229,
+    "amount_to_balance": 0.02944,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": 1.0,
+    "hour_of_day": 2.0,
+    "account_age_days": 401.94426,
+    "prior_count": 55.0
+   },
+   "score": 0.00012129
+  },
+  {
+   "features": {
+    "log_amount": 9.870932,
+    "amount_zscore": -0.769862,
+    "amount_to_balance": 0.075093,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 22.0,
+    "account_age_days": null,
+    "prior_count": 69.0
+   },
+   "score": 0.00011925
+  },
+  {
+   "features": {
+    "log_amount": 8.204259,
+    "amount_zscore": 1.189452,
+    "amount_to_balance": 0.051526,
+    "velocity_1h": 0.0,
+    "velocity_24h": 2.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 22.0,
+    "account_age_days": 385.891266,
+    "prior_count": 85.0
+   },
+   "score": 0.00011839
+  },
+  {
+   "features": {
+    "log_amount": 9.147506,
+    "amount_zscore": 0.45609,
+    "amount_to_balance": 0.13387,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 19.0,
+    "account_age_days": null,
+    "prior_count": 16.0
+   },
+   "score": 0.00011925
+  },
+  {
+   "features": {
+    "log_amount": 8.098085,
+    "amount_zscore": -1.189908,
+    "amount_to_balance": 0.01414,
+    "velocity_1h": 0.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 18.0,
+    "account_age_days": null,
+    "prior_count": 105.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 8.201287,
+    "amount_zscore": -0.407647,
+    "amount_to_balance": 0.009404,
+    "velocity_1h": 0.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 15.0,
+    "account_age_days": 93.554524,
+    "prior_count": 99.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 8.990597,
+    "amount_zscore": 0.201952,
+    "amount_to_balance": 0.036292,
+    "velocity_1h": 0.0,
+    "velocity_24h": 12.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 0.0,
+    "account_age_days": null,
+    "prior_count": 242.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 8.712394,
+    "amount_zscore": -0.362243,
+    "amount_to_balance": 0.065305,
+    "velocity_1h": 1.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 23.0,
+    "account_age_days": null,
+    "prior_count": 36.0
+   },
+   "score": 0.00012474
+  },
+  {
+   "features": {
+    "log_amount": 8.060674,
+    "amount_zscore": 0.22434,
+    "amount_to_balance": 0.026414,
+    "velocity_1h": 0.0,
+    "velocity_24h": 3.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 9.0,
+    "account_age_days": null,
+    "prior_count": 81.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 8.684424,
+    "amount_zscore": -0.780981,
+    "amount_to_balance": 0.02008,
+    "velocity_1h": 1.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 19.0,
+    "account_age_days": null,
+    "prior_count": 97.0
+   },
+   "score": 0.00012247
+  },
+  {
+   "features": {
+    "log_amount": 9.371473,
+    "amount_zscore": 0.780245,
+    "amount_to_balance": 0.22344,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 10.0,
+    "account_age_days": 97.778929,
+    "prior_count": 87.0
+   },
+   "score": 0.00012177
+  },
+  {
+   "features": {
+    "log_amount": 8.393937,
+    "amount_zscore": -0.809845,
+    "amount_to_balance": 0.064847,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 8.0,
+    "account_age_days": null,
+    "prior_count": 63.0
+   },
+   "score": 0.00011769
+  },
+  {
+   "features": {
+    "log_amount": 5.472313,
+    "amount_zscore": -2.098762,
+    "amount_to_balance": 0.007613,
+    "velocity_1h": 0.0,
+    "velocity_24h": 0.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 13.0,
+    "account_age_days": 680.148246,
+    "prior_count": 97.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 11.134798,
+    "amount_zscore": 1.083803,
+    "amount_to_balance": 0.162483,
+    "velocity_1h": 0.0,
+    "velocity_24h": 4.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 13.0,
+    "account_age_days": null,
+    "prior_count": 108.0
+   },
+   "score": 0.00012049
+  },
+  {
+   "features": {
+    "log_amount": 8.168251,
+    "amount_zscore": 0.037048,
+    "amount_to_balance": 0.036198,
+    "velocity_1h": 0.0,
+    "velocity_24h": 1.0,
+    "new_beneficiary": 0.0,
+    "new_device": 0.0,
+    "hour_of_day": 8.0,
+    "account_age_days": 1188.155053,
+    "prior_count": 83.0
+   },
+   "score": 0.00011627
+  },
+  {
+   "features": {
+    "log_amount": 8.185531,
+    "amount_zscore": -1.345388,
+    "amount_to_balance": 0.012979,
+    "velocity_1h": 0.0,
+    "velocity_24h": 1.0,
+    "new_beneficiary": 0.0,
+    "new_device": null,
+    "hour_of_day": 16.0,
+    "account_age_days": null,
+    "prior_count": 49.0
+   },
+   "score": 0.00011627
+  }
+ ]
+}

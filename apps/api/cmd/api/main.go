@@ -39,6 +39,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/risk"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
@@ -166,7 +167,14 @@ func run() error {
 	// secret has to be provisioned and neither key reveals the other.
 	qrMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
 	qrMAC.Write([]byte("nem receive-qr signing key v1"))
+	var riskSvc *risk.Service
+	if cfg.RiskMode != "off" {
+		if riskSvc, err = risk.NewService(risk.Config{Mode: risk.Mode(cfg.RiskMode), Logger: log}); err != nil {
+			return err
+		}
+	}
 	transfersSvc, err = transfers.NewService(transfers.Config{
+		Risk:  riskSvc,
 		QRKey: qrMAC.Sum(nil),
 		Pool:  pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, StepUps: identitySvc, Partner: partner, Sandbox: sandbox, Logger: log,
 		WebhookSecrets: map[string][]byte{sandbox.Name(): cfg.SandboxNIPSecret},

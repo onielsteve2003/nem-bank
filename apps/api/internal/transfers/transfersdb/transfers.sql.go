@@ -1130,6 +1130,21 @@ func (q *Queries) SetTransferReversal(ctx context.Context, arg SetTransferRevers
 	return err
 }
 
+const setTransferRisk = `-- name: SetTransferRisk :exec
+UPDATE transfers SET risk = $1, updated_at = clock_timestamp() WHERE id = $2
+`
+
+type SetTransferRiskParams struct {
+	Risk []byte
+	ID   uuid.UUID
+}
+
+// The assessment the customer and staff see on the transfer (contract RiskAssessment).
+func (q *Queries) SetTransferRisk(ctx context.Context, arg SetTransferRiskParams) error {
+	_, err := q.db.Exec(ctx, setTransferRisk, arg.Risk, arg.ID)
+	return err
+}
+
 const setTransferStatus = `-- name: SetTransferStatus :one
 UPDATE transfers
 SET status = $1, entry_id = coalesce($2, entry_id), updated_at = clock_timestamp()

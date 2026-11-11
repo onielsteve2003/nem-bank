@@ -22,6 +22,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/risk"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/transfersdb"
 )
 
@@ -198,11 +199,27 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 func (s *Service) commit(ctx context.Context, tx pgx.Tx, pl plan) (uuid.UUID, error) {
 	q := s.q.WithTx(tx)
 	delay := pl.coolingOff
-	if delay && pl.req.StepUpToken != "" && s.stepUps != nil {
+	// Risk scoring (AI-1). A duress look-alike moves nothing, so it is never scored (scoring
+	// it would only record that the customer was being watched).
+	gate := risk.Allow
+	var scored *risk.Result
+	if s.risk != nil && !pl.sender.InDuress {
+		r, err := s.assess(ctx, tx, pl)
+		if err != nil {
+			return uuid.Nil, err
+		}
+		scored, gate = &r, r.Enforced
+	}
+	if pl.req.StepUpToken != "" && s.stepUps != nil && (delay || gate == risk.StepUp) {
 		err := s.stepUps.ConsumeStepUp(ctx, tx, pl.userID, StepUpPurpose, pl.req.StepUpToken)
 		switch {
 		case err == nil:
+			// One confirmation answers both the cooling-off and a risk step-up. It cannot
+			// answer a hold: that waits for a person.
 			delay = false
+			if gate == risk.StepUp {
+				gate = risk.Allow
+			}
 		case !errors.Is(err, identity.ErrStepUpRequired):
 			return uuid.Nil, err
 		}
@@ -264,9 +281,12 @@ func (s *Service) commit(ctx context.Context, tx pgx.Tx, pl plan) (uuid.UUID, er
 		in.BankCode, in.AccountNumber = &dest.bank.Code, &dest.account.AccountNumber
 	}
 	// The money (and fee) is set aside while it waits: for the partner, or the cooling-off.
-	if !pl.sender.InDuress && (!dest.internal() || delay) {
+	if !pl.sender.InDuress && (!dest.internal() || delay || gate != risk.Allow) {
 		reason := "pending_transfer"
-		if delay {
+		switch {
+		case gate == risk.Hold:
+			reason = "fraud_review"
+		case delay:
 			reason = "delayed_transfer"
 		}
 		hold, err := ledger.PlaceHold(ctx, tx, ledger.Hold{Account: pl.src.AccountID, Amount: pl.total, Reference: id.String(), Reason: reason})
@@ -289,8 +309,22 @@ func (s *Service) commit(ctx context.Context, tx pgx.Tx, pl plan) (uuid.UUID, er
 	if err := event(ctx, q, id, Created, "Transfer created", nil); err != nil {
 		return uuid.Nil, err
 	}
-	// Risk scoring arrives with the fraud model (M29); every check before this point
-	// (ownership, currency, account state, recipient, limits) is what "checked" means today.
+	var riskNote *string // the first reason, shown on the timeline when the risk check stops the transfer
+	if scored != nil {
+		if err := s.risk.Record(ctx, tx, id, *scored); err != nil {
+			return uuid.Nil, err
+		}
+		contract, err := scored.Contract()
+		if err != nil {
+			return uuid.Nil, fmt.Errorf("risk json: %w", err)
+		}
+		if err := q.SetTransferRisk(ctx, transfersdb.SetTransferRiskParams{ID: id, Risk: contract}); err != nil {
+			return uuid.Nil, fmt.Errorf("set transfer risk: %w", err)
+		}
+		if len(scored.Reasons) > 0 {
+			riskNote = &scored.Reasons[0].Message
+		}
+	}
 	if t, err = s.move(ctx, q, t, RiskChecked, "Security checks done", nil, nil); err != nil {
 		return uuid.Nil, err
 	}
@@ -308,6 +342,16 @@ func (s *Service) commit(ctx context.Context, tx pgx.Tx, pl plan) (uuid.UUID, er
 		}
 		_, err = s.move(ctx, q, t, Processing, "Sent to "+dest.party.BankName, nil, nil)
 		return id, err
+	case gate == risk.Hold:
+		if _, err := s.move(ctx, q, t, HeldForReview, "Held for a quick review", riskNote, nil); err != nil {
+			return uuid.Nil, err
+		}
+		return id, nil
+	case gate == risk.StepUp:
+		if _, err := s.move(ctx, q, t, PendingStepUp, "Waiting for you to confirm it is you", riskNote, nil); err != nil {
+			return uuid.Nil, err
+		}
+		return id, nil
 	case delay:
 		minutes := int(s.limits.Rules().CoolingOffDelay / time.Minute)
 		detail := "Confirm with your PIN or OTP to send it now, or cancel it before then."
@@ -321,6 +365,30 @@ func (s *Service) commit(ctx context.Context, tx pgx.Tx, pl plan) (uuid.UUID, er
 	default:
 		return id, s.proceed(ctx, tx, t, pl.land)
 	}
+}
+
+// assess scores a planned transfer on the transaction that will create it.
+func (s *Service) assess(ctx context.Context, tx pgx.Tx, pl plan) (risk.Result, error) {
+	bal, err := ledger.GetBalances(ctx, tx, pl.src.AccountID)
+	if err != nil {
+		return risk.Result{}, fmt.Errorf("risk balance: %w", err)
+	}
+	in := risk.Input{
+		UserID: pl.userID, BeneficiaryKey: beneficiaryKey(pl.dest), AmountMinor: pl.req.Amount.Amount(),
+		BalanceMinor: bal.Ledger.Amount(),
+	}
+	if p, ok := identity.PrincipalFrom(ctx); ok && p.UserID == pl.userID {
+		in.DeviceID = p.DeviceID
+	}
+	return s.risk.Evaluate(ctx, tx, in)
+}
+
+// beneficiaryKey names who is paid, the same whether or not they were saved.
+func beneficiaryKey(d target) string {
+	if d.internal() {
+		return "nem:" + d.nem.AccountID.String()
+	}
+	return "bank:" + d.bank.Code + ":" + d.account.AccountNumber
 }
 
 // proceed moves the money of a transfer that may go now: instantly on the internal rail,

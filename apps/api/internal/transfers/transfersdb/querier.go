@@ -73,6 +73,8 @@ type Querier interface {
 	SetSagaDeadline(ctx context.Context, arg SetSagaDeadlineParams) error
 	SetTransferBeneficiary(ctx context.Context, arg SetTransferBeneficiaryParams) error
 	SetTransferReversal(ctx context.Context, arg SetTransferReversalParams) error
+	// The assessment the customer and staff see on the transfer (contract RiskAssessment).
+	SetTransferRisk(ctx context.Context, arg SetTransferRiskParams) error
 	// Moves a transfer on from the state the caller saw. The transition trigger refuses an
 	// illegal move; the status guard turns a lost race into no row instead of a double move.
 	SetTransferStatus(ctx context.Context, arg SetTransferStatusParams) (Transfer, error)
