@@ -732,6 +732,25 @@ type PreparedAction struct {
 	UpdatedAt      time.Time
 }
 
+type PrivacyExport struct {
+	RequestID  uuid.UUID
+	UserID     uuid.UUID
+	Ciphertext []byte
+	CreatedAt  time.Time
+	ExpiresAt  time.Time
+}
+
+type PrivacyRequest struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	Kind            string
+	Status          string
+	RequestedAt     time.Time
+	CompletesBy     time.Time
+	CompletedAt     *time.Time
+	RejectionReason pgtype.Text
+}
+
 type PushToken struct {
 	DeviceID      uuid.UUID
 	UserID        uuid.UUID
@@ -1080,6 +1099,7 @@ type User struct {
 	GuardianID        *uuid.UUID
 	FrozenAt          *time.Time
 	FrozenReason      pgtype.Text
+	DeletedAt         *time.Time
 }
 
 type WebhookDelivery struct {

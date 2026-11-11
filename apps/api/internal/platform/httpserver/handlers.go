@@ -28,6 +28,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/privacy"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/scam"
@@ -43,6 +44,7 @@ type handlers struct {
 	*adminAPI
 	*consoleAPI
 	*developerAPI
+	*privacyAPI
 	*accountsAPI
 	*transfersAPI
 	*limitsAPI
@@ -73,6 +75,7 @@ type (
 	adminAPI     = admin.API
 	consoleAPI   = console.API
 	developerAPI = developer.API
+	privacyAPI   = privacy.API
 	accountsAPI  = accounts.API
 	transfersAPI = transfers.API
 	limitsAPI    = limits.API

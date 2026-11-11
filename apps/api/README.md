@@ -113,6 +113,7 @@ The API refuses to start on a bad value and lists every problem at once.
 | `PAYSTACK_SECRET_KEY` | empty | Paystack **test** key (`sk_test_…`), required for `paystack_test`. A live key is refused |
 | `SANDBOX_NIP_WEBHOOK_SECRET` | fixed dev key | Base64, 32+ bytes: HMAC secret the sandbox signs callbacks with and the partner webhook verifies. Required in production |
 | `SANDBOX_NIP_CALLBACK_URL` | loopback | Where the sandbox posts callbacks; default `http://127.0.0.1:$PORT/v1/partner-webhooks/sandbox_nip` |
+| `PUBLIC_URL` | `http://127.0.0.1:$PORT` | Where this API is reachable from outside; emails use it for links (the data export download). Set it in production |
 
 ## Database
 

@@ -49,6 +49,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/privacy"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/risk"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
@@ -359,6 +360,17 @@ func run() error {
 		return err
 	}
 
+	// Data export and account deletion. Download links are signed with a key derived from the token
+	// signing seed under its own label, like the other link keys.
+	privacyMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
+	privacyMAC.Write([]byte("nem privacy export link signing key v1"))
+	privacySvc, err := privacy.NewService(privacy.Config{
+		Pool: pool, Keyring: keyring, Mailer: mail, StepUps: identitySvc, PublicURL: cfg.PublicURL, LinkKey: privacyMAC.Sum(nil), Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+
 	idem := idempotency.NewStore(pool)
 
 	metrics := observability.NewMetrics()
@@ -398,6 +410,7 @@ func run() error {
 		Admin:              admin.NewAPI(adminSvc),
 		Console:            console.NewAPI(consoleSvc),
 		Developer:          developer.NewAPI(developerSvc),
+		Privacy:            privacy.NewAPI(privacySvc),
 		KeyAuthenticator:   developerSvc,
 		StaffAuthenticator: adminSvc,
 	})
@@ -410,8 +423,8 @@ func run() error {
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub), supportSvc.RealtimeSubscriber(hub), developerSvc.Subscriber()},
-		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register, familySvc.Register, developerSvc.Register},
+		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune, privacySvc.Prune},
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register, familySvc.Register, developerSvc.Register, privacySvc.Register},
 		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs(), familySvc.PeriodicJobs()),
 	})
 	if err != nil {

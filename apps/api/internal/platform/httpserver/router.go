@@ -29,6 +29,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/privacy"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/scam"
@@ -104,6 +105,8 @@ type Options struct {
 	KeyAuthenticator Authenticator
 	// Developer serves API keys, webhooks and the sandbox payer; nil answers 501.
 	Developer *developer.API
+	// Privacy serves data export and account deletion; nil answers 501 and 404 for download links.
+	Privacy *privacy.API
 	// Console serves the staff console's customer, queue, ledger, configuration and audit
 	// operations; nil answers 501 for them and 404 for KYC photo links.
 	Console *console.API
@@ -198,6 +201,10 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	// The public API reference and the contract it renders (DEV-4).
 	r.GET(developer.DocsPath, lim.byAddress(), developer.DocsHandler)
 	r.GET(developer.SpecPath, lim.byAddress(), developer.SpecHandler)
+	if opts.Privacy != nil {
+		// One-time export links: the signature is the credential.
+		r.GET(privacy.DownloadPath, lim.byAddress(), opts.Privacy.DownloadHandler)
+	}
 	if opts.Console != nil {
 		// Signed KYC photo links, like attachment links: the signature is the credential.
 		r.GET(console.DocumentsPath, lim.byAddress(), opts.Console.DocumentsHandler)
@@ -205,7 +212,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, developerAPI: opts.Developer, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, developerAPI: opts.Developer, privacyAPI: opts.Privacy, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

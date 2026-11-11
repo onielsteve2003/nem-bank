@@ -104,7 +104,7 @@ func (q *Queries) GetSession(ctx context.Context, id uuid.UUID) (Session, error)
 }
 
 const getUserByEmail = `-- name: GetUserByEmail :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id, frozen_at, frozen_reason FROM users WHERE email = $1 AND NOT is_dependant
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id, frozen_at, frozen_reason, deleted_at FROM users WHERE email = $1 AND NOT is_dependant
 `
 
 func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error) {
@@ -139,12 +139,13 @@ func (q *Queries) GetUserByEmail(ctx context.Context, email string) (User, error
 		&i.GuardianID,
 		&i.FrozenAt,
 		&i.FrozenReason,
+		&i.DeletedAt,
 	)
 	return i, err
 }
 
 const getUserByPhone = `-- name: GetUserByPhone :one
-SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id, frozen_at, frozen_reason FROM users WHERE phone = $1 AND NOT is_dependant
+SELECT id, first_name, last_name, preferred_name, email, phone, date_of_birth, nemtag, nemtag_changed_at, password_hash, kyc_tier, kyc_status, is_demo, terms_version, privacy_version, consent_accepted_at, created_at, updated_at, pin_hash, pin_failures, pin_lockouts, pin_locked_until, duress_pin_hash, duress_since, is_dependant, guardian_id, frozen_at, frozen_reason, deleted_at FROM users WHERE phone = $1 AND NOT is_dependant
 `
 
 func (q *Queries) GetUserByPhone(ctx context.Context, phone string) (User, error) {
@@ -179,6 +180,7 @@ func (q *Queries) GetUserByPhone(ctx context.Context, phone string) (User, error
 		&i.GuardianID,
 		&i.FrozenAt,
 		&i.FrozenReason,
+		&i.DeletedAt,
 	)
 	return i, err
 }

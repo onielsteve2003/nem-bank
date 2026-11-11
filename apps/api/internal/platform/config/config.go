@@ -82,6 +82,10 @@ type Config struct {
 	// SandboxNIPCallbackURL is where the sandbox calls back; default this process over
 	// loopback, so callbacks never leave the container.
 	SandboxNIPCallbackURL string
+
+	// PublicURL is where this API is reachable from outside ("https://api.example.com"). Emails
+	// use it to build links, such as the data export download.
+	PublicURL string
 }
 
 // devOrigins are the Expo web dev server and the console's Vite dev server.
@@ -240,6 +244,7 @@ func Load(getenv func(string) string) (Config, error) {
 	if err != nil {
 		errs = append(errs, fmt.Errorf("SANDBOX_NIP_WEBHOOK_SECRET: %w", err))
 	}
+	cfg.PublicURL = strings.TrimRight(get("PUBLIC_URL", "http://127.0.0.1:"+strconv.Itoa(cfg.Port)), "/")
 	cfg.SandboxNIPCallbackURL = get("SANDBOX_NIP_CALLBACK_URL", "http://127.0.0.1:"+strconv.Itoa(cfg.Port)+"/v1/partner-webhooks/sandbox_nip")
 
 	if len(errs) > 0 {
