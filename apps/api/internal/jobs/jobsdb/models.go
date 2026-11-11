@@ -73,6 +73,31 @@ type Beneficiary struct {
 	CreatedAt       time.Time
 }
 
+type BillPayment struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	AccountID       uuid.UUID
+	Reference       string
+	BillerID        string
+	BillerName      string
+	Category        string
+	ProductID       pgtype.Text
+	ProductName     pgtype.Text
+	CustomerID      string
+	AmountMinor     int64
+	FeeMinor        int64
+	Status          string
+	Token           pgtype.Text
+	Units           pgtype.Text
+	LimitDay        pgtype.Date
+	EntryID         pgtype.UUID
+	ReversalEntryID pgtype.UUID
+	TransactionID   pgtype.UUID
+	FailureReason   pgtype.Text
+	CreatedAt       time.Time
+	CompletedAt     *time.Time
+}
+
 type Card struct {
 	ID                   uuid.UUID
 	UserID               uuid.UUID

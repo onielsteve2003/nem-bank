@@ -22,6 +22,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
@@ -190,6 +191,14 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// The simulated biller is the default rail (BILL-4); an adapter for a real aggregator
+	// replaces it here without touching the payment flow.
+	billsSvc, err := bills.NewService(bills.Config{
+		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Limits: limitsSvc, Biller: bills.Simulated{}, Logger: log,
+	})
+	if err != nil {
+		return err
+	}
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -227,6 +236,7 @@ func run() error {
 		Limits:             limits.NewAPI(limitsSvc),
 		FX:                 fx.NewAPI(fxSvc),
 		Cards:              cards.NewAPI(cardsSvc),
+		Bills:              bills.NewAPI(billsSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
@@ -240,8 +250,8 @@ func run() error {
 	runner, err := jobs.New(pool, log, jobs.Options{
 		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub)},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register},
-		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs()),
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register},
+		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs()),
 	})
 	if err != nil {
 		return err
