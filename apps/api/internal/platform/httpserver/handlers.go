@@ -16,6 +16,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
@@ -28,6 +29,7 @@ type handlers struct {
 	*accountsAPI
 	*transfersAPI
 	*limitsAPI
+	*realtimeAPI
 	fallback
 	version string
 	now     func() time.Time
@@ -41,6 +43,7 @@ type (
 	accountsAPI  = accounts.API
 	transfersAPI = transfers.API
 	limitsAPI    = limits.API
+	realtimeAPI  = realtime.API
 )
 
 var _ api.StrictServerInterface = (*handlers)(nil)

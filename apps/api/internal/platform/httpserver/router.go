@@ -17,6 +17,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 )
 
@@ -51,6 +52,8 @@ type Options struct {
 	Transfers *transfers.API
 	// Limits serves the customer's own limits; nil answers 501 for its operations.
 	Limits *limits.API
+	// Realtime serves tickets and the WebSocket; nil answers 501 and mounts no socket.
+	Realtime *realtime.Service
 	// Admin serves staff login and maker-checker; nil in tests that skip the console.
 	Admin *admin.API
 	// StaffAuthenticator verifies console tokens; nil makes every staff operation a 401.
@@ -131,13 +134,25 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	r.GET(LivenessPath, liveness)
 	r.GET(ReadinessPath, readiness(opts.Readiness, opts.Logger))
 	r.GET(MetricsPath, opts.Metrics.Handler(opts.MetricsToken))
+	if opts.Realtime != nil {
+		// A WebSocket upgrade, not a contract operation: the one-time ticket is its credential.
+		r.GET(realtime.Path, opts.Realtime.Handler)
+	}
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},
 	)
 	return r, nil
+}
+
+// realtimeOps is the ticket operation, or nil (which answers 501) without a realtime service.
+func realtimeOps(s *realtime.Service) *realtime.API {
+	if s == nil {
+		return nil
+	}
+	return realtime.NewAPI(s)
 }

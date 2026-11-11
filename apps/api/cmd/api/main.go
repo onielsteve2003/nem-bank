@@ -32,6 +32,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/logging"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/mailer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/transfers/partners"
 )
@@ -178,6 +179,12 @@ func run() error {
 		return err
 	}
 
+	hub := realtime.NewHub(nil)
+	realtimeSvc, err := realtime.New(realtime.Config{Hub: hub, Logger: log, AllowedOrigins: cfg.CORSOrigins})
+	if err != nil {
+		return err
+	}
+
 	idem := idempotency.NewStore(pool)
 
 	metrics := observability.NewMetrics()
@@ -198,6 +205,7 @@ func run() error {
 		Idempotency:        idem,
 		Accounts:           accounts.NewAPI(accountsSvc),
 		Transfers:          transfers.NewAPI(transfersSvc),
+		Realtime:           realtimeSvc,
 		Limits:             limits.NewAPI(limitsSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
@@ -210,7 +218,7 @@ func run() error {
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
-		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber()},
+		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub)},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances},
 		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register},
 		Periodic:     transfersSvc.PeriodicJobs(),

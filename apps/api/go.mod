@@ -3,6 +3,7 @@ module github.com/onielsteve2003/nem-bank/apps/api
 go 1.27.3
 
 require (
+	github.com/coder/websocket v1.8.15
 	github.com/exaring/otelpgx v0.13.0
 	github.com/getkin/kin-openapi v0.153.0
 	github.com/getsentry/sentry-go v0.50.0
