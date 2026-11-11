@@ -238,7 +238,7 @@ func (s *Service) Authorize(ctx context.Context, req ChargeRequest) (cardsdb.Car
 		if err != nil {
 			return fmt.Errorf("record authorization: %w", err)
 		}
-		return nil
+		return emit(ctx, tx, locked, out)
 	})
 	return out, err
 }

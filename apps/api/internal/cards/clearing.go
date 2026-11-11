@@ -127,7 +127,7 @@ func (s *Service) Capture(ctx context.Context, id uuid.UUID, amount *money.Money
 				return fmt.Errorf("mark card used: %w", err)
 			}
 		}
-		return nil
+		return emit(ctx, tx, card, out)
 	})
 	return out, err
 }
@@ -143,7 +143,8 @@ func (s *Service) Reverse(ctx context.Context, id uuid.UUID) (cardsdb.CardAuthor
 	var out cardsdb.CardAuthorization
 	err = pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		q := s.q.WithTx(tx)
-		if _, err := q.LockCard(ctx, cardID); err != nil {
+		card, err := q.LockCard(ctx, cardID)
+		if err != nil {
 			return fmt.Errorf("lock card: %w", err)
 		}
 		a, err := q.LockAuthorization(ctx, id)
@@ -167,7 +168,7 @@ func (s *Service) Reverse(ctx context.Context, id uuid.UUID) (cardsdb.CardAuthor
 		if err != nil {
 			return fmt.Errorf("reverse authorization: %w", err)
 		}
-		return nil
+		return emit(ctx, tx, card, out)
 	})
 	return out, err
 }
