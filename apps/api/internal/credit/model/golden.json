@@ -1,0 +1,365 @@
+{
+ "tolerance": 1e-05,
+ "cases": [
+  {
+   "salary": 255000.0,
+   "age_days": 605,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.05790985,
+   "band": "good"
+  },
+  {
+   "salary": 161000.0,
+   "age_days": 364,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.10329745,
+   "band": "fair"
+  },
+  {
+   "salary": 0.0,
+   "age_days": 420,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.98869931,
+   "band": "poor"
+  },
+  {
+   "salary": 278000.0,
+   "age_days": 25,
+   "goals": 3,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.1376992,
+   "band": "fair"
+  },
+  {
+   "salary": 200000.0,
+   "age_days": 133,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.13447357,
+   "band": "fair"
+  },
+  {
+   "salary": 289000.0,
+   "age_days": 292,
+   "goals": 2,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.0622034,
+   "band": "good"
+  },
+  {
+   "salary": 180000.0,
+   "age_days": 47,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.20219613,
+   "band": "poor"
+  },
+  {
+   "salary": 249000.0,
+   "age_days": 512,
+   "goals": 2,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.05391875,
+   "band": "good"
+  },
+  {
+   "salary": 523000.0,
+   "age_days": 314,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.05969257,
+   "band": "good"
+  },
+  {
+   "salary": 261000.0,
+   "age_days": 48,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.16956944,
+   "band": "fair"
+  },
+  {
+   "salary": 309000.0,
+   "age_days": 207,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.07958547,
+   "band": "good"
+  },
+  {
+   "salary": 244000.0,
+   "age_days": 55,
+   "goals": 0,
+   "repaid": 1,
+   "defaulted": 0,
+   "p": 0.13681533,
+   "band": "fair"
+  },
+  {
+   "salary": 467000.0,
+   "age_days": 236,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.07079985,
+   "band": "good"
+  },
+  {
+   "salary": 529000.0,
+   "age_days": 200,
+   "goals": 2,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.05252296,
+   "band": "good"
+  },
+  {
+   "salary": 628000.0,
+   "age_days": 729,
+   "goals": 1,
+   "repaid": 2,
+   "defaulted": 0,
+   "p": 0.02103697,
+   "band": "excellent"
+  },
+  {
+   "salary": 132000.0,
+   "age_days": 465,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.09017578,
+   "band": "fair"
+  },
+  {
+   "salary": 136000.0,
+   "age_days": 226,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.11644493,
+   "band": "fair"
+  },
+  {
+   "salary": 164000.0,
+   "age_days": 40,
+   "goals": 1,
+   "repaid": 1,
+   "defaulted": 0,
+   "p": 0.1613434,
+   "band": "fair"
+  },
+  {
+   "salary": 397000.0,
+   "age_days": 21,
+   "goals": 2,
+   "repaid": 3,
+   "defaulted": 0,
+   "p": 0.07520736,
+   "band": "good"
+  },
+  {
+   "salary": 211000.0,
+   "age_days": 394,
+   "goals": 3,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.05616846,
+   "band": "good"
+  },
+  {
+   "salary": 648000.0,
+   "age_days": 207,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.0628213,
+   "band": "good"
+  },
+  {
+   "salary": 395000.0,
+   "age_days": 933,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.03860837,
+   "band": "excellent"
+  },
+  {
+   "salary": 825000.0,
+   "age_days": 285,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.04875653,
+   "band": "good"
+  },
+  {
+   "salary": 168000.0,
+   "age_days": 295,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.09485102,
+   "band": "fair"
+  },
+  {
+   "salary": 189000.0,
+   "age_days": 950,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.0567327,
+   "band": "good"
+  },
+  {
+   "salary": 262000.0,
+   "age_days": 70,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.14850935,
+   "band": "fair"
+  },
+  {
+   "salary": 342000.0,
+   "age_days": 33,
+   "goals": 5,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.08468899,
+   "band": "good"
+  },
+  {
+   "salary": 137000.0,
+   "age_days": 64,
+   "goals": 4,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.12104476,
+   "band": "fair"
+  },
+  {
+   "salary": 230000.0,
+   "age_days": 552,
+   "goals": 1,
+   "repaid": 1,
+   "defaulted": 0,
+   "p": 0.05077953,
+   "band": "good"
+  },
+  {
+   "salary": 245000.0,
+   "age_days": 31,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.17748502,
+   "band": "fair"
+  },
+  {
+   "salary": 392000.0,
+   "age_days": 29,
+   "goals": 3,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.11042893,
+   "band": "fair"
+  },
+  {
+   "salary": 114000.0,
+   "age_days": 54,
+   "goals": 0,
+   "repaid": 2,
+   "defaulted": 0,
+   "p": 0.16184363,
+   "band": "fair"
+  },
+  {
+   "salary": 585000.0,
+   "age_days": 368,
+   "goals": 3,
+   "repaid": 0,
+   "defaulted": 1,
+   "p": 0.10390943,
+   "band": "fair"
+  },
+  {
+   "salary": 217000.0,
+   "age_days": 104,
+   "goals": 2,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.10689794,
+   "band": "fair"
+  },
+  {
+   "salary": 0.0,
+   "age_days": 0,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.99909401,
+   "band": "poor"
+  },
+  {
+   "salary": 5000000.0,
+   "age_days": 4000,
+   "goals": 9,
+   "repaid": 9,
+   "defaulted": 0,
+   "p": 0.00086521,
+   "band": "excellent"
+  },
+  {
+   "salary": 300000.0,
+   "age_days": 400,
+   "goals": 2,
+   "repaid": 1,
+   "defaulted": 5,
+   "p": 0.62779772,
+   "band": "poor"
+  },
+  {
+   "salary": 1200000.0,
+   "age_days": 900,
+   "goals": 3,
+   "repaid": 4,
+   "defaulted": 0,
+   "p": 0.00619775,
+   "band": "excellent"
+  },
+  {
+   "salary": 80000.0,
+   "age_days": 10,
+   "goals": 0,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.42504166,
+   "band": "poor"
+  },
+  {
+   "salary": 250000.0,
+   "age_days": 200,
+   "goals": 1,
+   "repaid": 0,
+   "defaulted": 0,
+   "p": 0.08985858,
+   "band": "good"
+  }
+ ]
+}

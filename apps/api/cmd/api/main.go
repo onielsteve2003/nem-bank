@@ -244,7 +244,7 @@ func run() error {
 	if err != nil {
 		return err
 	}
-	creditSvc, err := credit.NewService(credit.Config{Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Logger: log})
+	creditSvc, err := credit.NewService(credit.Config{Pool: pool, Accounts: accountsSvc, Customers: identitySvc, Scorer: credit.DefaultScorer(log), Logger: log})
 	if err != nil {
 		return err
 	}

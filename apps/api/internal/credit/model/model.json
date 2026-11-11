@@ -1,0 +1,63 @@
+{
+ "model": "credit-lr-v1",
+ "format": "standardized-logreg",
+ "target": "probability of default",
+ "features": [
+  {
+   "name": "log_salary",
+   "mean": 10.950851,
+   "scale": 4.077591,
+   "weight": -2.27616
+  },
+  {
+   "name": "log_age",
+   "mean": 4.842225,
+   "scale": 1.215785,
+   "weight": -0.509853
+  },
+  {
+   "name": "goals",
+   "mean": 1.093333,
+   "scale": 1.038109,
+   "weight": -0.164847
+  },
+  {
+   "name": "repaid",
+   "mean": 0.570571,
+   "scale": 1.064613,
+   "weight": -0.250092
+  },
+  {
+   "name": "defaulted",
+   "mean": 0.068,
+   "scale": 0.331152,
+   "weight": 0.39995
+  }
+ ],
+ "intercept": -1.363489,
+ "bands": [
+  {
+   "band": "excellent",
+   "below": 0.04
+  },
+  {
+   "band": "good",
+   "below": 0.09
+  },
+  {
+   "band": "fair",
+   "below": 0.18
+  }
+ ],
+ "share_bps": {
+  "excellent": 4000,
+  "good": 3000,
+  "fair": 2000,
+  "poor": 0
+ },
+ "tolerance": 1e-05,
+ "trained_with": {
+  "nemml": "0.1.0",
+  "seed": 7
+ }
+}

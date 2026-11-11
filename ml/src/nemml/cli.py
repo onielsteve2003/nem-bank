@@ -1,4 +1,4 @@
-"""Command line: `nemml data`, `nemml fraud` and `nemml categories` and `nemml scam`."""
+"""Command line: `nemml data`, `nemml fraud` and `nemml categories`, `nemml scam` and `nemml credit`."""
 
 import argparse
 import json
@@ -28,7 +28,20 @@ def main(argv: list[str] | None = None) -> int:
     scam.add_argument("--seed", type=int, default=7)
     scam.add_argument("--out", default=None, help="artifact directory (default ml/artifacts/scam)")
 
+    credit = sub.add_parser("credit", help="train, evaluate and export the credit scoring model")
+    credit.add_argument("--seed", type=int, default=7)
+    credit.add_argument("--out", default=None, help="artifact directory (default ml/artifacts/credit)")
+
     args = parser.parse_args(argv)
+    if args.command == "credit":
+        from pathlib import Path
+
+        from nemml.credit import run as run_credit
+
+        result = run_credit(args.seed, Path(args.out) if args.out else None)
+        print(json.dumps(result["metrics"]["test"], indent=2))
+        print(f"wrote {result['out_dir']}")
+        return 0
     if args.command == "scam":
         from pathlib import Path
 

@@ -1,0 +1,37 @@
+{
+  "model": "credit-lr-v1",
+  "rows": {
+    "train": 21000,
+    "test": 9000
+  },
+  "default_rate": 0.2276,
+  "test": {
+    "roc_auc_model": 0.8653,
+    "roc_auc_rules": 0.7937,
+    "brier_model": 0.0887,
+    "brier_constant": 0.1773,
+    "bands": {
+      "excellent": {
+        "share": 0.0818,
+        "predicted": 0.0299,
+        "observed": 0.034
+      },
+      "good": {
+        "share": 0.3198,
+        "predicted": 0.0646,
+        "observed": 0.0639
+      },
+      "fair": {
+        "share": 0.3231,
+        "predicted": 0.1259,
+        "observed": 0.1324
+      },
+      "poor": {
+        "share": 0.2753,
+        "predicted": 0.6021,
+        "observed": 0.5973
+      }
+    }
+  },
+  "beats_baseline": true
+}
