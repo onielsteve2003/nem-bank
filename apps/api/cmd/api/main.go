@@ -31,6 +31,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/developer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast/forecastdb"
@@ -350,6 +351,14 @@ func run() error {
 		return err
 	}
 
+	// API keys, webhooks (signed with encrypted per-endpoint secrets) and the sandbox payer.
+	developerSvc, err := developer.NewService(developer.Config{
+		Pool: pool, Keyring: keyring, StepUps: identitySvc, Transfers: transfersSvc, Logger: log,
+	})
+	if err != nil {
+		return err
+	}
+
 	idem := idempotency.NewStore(pool)
 
 	metrics := observability.NewMetrics()
@@ -388,6 +397,8 @@ func run() error {
 		Family:             family.NewAPI(familySvc),
 		Admin:              admin.NewAPI(adminSvc),
 		Console:            console.NewAPI(consoleSvc),
+		Developer:          developer.NewAPI(developerSvc),
+		KeyAuthenticator:   developerSvc,
 		StaffAuthenticator: adminSvc,
 	})
 	if err != nil {
@@ -398,9 +409,9 @@ func run() error {
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
-		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub), supportSvc.RealtimeSubscriber(hub)},
+		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub), supportSvc.RealtimeSubscriber(hub), developerSvc.Subscriber()},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune},
-		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register, familySvc.Register},
+		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register, familySvc.Register, developerSvc.Register},
 		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs(), familySvc.PeriodicJobs()),
 	})
 	if err != nil {

@@ -3,6 +3,7 @@ package httpserver
 import (
 	"bytes"
 	"context"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -20,6 +21,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/developer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
@@ -95,7 +97,7 @@ func signedOperation(op *openapi3.Operation) bool {
 // re-encodes it, and the signature covers the client's bytes. sig may be nil, and then
 // every signed operation is refused.
 func RequestValidator(spec *openapi3.T, auth Authenticator, sig SignatureVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
-	return requestValidator(spec, auth, nil, sig, nil, nil, nil, log)
+	return requestValidator(spec, auth, nil, nil, sig, nil, nil, nil, log)
 }
 
 // customerLimit runs once the caller is known; see limiter.byCustomer.
@@ -106,11 +108,12 @@ type customerLimit func(ctx context.Context, c *gin.Context, signed bool) error
 //
 // Partner callbacks are checked by partner on the raw body once their headers are valid;
 // partner may be nil, and then every callback is refused.
-func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig SignatureVerifier, idem IdempotencyStore, limit customerLimit, partner PartnerVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
+func requestValidator(spec *openapi3.T, auth, staff, keys Authenticator, sig SignatureVerifier, idem IdempotencyStore, limit customerLimit, partner PartnerVerifier, log *slog.Logger) (gin.HandlerFunc, error) {
 	roles, err := operationRoles(spec)
 	if err != nil {
 		return nil, err
 	}
+	scopes := operationScopes(spec)
 	// Routes are matched on the path alone. The spec's `servers` name a localhost URL that
 	// would never match the host the API runs on in production.
 	spec.Servers = nil
@@ -124,14 +127,16 @@ func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig Signature
 		KeepValidatedValue: true,
 		AuthenticationFunc: func(ctx context.Context, in *openapi3filter.AuthenticationInput) error {
 			slot, _ := ctx.Value(authSlotKey{}).(*authSlot)
-			// Each realm has its own verifier, so a customer token is never tried as a
-			// staff one. API keys arrive with the developer platform; until then they fail.
+			// Each realm has its own verifier, so a customer token is never tried as a staff
+			// one, and an API key is never tried as a token (it is not one).
 			var verifier Authenticator
 			switch in.SecuritySchemeName {
 			case "bearerAuth":
 				verifier = auth
 			case "staffAuth":
 				verifier = staff
+			case "apiKeyAuth":
+				verifier = keys
 			}
 			if slot == nil || verifier == nil {
 				return errors.New("security scheme not supported")
@@ -195,6 +200,13 @@ func requestValidator(spec *openapi3.T, auth, staff Authenticator, sig Signature
 		}
 		if slot.ctx != nil {
 			c.Request = c.Request.WithContext(slot.ctx)
+		}
+		// A developer API key reaches only what its scopes allow. A signed-in session has no scopes.
+		if key, ok := developer.KeyFrom(c.Request.Context()); ok {
+			if need := scopes[route.Operation]; need == "" || !key.Has(need) {
+				problem.Render(c, problem.Forbidden().WithDetail("This API key does not have the scope this call needs."))
+				return
+			}
 		}
 		if allowed := roles[route.Operation]; len(allowed) > 0 {
 			if p, ok := admin.PrincipalFrom(c.Request.Context()); !ok || !p.HasAny(allowed...) {
@@ -439,4 +451,31 @@ func operationRoles(spec *openapi3.T) (map[*openapi3.Operation][]admin.Role, err
 		}
 	}
 	return out, nil
+}
+
+// operationScopes is the scope an API key needs for each operation: the contract's
+// x-api-key-scope where it names one, and for the developer endpoints themselves the scope that
+// matches what they do (payment_links_write for the sandbox payer, webhooks_manage for webhooks).
+// An operation with no scope gives an API key no access at all, so a missing annotation fails
+// closed.
+func operationScopes(spec *openapi3.T) map[*openapi3.Operation]string {
+	out := map[*openapi3.Operation]string{}
+	for path, item := range spec.Paths.Map() {
+		for _, op := range item.Operations() {
+			if raw, ok := op.Extensions["x-api-key-scope"]; ok {
+				var scope string
+				if b, err := json.Marshal(raw); err == nil && json.Unmarshal(b, &scope) == nil {
+					out[op] = scope
+				}
+				continue
+			}
+			switch {
+			case strings.HasPrefix(path, "/v1/developer/sandbox/"):
+				out[op] = "payment_links_write"
+			case strings.HasPrefix(path, "/v1/developer/webhook"):
+				out[op] = "webhooks_manage"
+			}
+		}
+	}
+	return out
 }

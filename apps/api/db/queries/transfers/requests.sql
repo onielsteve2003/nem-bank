@@ -91,3 +91,9 @@ RETURNING *;
 UPDATE payment_links
 SET payments_count = payments_count + 1, total_received_minor = total_received_minor + @amount_minor
 WHERE id = @id;
+
+-- name: GetPaymentLinkByID :one
+SELECT * FROM payment_links WHERE id = @id;
+
+-- name: LockPaymentLinkByID :one
+SELECT * FROM payment_links WHERE id = @id AND user_id = @user_id FOR UPDATE;

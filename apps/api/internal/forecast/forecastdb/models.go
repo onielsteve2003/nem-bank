@@ -78,6 +78,18 @@ type AjoMember struct {
 	JoinedAt            time.Time
 }
 
+type ApiKey struct {
+	ID         uuid.UUID
+	UserID     uuid.UUID
+	Name       string
+	Prefix     string
+	KeyHash    []byte
+	Scopes     []string
+	CreatedAt  time.Time
+	LastUsedAt pgtype.Timestamptz
+	RevokedAt  pgtype.Timestamptz
+}
+
 type ApprovalRequest struct {
 	ID              uuid.UUID
 	Action          string
@@ -1068,4 +1080,38 @@ type User struct {
 	GuardianID        *uuid.UUID
 	FrozenAt          pgtype.Timestamptz
 	FrozenReason      *string
+}
+
+type WebhookDelivery struct {
+	ID              uuid.UUID
+	EndpointID      uuid.UUID
+	EventID         uuid.UUID
+	EventType       string
+	Payload         []byte
+	Attempt         int32
+	Status          string
+	ResponseStatus  pgtype.Int4
+	ResponseExcerpt *string
+	DurationMs      pgtype.Int4
+	NextRetryAt     pgtype.Timestamptz
+	Original        bool
+	CreatedAt       time.Time
+	UpdatedAt       time.Time
+}
+
+type WebhookEndpoint struct {
+	ID                   uuid.UUID
+	UserID               uuid.UUID
+	Url                  string
+	Description          *string
+	Events               []string
+	Status               string
+	SecretPrefix         string
+	SecretCiphertext     []byte
+	PrevSecretCiphertext []byte
+	PrevSecretExpiresAt  pgtype.Timestamptz
+	ConsecutiveFailures  int32
+	FirstFailureAt       pgtype.Timestamptz
+	CreatedAt            time.Time
+	DeletedAt            pgtype.Timestamptz
 }

@@ -19,6 +19,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/developer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
@@ -98,6 +99,11 @@ type Options struct {
 	Realtime *realtime.Service
 	// Admin serves staff login and maker-checker; nil in tests that skip the console.
 	Admin *admin.API
+	// KeyAuthenticator verifies developer API keys (apiKeyAuth); nil makes every API-key
+	// operation a 401 for key callers.
+	KeyAuthenticator Authenticator
+	// Developer serves API keys, webhooks and the sandbox payer; nil answers 501.
+	Developer *developer.API
 	// Console serves the staff console's customer, queue, ledger, configuration and audit
 	// operations; nil answers 501 for them and 404 for KYC photo links.
 	Console *console.API
@@ -136,7 +142,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 		limits = *opts.RateLimits
 	}
 	lim := newLimiter(limits, opts.Now)
-	validate, err := requestValidator(spec, opts.Authenticator, opts.StaffAuthenticator, opts.Signatures, opts.Idempotency, lim.byCustomer, opts.PartnerCallbacks, opts.Logger)
+	validate, err := requestValidator(spec, opts.Authenticator, opts.StaffAuthenticator, opts.KeyAuthenticator, opts.Signatures, opts.Idempotency, lim.byCustomer, opts.PartnerCallbacks, opts.Logger)
 	if err != nil {
 		return nil, err
 	}
@@ -189,6 +195,9 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 		r.GET(support.FilesPath, lim.byAddress(), opts.Support.FilesHandler)
 	}
 
+	// The public API reference and the contract it renders (DEV-4).
+	r.GET(developer.DocsPath, lim.byAddress(), developer.DocsHandler)
+	r.GET(developer.SpecPath, lim.byAddress(), developer.SpecHandler)
 	if opts.Console != nil {
 		// Signed KYC photo links, like attachment links: the signature is the credential.
 		r.GET(console.DocumentsPath, lim.byAddress(), opts.Console.DocumentsHandler)
@@ -196,7 +205,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, developerAPI: opts.Developer, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},

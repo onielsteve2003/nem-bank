@@ -19,6 +19,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/developer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
@@ -41,6 +42,7 @@ type handlers struct {
 	*identity.API
 	*adminAPI
 	*consoleAPI
+	*developerAPI
 	*accountsAPI
 	*transfersAPI
 	*limitsAPI
@@ -70,6 +72,7 @@ type fallback struct{ api.Unimplemented }
 type (
 	adminAPI     = admin.API
 	consoleAPI   = console.API
+	developerAPI = developer.API
 	accountsAPI  = accounts.API
 	transfersAPI = transfers.API
 	limitsAPI    = limits.API

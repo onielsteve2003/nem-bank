@@ -106,6 +106,32 @@ func (q *Queries) GetPaymentLink(ctx context.Context, arg GetPaymentLinkParams) 
 	return i, err
 }
 
+const getPaymentLinkByID = `-- name: GetPaymentLinkByID :one
+SELECT id, user_id, account_id, slug, title, note, amount_mode, currency, amount_minor, status, expires_at, payments_count, total_received_minor, created_at FROM payment_links WHERE id = $1
+`
+
+func (q *Queries) GetPaymentLinkByID(ctx context.Context, id uuid.UUID) (PaymentLink, error) {
+	row := q.db.QueryRow(ctx, getPaymentLinkByID, id)
+	var i PaymentLink
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Slug,
+		&i.Title,
+		&i.Note,
+		&i.AmountMode,
+		&i.Currency,
+		&i.AmountMinor,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.PaymentsCount,
+		&i.TotalReceivedMinor,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getPaymentLinkBySlug = `-- name: GetPaymentLinkBySlug :one
 SELECT id, user_id, account_id, slug, title, note, amount_mode, currency, amount_minor, status, expires_at, payments_count, total_received_minor, created_at FROM payment_links WHERE slug = $1
 `
@@ -533,6 +559,37 @@ func (q *Queries) LockMoneyRequest(ctx context.Context, arg LockMoneyRequestPara
 		&i.ExpiresAt,
 		&i.RespondedAt,
 		&i.LastRemindedAt,
+	)
+	return i, err
+}
+
+const lockPaymentLinkByID = `-- name: LockPaymentLinkByID :one
+SELECT id, user_id, account_id, slug, title, note, amount_mode, currency, amount_minor, status, expires_at, payments_count, total_received_minor, created_at FROM payment_links WHERE id = $1 AND user_id = $2 FOR UPDATE
+`
+
+type LockPaymentLinkByIDParams struct {
+	ID     uuid.UUID
+	UserID uuid.UUID
+}
+
+func (q *Queries) LockPaymentLinkByID(ctx context.Context, arg LockPaymentLinkByIDParams) (PaymentLink, error) {
+	row := q.db.QueryRow(ctx, lockPaymentLinkByID, arg.ID, arg.UserID)
+	var i PaymentLink
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Slug,
+		&i.Title,
+		&i.Note,
+		&i.AmountMode,
+		&i.Currency,
+		&i.AmountMinor,
+		&i.Status,
+		&i.ExpiresAt,
+		&i.PaymentsCount,
+		&i.TotalReceivedMinor,
+		&i.CreatedAt,
 	)
 	return i, err
 }

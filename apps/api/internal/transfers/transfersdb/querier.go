@@ -22,6 +22,7 @@ type Querier interface {
 	// Either side may read it.
 	GetMoneyRequest(ctx context.Context, arg GetMoneyRequestParams) (MoneyRequest, error)
 	GetPaymentLink(ctx context.Context, arg GetPaymentLinkParams) (PaymentLink, error)
+	GetPaymentLinkByID(ctx context.Context, id uuid.UUID) (PaymentLink, error)
 	GetPaymentLinkBySlug(ctx context.Context, slug string) (PaymentLink, error)
 	GetSchedule(ctx context.Context, arg GetScheduleParams) (ScheduledTransfer, error)
 	GetSplitBill(ctx context.Context, arg GetSplitBillParams) (SplitBill, error)
@@ -57,6 +58,7 @@ type Querier interface {
 	// Transfers accepted under duress that are still "on their way".
 	LockDuressTransfers(ctx context.Context, userID uuid.UUID) ([]Transfer, error)
 	LockMoneyRequest(ctx context.Context, arg LockMoneyRequestParams) (MoneyRequest, error)
+	LockPaymentLinkByID(ctx context.Context, arg LockPaymentLinkByIDParams) (PaymentLink, error)
 	LockPaymentLinkBySlug(ctx context.Context, slug string) (PaymentLink, error)
 	LockSchedule(ctx context.Context, arg LockScheduleParams) (ScheduledTransfer, error)
 	// The saga's steps (send, status check, callback) take this lock, so two answers for the
