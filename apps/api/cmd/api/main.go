@@ -24,6 +24,8 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ajo"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/assistant"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/assistant/assistantdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
@@ -254,6 +256,25 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// Language models, free tiers only. A missing key just leaves that provider out; with none
+	// the assistant answers 503 and the app falls back to its shortcuts.
+	var llm []assistant.Provider
+	if cfg.GeminiAPIKey != "" {
+		llm = append(llm, &assistant.Gemini{APIKey: cfg.GeminiAPIKey, Model: cfg.GeminiModel})
+	}
+	if cfg.GroqAPIKey != "" {
+		llm = append(llm, &assistant.Groq{APIKey: cfg.GroqAPIKey, Model: cfg.GroqModel})
+	}
+	if len(llm) == 0 {
+		log.Warn("GEMINI_API_KEY and GROQ_API_KEY not set: Nem Assistant is switched off")
+	}
+	assistantSvc, err := assistant.NewService(assistant.Config{
+		Store: assistantdb.New(pool), Gateway: assistant.NewGateway(llm...), Accounts: accountsSvc, Forecast: forecastSvc,
+		Beneficiaries: assistant.BeneficiariesFrom(transfersSvc), Cards: assistant.CardsFrom(cardsSvc), Customers: identitySvc, Logger: log,
+	})
+	if err != nil {
+		return err
+	}
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -297,6 +318,7 @@ func run() error {
 		Credit:             credit.NewAPI(creditSvc),
 		Scam:               scam.NewAPI(scamSvc),
 		Forecast:           forecast.NewAPI(forecastSvc),
+		Assistant:          assistant.NewAPI(assistantSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})

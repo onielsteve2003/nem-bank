@@ -48,6 +48,12 @@ type Config struct {
 	MailFromEmail string
 	MailFromName  string
 
+	// Language models for Nem Assistant (AI-6) and the optional ID prefill. Both optional: with
+	// neither key the assistant answers 503 and the app shows its shortcuts. Gemini is tried
+	// first, Groq when Gemini is out of quota or down.
+	GeminiAPIKey, GeminiModel string
+	GroqAPIKey, GroqModel     string
+
 	// OTPKey keys the HMAC one-time codes are stored under.
 	OTPKey []byte
 	// JWTSigningKey is the Ed25519 seed access tokens are signed with.
@@ -166,6 +172,9 @@ func Load(getenv func(string) string) (Config, error) {
 	}
 	cfg.MailFromEmail = get("MAIL_FROM_EMAIL", "no-reply@nem.bank")
 	cfg.MailFromName = get("MAIL_FROM_NAME", "Nem Bank")
+
+	cfg.GeminiAPIKey, cfg.GeminiModel = get("GEMINI_API_KEY", ""), get("GEMINI_MODEL", "")
+	cfg.GroqAPIKey, cfg.GroqModel = get("GROQ_API_KEY", ""), get("GROQ_MODEL", "")
 
 	cfg.OTPKey, err = secretKey(getenv("OTP_KEY"), cfg.Env, "nem-dev-otp-key")
 	if err != nil {

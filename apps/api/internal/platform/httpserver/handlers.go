@@ -14,6 +14,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/admin"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ajo"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/assistant"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
@@ -45,6 +46,7 @@ type handlers struct {
 	*creditAPI
 	*scamAPI
 	*forecastAPI
+	*assistantAPI
 	*realtimeAPI
 	fallback
 	version string
@@ -67,6 +69,7 @@ type (
 	creditAPI    = credit.API
 	scamAPI      = scam.API
 	forecastAPI  = forecast.API
+	assistantAPI = assistant.API
 	realtimeAPI  = realtime.API
 )
 

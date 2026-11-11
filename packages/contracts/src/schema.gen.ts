@@ -2932,6 +2932,13 @@ export interface paths {
      * @description The LLM only sees redacted or aggregated data and calls typed server tools (AI-6, AI-9).
      *     Money actions come back as `prepared_action` blocks; nothing moves until the customer
      *     confirms one. 503 `assistant_unavailable` means show the non-AI shortcuts instead.
+     *
+     *     Send `Accept: text/event-stream` to stream the answer as server-sent events instead of
+     *     one JSON body. Events: `tool` (`{name}`, a tool started), `delta` (`{text}`, a live
+     *     preview filtered word by word), `message` (the final `AssistantMessage`, the only
+     *     authoritative one: replace the preview with it) and `error` (`{code, title}`, the model
+     *     failed mid-answer). Caps and 503 are decided before the first byte, so they are still
+     *     ordinary problem responses.
      */
     post: operations['sendAssistantMessage'];
     delete?: never;

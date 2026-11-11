@@ -94,6 +94,23 @@ type ApprovalRequest struct {
 	ExpiresAt       time.Time
 }
 
+type AssistantConversation struct {
+	ID        uuid.UUID
+	UserID    uuid.UUID
+	CreatedAt time.Time
+}
+
+type AssistantMessage struct {
+	ID             uuid.UUID
+	ConversationID uuid.UUID
+	UserID         uuid.UUID
+	Role           string
+	Blocks         []byte
+	Ai             []byte
+	Provider       *string
+	CreatedAt      time.Time
+}
+
 type AuditLog struct {
 	Seq          int64
 	ID           uuid.UUID
@@ -508,6 +525,20 @@ type Posting struct {
 	Currency          string
 	BalanceAfterMinor int64
 	CreatedAt         time.Time
+}
+
+type PreparedAction struct {
+	ID             uuid.UUID
+	UserID         uuid.UUID
+	ConversationID uuid.UUID
+	Kind           string
+	Summary        string
+	Details        []byte
+	Status         string
+	ExpiresAt      time.Time
+	Result         []byte
+	CreatedAt      time.Time
+	UpdatedAt      time.Time
 }
 
 type RefreshToken struct {
