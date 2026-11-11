@@ -28,7 +28,10 @@ func newService(t *testing.T) (*Service, *Hub) {
 func dial(t *testing.T, srv *httptest.Server, ticket string) (*websocket.Conn, error) {
 	t.Helper()
 	url := "ws" + strings.TrimPrefix(srv.URL, "http") + Path + "?ticket=" + ticket
-	c, _, err := websocket.Dial(t.Context(), url, nil)
+	c, resp, err := websocket.Dial(t.Context(), url, nil)
+	if resp != nil && resp.Body != nil {
+		_ = resp.Body.Close()
+	}
 	return c, err
 }
 

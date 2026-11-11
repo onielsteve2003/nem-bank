@@ -8,7 +8,6 @@ import (
 	"github.com/google/uuid"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
-	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
@@ -93,6 +92,6 @@ func (s *Service) pushRequest(ctx context.Context, hub *realtime.Hub, d jobs.Del
 	if err != nil {
 		return err
 	}
-	var data api.MoneyRequest = RequestJSON(rv)
+	data := RequestJSON(rv)
 	return hub.Publish(p.PayerID, realtime.Event{ID: eventID(d, "money_request.received"), Type: "money_request.received", OccurredAt: d.CreatedAt.UTC(), Data: data})
 }
