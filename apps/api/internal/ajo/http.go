@@ -13,10 +13,13 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
+// API adapts the service to the contract's strict server; the router embeds it. A nil *API
+// answers 501.
 type API struct {
 	svc *Service
 }
 
+// NewAPI returns the ajo operations for the router.
 func NewAPI(svc *Service) *API {
 	return &API{svc: svc}
 }

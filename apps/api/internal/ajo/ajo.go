@@ -7,10 +7,11 @@ package ajo
 
 import (
 	"context"
+	"crypto/rand"
 	"errors"
 	"fmt"
 	"log/slog"
-	"math/rand/v2"
+	"math/big"
 	"net/http"
 	"strings"
 	"time"
@@ -38,7 +39,9 @@ const (
 var lagos = time.FixedZone("WAT", 60*60)
 
 var (
-	ErrGroupNotFound  = problem.NotFound("Ajo group")
+	// ErrGroupNotFound is the 404 for an ajo group the caller is not in.
+	ErrGroupNotFound = problem.NotFound("Ajo group")
+	// ErrInviteNotFound is the 404 for an invite link that is unknown or has expired.
 	ErrInviteNotFound = problem.New(http.StatusNotFound, "not_found", "This invite link is not valid")
 	errNaira          = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Ajo is saved in naira")
 	errNotActive      = problem.New(http.StatusForbidden, "account_not_active", "This account cannot be used right now")
@@ -50,16 +53,19 @@ var (
 				WithDetail("You had your payout in another ajo but missed a contribution after it.")
 )
 
+// Accounts is the customer's accounts; *accounts.Service implements it.
 type Accounts interface {
 	Owned(ctx context.Context, userID, accountID uuid.UUID) (accountsdb.GetCustomerAccountRow, error)
 	Naira(ctx context.Context, userID uuid.UUID) (accountsdb.CustomerAccount, error)
 }
 
+// Customers looks customers up by id or @nemtag; *identity.Service implements it.
 type Customers interface {
 	CustomerProfile(ctx context.Context, userID uuid.UUID) (identity.CustomerProfile, error)
 	FindCustomer(ctx context.Context, handle string) (uuid.UUID, error)
 }
 
+// Config holds the service's dependencies.
 type Config struct {
 	Pool       *pgxpool.Pool
 	Accounts   Accounts
@@ -69,6 +75,7 @@ type Config struct {
 	WebBaseURL string
 }
 
+// Service is the ajo domain.
 type Service struct {
 	pool       *pgxpool.Pool
 	q          *ajodb.Queries
@@ -79,6 +86,7 @@ type Service struct {
 	webBaseURL string
 }
 
+// NewService builds the service.
 func NewService(cfg Config) (*Service, error) {
 	if cfg.Pool == nil || cfg.Accounts == nil || cfg.Customers == nil || cfg.Logger == nil {
 		return nil, errors.New("ajo: pool, accounts, customers and logger are required")
@@ -131,6 +139,7 @@ func cycleDays(frequency string) int {
 	}
 }
 
+// CreateGroupInput is what a customer chooses when starting a group (AJO-1).
 type CreateGroupInput struct {
 	Name             string
 	Contribution     money.Money
@@ -142,6 +151,7 @@ type CreateGroupInput struct {
 	SourceAccountID  uuid.UUID
 }
 
+// MemberView is a member as the group shows them.
 type MemberView struct {
 	User                identity.CustomerProfile
 	UserID              uuid.UUID
@@ -152,6 +162,7 @@ type MemberView struct {
 	MissedContributions int
 }
 
+// GroupView is a group with its members, pot and schedule position (contract AjoGroup).
 type GroupView struct {
 	ID                 uuid.UUID
 	Name               string
@@ -179,6 +190,7 @@ type GroupView struct {
 	NextPayout         *NextPayoutView
 }
 
+// NextPayoutView says who is paid next and when.
 type NextPayoutView struct {
 	Member identity.CustomerProfile
 	UserID uuid.UUID
@@ -186,6 +198,7 @@ type NextPayoutView struct {
 	At     time.Time
 }
 
+// CycleView is one turn of the rotation: who is paid, who has paid in (contract AjoCycle).
 type CycleView struct {
 	ID            uuid.UUID
 	GroupID       uuid.UUID
@@ -198,6 +211,7 @@ type CycleView struct {
 	Contributions []ContributionView
 }
 
+// ContributionView is one member's payment in a cycle.
 type ContributionView struct {
 	User     identity.CustomerProfile
 	UserID   uuid.UUID
@@ -206,6 +220,7 @@ type ContributionView struct {
 	PaidAt   *time.Time
 }
 
+// InviteResult says which invitations were sent and which handles were not found.
 type InviteResult struct {
 	InviteCode string
 	InviteURL  string
@@ -225,6 +240,7 @@ func (s *Service) assertNoDebt(ctx context.Context, userID uuid.UUID) error {
 	return nil
 }
 
+// Create starts a group in the forming state and makes the creator its first member (AJO-1).
 func (s *Service) Create(ctx context.Context, in CreateGroupInput) (GroupView, error) {
 	p, err := principal(ctx)
 	if err != nil {
@@ -294,22 +310,22 @@ func (s *Service) Create(ctx context.Context, in CreateGroupInput) (GroupView, e
 		}
 		q := s.q.WithTx(tx)
 		_, err = q.InsertAjoGroup(ctx, ajodb.InsertAjoGroupParams{
-			ID:                 groupID,
-			Name:               name,
-			AccountID:          escrowAccountID,
-			CreatedByID:        p.UserID,
-			ContributionMinor:  in.Contribution.Amount(),
-			Frequency:          in.Frequency,
-			MemberCount:        int32(in.MemberCount),
-			Rotation:           in.Rotation,
-			StartDate:          startDay,
-			GracePeriodHours:   int32(in.GracePeriodHours),
-			Status:             "forming",
-			CurrentCycle:       0,
-			TotalCycles:        int32(in.MemberCount),
-			InviteCode:         inviteCode,
-			InviteExpiresAt:    expiresAt,
-			CreatedAt:          now,
+			ID:                groupID,
+			Name:              name,
+			AccountID:         escrowAccountID,
+			CreatedByID:       p.UserID,
+			ContributionMinor: in.Contribution.Amount(),
+			Frequency:         in.Frequency,
+			MemberCount:       int32(in.MemberCount), //nolint:gosec // validated to 2..30 above
+			Rotation:          in.Rotation,
+			StartDate:         startDay,
+			GracePeriodHours:  int32(in.GracePeriodHours), //nolint:gosec // validated to 0..72 above
+			Status:            "forming",
+			CurrentCycle:      0,
+			TotalCycles:       int32(in.MemberCount), //nolint:gosec // validated to 2..30 above
+			InviteCode:        inviteCode,
+			InviteExpiresAt:   expiresAt,
+			CreatedAt:         now,
 		})
 		if err != nil {
 			return fmt.Errorf("insert ajo group: %w", err)
@@ -332,6 +348,7 @@ func (s *Service) Create(ctx context.Context, in CreateGroupInput) (GroupView, e
 	return s.Get(ctx, groupID)
 }
 
+// Get reads a group the caller belongs to.
 func (s *Service) Get(ctx context.Context, id uuid.UUID) (GroupView, error) {
 	row, err := s.q.GetAjoGroup(ctx, id)
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -343,6 +360,7 @@ func (s *Service) Get(ctx context.Context, id uuid.UUID) (GroupView, error) {
 	return s.assembleGroup(ctx, row)
 }
 
+// List lists the groups the caller belongs to.
 func (s *Service) List(ctx context.Context) ([]GroupView, error) {
 	p, err := principal(ctx)
 	if err != nil {
@@ -443,6 +461,7 @@ func (s *Service) assembleGroup(ctx context.Context, g ajodb.GetAjoGroupRow) (Gr
 	return gv, nil
 }
 
+// Invite invites customers by @nemtag (AJO-2).
 func (s *Service) Invite(ctx context.Context, groupID uuid.UUID, nemtags []string) (InviteResult, error) {
 	p, err := principal(ctx)
 	if err != nil {
@@ -509,7 +528,7 @@ func (s *Service) Invite(ctx context.Context, groupID uuid.UUID, nemtags []strin
 			now := s.now().UTC()
 			var pos pgtype.Int4
 			if g.Rotation == "fixed" {
-				pos = pgtype.Int4{Int32: int32(len(members) + len(invitedIDs)), Valid: true}
+				pos = pgtype.Int4{Int32: int32(len(members) + len(invitedIDs)), Valid: true} //nolint:gosec // bounded by the group size (at most 30)
 			}
 			_ = s.q.InsertAjoMember(ctx, ajodb.InsertAjoMemberParams{
 				GroupID:             groupID,
@@ -535,6 +554,7 @@ func (s *Service) Invite(ctx context.Context, groupID uuid.UUID, nemtags []strin
 	}, nil
 }
 
+// GetInvite previews the group behind an invite link.
 func (s *Service) GetInvite(ctx context.Context, inviteCode string) (GroupView, error) {
 	row, err := s.q.GetAjoGroupByInviteCode(ctx, strings.ToUpper(inviteCode))
 	if errors.Is(err, pgx.ErrNoRows) {
@@ -546,6 +566,7 @@ func (s *Service) GetInvite(ctx context.Context, inviteCode string) (GroupView, 
 	return s.assembleGroup(ctx, ajodb.GetAjoGroupRow(row))
 }
 
+// AcceptInvite joins the group an invite link points to, choosing the account contributions come from.
 func (s *Service) AcceptInvite(ctx context.Context, inviteCode string, sourceAccountID uuid.UUID) (GroupView, error) {
 	p, err := principal(ctx)
 	if err != nil {
@@ -619,6 +640,7 @@ func (s *Service) AcceptInvite(ctx context.Context, inviteCode string, sourceAcc
 	return s.Get(ctx, row.ID)
 }
 
+// Start begins the rotation once the group is full (AJO-3).
 func (s *Service) Start(ctx context.Context, groupID uuid.UUID) (GroupView, error) {
 	p, err := principal(ctx)
 	if err != nil {
@@ -656,9 +678,15 @@ func (s *Service) Start(ctx context.Context, groupID uuid.UUID) (GroupView, erro
 	order := make([]ajodb.AjoMember, len(joined))
 	copy(order, joined)
 	if g.Rotation == "random_draw" {
-		rand.Shuffle(len(order), func(i, j int) {
+		// The draw decides who is paid first, so it uses the system's secure randomness.
+		for i := len(order) - 1; i > 0; i-- {
+			n, err := rand.Int(rand.Reader, big.NewInt(int64(i+1)))
+			if err != nil {
+				return GroupView{}, fmt.Errorf("draw rotation: %w", err)
+			}
+			j := int(n.Int64())
 			order[i], order[j] = order[j], order[i]
-		})
+		}
 	}
 
 	now := s.now().UTC()
@@ -740,6 +768,7 @@ func (s *Service) Start(ctx context.Context, groupID uuid.UUID) (GroupView, erro
 	return s.Get(ctx, groupID)
 }
 
+// Leave removes the caller from a group that has not started.
 func (s *Service) Leave(ctx context.Context, groupID uuid.UUID) error {
 	p, err := principal(ctx)
 	if err != nil {
@@ -769,6 +798,7 @@ func (s *Service) Leave(ctx context.Context, groupID uuid.UUID) error {
 	return s.q.DeleteAjoMember(ctx, ajodb.DeleteAjoMemberParams{GroupID: groupID, UserID: p.UserID})
 }
 
+// ListCycles lists a group's turns with who has paid.
 func (s *Service) ListCycles(ctx context.Context, groupID uuid.UUID) ([]CycleView, error) {
 	_, err := s.Get(ctx, groupID)
 	if err != nil {

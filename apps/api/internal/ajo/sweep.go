@@ -104,7 +104,7 @@ func (s *Service) sweepGroup(ctx context.Context, g ajodb.ListActiveAjoGroupsRow
 }
 
 func (s *Service) collectCycle(ctx context.Context, groupID uuid.UUID, cycleNumber int) {
-	cycle, err := s.q.GetAjoCycle(ctx, ajodb.GetAjoCycleParams{GroupID: groupID, CycleNumber: int32(cycleNumber)})
+	cycle, err := s.q.GetAjoCycle(ctx, ajodb.GetAjoCycleParams{GroupID: groupID, CycleNumber: int32(cycleNumber)}) //nolint:gosec // a cycle number is at most the group size (30)
 	if err != nil {
 		return
 	}
@@ -202,7 +202,7 @@ func (s *Service) payoutCycle(ctx context.Context, groupID uuid.UUID, cycleNumbe
 	if err != nil {
 		return
 	}
-	cycle, err := s.q.GetAjoCycle(ctx, ajodb.GetAjoCycleParams{GroupID: groupID, CycleNumber: int32(cycleNumber)})
+	cycle, err := s.q.GetAjoCycle(ctx, ajodb.GetAjoCycleParams{GroupID: groupID, CycleNumber: int32(cycleNumber)}) //nolint:gosec // a cycle number is at most the group size (30)
 	if err != nil {
 		return
 	}
@@ -282,11 +282,11 @@ func (s *Service) payoutCycle(ctx context.Context, groupID uuid.UUID, cycleNumbe
 		}
 		if err := q.UpdateAjoGroupCurrentCycle(ctx, ajodb.UpdateAjoGroupCurrentCycleParams{
 			ID:           groupID,
-			CurrentCycle: int32(nextCycle),
+			CurrentCycle: int32(nextCycle), //nolint:gosec // at most the group size (30)
 		}); err != nil {
 			return err
 		}
-		nextRow, err := q.GetAjoCycle(ctx, ajodb.GetAjoCycleParams{GroupID: groupID, CycleNumber: int32(nextCycle)})
+		nextRow, err := q.GetAjoCycle(ctx, ajodb.GetAjoCycleParams{GroupID: groupID, CycleNumber: int32(nextCycle)}) //nolint:gosec // at most the group size (30)
 		if err == nil {
 			_ = q.UpdateAjoCyclePayoutStatus(ctx, ajodb.UpdateAjoCyclePayoutStatusParams{
 				ID:           nextRow.ID,

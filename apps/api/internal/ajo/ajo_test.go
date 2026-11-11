@@ -72,12 +72,6 @@ func (c *clock) Now() time.Time {
 	return c.t
 }
 
-func (c *clock) advance(d time.Duration) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.t = c.t.Add(d)
-}
-
 type fixture struct {
 	t    *testing.T
 	pool *pgxpool.Pool
