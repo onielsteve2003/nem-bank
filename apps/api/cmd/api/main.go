@@ -28,6 +28,8 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast/forecastdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
@@ -248,6 +250,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	forecastSvc, err := forecast.NewService(forecast.Config{Queries: forecastdb.New(pool), Accounts: accountsSvc, Customers: identitySvc})
+	if err != nil {
+		return err
+	}
 	adminSvc, err := admin.NewService(admin.Config{
 		Pool: pool, Logger: log, SigningKey: cfg.StaffJWTSigningKey, Keyring: keyring,
 	})
@@ -290,6 +296,7 @@ func run() error {
 		Ajo:                ajo.NewAPI(ajoSvc),
 		Credit:             credit.NewAPI(creditSvc),
 		Scam:               scam.NewAPI(scamSvc),
+		Forecast:           forecast.NewAPI(forecastSvc),
 		Admin:              admin.NewAPI(adminSvc),
 		StaffAuthenticator: adminSvc,
 	})
