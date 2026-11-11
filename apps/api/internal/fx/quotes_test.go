@@ -558,3 +558,11 @@ func TestPruneKeepsUsedQuotesAndDropsOldUnusedOnes(t *testing.T) {
 		t.Fatalf("history after prune = %+v, %v", c, err)
 	}
 }
+
+func (p *profiles) setDemo(id uuid.UUID) {
+	p.mu.Lock()
+	defer p.mu.Unlock()
+	cp := p.m[id]
+	cp.IsDemo = true
+	p.m[id] = cp
+}

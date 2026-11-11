@@ -351,6 +351,7 @@ type CustomerProfile struct {
 	Nemtag   *string
 	KycTier  int
 	InDuress bool
+	IsDemo   bool
 }
 
 // CustomerProfile loads the customer's profile.
@@ -360,7 +361,7 @@ func (s *Service) CustomerProfile(ctx context.Context, userID uuid.UUID) (Custom
 		return CustomerProfile{}, fmt.Errorf("load user: %w", err)
 	}
 	return CustomerProfile{
-		Name: u.FirstName + " " + u.LastName, Nemtag: u.Nemtag, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil,
+		Name: u.FirstName + " " + u.LastName, Nemtag: u.Nemtag, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil, IsDemo: u.IsDemo,
 	}, nil
 }
 

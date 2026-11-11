@@ -8,6 +8,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgtype"
 	"github.com/riverqueue/river"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx/fxdb"
@@ -29,6 +30,10 @@ func (s *Service) Ingest(ctx context.Context) error {
 			err = s.store(ctx, snap)
 		}
 		if err == nil {
+			// A failed check is not a failed reading: the alerts stay waiting for the next run.
+			if cerr := s.CheckAlerts(ctx); cerr != nil {
+				s.log.Error("fx alert check failed", "error", cerr.Error())
+			}
 			return nil
 		}
 		s.log.Warn("fx rate source failed", "error", err.Error())
@@ -134,6 +139,9 @@ func (s *Service) Prune(ctx context.Context) error {
 	}
 	if _, err := s.q.PruneQuotes(ctx, now.Add(-retainQuotes)); err != nil {
 		errs = append(errs, fmt.Errorf("prune quotes: %w", err))
+	}
+	if _, err := s.q.PruneAlerts(ctx, pgtype.Timestamptz{Time: now.Add(-alertKeep), Valid: true}); err != nil {
+		errs = append(errs, fmt.Errorf("prune alerts: %w", err))
 	}
 	return errors.Join(errs...)
 }

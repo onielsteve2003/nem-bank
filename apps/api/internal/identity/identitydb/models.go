@@ -121,6 +121,18 @@ type DeviceChallenge struct {
 	UsedAt    *time.Time
 }
 
+type FxAlert struct {
+	ID              uuid.UUID
+	UserID          uuid.UUID
+	Pair            string
+	Direction       string
+	TargetE8        int64
+	Status          string
+	CreatedAt       time.Time
+	TriggeredAt     *time.Time
+	TriggeredRateE8 pgtype.Int8
+}
+
 type FxConversion struct {
 	ID                  uuid.UUID
 	UserID              uuid.UUID

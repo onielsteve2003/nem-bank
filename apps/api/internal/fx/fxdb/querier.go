@@ -9,27 +9,37 @@ import (
 	"time"
 
 	"github.com/google/uuid"
+	"github.com/jackc/pgx/v5/pgtype"
 )
 
 type Querier interface {
+	CountActiveAlerts(ctx context.Context, userID uuid.UUID) (int64, error)
+	DeleteAlert(ctx context.Context, arg DeleteAlertParams) (int64, error)
 	GetConversionByQuote(ctx context.Context, quoteID uuid.UUID) (uuid.UUID, error)
 	GetQuote(ctx context.Context, arg GetQuoteParams) (FxQuote, error)
+	InsertAlert(ctx context.Context, arg InsertAlertParams) (FxAlert, error)
 	InsertConversion(ctx context.Context, arg InsertConversionParams) (FxConversion, error)
 	InsertQuote(ctx context.Context, arg InsertQuoteParams) (FxQuote, error)
 	// A reading is unique per pair and instant; a repeated insert (a retried job) is a no-op.
 	InsertRate(ctx context.Context, arg InsertRateParams) error
 	LatestRate(ctx context.Context, pair string) (LatestRateRow, error)
 	LatestRates(ctx context.Context) ([]LatestRatesRow, error)
+	// Waiting alerts first, then ones that fired since @since, newest first.
+	ListAlerts(ctx context.Context, arg ListAlertsParams) ([]FxAlert, error)
 	// The customer's conversions, newest first, keyset paged on (created_at, id).
 	ListConversions(ctx context.Context, arg ListConversionsParams) ([]ListConversionsRow, error)
 	// Held for the whole conversion, so two requests for one quote take turns.
 	LockQuote(ctx context.Context, arg LockQuoteParams) (FxQuote, error)
+	PruneAlerts(ctx context.Context, before pgtype.Timestamptz) (int64, error)
 	// Expired quotes nobody converted. Converted ones stay: the conversion history needs them.
 	PruneQuotes(ctx context.Context, before time.Time) (int64, error)
 	PruneRates(ctx context.Context, before time.Time) (int64, error)
 	// The last reading in each @step_seconds bucket since @since, oldest first. A bucket is
 	// reported at its start, so the points sit on an even grid for the chart.
 	RateHistory(ctx context.Context, arg RateHistoryParams) ([]RateHistoryRow, error)
+	// Fires every waiting alert on the pair the new mid rate has reached. Once only: the status
+	// check keeps a second run from firing it again.
+	TriggerAlerts(ctx context.Context, arg TriggerAlertsParams) ([]FxAlert, error)
 }
 
 var _ Querier = (*Queries)(nil)

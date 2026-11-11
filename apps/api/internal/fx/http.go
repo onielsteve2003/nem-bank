@@ -7,6 +7,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 // API adapts the service to the contract's strict server; the router embeds it. A nil *API
@@ -135,4 +136,73 @@ func (a *API) ListFxConversions(ctx context.Context, req api.ListFxConversionsRe
 		out.Data[i] = ConversionJSON(c)
 	}
 	return out, nil
+}
+
+// ListFxAlerts is GET /v1/fx/alerts.
+func (a *API) ListFxAlerts(ctx context.Context, _ api.ListFxAlertsRequestObject) (api.ListFxAlertsResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	rows, err := a.svc.Alerts(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := api.ListFxAlerts200JSONResponse{Data: make([]api.FxAlert, len(rows))}
+	for i, r := range rows {
+		out.Data[i] = AlertJSON(r)
+	}
+	return out, nil
+}
+
+// CreateFxAlert is POST /v1/fx/alerts.
+func (a *API) CreateFxAlert(ctx context.Context, req api.CreateFxAlertRequestObject) (api.CreateFxAlertResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	al, err := a.svc.CreateAlert(ctx, b.Pair, string(b.Direction), b.TargetRate)
+	if err != nil {
+		return nil, err
+	}
+	return api.CreateFxAlert201JSONResponse(AlertJSON(al)), nil
+}
+
+// DeleteFxAlert is DELETE /v1/fx/alerts/{alert_id}.
+func (a *API) DeleteFxAlert(ctx context.Context, req api.DeleteFxAlertRequestObject) (api.DeleteFxAlertResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	if err := a.svc.DeleteAlert(ctx, req.AlertId); err != nil {
+		return nil, err
+	}
+	return api.DeleteFxAlert204Response{}, nil
+}
+
+// DemoInboundTransfer is POST /v1/demo/inbound-transfer (FX-3). It lives here until Demo
+// Controls (T31) gathers the demo operations.
+func (a *API) DemoInboundTransfer(ctx context.Context, req api.DemoInboundTransferRequestObject) (api.DemoInboundTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	amount, err := money.ParseMinor(b.Amount.AmountMinor, string(b.Amount.Currency))
+	if err != nil {
+		return nil, problem.Validation(problem.Field("/amount", "invalid", "Enter a valid amount."))
+	}
+	in := InboundRequest{Account: b.AccountId, Amount: amount, SenderName: b.SenderName}
+	if b.SenderBank != nil {
+		in.SenderBank = *b.SenderBank
+	}
+	if b.Narration != nil {
+		in.Narration = *b.Narration
+	}
+	t, err := a.svc.DemoInbound(ctx, in)
+	if err != nil {
+		return nil, err
+	}
+	j, err := accounts.TransactionJSON(t)
+	if err != nil {
+		return nil, err
+	}
+	return api.DemoInboundTransfer201JSONResponse(j), nil
 }
