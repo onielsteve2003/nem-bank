@@ -13,7 +13,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
-	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/savings/savingsdb"
 )
 
@@ -156,8 +156,23 @@ type sweepWorker struct {
 }
 
 func (w *sweepWorker) Work(ctx context.Context, _ *river.Job[SweepArgs]) error {
-	_, err := w.s.SweepAutoSaves(ctx)
-	return err
+	return w.s.Sweep(ctx)
+}
+
+// Sweep runs every savings clock once: auto-saves, goal interest, then locks (interest
+// and maturity). One failing does not stop the others; the job is retried for the error.
+func (s *Service) Sweep(ctx context.Context) error {
+	var errs []error
+	if _, err := s.SweepAutoSaves(ctx); err != nil {
+		errs = append(errs, err)
+	}
+	if _, err := s.SweepGoalInterest(ctx); err != nil {
+		errs = append(errs, err)
+	}
+	if _, err := s.SweepLocks(ctx); err != nil {
+		errs = append(errs, err)
+	}
+	return errors.Join(errs...)
 }
 
 // Register adds the savings workers (jobs.Options.Workers).
@@ -171,5 +186,3 @@ func (s *Service) PeriodicJobs() []*river.PeriodicJob {
 			&river.PeriodicJobOpts{RunOnStart: true}),
 	}
 }
-
-var _ = money.NGN

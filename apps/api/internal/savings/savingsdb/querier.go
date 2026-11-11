@@ -17,19 +17,38 @@ type Querier interface {
 	// Closing ends the auto-save rule with it.
 	CloseGoal(ctx context.Context, arg CloseGoalParams) (SavingsGoal, error)
 	CountActiveGoals(ctx context.Context, userID uuid.UUID) (int64, error)
+	CountActiveLocks(ctx context.Context, userID uuid.UUID) (int64, error)
+	EndLock(ctx context.Context, arg EndLockParams) (LockedSaving, error)
 	GetGoal(ctx context.Context, arg GetGoalParams) (GetGoalRow, error)
+	GetLock(ctx context.Context, arg GetLockParams) (LockedSaving, error)
+	// Without the caller, for the sweep that pays locks out.
+	GetLockOwner(ctx context.Context, id uuid.UUID) (uuid.UUID, error)
 	GetRoundUpSettings(ctx context.Context, userID uuid.UUID) (RoundUpSetting, error)
 	// What the Grow tab adds up: money in open goals and the interest they have earned.
 	GoalTotals(ctx context.Context, userID uuid.UUID) (GoalTotalsRow, error)
 	InsertGoal(ctx context.Context, arg InsertGoalParams) (SavingsGoal, error)
+	InsertLock(ctx context.Context, arg InsertLockParams) (LockedSaving, error)
 	// Zero rows means this spend was already rounded up.
 	InsertRoundUp(ctx context.Context, arg InsertRoundUpParams) (int64, error)
 	ListDueAutoSaves(ctx context.Context, now *time.Time) ([]uuid.UUID, error)
 	// Active goals first, newest first within each.
 	ListGoals(ctx context.Context, userID uuid.UUID) ([]ListGoalsRow, error)
+	// Open goals owed interest: the last day paid is before today (Lagos).
+	ListGoalsToPay(ctx context.Context, today time.Time) ([]uuid.UUID, error)
+	// Active locks first, then the most recently started.
+	ListLocks(ctx context.Context, userID uuid.UUID) ([]LockedSaving, error)
+	// Active locks that have a day of interest to post or have reached maturity.
+	ListLocksToAdvance(ctx context.Context, today time.Time) ([]uuid.UUID, error)
 	// Held while a deposit, withdrawal, edit or auto-save runs, so they apply one at a time.
 	LockGoal(ctx context.Context, id uuid.UUID) (SavingsGoal, error)
+	// Held while interest is posted or the lock is paid out, so a lock ends exactly once.
+	LockLock(ctx context.Context, id uuid.UUID) (LockedSaving, error)
+	// What the Grow tab adds up for locks: principal still locked, interest earned (accrued on
+	// running locks, kept on finished ones) and how many are running.
+	LockTotals(ctx context.Context, userID uuid.UUID) (LockTotalsRow, error)
 	SetAutoSaveNext(ctx context.Context, arg SetAutoSaveNextParams) error
+	SetGoalInterest(ctx context.Context, arg SetGoalInterestParams) error
+	SetLockAccrual(ctx context.Context, arg SetLockAccrualParams) error
 	SumRoundUpsSince(ctx context.Context, arg SumRoundUpsSinceParams) (int64, error)
 	UpdateGoal(ctx context.Context, arg UpdateGoalParams) (SavingsGoal, error)
 	UpsertRoundUpSettings(ctx context.Context, arg UpsertRoundUpSettingsParams) (RoundUpSetting, error)

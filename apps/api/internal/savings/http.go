@@ -272,3 +272,94 @@ func (a *API) SetRoundUps(ctx context.Context, req api.SetRoundUpsRequestObject)
 	}
 	return api.SetRoundUps200JSONResponse(roundUpsJSON(r)), nil
 }
+
+// LockJSON is the contract's LockedSaving.
+func LockJSON(l Lock) api.LockedSaving {
+	out := api.LockedSaving{
+		Id: l.ID, Principal: accounts.Money(l.Principal), TermDays: l.TermDays, RateBps: l.RateBps,
+		StartDate: openapi_types.Date{Time: l.StartDate}, MaturityDate: openapi_types.Date{Time: l.MaturityDate},
+		AccruedInterest: accounts.Money(l.AccruedInterest), ExpectedInterest: accounts.Money(l.ExpectedInterest),
+		EarlyBreakPenaltyBps: l.EarlyBreakPenaltyBps, Status: api.LockedSavingStatus(l.Status),
+	}
+	if l.PaidOut != nil {
+		p := accounts.Money(*l.PaidOut)
+		out.PaidOut = &p
+	}
+	return out
+}
+
+// QuoteLockedSaving is POST /v1/savings/locks/quote.
+func (a *API) QuoteLockedSaving(_ context.Context, req api.QuoteLockedSavingRequestObject) (api.QuoteLockedSavingResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	amount, err := parseMoney(req.Body.Amount, "/amount")
+	if err != nil {
+		return nil, err
+	}
+	q, err := a.svc.Quote(amount, req.Body.TermDays)
+	if err != nil {
+		return nil, err
+	}
+	return api.QuoteLockedSaving200JSONResponse{
+		Amount: accounts.Money(q.Amount), TermDays: q.TermDays, RateBps: q.RateBps, InterestAtMaturity: accounts.Money(q.InterestAtMaturity),
+		MaturityDate: openapi_types.Date{Time: q.MaturityDate}, EarlyBreakPenaltyBps: q.EarlyBreakPenaltyBps, EarlyBreakExplanation: q.Explanation,
+	}, nil
+}
+
+// ListLockedSavings is GET /v1/savings/locks.
+func (a *API) ListLockedSavings(ctx context.Context, _ api.ListLockedSavingsRequestObject) (api.ListLockedSavingsResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	list, err := a.svc.Locks(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := api.ListLockedSavings200JSONResponse{Data: make([]api.LockedSaving, len(list))}
+	for i, l := range list {
+		out.Data[i] = LockJSON(l)
+	}
+	return out, nil
+}
+
+// CreateLockedSaving is POST /v1/savings/locks.
+func (a *API) CreateLockedSaving(ctx context.Context, req api.CreateLockedSavingRequestObject) (api.CreateLockedSavingResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	b := req.Body
+	amount, err := parseMoney(b.Amount, "/amount")
+	if err != nil {
+		return nil, err
+	}
+	l, err := a.svc.CreateLock(ctx, amount, b.TermDays, b.SourceAccountId, bool(b.AcceptedTerms))
+	if err != nil {
+		return nil, err
+	}
+	return api.CreateLockedSaving201JSONResponse(LockJSON(l)), nil
+}
+
+// GetLockedSaving is GET /v1/savings/locks/{lock_id}.
+func (a *API) GetLockedSaving(ctx context.Context, req api.GetLockedSavingRequestObject) (api.GetLockedSavingResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	l, err := a.svc.Lock(ctx, req.LockId)
+	if err != nil {
+		return nil, err
+	}
+	return api.GetLockedSaving200JSONResponse(LockJSON(l)), nil
+}
+
+// BreakLockedSaving is POST /v1/savings/locks/{lock_id}/break.
+func (a *API) BreakLockedSaving(ctx context.Context, req api.BreakLockedSavingRequestObject) (api.BreakLockedSavingResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	l, err := a.svc.BreakLock(ctx, req.LockId)
+	if err != nil {
+		return nil, err
+	}
+	return api.BreakLockedSaving200JSONResponse(LockJSON(l)), nil
+}

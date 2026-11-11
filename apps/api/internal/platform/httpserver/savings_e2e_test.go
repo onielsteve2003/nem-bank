@@ -98,3 +98,67 @@ func TestASignedGoalDepositIsMadeOnceAndAnExplicitNullClearsTheRule(t *testing.T
 		t.Fatalf("naira after closing = %s, want the full ₦100,000 back", n.LedgerBalance.AmountMinor)
 	}
 }
+
+// TestALockIsQuotedMadeOnceAndBrokenWithItsPenalty walks locked savings over HTTP: the
+// disclosure, a double-tapped signed lock that replays, and an early break.
+func TestALockIsQuotedMadeOnceAndBrokenWithItsPenalty(t *testing.T) {
+	t.Parallel()
+	s := newFXStack(t)
+	tok := s.user.AccessToken
+	ngn := call[api.AccountList](t, s.h, http.MethodGet, "/v1/accounts", tok, nil, http.StatusOK).Data[0]
+	if err := pgx.BeginFunc(t.Context(), s.pool, func(tx pgx.Tx) error {
+		src, err := ledger.SystemAccount(t.Context(), tx, ledger.KindDemoFunding, "NGN")
+		if err != nil {
+			return err
+		}
+		amt := money.New(100_000_00, money.NGN)
+		_, err = ledger.Post(t.Context(), tx, ledger.Entry{Kind: "demo_funding", Reference: "seed",
+			Legs: []ledger.Leg{ledger.Debit(src.ID, amt), ledger.Credit(ngn.Id, amt)}})
+		return err
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	quote := call[api.LockQuote](t, s.h, http.MethodPost, "/v1/savings/locks/quote", tok,
+		map[string]any{"amount": map[string]string{"amount_minor": "5000000", "currency": "NGN"}, "term_days": 90}, http.StatusOK)
+	if quote.RateBps != 1400 || quote.InterestAtMaturity.AmountMinor != "172602" || quote.EarlyBreakPenaltyBps != 5000 || quote.EarlyBreakExplanation == "" {
+		t.Fatalf("quote = %+v", quote)
+	}
+	call[api.Problem](t, s.h, http.MethodPost, "/v1/savings/locks/quote", tok,
+		map[string]any{"amount": map[string]string{"amount_minor": "5000000", "currency": "NGN"}, "term_days": 45}, http.StatusUnprocessableEntity)
+
+	body := `{"amount":{"amount_minor":"5000000","currency":"NGN"},"term_days":90,"source_account_id":"` + ngn.Id.String() + `","accepted_terms":true}`
+	key := uuid.NewString()
+	first := signedPostKey(t, s.h, s.key, s.user.Device.Id, tok, "/v1/savings/locks", body, "nonce-lck-0000001", key)
+	if first.Code != http.StatusCreated {
+		t.Fatalf("create lock = %d: %s", first.Code, first.Body)
+	}
+	second := signedPostKey(t, s.h, s.key, s.user.Device.Id, tok, "/v1/savings/locks", body, "nonce-lck-0000002", key)
+	if second.Code != http.StatusCreated || second.Header().Get("Idempotent-Replayed") != "true" || second.Body.String() != first.Body.String() {
+		t.Fatalf("double tap = %d %q: %s", second.Code, second.Header().Get("Idempotent-Replayed"), second.Body)
+	}
+	lock := decode[api.LockedSaving](t, first.Body.Bytes())
+	if lock.Status != api.LockedSavingStatusActive || lock.Principal.AmountMinor != "5000000" || lock.ExpectedInterest.AmountMinor != "172602" {
+		t.Fatalf("lock = %+v", lock)
+	}
+	if n := call[api.Account](t, s.h, http.MethodGet, "/v1/accounts/"+ngn.Id.String(), tok, nil, http.StatusOK); n.LedgerBalance.AmountMinor != "5000000" {
+		t.Fatalf("naira = %s, want one ₦50,000 debit", n.LedgerBalance.AmountMinor)
+	}
+	if got := call[api.LockedSaving](t, s.h, http.MethodGet, "/v1/savings/locks/"+lock.Id.String(), tok, nil, http.StatusOK); got.Id != lock.Id {
+		t.Fatalf("get = %+v", got)
+	}
+	if list := call[api.LockedSavingList](t, s.h, http.MethodGet, "/v1/savings/locks", tok, nil, http.StatusOK); len(list.Data) != 1 {
+		t.Fatalf("list = %+v", list)
+	}
+
+	broke := signedPostKey(t, s.h, s.key, s.user.Device.Id, tok, "/v1/savings/locks/"+lock.Id.String()+"/break", "", "nonce-lck-0000003", uuid.NewString())
+	if broke.Code != http.StatusOK {
+		t.Fatalf("break = %d: %s", broke.Code, broke.Body)
+	}
+	if b := decode[api.LockedSaving](t, broke.Body.Bytes()); b.Status != api.LockedSavingStatusBroken || b.PaidOut == nil || b.PaidOut.AmountMinor != "5000000" {
+		t.Fatalf("broken = %+v (no interest yet, so the whole principal comes back)", b)
+	}
+	if n := call[api.Account](t, s.h, http.MethodGet, "/v1/accounts/"+ngn.Id.String(), tok, nil, http.StatusOK); n.LedgerBalance.AmountMinor != "10000000" {
+		t.Fatalf("naira after breaking = %s", n.LedgerBalance.AmountMinor)
+	}
+}

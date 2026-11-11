@@ -578,8 +578,13 @@ func (s *Service) Summary(ctx context.Context) (Summary, error) {
 	if err != nil {
 		return Summary{}, fmt.Errorf("round-ups this month: %w", err)
 	}
+	locks, err := s.q.LockTotals(ctx, p.UserID)
+	if err != nil {
+		return Summary{}, fmt.Errorf("lock totals: %w", err)
+	}
 	return Summary{
-		TotalSaved: naira(t.Saved), InterestEarned: naira(t.Interest), RoundUpsThisMonth: naira(ru), Goals: int(t.Goals),
+		TotalSaved: naira(t.Saved + locks.Locked), InterestEarned: naira(t.Interest + locks.Interest),
+		RoundUpsThisMonth: naira(ru), Goals: int(t.Goals), Locks: int(locks.Running),
 	}, nil
 }
 

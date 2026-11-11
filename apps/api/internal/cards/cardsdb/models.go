@@ -293,6 +293,25 @@ type LedgerAccount struct {
 	CreatedAt      time.Time
 }
 
+type LockedSaving struct {
+	ID                    uuid.UUID
+	UserID                uuid.UUID
+	AccountID             uuid.UUID
+	PrincipalMinor        int64
+	TermDays              int32
+	RateBps               int32
+	EarlyBreakPenaltyBps  int32
+	StartDate             pgtype.Date
+	MaturityDate          pgtype.Date
+	ExpectedInterestMinor int64
+	AccruedInterestMinor  int64
+	AccruedDays           int32
+	Status                string
+	PaidOutMinor          *int64
+	EndedAt               *time.Time
+	CreatedAt             time.Time
+}
+
 type MoneyRequest struct {
 	ID             uuid.UUID
 	RequesterID    uuid.UUID
