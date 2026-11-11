@@ -36,6 +36,9 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/nemml/fraud.py" = ["E501"]  # model card prose
+"src/nemml/categories.py" = ["E501"]  # model card prose
+"src/nemml/categories_data.py" = ["E501"]  # word lists
+"src/nemml/merchants.py" = ["E501"]  # merchant lists
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]

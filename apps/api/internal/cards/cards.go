@@ -23,6 +23,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts/accountsdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/audit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards/cardsdb"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
@@ -100,8 +101,11 @@ type Config struct {
 	StepUps   StepUps
 	Keyring   *fieldcrypt.Keyring
 	// Rates prices charges in a currency other than the card's; nil refuses them.
-	Rates  Rater
-	Logger *slog.Logger
+	Rates Rater
+	// Categorizer files card payments by merchant name (AI-3); nil leaves the merchant
+	// category code's answer alone.
+	Categorizer *categorize.Classifier
+	Logger      *slog.Logger
 	// Now defaults to time.Now.
 	Now func() time.Time
 }
@@ -115,8 +119,10 @@ type Service struct {
 	stepUps   StepUps
 	keyring   *fieldcrypt.Keyring
 	rates     Rater
-	log       *slog.Logger
-	now       func() time.Time
+	// categorizer is nil when smart categories is off.
+	categorizer *categorize.Classifier
+	log         *slog.Logger
+	now         func() time.Time
 }
 
 // NewService builds the service.
@@ -126,7 +132,7 @@ func NewService(cfg Config) (*Service, error) {
 	}
 	s := &Service{
 		pool: cfg.Pool, q: cardsdb.New(cfg.Pool), accounts: cfg.Accounts, customers: cfg.Customers, stepUps: cfg.StepUps,
-		keyring: cfg.Keyring, rates: cfg.Rates, log: cfg.Logger.With("component", "cards"), now: cfg.Now,
+		keyring: cfg.Keyring, rates: cfg.Rates, categorizer: cfg.Categorizer, log: cfg.Logger.With("component", "cards"), now: cfg.Now,
 	}
 	if s.now == nil {
 		s.now = time.Now

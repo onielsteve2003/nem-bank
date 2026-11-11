@@ -14,6 +14,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards/cardsdb"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
@@ -220,9 +221,11 @@ func (s *Service) Authorize(ctx context.Context, req ChargeRequest) (cardsdb.Car
 				row.HoldID, row.ExpiresAt, row.Status = &hold.ID, &expiresAt, AuthAuthorized
 				// The pending line the customer sees in their history; capture or reversal
 				// settles it (CARD-5).
+				category, source, confidence := s.categorize(req.Merchant)
 				line, err := accounts.Record(ctx, tx, accounts.Line{
 					UserID: locked.UserID, AccountID: locked.AccountID, Type: "card_payment", Direction: "debit", Status: "pending",
-					Amount: billed, Narration: req.Merchant.Name, Reference: id.String(), Category: categoryFor(req.Merchant.MCC),
+					Amount: billed, Narration: req.Merchant.Name, Reference: id.String(),
+					Category: category, CategorySource: source, CategoryConfidence: confidence,
 					Counterparty: api.Counterparty{Name: req.Merchant.Name, MerchantId: &req.Merchant.ID}, CardID: &locked.ID, At: now,
 				})
 				if err != nil {
@@ -257,6 +260,22 @@ func (s *Service) billingFor(ctx context.Context, amount money.Money, card money
 		return money.Money{}, err
 	}
 	return billing(amount, card, views)
+}
+
+// categorize files a card payment (AI-3): the merchant dictionary, then the model if it is
+// confident, then the merchant category code. The customer's own rule for the merchant is
+// applied afterwards, when the line is recorded.
+func (s *Service) categorize(m Merchant) (category, source string, confidence *float64) {
+	if s.categorizer != nil {
+		if r, ok := s.categorizer.Classify(m.Name); ok {
+			if r.Source == categorize.SourceModel {
+				c := r.Confidence
+				confidence = &c
+			}
+			return r.Category, string(r.Source), confidence
+		}
+	}
+	return categoryFor(m.MCC), "rules", nil
 }
 
 // categoryFor files a charge by the merchant's category code, for the history and insights.

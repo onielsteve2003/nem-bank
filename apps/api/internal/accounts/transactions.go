@@ -5,6 +5,8 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
+	"net/http"
 	"strings"
 	"time"
 
@@ -13,6 +15,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts/accountsdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/pagination"
@@ -50,11 +53,14 @@ type Line struct {
 	Entry *ledger.Posted
 	// Narration is the customer-facing description, Reference the payment reference.
 	Narration, Reference string
-	// Category is a contract Category, set by rules.
-	Category     string
-	Counterparty api.Counterparty
-	TransferID   *uuid.UUID
-	CardID       *uuid.UUID
+	// Category is a contract Category. CategorySource says who chose it ("rules" by default,
+	// or "model" with CategoryConfidence); a customer's own rule for the merchant replaces either.
+	Category           string
+	CategorySource     string
+	CategoryConfidence *float64
+	Counterparty       api.Counterparty
+	TransferID         *uuid.UUID
+	CardID             *uuid.UUID
 	// At defaults to the entry's time, else now.
 	At time.Time
 }
@@ -77,11 +83,33 @@ func Record(ctx context.Context, tx pgx.Tx, l Line) (accountsdb.Transaction, err
 	if err != nil {
 		return accountsdb.Transaction{}, fmt.Errorf("counterparty: %w", err)
 	}
+	source, confidence := l.CategorySource, l.CategoryConfidence
+	if source == "" {
+		source = "rules"
+	}
+	if source != "model" {
+		confidence = nil
+	}
+	q := accountsdb.New(tx)
+	// The customer's word beats every guess: an "always file this merchant as..." rule.
+	rule, err := q.GetMerchantRule(ctx, accountsdb.GetMerchantRuleParams{
+		UserID: l.UserID, MerchantKey: categorize.MerchantKey(l.Counterparty.Name),
+	})
+	switch {
+	case err == nil:
+		l.Category, source, confidence = rule, "user", nil
+	case !errors.Is(err, pgx.ErrNoRows):
+		return accountsdb.Transaction{}, fmt.Errorf("merchant rule: %w", err)
+	}
 	p := accountsdb.InsertTransactionParams{
 		ID: id, UserID: l.UserID, AccountID: l.AccountID, Currency: string(l.Amount.Currency()),
 		Type: l.Type, Direction: l.Direction, Status: l.Status, AmountMinor: l.Amount.Amount(),
-		Narration: l.Narration, Reference: l.Reference, Category: l.Category, CategorySource: "rules",
+		Narration: l.Narration, Reference: l.Reference, Category: l.Category, CategorySource: source,
 		Counterparty: cp, TransferID: l.TransferID, CardID: l.CardID, CreatedAt: l.At,
+	}
+	if confidence != nil {
+		c := float32(*confidence)
+		p.CategoryConfidence = &c
 	}
 	if l.Fee != nil && l.Fee.IsPositive() {
 		f, code := l.Fee.Amount(), l.FeeCode
@@ -97,7 +125,7 @@ func Record(ctx context.Context, tx pgx.Tx, l Line) (accountsdb.Transaction, err
 	if p.CreatedAt.IsZero() {
 		p.CreatedAt = time.Now()
 	}
-	t, err := accountsdb.New(tx).InsertTransaction(ctx, p)
+	t, err := q.InsertTransaction(ctx, p)
 	if err != nil {
 		return accountsdb.Transaction{}, fmt.Errorf("insert transaction: %w", err)
 	}
@@ -257,4 +285,87 @@ var likeEscaper = strings.NewReplacer(`\`, `\\`, `%`, `\%`, `_`, `\_`)
 
 func lagosMidnight(d time.Time) time.Time {
 	return time.Date(d.Year(), d.Month(), d.Day(), 0, 0, 0, 0, lagos)
+}
+
+// Recategorize is the customer's correction of a transaction's category (AI-3). It beats any
+// rule or model guess, is kept as a labelled example for retraining and, when asked, becomes
+// the customer's rule for that merchant: every other line from it changes now, and future
+// ones are filed the same way as they are recorded.
+func (s *Service) Recategorize(ctx context.Context, id uuid.UUID, category string, applyToSimilar bool) (Detail, error) {
+	if !categorize.ValidCategory(category) {
+		return Detail{}, problem.New(http.StatusBadRequest, problem.CodeValidationFailed, "That is not a category")
+	}
+	// Reading it first applies ownership and the duress decoy exactly as the detail view does.
+	before, err := s.Transaction(ctx, id)
+	if err != nil {
+		return Detail{}, err
+	}
+	key := categorize.MerchantKey(counterpartyName(before.Transaction))
+	correctionID, err := uuid.NewV7()
+	if err != nil {
+		return Detail{}, fmt.Errorf("correction id: %w", err)
+	}
+	err = pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
+		q := s.q.WithTx(tx)
+		if _, err := q.SetTransactionCategory(ctx, accountsdb.SetTransactionCategoryParams{
+			ID: id, UserID: before.UserID, Category: category,
+		}); err != nil {
+			return fmt.Errorf("set category: %w", err)
+		}
+		if err := q.InsertCategoryCorrection(ctx, accountsdb.InsertCategoryCorrectionParams{
+			ID: correctionID, UserID: before.UserID, TransactionID: id, MerchantKey: key,
+			Text:             strings.TrimSpace(counterpartyName(before.Transaction) + " " + before.Narration),
+			PreviousCategory: before.Category, PreviousSource: before.CategorySource,
+			PreviousConfidence: before.CategoryConfidence, Category: category, ApplyToSimilar: applyToSimilar,
+		}); err != nil {
+			return fmt.Errorf("record correction: %w", err)
+		}
+		if applyToSimilar && key != "" {
+			if err := q.UpsertMerchantRule(ctx, accountsdb.UpsertMerchantRuleParams{
+				UserID: before.UserID, MerchantKey: key, Category: category,
+			}); err != nil {
+				return fmt.Errorf("save merchant rule: %w", err)
+			}
+			if _, err := q.RecategorizeMerchant(ctx, accountsdb.RecategorizeMerchantParams{
+				UserID: before.UserID, MerchantKey: key, Category: category, ExceptID: id,
+			}); err != nil {
+				return fmt.Errorf("recategorize merchant: %w", err)
+			}
+		}
+		return nil
+	})
+	if err != nil {
+		return Detail{}, err
+	}
+	return s.Transaction(ctx, id)
+}
+
+// counterpartyName is the name on a line's counterparty, which is what merchants are keyed by.
+func counterpartyName(t accountsdb.Transaction) string {
+	var cp struct {
+		Name string `json:"name"`
+	}
+	if err := json.Unmarshal(t.Counterparty, &cp); err != nil {
+		return ""
+	}
+	return cp.Name
+}
+
+// ExportCorrections writes every customer correction as JSON lines (text and the category the
+// customer chose): the labelled examples smart categories retrains on.
+func (s *Service) ExportCorrections(ctx context.Context, w io.Writer) (int, error) {
+	rows, err := s.q.ListCategoryCorrections(ctx)
+	if err != nil {
+		return 0, fmt.Errorf("list corrections: %w", err)
+	}
+	enc := json.NewEncoder(w)
+	for _, r := range rows {
+		if err := enc.Encode(map[string]any{
+			"text": r.Text, "label": r.Category, "previous": r.PreviousCategory, "previous_source": r.PreviousSource,
+			"at": r.CreatedAt,
+		}); err != nil {
+			return 0, fmt.Errorf("write correction: %w", err)
+		}
+	}
+	return len(rows), nil
 }

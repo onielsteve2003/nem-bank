@@ -21,11 +21,13 @@ type Querier interface {
 	GetCustomerAccountByCurrency(ctx context.Context, arg GetCustomerAccountByCurrencyParams) (CustomerAccount, error)
 	// Where a held internal transfer lands when it is released.
 	GetCustomerAccountByID(ctx context.Context, accountID uuid.UUID) (CustomerAccount, error)
+	GetMerchantRule(ctx context.Context, arg GetMerchantRuleParams) (string, error)
 	GetStatement(ctx context.Context, arg GetStatementParams) (GetStatementRow, error)
 	// The public verification page: just enough to confirm the document, nothing to act on.
 	GetStatementByCode(ctx context.Context, verificationCode *string) (GetStatementByCodeRow, error)
 	GetStatementPDF(ctx context.Context, arg GetStatementPDFParams) (GetStatementPDFRow, error)
 	GetTransaction(ctx context.Context, arg GetTransactionParams) (Transaction, error)
+	InsertCategoryCorrection(ctx context.Context, arg InsertCategoryCorrectionParams) error
 	InsertCustomerAccount(ctx context.Context, arg InsertCustomerAccountParams) (CustomerAccount, error)
 	// Written once: a re-run (or a second instance) leaves the first row in place.
 	InsertDailyBalances(ctx context.Context, arg InsertDailyBalancesParams) error
@@ -34,6 +36,8 @@ type Querier interface {
 	InsertLedgerAccount(ctx context.Context, arg InsertLedgerAccountParams) error
 	InsertStatement(ctx context.Context, arg InsertStatementParams) (InsertStatementRow, error)
 	InsertTransaction(ctx context.Context, arg InsertTransactionParams) (Transaction, error)
+	// The retraining feed: text and the category the customer chose.
+	ListCategoryCorrections(ctx context.Context) ([]ListCategoryCorrectionsRow, error)
 	// NGN first, then the wallets in the app's order.
 	ListCustomerAccounts(ctx context.Context, userID uuid.UUID) ([]ListCustomerAccountsRow, error)
 	// The customer-facing lines behind an account's entries, for statement narrations.
@@ -48,9 +52,15 @@ type Querier interface {
 	LockStatement(ctx context.Context, id uuid.UUID) (LockStatementRow, error)
 	NextNubanSerial(ctx context.Context) (int64, error)
 	NextWalletSerial(ctx context.Context) (int64, error)
+	// "Also for similar": every other line of this customer with the same counterparty. The key is
+	// built as categorize.MerchantKey builds it (lowercase, single-spaced).
+	RecategorizeMerchant(ctx context.Context, arg RecategorizeMerchantParams) (int64, error)
+	// A correction: the customer's word replaces whoever chose before, and a model's confidence goes with it.
+	SetTransactionCategory(ctx context.Context, arg SetTransactionCategoryParams) (Transaction, error)
 	// A pending line whose money has now moved (or failed to): the entry and balance arrive
 	// with the status.
 	SettleTransaction(ctx context.Context, arg SettleTransactionParams) (Transaction, error)
+	UpsertMerchantRule(ctx context.Context, arg UpsertMerchantRuleParams) error
 }
 
 var _ Querier = (*Queries)(nil)

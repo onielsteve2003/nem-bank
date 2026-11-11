@@ -25,6 +25,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/bills"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/cards"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
@@ -196,8 +197,17 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	// Smart categories (AI-3). If the model will not load, the dictionary still works.
+	categorizer, err := categorize.New()
+	if err != nil {
+		log.Error("category model failed to load; the merchant dictionary decides alone", "error", err)
+		if categorizer, err = categorize.DictionaryOnly(); err != nil {
+			return err
+		}
+	}
 	cardsSvc, err := cards.NewService(cards.Config{
-		Pool: pool, Accounts: accountsSvc, Customers: identitySvc, StepUps: identitySvc, Keyring: keyring, Rates: fxSvc, Logger: log,
+		Categorizer: categorizer,
+		Pool:        pool, Accounts: accountsSvc, Customers: identitySvc, StepUps: identitySvc, Keyring: keyring, Rates: fxSvc, Logger: log,
 	})
 	if err != nil {
 		return err

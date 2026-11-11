@@ -1,0 +1,602 @@
+[
+ {
+  "keyword": "lagos business school",
+  "category": "education"
+ },
+ {
+  "keyword": "peace mass transit",
+  "category": "transport"
+ },
+ {
+  "keyword": "ikeja city mall",
+  "category": "shopping"
+ },
+ {
+  "keyword": "park n shop",
+  "category": "groceries"
+ },
+ {
+  "keyword": "covenant university",
+  "category": "education"
+ },
+ {
+  "keyword": "cactus restaurant",
+  "category": "food"
+ },
+ {
+  "keyword": "water corporation",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "chicken republic",
+  "category": "food"
+ },
+ {
+  "keyword": "linkedin premium",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "sweet sensation",
+  "category": "food"
+ },
+ {
+  "keyword": "genesis cinemas",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "youtube premium",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "lagoon hospital",
+  "category": "health"
+ },
+ {
+  "keyword": "cash withdrawal",
+  "category": "cash"
+ },
+ {
+  "keyword": "service charge",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "pos withdrawal",
+  "category": "cash"
+ },
+ {
+  "keyword": "dominos pizza",
+  "category": "food"
+ },
+ {
+  "keyword": "market square",
+  "category": "groceries"
+ },
+ {
+  "keyword": "abc transport",
+  "category": "transport"
+ },
+ {
+  "keyword": "prepaid meter",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "ozone cinemas",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "terra kulture",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "lekki gardens",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "avon medical",
+  "category": "health"
+ },
+ {
+  "keyword": "pocket money",
+  "category": "family"
+ },
+ {
+  "keyword": "burger king",
+  "category": "food"
+ },
+ {
+  "keyword": "data bundle",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "apple music",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "prime video",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "microsoft 0",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "school fees",
+  "category": "education"
+ },
+ {
+  "keyword": "estate levy",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "caution fee",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "cold stone",
+  "category": "food"
+ },
+ {
+  "keyword": "lekki toll",
+  "category": "transport"
+ },
+ {
+  "keyword": "palms mall",
+  "category": "shopping"
+ },
+ {
+  "keyword": "google one",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "the place",
+  "category": "food"
+ },
+ {
+  "keyword": "bukka hut",
+  "category": "food"
+ },
+ {
+  "keyword": "ofada boy",
+  "category": "food"
+ },
+ {
+  "keyword": "mama cass",
+  "category": "food"
+ },
+ {
+  "keyword": "mr biggs",
+  "category": "food"
+ },
+ {
+  "keyword": "mrs fuel",
+  "category": "transport"
+ },
+ {
+  "keyword": "lcc toll",
+  "category": "transport"
+ },
+ {
+  "keyword": "cash out",
+  "category": "cash"
+ },
+ {
+  "keyword": "item 0",
+  "category": "food"
+ },
+ {
+  "keyword": "totalenergies",
+  "category": "transport"
+ },
+ {
+  "keyword": "propertymart",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "tantalizers",
+  "category": "food"
+ },
+ {
+  "keyword": "kilimanjaro",
+  "category": "food"
+ },
+ {
+  "keyword": "electricity",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "spectranet",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "aliexpress",
+  "category": "shopping"
+ },
+ {
+  "keyword": "silverbird",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "healthplus",
+  "category": "health"
+ },
+ {
+  "keyword": "reddington",
+  "category": "health"
+ },
+ {
+  "keyword": "debonairs",
+  "category": "food"
+ },
+ {
+  "keyword": "startimes",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "filmhouse",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "sportybet",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "audiomack",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "shoprite",
+  "category": "groceries"
+ },
+ {
+  "keyword": "justrite",
+  "category": "groceries"
+ },
+ {
+  "keyword": "indriver",
+  "category": "transport"
+ },
+ {
+  "keyword": "etisalat",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "payporte",
+  "category": "shopping"
+ },
+ {
+  "keyword": "nairabet",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "evercare",
+  "category": "health"
+ },
+ {
+  "keyword": "pharmacy",
+  "category": "health"
+ },
+ {
+  "keyword": "hospital",
+  "category": "health"
+ },
+ {
+  "keyword": "coursera",
+  "category": "education"
+ },
+ {
+  "keyword": "landlord",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "hubmart",
+  "category": "groceries"
+ },
+ {
+  "keyword": "grocery",
+  "category": "groceries"
+ },
+ {
+  "keyword": "0mobile",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "airtime",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "betking",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "concert",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "netflix",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "spotify",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "showmax",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "medplus",
+  "category": "health"
+ },
+ {
+  "keyword": "tuition",
+  "category": "education"
+ },
+ {
+  "keyword": "brother",
+  "category": "family"
+ },
+ {
+  "keyword": "grandma",
+  "category": "family"
+ },
+ {
+  "keyword": "cashout",
+  "category": "cash"
+ },
+ {
+  "keyword": "jollof",
+  "category": "food"
+ },
+ {
+  "keyword": "ebeano",
+  "category": "groceries"
+ },
+ {
+  "keyword": "jendol",
+  "category": "groceries"
+ },
+ {
+  "keyword": "addide",
+  "category": "groceries"
+ },
+ {
+  "keyword": "conoil",
+  "category": "transport"
+ },
+ {
+  "keyword": "lagbus",
+  "category": "transport"
+ },
+ {
+  "keyword": "airtel",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "amazon",
+  "category": "shopping"
+ },
+ {
+  "keyword": "adidas",
+  "category": "shopping"
+ },
+ {
+  "keyword": "bet0ja",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "cinema",
+  "category": "entertainment"
+ },
+ {
+  "keyword": "openai",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "icloud",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "github",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "notion",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "hygeia",
+  "category": "health"
+ },
+ {
+  "keyword": "clinic",
+  "category": "health"
+ },
+ {
+  "keyword": "dental",
+  "category": "health"
+ },
+ {
+  "keyword": "unilag",
+  "category": "education"
+ },
+ {
+  "keyword": "sister",
+  "category": "family"
+ },
+ {
+  "keyword": "upkeep",
+  "category": "family"
+ },
+ {
+  "keyword": "oando",
+  "category": "transport"
+ },
+ {
+  "keyword": "smile",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "ikedc",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "ekedc",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "kedco",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "ibedc",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "lawma",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "jumia",
+  "category": "shopping"
+ },
+ {
+  "keyword": "konga",
+  "category": "shopping"
+ },
+ {
+  "keyword": "shein",
+  "category": "shopping"
+ },
+ {
+  "keyword": "canva",
+  "category": "subscriptions"
+ },
+ {
+  "keyword": "udemy",
+  "category": "education"
+ },
+ {
+  "keyword": "mummy",
+  "category": "family"
+ },
+ {
+  "keyword": "daddy",
+  "category": "family"
+ },
+ {
+  "keyword": "aunty",
+  "category": "family"
+ },
+ {
+  "keyword": "uncle",
+  "category": "family"
+ },
+ {
+  "keyword": "spar",
+  "category": "groceries"
+ },
+ {
+  "keyword": "bolt",
+  "category": "transport"
+ },
+ {
+  "keyword": "uber",
+  "category": "transport"
+ },
+ {
+  "keyword": "nnpc",
+  "category": "transport"
+ },
+ {
+  "keyword": "gigm",
+  "category": "transport"
+ },
+ {
+  "keyword": "fuel",
+  "category": "transport"
+ },
+ {
+  "keyword": "phed",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "aedc",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "eedc",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "dstv",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "gotv",
+  "category": "bills_utilities"
+ },
+ {
+  "keyword": "slot",
+  "category": "shopping"
+ },
+ {
+  "keyword": "temu",
+  "category": "shopping"
+ },
+ {
+  "keyword": "jiji",
+  "category": "shopping"
+ },
+ {
+  "keyword": "zara",
+  "category": "shopping"
+ },
+ {
+  "keyword": "nike",
+  "category": "shopping"
+ },
+ {
+  "keyword": "waec",
+  "category": "education"
+ },
+ {
+  "keyword": "jamb",
+  "category": "education"
+ },
+ {
+  "keyword": "neco",
+  "category": "education"
+ },
+ {
+  "keyword": "rent",
+  "category": "rent_housing"
+ },
+ {
+  "keyword": "kfc",
+  "category": "food"
+ },
+ {
+  "keyword": "brt",
+  "category": "transport"
+ },
+ {
+  "keyword": "mtn",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "glo",
+  "category": "airtime_data"
+ },
+ {
+  "keyword": "mum",
+  "category": "family"
+ },
+ {
+  "keyword": "dad",
+  "category": "family"
+ },
+ {
+  "keyword": "atm",
+  "category": "cash"
+ }
+]

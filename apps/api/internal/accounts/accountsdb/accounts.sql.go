@@ -122,6 +122,22 @@ func (q *Queries) GetCustomerAccountByID(ctx context.Context, accountID uuid.UUI
 	return i, err
 }
 
+const getMerchantRule = `-- name: GetMerchantRule :one
+SELECT category FROM merchant_category_rules WHERE user_id = $1 AND merchant_key = $2
+`
+
+type GetMerchantRuleParams struct {
+	UserID      uuid.UUID
+	MerchantKey string
+}
+
+func (q *Queries) GetMerchantRule(ctx context.Context, arg GetMerchantRuleParams) (string, error) {
+	row := q.db.QueryRow(ctx, getMerchantRule, arg.UserID, arg.MerchantKey)
+	var category string
+	err := row.Scan(&category)
+	return category, err
+}
+
 const getTransaction = `-- name: GetTransaction :one
 SELECT id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code, balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id, card_id, created_at, updated_at FROM transactions WHERE id = $1 AND user_id = $2
 `
@@ -159,6 +175,45 @@ func (q *Queries) GetTransaction(ctx context.Context, arg GetTransactionParams) 
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const insertCategoryCorrection = `-- name: InsertCategoryCorrection :exec
+INSERT INTO category_corrections (
+  id, user_id, transaction_id, merchant_key, text, previous_category, previous_source, previous_confidence,
+  category, apply_to_similar
+) VALUES (
+  $1, $2, $3, $4, $5, $6, $7,
+  $8, $9, $10
+)
+`
+
+type InsertCategoryCorrectionParams struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	TransactionID      uuid.UUID
+	MerchantKey        string
+	Text               string
+	PreviousCategory   string
+	PreviousSource     string
+	PreviousConfidence *float32
+	Category           string
+	ApplyToSimilar     bool
+}
+
+func (q *Queries) InsertCategoryCorrection(ctx context.Context, arg InsertCategoryCorrectionParams) error {
+	_, err := q.db.Exec(ctx, insertCategoryCorrection,
+		arg.ID,
+		arg.UserID,
+		arg.TransactionID,
+		arg.MerchantKey,
+		arg.Text,
+		arg.PreviousCategory,
+		arg.PreviousSource,
+		arg.PreviousConfidence,
+		arg.Category,
+		arg.ApplyToSimilar,
+	)
+	return err
 }
 
 const insertCustomerAccount = `-- name: InsertCustomerAccount :one
@@ -226,36 +281,38 @@ func (q *Queries) InsertLedgerAccount(ctx context.Context, arg InsertLedgerAccou
 const insertTransaction = `-- name: InsertTransaction :one
 INSERT INTO transactions (
   id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code,
-  balance_after_minor, narration, reference, category, category_source, counterparty, transfer_id, card_id, created_at
+  balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id,
+  card_id, created_at
 ) VALUES (
   $1, $2, $3, $4, $5, $6, $7, $8, $9,
   $10, $11, $12, $13, $14, $15,
-  $16, $17, $18, $19, $20
+  $16, $17, $18, $19, $20, $21
 )
 RETURNING id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code, balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id, card_id, created_at, updated_at
 `
 
 type InsertTransactionParams struct {
-	ID                uuid.UUID
-	UserID            uuid.UUID
-	AccountID         uuid.UUID
-	Currency          string
-	EntryID           *uuid.UUID
-	Type              string
-	Direction         string
-	Status            string
-	AmountMinor       int64
-	FeeMinor          *int64
-	FeeCode           *string
-	BalanceAfterMinor *int64
-	Narration         string
-	Reference         string
-	Category          string
-	CategorySource    string
-	Counterparty      []byte
-	TransferID        *uuid.UUID
-	CardID            *uuid.UUID
-	CreatedAt         time.Time
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	AccountID          uuid.UUID
+	Currency           string
+	EntryID            *uuid.UUID
+	Type               string
+	Direction          string
+	Status             string
+	AmountMinor        int64
+	FeeMinor           *int64
+	FeeCode            *string
+	BalanceAfterMinor  *int64
+	Narration          string
+	Reference          string
+	Category           string
+	CategorySource     string
+	CategoryConfidence *float32
+	Counterparty       []byte
+	TransferID         *uuid.UUID
+	CardID             *uuid.UUID
+	CreatedAt          time.Time
 }
 
 func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionParams) (Transaction, error) {
@@ -276,6 +333,7 @@ func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionPa
 		arg.Reference,
 		arg.Category,
 		arg.CategorySource,
+		arg.CategoryConfidence,
 		arg.Counterparty,
 		arg.TransferID,
 		arg.CardID,
@@ -307,6 +365,47 @@ func (q *Queries) InsertTransaction(ctx context.Context, arg InsertTransactionPa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const listCategoryCorrections = `-- name: ListCategoryCorrections :many
+SELECT text, category, previous_category, previous_source, created_at
+FROM category_corrections
+ORDER BY created_at, id
+`
+
+type ListCategoryCorrectionsRow struct {
+	Text             string
+	Category         string
+	PreviousCategory string
+	PreviousSource   string
+	CreatedAt        time.Time
+}
+
+// The retraining feed: text and the category the customer chose.
+func (q *Queries) ListCategoryCorrections(ctx context.Context) ([]ListCategoryCorrectionsRow, error) {
+	rows, err := q.db.Query(ctx, listCategoryCorrections)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []ListCategoryCorrectionsRow{}
+	for rows.Next() {
+		var i ListCategoryCorrectionsRow
+		if err := rows.Scan(
+			&i.Text,
+			&i.Category,
+			&i.PreviousCategory,
+			&i.PreviousSource,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
 }
 
 const listCustomerAccounts = `-- name: ListCustomerAccounts :many
@@ -524,6 +623,81 @@ func (q *Queries) NextWalletSerial(ctx context.Context) (int64, error) {
 	return column_1, err
 }
 
+const recategorizeMerchant = `-- name: RecategorizeMerchant :execrows
+UPDATE transactions
+SET category = $1, category_source = 'user', category_confidence = NULL, updated_at = now()
+WHERE user_id = $2
+  AND lower(regexp_replace(btrim(counterparty->>'name'), '\s+', ' ', 'g')) = $3::text
+  AND id <> $4
+  AND (category <> $1 OR category_source <> 'user')
+`
+
+type RecategorizeMerchantParams struct {
+	Category    string
+	UserID      uuid.UUID
+	MerchantKey string
+	ExceptID    uuid.UUID
+}
+
+// "Also for similar": every other line of this customer with the same counterparty. The key is
+// built as categorize.MerchantKey builds it (lowercase, single-spaced).
+func (q *Queries) RecategorizeMerchant(ctx context.Context, arg RecategorizeMerchantParams) (int64, error) {
+	result, err := q.db.Exec(ctx, recategorizeMerchant,
+		arg.Category,
+		arg.UserID,
+		arg.MerchantKey,
+		arg.ExceptID,
+	)
+	if err != nil {
+		return 0, err
+	}
+	return result.RowsAffected(), nil
+}
+
+const setTransactionCategory = `-- name: SetTransactionCategory :one
+UPDATE transactions
+SET category = $1, category_source = 'user', category_confidence = NULL, updated_at = now()
+WHERE id = $2 AND user_id = $3
+RETURNING id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code, balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id, card_id, created_at, updated_at
+`
+
+type SetTransactionCategoryParams struct {
+	Category string
+	ID       uuid.UUID
+	UserID   uuid.UUID
+}
+
+// A correction: the customer's word replaces whoever chose before, and a model's confidence goes with it.
+func (q *Queries) SetTransactionCategory(ctx context.Context, arg SetTransactionCategoryParams) (Transaction, error) {
+	row := q.db.QueryRow(ctx, setTransactionCategory, arg.Category, arg.ID, arg.UserID)
+	var i Transaction
+	err := row.Scan(
+		&i.ID,
+		&i.UserID,
+		&i.AccountID,
+		&i.Currency,
+		&i.EntryID,
+		&i.Type,
+		&i.Direction,
+		&i.Status,
+		&i.AmountMinor,
+		&i.FeeMinor,
+		&i.FeeCode,
+		&i.BalanceAfterMinor,
+		&i.Narration,
+		&i.Reference,
+		&i.Category,
+		&i.CategorySource,
+		&i.CategoryConfidence,
+		&i.Counterparty,
+		&i.TransferID,
+		&i.CardID,
+		&i.CreatedAt,
+		&i.UpdatedAt,
+	)
+	return i, err
+}
+
 const settleTransaction = `-- name: SettleTransaction :one
 UPDATE transactions
 SET status = $1, entry_id = coalesce($2, entry_id),
@@ -577,4 +751,21 @@ func (q *Queries) SettleTransaction(ctx context.Context, arg SettleTransactionPa
 		&i.UpdatedAt,
 	)
 	return i, err
+}
+
+const upsertMerchantRule = `-- name: UpsertMerchantRule :exec
+INSERT INTO merchant_category_rules (user_id, merchant_key, category)
+VALUES ($1, $2, $3)
+ON CONFLICT (user_id, merchant_key) DO UPDATE SET category = EXCLUDED.category, updated_at = now()
+`
+
+type UpsertMerchantRuleParams struct {
+	UserID      uuid.UUID
+	MerchantKey string
+	Category    string
+}
+
+func (q *Queries) UpsertMerchantRule(ctx context.Context, arg UpsertMerchantRuleParams) error {
+	_, err := q.db.Exec(ctx, upsertMerchantRule, arg.UserID, arg.MerchantKey, arg.Category)
+	return err
 }

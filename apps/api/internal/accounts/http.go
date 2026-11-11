@@ -5,6 +5,7 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"net/http"
 	"strconv"
 	"strings"
 	"time"
@@ -13,6 +14,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/ledgerdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 // API adapts the service to the contract's strict server; the router embeds it.
@@ -230,9 +232,36 @@ func (a *API) GetTransaction(ctx context.Context, req api.GetTransactionRequestO
 	if err != nil {
 		return nil, err
 	}
-	t, err := TransactionJSON(d.Transaction)
+	out, err := detailJSON(d)
 	if err != nil {
 		return nil, err
+	}
+	return api.GetTransaction200JSONResponse(out), nil
+}
+
+// UpdateTransaction is PATCH /v1/transactions/{transaction_id}: the customer's category
+// correction (AI-3).
+func (a *API) UpdateTransaction(ctx context.Context, req api.UpdateTransactionRequestObject) (api.UpdateTransactionResponseObject, error) {
+	if req.Body == nil {
+		return nil, problem.New(http.StatusBadRequest, problem.CodeValidationFailed, "A category is required")
+	}
+	similar := req.Body.ApplyToSimilar != nil && *req.Body.ApplyToSimilar
+	d, err := a.svc.Recategorize(ctx, req.TransactionId, string(req.Body.Category), similar)
+	if err != nil {
+		return nil, err
+	}
+	out, err := detailJSON(d)
+	if err != nil {
+		return nil, err
+	}
+	return api.UpdateTransaction200JSONResponse(out), nil
+}
+
+// detailJSON is the contract's transaction detail.
+func detailJSON(d Detail) (api.TransactionDetail, error) {
+	t, err := TransactionJSON(d.Transaction)
+	if err != nil {
+		return api.TransactionDetail{}, err
 	}
 	fees := []api.FeeLine{}
 	if t.Fee != nil && d.FeeCode != nil {
@@ -242,7 +271,7 @@ func (a *API) GetTransaction(ctx context.Context, req api.GetTransactionRequestO
 	if d.EntryID != nil {
 		entry = *d.EntryID
 	}
-	return api.GetTransaction200JSONResponse{
+	return api.TransactionDetail{
 		Id: t.Id, AccountId: t.AccountId, Type: t.Type, Direction: t.Direction, Status: t.Status, Amount: t.Amount,
 		Fee: t.Fee, BalanceAfter: t.BalanceAfter, Narration: t.Narration, Reference: t.Reference, Category: t.Category,
 		CategorySource: t.CategorySource, CategoryConfidence: t.CategoryConfidence, Counterparty: t.Counterparty,

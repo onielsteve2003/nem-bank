@@ -202,6 +202,20 @@ type CardAuthorization struct {
 	SettledAt       *time.Time
 }
 
+type CategoryCorrection struct {
+	ID                 uuid.UUID
+	UserID             uuid.UUID
+	TransactionID      uuid.UUID
+	MerchantKey        string
+	Text               string
+	PreviousCategory   string
+	PreviousSource     string
+	PreviousConfidence pgtype.Float4
+	Category           string
+	ApplyToSimilar     bool
+	CreatedAt          time.Time
+}
+
 type CustomerAccount struct {
 	AccountID     uuid.UUID
 	UserID        uuid.UUID
@@ -406,6 +420,14 @@ type LockedSaving struct {
 	PaidOutMinor          pgtype.Int8
 	EndedAt               *time.Time
 	CreatedAt             time.Time
+}
+
+type MerchantCategoryRule struct {
+	UserID      uuid.UUID
+	MerchantKey string
+	Category    string
+	CreatedAt   time.Time
+	UpdatedAt   time.Time
 }
 
 type MoneyRequest struct {

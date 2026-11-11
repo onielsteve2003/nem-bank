@@ -1,0 +1,80 @@
+{
+  "model": "category-tfidf-lr-v1",
+  "rows": {
+    "train": 7494,
+    "val": 2718,
+    "test": 2790
+  },
+  "entities": {
+    "train": 1188,
+    "val": 431,
+    "test": 441
+  },
+  "threshold": 0.3,
+  "test": {
+    "rules_baseline": {
+      "accuracy": 0.248,
+      "macro_f1": 0.3209
+    },
+    "model_alone": {
+      "accuracy": 0.9229,
+      "macro_f1": 0.866
+    },
+    "system": {
+      "accuracy": 0.9688,
+      "macro_f1": 0.9719
+    }
+  },
+  "test_unseen_merchants": {
+    "rules_baseline": {
+      "accuracy": 0.2091,
+      "macro_f1": 0.2451
+    },
+    "model_alone": {
+      "accuracy": 0.9564,
+      "macro_f1": 0.8973
+    },
+    "system": {
+      "accuracy": 0.9736,
+      "macro_f1": 0.9763
+    }
+  },
+  "test_known_merchants": {
+    "rules_baseline": {
+      "accuracy": 0.8333,
+      "macro_f1": 0.7072
+    },
+    "model_alone": {
+      "accuracy": 0.4195,
+      "macro_f1": 0.2985
+    },
+    "system": {
+      "accuracy": 0.8966,
+      "macro_f1": 0.7283
+    }
+  },
+  "decided_by": {
+    "model": 0.8176,
+    "rules": 0.1642,
+    "fallback": 0.0183
+  },
+  "model_confident_share": 0.957,
+  "model_confident_accuracy": 0.9622,
+  "per_class_f1_system": {
+    "food": 0.943,
+    "groceries": 0.958,
+    "transport": 0.985,
+    "airtime_data": 0.998,
+    "bills_utilities": 0.996,
+    "shopping": 0.938,
+    "entertainment": 0.993,
+    "subscriptions": 0.979,
+    "health": 0.966,
+    "education": 0.998,
+    "rent_housing": 0.967,
+    "family": 0.989,
+    "cash": 0.997,
+    "other": 0.9
+  },
+  "beats_baseline": true
+}

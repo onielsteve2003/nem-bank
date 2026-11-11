@@ -35,11 +35,12 @@ SELECT * FROM customer_accounts WHERE user_id = @user_id AND currency = @currenc
 -- name: InsertTransaction :one
 INSERT INTO transactions (
   id, user_id, account_id, currency, entry_id, type, direction, status, amount_minor, fee_minor, fee_code,
-  balance_after_minor, narration, reference, category, category_source, counterparty, transfer_id, card_id, created_at
+  balance_after_minor, narration, reference, category, category_source, category_confidence, counterparty, transfer_id,
+  card_id, created_at
 ) VALUES (
   @id, @user_id, @account_id, @currency, sqlc.narg('entry_id'), @type, @direction, @status, @amount_minor,
   sqlc.narg('fee_minor'), sqlc.narg('fee_code'), sqlc.narg('balance_after_minor'), @narration, @reference, @category,
-  @category_source, @counterparty, sqlc.narg('transfer_id'), sqlc.narg('card_id'), @created_at
+  @category_source, sqlc.narg('category_confidence'), @counterparty, sqlc.narg('transfer_id'), sqlc.narg('card_id'), @created_at
 )
 RETURNING *;
 
@@ -91,3 +92,43 @@ SELECT * FROM customer_accounts WHERE account_number = $1 AND kind = 'ngn_curren
 -- name: GetCustomerAccountByID :one
 -- Where a held internal transfer lands when it is released.
 SELECT * FROM customer_accounts WHERE account_id = $1;
+
+-- name: GetMerchantRule :one
+SELECT category FROM merchant_category_rules WHERE user_id = @user_id AND merchant_key = @merchant_key;
+
+-- name: UpsertMerchantRule :exec
+INSERT INTO merchant_category_rules (user_id, merchant_key, category)
+VALUES (@user_id, @merchant_key, @category)
+ON CONFLICT (user_id, merchant_key) DO UPDATE SET category = EXCLUDED.category, updated_at = now();
+
+-- name: SetTransactionCategory :one
+-- A correction: the customer's word replaces whoever chose before, and a model's confidence goes with it.
+UPDATE transactions
+SET category = @category, category_source = 'user', category_confidence = NULL, updated_at = now()
+WHERE id = @id AND user_id = @user_id
+RETURNING *;
+
+-- name: RecategorizeMerchant :execrows
+-- "Also for similar": every other line of this customer with the same counterparty. The key is
+-- built as categorize.MerchantKey builds it (lowercase, single-spaced).
+UPDATE transactions
+SET category = @category, category_source = 'user', category_confidence = NULL, updated_at = now()
+WHERE user_id = @user_id
+  AND lower(regexp_replace(btrim(counterparty->>'name'), '\s+', ' ', 'g')) = @merchant_key::text
+  AND id <> @except_id
+  AND (category <> @category OR category_source <> 'user');
+
+-- name: InsertCategoryCorrection :exec
+INSERT INTO category_corrections (
+  id, user_id, transaction_id, merchant_key, text, previous_category, previous_source, previous_confidence,
+  category, apply_to_similar
+) VALUES (
+  @id, @user_id, @transaction_id, @merchant_key, @text, @previous_category, @previous_source,
+  sqlc.narg('previous_confidence'), @category, @apply_to_similar
+);
+
+-- name: ListCategoryCorrections :many
+-- The retraining feed: text and the category the customer chose.
+SELECT text, category, previous_category, previous_source, created_at
+FROM category_corrections
+ORDER BY created_at, id;

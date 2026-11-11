@@ -1,4 +1,4 @@
-"""Command line: `uv run nemml data` and `uv run nemml fraud`."""
+"""Command line: `nemml data`, `nemml fraud` and `nemml categories`."""
 
 import argparse
 import json
@@ -20,7 +20,20 @@ def main(argv: list[str] | None = None) -> int:
     fraud.add_argument("--seed", type=int, default=7)
     fraud.add_argument("--out", default=None, help="artifact directory (default ml/artifacts/fraud)")
 
+    cats = sub.add_parser("categories", help="train, evaluate and export the smart-categories model")
+    cats.add_argument("--seed", type=int, default=7)
+    cats.add_argument("--out", default=None, help="artifact directory (default ml/artifacts/categories)")
+
     args = parser.parse_args(argv)
+    if args.command == "categories":
+        from pathlib import Path
+
+        from nemml.categories import run as run_categories
+
+        result = run_categories(args.seed, Path(args.out) if args.out else None)
+        print(json.dumps(result["metrics"]["test"], indent=2))
+        print(f"wrote {result['out_dir']}")
+        return 0
     cfg = DatasetConfig(seed=args.seed)
     if args.command == "data":
         cfg = DatasetConfig(
