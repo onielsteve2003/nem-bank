@@ -143,6 +143,19 @@
     "simulated": "Demo Controls don off the bank",
     "detail": "Na wetin we save for {{time}} we dey show. Payment need network."
   },
+  "bank": {
+    "waking": {
+      "title": "We dey wake the bank…",
+      "detail": "Our free server dey sleep when nobody dey use am. E fit take up to one minute."
+    },
+    "unreachable": {
+      "title": "We no fit reach the bank",
+      "detail": "Check your network, or use the demo bank wey dey this phone."
+    },
+    "tryAgain": "Try am again",
+    "useDemo": "Use the demo bank instead",
+    "useDemoHint": "E go switch to pretend money wey dey this phone and log you out of the real bank"
+  },
   "me": {
     "title": "Me",
     "loading": "Your profile dey load",

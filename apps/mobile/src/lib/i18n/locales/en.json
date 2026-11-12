@@ -143,6 +143,19 @@
     "simulated": "Demo Controls has the bank offline",
     "detail": "Showing what was saved at {{time}}. Payments need a connection."
   },
+  "bank": {
+    "waking": {
+      "title": "Waking up the bank…",
+      "detail": "Our free server sleeps when nobody is using it. This can take up to a minute."
+    },
+    "unreachable": {
+      "title": "We can’t reach the bank",
+      "detail": "Check your connection, or carry on with the demo bank on this phone."
+    },
+    "tryAgain": "Try again",
+    "useDemo": "Use the demo bank instead",
+    "useDemoHint": "Switches to simulated money stored on this phone and signs you out of the real bank"
+  },
   "me": {
     "title": "Me",
     "loading": "Loading your profile",

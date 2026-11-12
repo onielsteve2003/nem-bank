@@ -2,6 +2,7 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import { deviceSigner } from '@/lib/deviceKey';
 import { env as appEnv, type Env } from '@/lib/env';
+import { useBankStore } from '@/stores/bank';
 import { useSessionStore } from '@/stores/session';
 
 import { createHttpRepositories, sessionTokens } from './http';
@@ -64,12 +65,14 @@ export function RepositoryProvider({
   simulation = null,
   env = appEnv,
 }: Props) {
+  // "Use the demo bank instead" (T31.4) swaps the real API for the on-device mock bank.
+  const demoFallback = useBankStore((s) => s.demoFallback);
   const value = useMemo<DataLayer>(
     () =>
       repositories
         ? { repositories, realtime: realtime ?? silentRealtime, simulation }
-        : createDataLayer(env),
-    [repositories, realtime, simulation, env],
+        : createDataLayer(demoFallback ? { apiMode: 'mock', apiUrl: env.apiUrl } : env),
+    [repositories, realtime, simulation, env, demoFallback],
   );
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }

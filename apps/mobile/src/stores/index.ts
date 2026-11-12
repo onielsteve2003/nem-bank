@@ -5,6 +5,7 @@ import { usePreferencesStore } from './preferences';
 import { usePrivacyStore } from './privacy';
 import { useSessionStore } from './session';
 
+export { useBankBlocked, useBankStore, type BankState, type BankStatus } from './bank';
 export { bindSimulation, useDemoStore, type DemoState } from './demo';
 export { useDeepLinkStore, type DeepLinkState } from './deepLink';
 export { useAppLocked, useLockStore, type LockState } from './lock';

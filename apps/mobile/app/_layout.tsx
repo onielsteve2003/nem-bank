@@ -13,9 +13,11 @@ import { RepositoryProvider, useSimulation } from '@/data';
 import { AppLock } from '@/features/lock/AppLock';
 import { AppErrorBoundary } from '@/features/shell/CrashScreen';
 import { CoolOffBanner } from '@/features/auth/components/CoolOffBanner';
+import { BankWakingOverlay } from '@/features/shell/BankWakingOverlay';
 import { OfflineBanner } from '@/features/shell/OfflineBanner';
 import { PhoneFrame } from '@/features/shell/PhoneFrame';
 import { RootNavigator } from '@/features/shell/RootNavigator';
+import { useBankWarmup } from '@/features/shell/useBankWarmup';
 import { useSessionWatcher } from '@/features/shell/useSessionWatcher';
 import i18n from '@/lib/i18n';
 import { QueryProvider } from '@/lib/query';
@@ -54,11 +56,13 @@ export default function RootLayout() {
               <BottomSheetModalProvider>
                 <ToastProvider>
                   <SessionWatcher />
+                  <BankWarmup />
                   <ScreenBannerProvider value={offlineBanner}>
                     <AppErrorBoundary>
                       <RootNavigator />
                     </AppErrorBoundary>
                     <AppLock />
+                    <BankWakingOverlay />
                   </ScreenBannerProvider>
                 </ToastProvider>
               </BottomSheetModalProvider>
@@ -80,6 +84,12 @@ const offlineBanner = (
 /** Session expiry, and the cache wipe on sign-out (T4.6). */
 function SessionWatcher() {
   useSessionWatcher();
+  return null;
+}
+
+/** Wakes the free-tier API on launch and keeps it warm (T31.4). */
+function BankWarmup() {
+  useBankWarmup();
   return null;
 }
 
