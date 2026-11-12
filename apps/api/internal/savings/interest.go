@@ -260,3 +260,37 @@ func (s *Service) settleLock(ctx context.Context, tx pgx.Tx, l savingsdb.LockedS
 	}
 	return out, nil
 }
+
+// AdvanceUser brings one customer's savings up to asOf, a day the demo clock has moved to: goals
+// are paid the interest they earned meanwhile and locks accrue and mature, exactly as the sweeps
+// would have done on those days. Only the customer's own rows are touched.
+func (s *Service) AdvanceUser(ctx context.Context, userID uuid.UUID, asOf time.Time) error {
+	day := lagosDay(asOf)
+	goals, err := s.pool.Query(ctx, `SELECT id FROM savings_goals WHERE user_id = $1 AND status = 'active' AND interest_paid_to < $2`, userID, day)
+	if err != nil {
+		return fmt.Errorf("list goals: %w", err)
+	}
+	goalIDs, err := pgx.CollectRows(goals, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return fmt.Errorf("read goals: %w", err)
+	}
+	locks, err := s.pool.Query(ctx, `SELECT id FROM locked_savings WHERE user_id = $1 AND status = 'active'`, userID)
+	if err != nil {
+		return fmt.Errorf("list locks: %w", err)
+	}
+	lockIDs, err := pgx.CollectRows(locks, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return fmt.Errorf("read locks: %w", err)
+	}
+	for _, id := range goalIDs {
+		if _, err := s.payGoalInterest(ctx, id, day); err != nil {
+			return fmt.Errorf("goal interest: %w", err)
+		}
+	}
+	for _, id := range lockIDs {
+		if _, err := s.advanceLock(ctx, id, day); err != nil {
+			return fmt.Errorf("advance lock: %w", err)
+		}
+	}
+	return nil
+}

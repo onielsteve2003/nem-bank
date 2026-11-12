@@ -337,3 +337,37 @@ func TestGoalsEarnDailyInterestThroughTheLedger(t *testing.T) {
 		t.Fatalf("summary interest = %+v, %v", sum, err)
 	}
 }
+
+func TestAdvanceUserMovesOneCustomerAheadWithoutTheRealClock(t *testing.T) {
+	t.Parallel()
+	f := newFixture(t)
+	c, other := f.customer(200_000_00), f.customer(200_000_00)
+	l, otherLock := f.lock(c, 100_000_00, 30), f.lock(other, 100_000_00, 30)
+	g := f.goal(c, 500_000_00, nil)
+	if _, err := f.svc.Deposit(c.ctx, g.ID, c.ngn, naira(50_000_00)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := f.svc.AdvanceUser(t.Context(), c.id, f.clk.Now().Add(30*day)); err != nil {
+		t.Fatal(err)
+	}
+	got, err := f.svc.Lock(c.ctx, l.ID)
+	if err != nil || got.Status != "matured" {
+		t.Fatalf("lock = %+v, %v", got, err)
+	}
+	goal, _ := f.svc.Get(c.ctx, g.ID)
+	if want := SimpleInterest(50_000_00, 1_000, 30); goal.InterestEarned.Amount() != want {
+		t.Fatalf("goal earned %d, want %d", goal.InterestEarned.Amount(), want)
+	}
+	if o, _ := f.svc.Lock(other.ctx, otherLock.ID); o.Status != "active" {
+		t.Fatalf("another customer's lock moved: %s", o.Status)
+	}
+	// The real sweep today finds nothing left to pay for the customer who travelled.
+	before := f.interestExpense()
+	if _, err := f.svc.SweepGoalInterest(t.Context()); err != nil {
+		t.Fatal(err)
+	}
+	if f.interestExpense() != before {
+		t.Fatal("the real sweep paid the travelled days again")
+	}
+}

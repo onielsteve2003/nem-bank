@@ -4,6 +4,7 @@ import (
 	"context"
 	"errors"
 	"testing"
+	"time"
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5/pgxpool"
@@ -43,7 +44,7 @@ func signIn(t *testing.T, svc *Service, persona string) (context.Context, identi
 		t.Fatal(err)
 	}
 	var account uuid.UUID
-	if err := svc.pool.QueryRow(t.Context(), `SELECT account_id FROM customer_accounts WHERE user_id = $1`, res.User.ID).Scan(&account); err != nil {
+	if err := svc.pool.QueryRow(t.Context(), `SELECT account_id FROM customer_accounts WHERE user_id = $1 AND currency = 'NGN'`, res.User.ID).Scan(&account); err != nil {
 		t.Fatal(err)
 	}
 	ctx := identity.WithPrincipal(t.Context(), identity.Principal{UserID: res.User.ID, SessionID: uuid.New(), DeviceID: res.Device.ID})
@@ -221,5 +222,65 @@ func TestAutoReviewUsesTheChoiceOnce(t *testing.T) {
 	}
 	if err := svc.SetKycReview(ctx, "maybe"); err == nil {
 		t.Fatal("an unknown outcome must be refused")
+	}
+}
+
+// recorder is an Advancer that remembers who it was asked to advance, and to when.
+type recorder struct {
+	users []uuid.UUID
+	asOf  []time.Time
+}
+
+func (r *recorder) AdvanceUser(_ context.Context, id uuid.UUID, asOf time.Time) error {
+	r.users, r.asOf = append(r.users, id), append(r.asOf, asOf)
+	return nil
+}
+
+func TestTimeTravelMovesTheCallersClockAndAdvancesTheirRecords(t *testing.T) {
+	svc, pool, _ := withService(t)
+	rec := &recorder{}
+	svc.advancers = []Advancer{rec}
+	ctx, res, _ := signIn(t, svc, "tolu")
+
+	c, err := svc.TimeTravel(ctx, 30)
+	if err != nil || c.OffsetDays != 30 {
+		t.Fatalf("clock = %+v, %v", c, err)
+	}
+	if len(rec.users) != 1 || rec.users[0] != res.User.ID || !rec.asOf[0].Equal(c.Now) {
+		t.Fatalf("advanced %v as of %v, clock %v", rec.users, rec.asOf, c.Now)
+	}
+	if d := time.Until(c.Now); d < 29*24*time.Hour || d > 31*24*time.Hour {
+		t.Fatalf("the demo date is %v from now", d)
+	}
+	c, err = svc.TimeTravel(ctx, 10)
+	if err != nil || c.OffsetDays != 40 {
+		t.Fatalf("second jump = %+v, %v", c, err)
+	}
+	var stored int
+	if err := pool.QueryRow(t.Context(), `SELECT demo_offset_days FROM users WHERE id = $1`, res.User.ID).Scan(&stored); err != nil || stored != 40 {
+		t.Fatalf("stored offset = %d, %v", stored, err)
+	}
+	// Too far, or nonsense, changes nothing.
+	for _, days := range []int{0, -1, 366, 330} {
+		if _, err := svc.TimeTravel(ctx, days); err == nil {
+			t.Fatalf("%d days was accepted", days)
+		}
+	}
+	if len(rec.users) != 2 {
+		t.Fatalf("a refused jump still advanced records (%d calls)", len(rec.users))
+	}
+}
+
+func TestTimeTravelRefusesARealCustomer(t *testing.T) {
+	svc, pool, _ := withService(t)
+	var id uuid.UUID
+	if err := pool.QueryRow(t.Context(), `
+		INSERT INTO users (id, first_name, last_name, email, phone, date_of_birth, password_hash, terms_version, privacy_version, consent_accepted_at)
+		VALUES (gen_random_uuid(), 'Real', 'Person', 'real2@example.com', '+2348031234568', '1990-01-01', 'x', 't', 'p', now()) RETURNING id`).Scan(&id); err != nil {
+		t.Fatal(err)
+	}
+	ctx := identity.WithPrincipal(t.Context(), identity.Principal{UserID: id})
+	if _, err := svc.TimeTravel(ctx, 5); !errors.Is(err, errNotDemo) {
+		t.Fatalf("err = %v", err)
 	}
 }

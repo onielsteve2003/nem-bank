@@ -27,17 +27,20 @@ type Config struct {
 	// Rules supplies the tier balance caps and KYC the sandbox reviewer.
 	Rules Rules
 	KYC   Reviewer
+	// Advancers run what falls due for the customer when the demo clock moves (time travel).
+	Advancers []Advancer
 	// Now defaults to time.Now.
 	Now func() time.Time
 }
 
 // Service implements the demo operations.
 type Service struct {
-	pool  *pgxpool.Pool
-	id    *identity.Service
-	rules Rules
-	kyc   Reviewer
-	now   func() time.Time
+	pool      *pgxpool.Pool
+	id        *identity.Service
+	rules     Rules
+	kyc       Reviewer
+	advancers []Advancer
+	now       func() time.Time
 }
 
 // NewService checks the configuration and returns the service.
@@ -48,7 +51,7 @@ func NewService(cfg Config) (*Service, error) {
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
-	return &Service{pool: cfg.Pool, id: cfg.Identity, rules: cfg.Rules, kyc: cfg.KYC, now: cfg.Now}, nil
+	return &Service{pool: cfg.Pool, id: cfg.Identity, rules: cfg.Rules, kyc: cfg.KYC, advancers: cfg.Advancers, now: cfg.Now}, nil
 }
 
 // ErrUnknownPersona is a persona the demo does not have.

@@ -70,7 +70,7 @@ func (s *Service) Sweep(ctx context.Context) error {
 	}
 	var errs []error
 	for _, id := range ids {
-		if err := s.sweepLoan(ctx, id); err != nil {
+		if err := s.sweepLoan(ctx, id, lagosDay(s.now())); err != nil {
 			s.log.Warn("loan sweep", slog.String("loan_id", id.String()), slog.Any("error", err))
 			errs = append(errs, err)
 		}
@@ -78,7 +78,7 @@ func (s *Service) Sweep(ctx context.Context) error {
 	return errors.Join(errs...)
 }
 
-func (s *Service) sweepLoan(ctx context.Context, id uuid.UUID) error {
+func (s *Service) sweepLoan(ctx context.Context, id uuid.UUID, today time.Time) error {
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		q := creditdb.New(tx)
 		l, err := q.LockLoan(ctx, id)
@@ -88,7 +88,6 @@ func (s *Service) sweepLoan(ctx context.Context, id uuid.UUID) error {
 		if l.Status == "repaid" {
 			return nil
 		}
-		today := lagosDay(s.now())
 		items, err := q.ListInstallments(ctx, id)
 		if err != nil {
 			return fmt.Errorf("load schedule: %w", err)
@@ -154,4 +153,25 @@ func (s *Service) flagOverdue(ctx context.Context, tx pgx.Tx, q *creditdb.Querie
 		return fmt.Errorf("default loan: %w", err)
 	}
 	return emit(ctx, tx, TopicDefaulted, l.ID, map[string]any{"user_id": l.UserID, "loan_id": l.ID})
+}
+
+// AdvanceUser runs the repayment check for one customer's open loans as of asOf, a day the demo
+// clock has moved to: instalments that fell due meanwhile are collected from auto-repay, flagged
+// overdue, or end in default, as the sweep would have done on those days.
+func (s *Service) AdvanceUser(ctx context.Context, userID uuid.UUID, asOf time.Time) error {
+	rows, err := s.pool.Query(ctx, `SELECT id FROM loans WHERE user_id = $1 AND status <> 'repaid'`, userID)
+	if err != nil {
+		return fmt.Errorf("list loans: %w", err)
+	}
+	ids, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return fmt.Errorf("read loans: %w", err)
+	}
+	var errs []error
+	for _, id := range ids {
+		if err := s.sweepLoan(ctx, id, lagosDay(asOf)); err != nil {
+			errs = append(errs, err)
+		}
+	}
+	return errors.Join(errs...)
 }

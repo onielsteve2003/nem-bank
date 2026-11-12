@@ -313,6 +313,11 @@ func (s *Service) RunDue(ctx context.Context) error {
 }
 
 func (s *Service) runSchedule(ctx context.Context, id, userID uuid.UUID) error {
+	return s.runScheduleAt(ctx, id, userID, s.now())
+}
+
+// runScheduleAt runs one schedule as of now, the day it is being run for.
+func (s *Service) runScheduleAt(ctx context.Context, id, userID uuid.UUID, now time.Time) error {
 	sch, err := s.q.GetSchedule(ctx, transfersdb.GetScheduleParams{ID: id, UserID: userID})
 	if err != nil {
 		return fmt.Errorf("load schedule: %w", err)
@@ -338,7 +343,7 @@ func (s *Service) runSchedule(ctx context.Context, id, userID uuid.UUID) error {
 	}
 	return pgx.BeginFunc(ctx, s.pool, func(tx pgx.Tx) error {
 		q := s.q.WithTx(tx)
-		sch, err := q.ClaimDueSchedule(ctx, transfersdb.ClaimDueScheduleParams{ID: id, Now: ptr(s.now())})
+		sch, err := q.ClaimDueSchedule(ctx, transfersdb.ClaimDueScheduleParams{ID: id, Now: ptr(now)})
 		if errors.Is(err, pgx.ErrNoRows) {
 			return nil // another runner has it, or it was paused or edited meanwhile
 		}
@@ -427,4 +432,37 @@ func ScheduleJSON(sch transfersdb.ScheduledTransfer) (api.ScheduledTransfer, err
 		out.LastRun = &r
 	}
 	return out, nil
+}
+
+// maxDemoRuns bounds how many scheduled runs one demo time travel makes: a daily schedule over
+// the longest jump (a year) is the most it needs.
+const maxDemoRuns = 400
+
+// AdvanceUser runs one customer's schedules for every run that fell due up to asOf, a day the
+// demo clock has moved to, oldest first. A run the bank refuses is recorded as failed, like any
+// other, and the schedule moves on.
+func (s *Service) AdvanceUser(ctx context.Context, userID uuid.UUID, asOf time.Time) error {
+	for runs := 0; runs < maxDemoRuns; {
+		rows, err := s.pool.Query(ctx, `
+			SELECT id FROM scheduled_transfers
+			WHERE user_id = $1 AND status = 'active' AND next_run_at <= $2
+			ORDER BY next_run_at LIMIT 20`, userID, asOf)
+		if err != nil {
+			return fmt.Errorf("list due schedules: %w", err)
+		}
+		ids, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+		if err != nil {
+			return fmt.Errorf("read due schedules: %w", err)
+		}
+		if len(ids) == 0 {
+			return nil
+		}
+		for _, id := range ids {
+			if err := s.runScheduleAt(ctx, id, userID, asOf); err != nil {
+				return err
+			}
+			runs++
+		}
+	}
+	return nil
 }

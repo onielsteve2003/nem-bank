@@ -5,6 +5,7 @@ import (
 	"errors"
 	"fmt"
 	"log/slog"
+	"slices"
 	"time"
 
 	"github.com/google/uuid"
@@ -346,4 +347,42 @@ func (s *Service) settleLate(ctx context.Context, groupID uuid.UUID, now time.Ti
 			}
 		}
 	}
+}
+
+// AdvanceUser runs the ajo clock for the groups a demo customer started, as of asOf, a day the
+// demo clock has moved to: contributions are collected, due cycles pay out and late members are
+// settled, cycle after cycle, as the sweep would have done on those days. Groups other people
+// started keep their own time.
+func (s *Service) AdvanceUser(ctx context.Context, userID uuid.UUID, asOf time.Time) error {
+	rows, err := s.pool.Query(ctx, `SELECT id FROM ajo_groups WHERE created_by_id = $1 AND status = 'active'`, userID)
+	if err != nil {
+		return fmt.Errorf("list groups: %w", err)
+	}
+	ids, err := pgx.CollectRows(rows, pgx.RowTo[uuid.UUID])
+	if err != nil {
+		return fmt.Errorf("read groups: %w", err)
+	}
+	now := asOf.UTC()
+	for _, id := range ids {
+		// One pass per cycle at most: a pass that moves nothing ends the loop.
+		for range 31 {
+			groups, err := s.q.ListActiveAjoGroups(ctx)
+			if err != nil {
+				return fmt.Errorf("list active ajo groups: %w", err)
+			}
+			i := slices.IndexFunc(groups, func(g ajodb.ListActiveAjoGroupsRow) bool { return g.ID == id })
+			if i < 0 {
+				break
+			}
+			before := groups[i].CurrentCycle
+			if err := s.sweepGroup(ctx, groups[i], now); err != nil {
+				return err
+			}
+			after, err := s.q.GetAjoGroup(ctx, id)
+			if err != nil || after.Status != "active" || after.CurrentCycle == before {
+				break
+			}
+		}
+	}
+	return nil
 }

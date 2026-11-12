@@ -90,3 +90,15 @@ func (a *API) DemoSetKycReview(ctx context.Context, req api.DemoSetKycReviewRequ
 	}
 	return api.DemoSetKycReview204Response{}, nil
 }
+
+// DemoTimeTravel is POST /v1/demo/time-travel.
+func (a *API) DemoTimeTravel(ctx context.Context, req api.DemoTimeTravelRequestObject) (api.DemoTimeTravelResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	c, err := a.svc.TimeTravel(ctx, req.Body.Days)
+	if err != nil {
+		return nil, err
+	}
+	return api.DemoTimeTravel200JSONResponse(api.DemoClock{Now: c.Now, OffsetDays: c.OffsetDays}), nil
+}
