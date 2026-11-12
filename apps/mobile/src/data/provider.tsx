@@ -1,8 +1,9 @@
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
+import { deviceSigner } from '@/lib/deviceKey';
 import { env as appEnv, type Env } from '@/lib/env';
 
-import { createHttpRepositories } from './http';
+import { createHttpRepositories, sessionTokens } from './http';
 import { createMockBank, type Simulation } from './mock';
 import { silentRealtime, type RealtimeSource } from './realtime';
 import type { Domain, Repositories } from './repositories';
@@ -19,7 +20,11 @@ export interface DataLayer {
 export function createDataLayer(env: Env): DataLayer {
   if (env.apiMode === 'http') {
     return {
-      repositories: createHttpRepositories({ baseUrl: env.apiUrl }),
+      repositories: createHttpRepositories({
+        baseUrl: env.apiUrl,
+        tokens: sessionTokens,
+        signer: deviceSigner,
+      }),
       realtime: silentRealtime,
       simulation: null,
     };

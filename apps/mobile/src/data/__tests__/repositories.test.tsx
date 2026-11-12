@@ -62,16 +62,11 @@ describe('createRepositories', () => {
     expect(typeof repos.accounts.list).toBe('function');
   });
 
-  it('reports operations the http client cannot serve yet as problems', async () => {
+  it('uses http repositories in http mode: a signed-out call is a 401 before any network', async () => {
     const repos = createRepositories({ apiMode: 'http', apiUrl: 'http://localhost:8080' });
     const error = await repos.accounts.list().catch((e: unknown) => e);
-    expect(isApiError(error, 'not_implemented')).toBe(true);
-    expect((error as ApiError).status).toBe(501);
-  });
-
-  it('uses http repositories in http mode', async () => {
-    const repos = createRepositories({ apiMode: 'http', apiUrl: 'http://localhost:8080' });
-    await expect(repos.accounts.list()).rejects.toThrow(/Phase 2/);
+    expect(isApiError(error, 'session_expired')).toBe(true);
+    expect((error as ApiError).status).toBe(401);
   });
 });
 

@@ -10,6 +10,7 @@ import { uuidv7 } from '@/lib/ids';
 
 import type { CallOptions, OperationId } from '../contract';
 import { ApiError, problem } from '../errors';
+import { encodeMultipart, MULTIPART_OPERATIONS } from './multipart';
 
 // The transport for Phase 2 (architecture §6). It turns a repository call into an
 // HTTP request using the contract's operation table and adds what the caller
@@ -192,12 +193,13 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
     target: string,
     body: string,
     token: string | null,
+    contentType: string | null,
   ): Promise<Record<string, string>> {
     const headers: Record<string, string> = {
       Accept: 'application/json, application/problem+json',
       'X-Request-Id': uuidv7(),
     };
-    if (body) headers['Content-Type'] = 'application/json';
+    if (contentType) headers['Content-Type'] = contentType;
     if (token) headers.Authorization = `Bearer ${token}`;
     if (meta.idempotent) {
       // A key made up here would differ on every retry and defeat the point.
@@ -237,14 +239,26 @@ export function createHttpClient(config: HttpClientConfig): HttpClient {
       const meta: OperationMeta | undefined = OPERATIONS[operationId as RouteOperationId];
       if (!meta) throw new TypeError(`${operationId} is not an API route`);
       const target = buildPath(meta.path, input.path) + buildQuery(input.query);
-      const body = input.body === undefined ? '' : JSON.stringify(input.body);
+      // Uploads are multipart bytes and never signed; everything else is JSON text.
+      const form =
+        MULTIPART_OPERATIONS.has(operationId) && input.body !== undefined
+          ? encodeMultipart(input.body as Record<string, unknown>)
+          : null;
+      const body = form || input.body === undefined ? '' : JSON.stringify(input.body);
       const bearer = meta.auth === 'bearer';
 
       const attempt = async (token: string | null) =>
         send(`${baseUrl}${target}`, {
           method: meta.method,
-          headers: await headersFor(meta, input, target, body, token),
-          body: body || undefined,
+          headers: await headersFor(
+            meta,
+            input,
+            target,
+            body,
+            token,
+            form ? form.contentType : body ? 'application/json' : null,
+          ),
+          body: (form?.bytes ?? (body || undefined)) as RequestInit['body'],
           signal: options.signal,
         });
 
