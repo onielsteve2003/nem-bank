@@ -17,4 +17,5 @@ export {
   type RealtimeSource,
   type RealtimeStatus,
 } from './realtime';
+export { createSocketRealtime, type SocketRealtime } from './socketRealtime';
 export * from './repositories';

@@ -2,10 +2,12 @@ import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import { deviceSigner } from '@/lib/deviceKey';
 import { env as appEnv, type Env } from '@/lib/env';
+import { useSessionStore } from '@/stores/session';
 
 import { createHttpRepositories, sessionTokens } from './http';
 import { createMockBank, type Simulation } from './mock';
 import { silentRealtime, type RealtimeSource } from './realtime';
+import { createSocketRealtime } from './socketRealtime';
 import type { Domain, Repositories } from './repositories';
 
 /** Everything the app reads data through: repositories, realtime, and (mock only) network simulation. */
@@ -19,15 +21,19 @@ export interface DataLayer {
 /** Picks the data source from `EXPO_PUBLIC_API_MODE`; mock is the default. */
 export function createDataLayer(env: Env): DataLayer {
   if (env.apiMode === 'http') {
-    return {
-      repositories: createHttpRepositories({
-        baseUrl: env.apiUrl,
-        tokens: sessionTokens,
-        signer: deviceSigner,
-      }),
-      realtime: silentRealtime,
-      simulation: null,
-    };
+    const repositories = createHttpRepositories({
+      baseUrl: env.apiUrl,
+      tokens: sessionTokens,
+      signer: deviceSigner,
+    });
+    const realtime = createSocketRealtime({
+      getTicket: () => repositories.realtime.createTicket({}),
+    });
+    // The socket follows the session: open while signed in, closed otherwise.
+    const follow = (status: string) => realtime.setActive(status === 'signedIn');
+    follow(useSessionStore.getState().status);
+    useSessionStore.subscribe((state) => follow(state.status));
+    return { repositories, realtime, simulation: null };
   }
   const { repositories, realtime, simulation } = createMockBank();
   return { repositories, realtime, simulation };
