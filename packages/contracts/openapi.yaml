@@ -6476,6 +6476,7 @@ components:
         - unfreeze
         - limit_increase
         - account_deletion
+        - api_key
     StepUpMethod:
       type: string
       enum: [email_otp, security_question, pin, device_signature]

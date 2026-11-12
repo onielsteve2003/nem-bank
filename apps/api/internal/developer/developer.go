@@ -37,10 +37,8 @@ type StepUps interface {
 	ConsumeStepUp(ctx context.Context, tx pgx.Tx, userID uuid.UUID, purpose, token string) error
 }
 
-// stepUpPurpose is the purpose a key-creation confirmation must have. The contract has no
-// purpose of its own for API keys, so this reuses the one for "bind a new credential to my
-// account"; adding api_key to the contract's StepUpPurpose enum is the clean fix.
-const stepUpPurpose = "device_bind"
+// stepUpPurpose is the purpose a key-creation confirmation must have (contract StepUpPurpose).
+const stepUpPurpose = "api_key"
 
 // Config holds the service's dependencies.
 type Config struct {

@@ -4605,7 +4605,8 @@ export interface components {
       | 'card_reveal'
       | 'unfreeze'
       | 'limit_increase'
-      | 'account_deletion';
+      | 'account_deletion'
+      | 'api_key';
     /** @enum {string} */
     StepUpMethod: 'email_otp' | 'security_question' | 'pin' | 'device_signature';
     StepUpStartRequest: {
