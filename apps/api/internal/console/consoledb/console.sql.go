@@ -373,7 +373,7 @@ func (q *Queries) GetBankConfig(ctx context.Context) (GetBankConfigRow, error) {
 
 const getCustomer = `-- name: GetCustomer :one
 SELECT id, first_name, last_name, email, phone, nemtag, date_of_birth, kyc_tier, kyc_status, is_demo,
-       duress_since, frozen_at, created_at
+       duress_since, frozen_at, panic_at, created_at
 FROM users WHERE id = $1
 `
 
@@ -390,6 +390,7 @@ type GetCustomerRow struct {
 	IsDemo      bool
 	DuressSince *time.Time
 	FrozenAt    *time.Time
+	PanicAt     *time.Time
 	CreatedAt   time.Time
 }
 
@@ -409,6 +410,7 @@ func (q *Queries) GetCustomer(ctx context.Context, id uuid.UUID) (GetCustomerRow
 		&i.IsDemo,
 		&i.DuressSince,
 		&i.FrozenAt,
+		&i.PanicAt,
 		&i.CreatedAt,
 	)
 	return i, err

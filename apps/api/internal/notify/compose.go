@@ -51,6 +51,7 @@ type payload struct {
 	ConversationID  uuid.UUID `json:"conversation_id"`
 	Sender          string    `json:"sender"`
 	Status          string    `json:"status"`
+	Active          bool      `json:"active"`
 	GuardianID      uuid.UUID `json:"guardian_id"`
 	DependantName   string    `json:"dependant_name"`
 	Reason          string    `json:"reason"`
@@ -68,6 +69,7 @@ var Topics = []string{
 	"statement.ready", "fx.alert_triggered", "dispute.updated", "support.message",
 	"identity.device_bound", "identity.refresh_token_reused", "kyc.updated",
 	"family.approval_requested", "family.approval_decided", "family.allowance_sent", "family.allowance_failed",
+	"security.panic_changed",
 }
 
 // symbols are the currencies the bank holds; anything else prints its code.
@@ -205,6 +207,11 @@ func compose(d jobs.Delivery) ([]draft, error) {
 		add(p.UserID, "dependant", "transactions", "Allowance received", "Your allowance of "+amount+" has arrived.", "nembank://home")
 	case "family.allowance_failed":
 		add(p.GuardianID, "guardian", "transactions", "Allowance not sent", orDefault(p.DependantName, "Your dependant")+"'s allowance of "+amount+" could not be sent: "+orDefault(p.Reason, "please check your account")+".", "nembank://family")
+	case "security.panic_changed":
+		// Turning it on tells the customer's other devices; turning it off is their own action.
+		if p.Active {
+			add(p.UserID, "owner", "security", "Panic mode is on", "Your cards are frozen and no money can leave your account.", "nembank://security")
+		}
 	case "identity.device_bound":
 		uid, err := uuid.Parse(d.AggregateID)
 		if err != nil {

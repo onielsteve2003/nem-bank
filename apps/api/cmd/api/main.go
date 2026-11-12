@@ -41,6 +41,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/panicmode"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/config"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/database"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/fieldcrypt"
@@ -364,6 +365,10 @@ func run() error {
 	// signing seed under its own label, like the other link keys.
 	privacyMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
 	privacyMAC.Write([]byte("nem privacy export link signing key v1"))
+	panicSvc, err := panicmode.NewService(panicmode.Config{Pool: pool, StepUps: identitySvc})
+	if err != nil {
+		return err
+	}
 	privacySvc, err := privacy.NewService(privacy.Config{
 		Pool: pool, Keyring: keyring, Mailer: mail, StepUps: identitySvc, PublicURL: cfg.PublicURL, LinkKey: privacyMAC.Sum(nil), Logger: log,
 	})
@@ -411,6 +416,7 @@ func run() error {
 		Console:            console.NewAPI(consoleSvc),
 		Developer:          developer.NewAPI(developerSvc),
 		Privacy:            privacy.NewAPI(privacySvc),
+		Panic:              panicmode.NewAPI(panicSvc),
 		KeyAuthenticator:   developerSvc,
 		StaffAuthenticator: adminSvc,
 	})
@@ -422,7 +428,7 @@ func run() error {
 	// Jobs run in-process (Render free has no worker dynos). Subscribers arrive with the
 	// domains that need side effects (notify, webhooks, transfer sagas).
 	runner, err := jobs.New(pool, log, jobs.Options{
-		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub), supportSvc.RealtimeSubscriber(hub), developerSvc.Subscriber()},
+		Subscribers:  []jobs.Subscriber{accountsSvc.StatementSubscriber(), transfersSvc.RealtimeSubscriber(hub), fxSvc.RealtimeSubscriber(hub), cardsSvc.RealtimeSubscriber(hub), savingsSvc.Subscriber(), notifySvc.Subscriber(), kycSvc.RealtimeSubscriber(hub), supportSvc.RealtimeSubscriber(hub), developerSvc.Subscriber(), panicSvc.RealtimeSubscriber(hub)},
 		Housekeeping: []func(context.Context) error{idem.Prune, accountsSvc.SnapshotBalances, fxSvc.Prune, privacySvc.Prune},
 		Workers:      []func(*river.Workers){sandbox.Register, transfersSvc.Register, fxSvc.Register, cardsSvc.Register, billsSvc.Register, savingsSvc.Register, ajoSvc.Register, creditSvc.Register, familySvc.Register, developerSvc.Register, privacySvc.Register},
 		Periodic:     slices.Concat(transfersSvc.PeriodicJobs(), fxSvc.PeriodicJobs(), cardsSvc.PeriodicJobs(), billsSvc.PeriodicJobs(), savingsSvc.PeriodicJobs(), ajoSvc.PeriodicJobs(), creditSvc.PeriodicJobs(), familySvc.PeriodicJobs()),

@@ -75,6 +75,8 @@ var (
 	errNeedLock  = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Pick the merchant this card is locked to")
 	errLimitCcy  = problem.New(http.StatusUnprocessableEntity, problem.CodeValidationFailed, "Set the spend limit in the card's currency")
 	errNotLive   = problem.New(http.StatusConflict, "invalid_state", "This card is no longer active")
+	errPanicOn   = problem.New(http.StatusConflict, "invalid_state", "Release panic mode first").
+			WithDetail("Panic mode froze this card. Releasing it unfreezes every card at once.")
 )
 
 // Accounts is the customer's accounts; *accounts.Service implements it.

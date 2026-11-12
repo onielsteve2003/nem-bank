@@ -199,6 +199,11 @@ func (s *Service) Create(ctx context.Context, r Request) (View, error) {
 
 // screen asks the family controls whether a dependant may send this.
 func (s *Service) screen(ctx context.Context, pl plan, noApproval bool) error {
+	// Panic mode stops every payment (SEC-4). Under duress the transfer is already blocked in
+	// silence, and a refusal here would tell whoever is forcing the customer.
+	if pl.sender.Panic && !pl.sender.InDuress {
+		return identity.ErrOutgoingBlocked
+	}
 	if s.family == nil || pl.sender.InDuress {
 		return nil
 	}

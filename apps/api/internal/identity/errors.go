@@ -29,5 +29,9 @@ var (
 	// shown after the password was right, so it tells a stranger nothing.
 	ErrAccountFrozen = problem.New(http.StatusForbidden, "account_frozen", "This account is frozen").
 				WithDetail("Contact support to find out why and how to restore access.")
+	// ErrOutgoingBlocked answers a payment while the customer's panic mode is on (SEC-4). The code
+	// is the mock bank's, so the app shows the same message.
+	ErrOutgoingBlocked = problem.New(http.StatusForbidden, "outgoing_blocked", "Outgoing payments are paused").
+				WithDetail("Panic mode is on. Release it in the Security Center to send money again.")
 	errSignupExpired = problem.New(http.StatusGone, "otp_expired", "This sign-up has expired. Start again.")
 )

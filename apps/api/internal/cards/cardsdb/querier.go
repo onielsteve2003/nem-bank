@@ -6,6 +6,7 @@ package cardsdb
 
 import (
 	"context"
+	"time"
 
 	"github.com/google/uuid"
 )
@@ -21,6 +22,7 @@ type Querier interface {
 	GetCard(ctx context.Context, arg GetCardParams) (Card, error)
 	// The processor's lookup: the merchant sends a number, never an ID.
 	GetCardByPanIndex(ctx context.Context, panIndex []byte) (Card, error)
+	GetPanicAt(ctx context.Context, id uuid.UUID) (*time.Time, error)
 	InsertAuthorization(ctx context.Context, arg InsertAuthorizationParams) (CardAuthorization, error)
 	InsertCard(ctx context.Context, arg InsertCardParams) (Card, error)
 	// One card's attempts, newest first, by keyset.

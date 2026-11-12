@@ -195,7 +195,11 @@ func (s *Service) customer360(ctx context.Context, p admin.Principal, id uuid.UU
 
 	// The customer's own panic button has no server side yet; what a staff freeze does shows
 	// here, so a reviewer can see whether outgoing money is blocked.
-	out.Panic = api.PanicState{OutgoingBlocked: u.FrozenAt != nil}
+	out.Panic = api.PanicState{Active: u.PanicAt != nil, OutgoingBlocked: u.FrozenAt != nil || u.PanicAt != nil}
+	if u.PanicAt != nil {
+		at := u.PanicAt.UTC()
+		out.Panic.ActivatedAt = &at
+	}
 	return out, nil
 }
 

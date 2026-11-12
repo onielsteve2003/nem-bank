@@ -1100,6 +1100,7 @@ type User struct {
 	FrozenAt          pgtype.Timestamptz
 	FrozenReason      pgtype.Text
 	DeletedAt         pgtype.Timestamptz
+	PanicAt           pgtype.Timestamptz
 }
 
 type WebhookDelivery struct {

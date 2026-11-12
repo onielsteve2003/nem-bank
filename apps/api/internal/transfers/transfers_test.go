@@ -417,3 +417,29 @@ func TestReferencesLookLikeTheContractExample(t *testing.T) {
 }
 
 func day() time.Time { return time.Date(2026, 11, 9, 12, 0, 0, 0, time.UTC) }
+
+func TestPanicModeRefusesEveryTransferAndLeavesTheMoneyAlone(t *testing.T) {
+	t.Parallel()
+	f := newFixture(t)
+	tolu := f.customer("Tolu", "tolu", 5_000_000)
+	ada := f.customer("Ada", "ada", 0)
+	prof, _ := f.profs.CustomerProfile(t.Context(), tolu.id)
+	prof.Panic = true
+	f.profs.set(tolu.id, prof)
+
+	var p *problem.Error
+	_, err := f.svc.Create(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100_000)})
+	if !errors.As(err, &p) || p.Code != "outgoing_blocked" || p.Status != 403 {
+		t.Fatalf("transfer in panic mode = %v, want 403 outgoing_blocked", err)
+	}
+	if f.balance(tolu) != 5_000_000 || f.balance(ada) != 0 {
+		t.Fatalf("balances moved: %d, %d", f.balance(tolu), f.balance(ada))
+	}
+
+	// Releasing it lets the same transfer through.
+	prof.Panic = false
+	f.profs.set(tolu.id, prof)
+	if _, err := f.svc.Create(tolu.ctx, Request{SourceAccountID: tolu.account, Destination: toNem(ada.number), Amount: ngn(100_000)}); err != nil {
+		t.Fatalf("transfer after release: %v", err)
+	}
+}

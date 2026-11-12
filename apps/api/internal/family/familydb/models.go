@@ -1100,6 +1100,7 @@ type User struct {
 	FrozenAt          *time.Time
 	FrozenReason      *string
 	DeletedAt         *time.Time
+	PanicAt           *time.Time
 }
 
 type WebhookDelivery struct {

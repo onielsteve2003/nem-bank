@@ -49,3 +49,6 @@ UPDATE cards
 SET status = @status, frozen_by_panic = @frozen_by_panic, terminated_at = @terminated_at
 WHERE id = @id
 RETURNING *;
+
+-- name: GetPanicAt :one
+SELECT panic_at FROM users WHERE id = @id;

@@ -103,6 +103,17 @@ func (q *Queries) GetCardByPanIndex(ctx context.Context, panIndex []byte) (Card,
 	return i, err
 }
 
+const getPanicAt = `-- name: GetPanicAt :one
+SELECT panic_at FROM users WHERE id = $1
+`
+
+func (q *Queries) GetPanicAt(ctx context.Context, id uuid.UUID) (*time.Time, error) {
+	row := q.db.QueryRow(ctx, getPanicAt, id)
+	var panic_at *time.Time
+	err := row.Scan(&panic_at)
+	return panic_at, err
+}
+
 const insertCard = `-- name: InsertCard :one
 INSERT INTO cards (
   id, user_id, account_id, currency, type, network, last4, pan_enc, pan_index, expiry_month, expiry_year,

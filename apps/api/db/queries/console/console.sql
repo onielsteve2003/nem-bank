@@ -18,7 +18,7 @@ LIMIT @page_size;
 
 -- name: GetCustomer :one
 SELECT id, first_name, last_name, email, phone, nemtag, date_of_birth, kyc_tier, kyc_status, is_demo,
-       duress_since, frozen_at, created_at
+       duress_since, frozen_at, panic_at, created_at
 FROM users WHERE id = @id;
 
 -- name: LockCustomer :one

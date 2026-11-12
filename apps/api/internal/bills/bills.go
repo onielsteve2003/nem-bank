@@ -239,6 +239,9 @@ func (s *Service) Pay(ctx context.Context, req PayRequest) (Payment, error) {
 	if err != nil {
 		return Payment{}, fmt.Errorf("customer profile: %w", err)
 	}
+	if prof.Panic && !prof.InDuress {
+		return Payment{}, identity.ErrOutgoingBlocked
+	}
 	coolOff, err := s.customers.CoolOff(ctx)
 	if err != nil {
 		return Payment{}, fmt.Errorf("cool-off: %w", err)

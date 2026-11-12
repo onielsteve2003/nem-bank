@@ -351,7 +351,9 @@ type CustomerProfile struct {
 	Nemtag   *string
 	KycTier  int
 	InDuress bool
-	IsDemo   bool
+	// Panic is set while the customer's panic mode is on (SEC-4): nothing may leave their accounts.
+	Panic  bool
+	IsDemo bool
 }
 
 // CustomerProfile loads the customer's profile.
@@ -361,7 +363,7 @@ func (s *Service) CustomerProfile(ctx context.Context, userID uuid.UUID) (Custom
 		return CustomerProfile{}, fmt.Errorf("load user: %w", err)
 	}
 	return CustomerProfile{
-		Name: u.FirstName + " " + u.LastName, Nemtag: u.Nemtag, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil, IsDemo: u.IsDemo,
+		Name: u.FirstName + " " + u.LastName, Nemtag: u.Nemtag, KycTier: int(u.KycTier), InDuress: u.DuressSince != nil, Panic: u.PanicAt != nil, IsDemo: u.IsDemo,
 	}, nil
 }
 

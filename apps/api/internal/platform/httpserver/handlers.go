@@ -27,6 +27,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/panicmode"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/privacy"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
@@ -45,6 +46,7 @@ type handlers struct {
 	*consoleAPI
 	*developerAPI
 	*privacyAPI
+	*panicAPI
 	*accountsAPI
 	*transfersAPI
 	*limitsAPI
@@ -76,6 +78,7 @@ type (
 	consoleAPI   = console.API
 	developerAPI = developer.API
 	privacyAPI   = privacy.API
+	panicAPI     = panicmode.API
 	accountsAPI  = accounts.API
 	transfersAPI = transfers.API
 	limitsAPI    = limits.API

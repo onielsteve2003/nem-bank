@@ -179,6 +179,13 @@ func (s *Service) Unfreeze(ctx context.Context, id uuid.UUID, stepUpToken string
 			return errNotLive
 		}
 		if card.FrozenByPanic {
+			// While panic mode is on its cards stay frozen: releasing the button unfreezes
+			// them all at once.
+			if at, err := s.q.WithTx(tx).GetPanicAt(ctx, p.UserID); err != nil {
+				return fmt.Errorf("load panic state: %w", err)
+			} else if at != nil {
+				return errPanicOn
+			}
 			if err := s.stepUps.ConsumeStepUp(ctx, tx, p.UserID, StepUpUnfreeze, stepUpToken); err != nil {
 				return err
 			}

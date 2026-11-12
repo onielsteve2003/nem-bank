@@ -27,6 +27,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/notify"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/panicmode"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/observability"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/privacy"
@@ -107,6 +108,8 @@ type Options struct {
 	Developer *developer.API
 	// Privacy serves data export and account deletion; nil answers 501 and 404 for download links.
 	Privacy *privacy.API
+	// Panic serves the panic button; nil answers 501 for its operations.
+	Panic *panicmode.API
 	// Console serves the staff console's customer, queue, ledger, configuration and audit
 	// operations; nil answers 501 for them and 404 for KYC photo links.
 	Console *console.API
@@ -212,7 +215,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 
 	// Validation is attached to the contract's routes only, so unknown paths still 404.
 	contract := r.Group("", lim.byAddress(), validate)
-	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, developerAPI: opts.Developer, privacyAPI: opts.Privacy, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
+	h := &handlers{API: opts.Identity, adminAPI: opts.Admin, consoleAPI: opts.Console, developerAPI: opts.Developer, privacyAPI: opts.Privacy, panicAPI: opts.Panic, accountsAPI: opts.Accounts, transfersAPI: opts.Transfers, limitsAPI: opts.Limits, fxAPI: opts.FX, cardsAPI: opts.Cards, billsAPI: opts.Bills, savingsAPI: opts.Savings, ajoAPI: opts.Ajo, creditAPI: opts.Credit, scamAPI: opts.Scam, forecastAPI: opts.Forecast, assistantAPI: opts.Assistant, prefillAPI: opts.KYCPrefill, kycAPI: opts.KYC, supportAPI: opts.Support, notifyAPI: opts.Notify, familyAPI: opts.Family, realtimeAPI: realtimeOps(opts.Realtime), version: opts.Version, now: opts.Now}
 	api.RegisterHandlersWithOptions(contract,
 		api.NewStrictHandlerWithOptions(h, nil, strictOptions(opts.Logger)),
 		api.GinServerOptions{ErrorHandler: paramErrorHandler},
