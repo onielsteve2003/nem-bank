@@ -31,6 +31,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/categorize"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/console"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/credit"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/demo"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/developer"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
@@ -365,6 +366,10 @@ func run() error {
 	// signing seed under its own label, like the other link keys.
 	privacyMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
 	privacyMAC.Write([]byte("nem privacy export link signing key v1"))
+	demoSvc, err := demo.NewService(demo.Config{Pool: pool, Identity: identitySvc})
+	if err != nil {
+		return err
+	}
 	panicSvc, err := panicmode.NewService(panicmode.Config{Pool: pool, StepUps: identitySvc})
 	if err != nil {
 		return err
@@ -417,6 +422,7 @@ func run() error {
 		Developer:          developer.NewAPI(developerSvc),
 		Privacy:            privacy.NewAPI(privacySvc),
 		Panic:              panicmode.NewAPI(panicSvc),
+		Demo:               demo.NewAPI(demoSvc),
 		KeyAuthenticator:   developerSvc,
 		StaffAuthenticator: adminSvc,
 	})

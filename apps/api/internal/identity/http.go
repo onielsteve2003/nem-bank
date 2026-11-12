@@ -94,14 +94,20 @@ func deviceJSON(d identitydb.Device, current uuid.UUID, now time.Time) api.Devic
 	return out
 }
 
-func (a *API) sessionJSON(r AuthResult) api.AuthSession {
+func (a *API) sessionJSON(r AuthResult) api.AuthSession { return SessionJSON(r, a.svc.now()) }
+
+// SessionJSON is a signed-in session as the contract's AuthSession.
+func SessionJSON(r AuthResult, now time.Time) api.AuthSession {
 	return api.AuthSession{
 		AccessToken: r.AccessToken, AccessTokenExpiresAt: r.AccessTokenExpiresAt.UTC(),
 		RefreshToken: r.RefreshToken, RefreshTokenExpiresAt: r.RefreshTokenExpiresAt.UTC(),
 		TokenType: api.Bearer, User: userJSON(r.User),
-		Device: deviceJSON(r.Device, r.Device.ID, a.svc.now()),
+		Device: deviceJSON(r.Device, r.Device.ID, now),
 	}
 }
+
+// Registration converts the contract's device registration for the service.
+func Registration(d api.DeviceRegistration) DeviceRegistration { return registration(d) }
 
 func registration(d api.DeviceRegistration) DeviceRegistration {
 	return DeviceRegistration{

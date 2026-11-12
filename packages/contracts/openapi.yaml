@@ -6436,6 +6436,11 @@ components:
           description: Which seeded persona to load.
           enum: [tolu, mama_ngozi, emeka, bisi]
           default: tolu
+        device:
+          description: >
+            The caller's device key. The real API needs it so the demo user's money requests can be
+            signed by this phone; the offline demo ignores it.
+          $ref: '#/components/schemas/DeviceRegistration'
     RefreshRequest:
       type: object
       required: [refresh_token]

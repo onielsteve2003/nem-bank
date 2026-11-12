@@ -4580,6 +4580,8 @@ export interface components {
        * @enum {string}
        */
       persona: 'tolu' | 'mama_ngozi' | 'emeka' | 'bisi';
+      /** @description The caller's device key. The real API needs it so the demo user's money requests can be signed by this phone; the offline demo ignores it. */
+      device?: components['schemas']['DeviceRegistration'];
     };
     RefreshRequest: {
       refresh_token: string;
