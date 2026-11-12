@@ -61,7 +61,7 @@ export function WelcomeScreen() {
           accessibilityHint={t('auth.welcome.tryDemoHint')}
           loading={demo.isPending}
           fullWidth
-          onPress={() => demo.mutate({ body: { persona: 'tolu' } })}
+          onPress={() => demo.start('tolu')}
         />
         {demo.isError && (
           <Text variant="caption" color="danger" accessibilityRole="alert">
