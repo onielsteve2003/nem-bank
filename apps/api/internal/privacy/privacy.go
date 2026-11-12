@@ -459,53 +459,8 @@ func (s *Service) Erase(ctx context.Context, id uuid.UUID) error {
 		if why := blockers(b); len(why) > 0 {
 			return q.SetRequestStatus(ctx, privacydb.SetRequestStatusParams{ID: id, NewStatus: "rejected", DoneAt: &now, Reason: ptr(strings.Join(why, " "))})
 		}
-		// Peers' records first, while the customer's accounts can still be found by their owner.
-		steps := []struct {
-			name string
-			run  func() error
-		}{
-			{"peer transfers", func() error { return q.ErasePeersTransfers(ctx, uid) }},
-			{"peer transactions", func() error { return q.ErasePeersTransactions(ctx, uid) }},
-			{"sessions", func() error { return q.EndSessions(ctx, uid) }},
-			{"refresh tokens", func() error { return q.DeleteRefreshTokens(ctx, uid) }},
-			{"devices", func() error { return q.EraseDevices(ctx, uid) }},
-			{"push tokens", func() error { return q.DeletePushTokens(ctx, uid) }},
-			{"kyc identifiers", func() error { return q.DeleteKycIdentifiers(ctx, uid) }},
-			{"kyc checks", func() error { return q.DeleteKycChecks(ctx, uid) }},
-			{"kyc blobs", func() error { return q.DeleteKycBlobs(ctx, uid) }},
-			{"kyc documents", func() error { return q.DeleteKycDocuments(ctx, uid) }},
-			{"kyc submissions", func() error { return q.EraseKycSubmissions(ctx, uid) }},
-			{"notifications", func() error { return q.DeleteNotifications(ctx, uid) }},
-			{"notification preferences", func() error { return q.DeleteNotificationPreferences(ctx, uid) }},
-			{"assistant messages", func() error { return q.DeleteAssistantMessages(ctx, uid) }},
-			{"prepared actions", func() error { return q.DeletePreparedActions(ctx, uid) }},
-			{"assistant conversations", func() error { return q.DeleteAssistantConversations(ctx, uid) }},
-			{"support messages", func() error { return q.EraseSupportMessages(ctx, uid) }},
-			{"support conversations", func() error { return q.EraseSupportConversations(ctx, uid) }},
-			{"disputes", func() error { return q.EraseDisputes(ctx, uid) }},
-			{"attachments", func() error { return q.DeleteAttachments(ctx, uid) }},
-			{"beneficiaries", func() error { return q.DeleteBeneficiaries(ctx, uid) }},
-			{"scheduled transfers", func() error { return q.DeleteScheduledTransfers(ctx, uid) }},
-			{"payment links", func() error { return q.ClosePaymentLinks(ctx, uid) }},
-			{"savings goals", func() error { return q.CloseSavingsGoals(ctx, uid) }},
-			{"category corrections", func() error { return q.DeleteCategoryCorrections(ctx, uid) }},
-			{"statements", func() error { return q.DeleteStatements(ctx, uid) }},
-			{"fx alerts", func() error { return q.DeleteFxAlerts(ctx, uid) }},
-			{"self limits", func() error { return q.DeleteSelfLimits(ctx, uid) }},
-			{"staff notes", func() error { return q.DeleteStaffNotes(ctx, uid) }},
-			{"cards", func() error { return q.TerminateCards(ctx, uid) }},
-			{"api keys", func() error { return q.RevokeAPIKeys(ctx, uid) }},
-			{"webhook endpoints", func() error { return q.DeleteWebhooks(ctx, uid) }},
-			{"webhook deliveries", func() error { return q.ClearWebhookDeliveries(ctx, uid) }},
-			{"exports", func() error { return q.DeleteOwnExports(ctx, uid) }},
-			{"accounts", func() error { return q.CloseAccounts(ctx, uid) }},
-			{"ledger labels", func() error { return q.RenameLedgerAccounts(ctx, &uid) }},
-			{"profile", func() error { return q.EraseUser(ctx, privacydb.EraseUserParams{ID: uid, Now: now}) }},
-		}
-		for _, st := range steps {
-			if err := st.run(); err != nil {
-				return fmt.Errorf("erase %s: %w", st.name, err)
-			}
+		if err := eraseCustomer(ctx, q, uid, now); err != nil {
+			return err
 		}
 		// The log names the customer by ID only; it is part of what the law makes us keep.
 		if _, err := audit.Append(ctx, tx, audit.Input{
@@ -516,4 +471,57 @@ func (s *Service) Erase(ctx context.Context, id uuid.UUID) error {
 		}
 		return q.SetRequestStatus(ctx, privacydb.SetRequestStatusParams{ID: id, NewStatus: "completed", DoneAt: &now})
 	})
+}
+
+// eraseCustomer closes the customer's accounts and erases what identifies them. Peers' records go
+// first, while the customer's accounts can still be found by their owner.
+func eraseCustomer(ctx context.Context, q *privacydb.Queries, uid uuid.UUID, now time.Time) error {
+	steps := []struct {
+		name string
+		run  func() error
+	}{
+		{"peer transfers", func() error { return q.ErasePeersTransfers(ctx, uid) }},
+		{"peer transactions", func() error { return q.ErasePeersTransactions(ctx, uid) }},
+		{"sessions", func() error { return q.EndSessions(ctx, uid) }},
+		{"refresh tokens", func() error { return q.DeleteRefreshTokens(ctx, uid) }},
+		{"devices", func() error { return q.EraseDevices(ctx, uid) }},
+		{"push tokens", func() error { return q.DeletePushTokens(ctx, uid) }},
+		{"kyc identifiers", func() error { return q.DeleteKycIdentifiers(ctx, uid) }},
+		{"kyc checks", func() error { return q.DeleteKycChecks(ctx, uid) }},
+		{"kyc blobs", func() error { return q.DeleteKycBlobs(ctx, uid) }},
+		{"kyc documents", func() error { return q.DeleteKycDocuments(ctx, uid) }},
+		{"kyc submissions", func() error { return q.EraseKycSubmissions(ctx, uid) }},
+		{"notifications", func() error { return q.DeleteNotifications(ctx, uid) }},
+		{"notification preferences", func() error { return q.DeleteNotificationPreferences(ctx, uid) }},
+		{"assistant messages", func() error { return q.DeleteAssistantMessages(ctx, uid) }},
+		{"prepared actions", func() error { return q.DeletePreparedActions(ctx, uid) }},
+		{"assistant conversations", func() error { return q.DeleteAssistantConversations(ctx, uid) }},
+		{"support messages", func() error { return q.EraseSupportMessages(ctx, uid) }},
+		{"support conversations", func() error { return q.EraseSupportConversations(ctx, uid) }},
+		{"disputes", func() error { return q.EraseDisputes(ctx, uid) }},
+		{"attachments", func() error { return q.DeleteAttachments(ctx, uid) }},
+		{"beneficiaries", func() error { return q.DeleteBeneficiaries(ctx, uid) }},
+		{"scheduled transfers", func() error { return q.DeleteScheduledTransfers(ctx, uid) }},
+		{"payment links", func() error { return q.ClosePaymentLinks(ctx, uid) }},
+		{"savings goals", func() error { return q.CloseSavingsGoals(ctx, uid) }},
+		{"category corrections", func() error { return q.DeleteCategoryCorrections(ctx, uid) }},
+		{"statements", func() error { return q.DeleteStatements(ctx, uid) }},
+		{"fx alerts", func() error { return q.DeleteFxAlerts(ctx, uid) }},
+		{"self limits", func() error { return q.DeleteSelfLimits(ctx, uid) }},
+		{"staff notes", func() error { return q.DeleteStaffNotes(ctx, uid) }},
+		{"cards", func() error { return q.TerminateCards(ctx, uid) }},
+		{"api keys", func() error { return q.RevokeAPIKeys(ctx, uid) }},
+		{"webhook endpoints", func() error { return q.DeleteWebhooks(ctx, uid) }},
+		{"webhook deliveries", func() error { return q.ClearWebhookDeliveries(ctx, uid) }},
+		{"exports", func() error { return q.DeleteOwnExports(ctx, uid) }},
+		{"accounts", func() error { return q.CloseAccounts(ctx, uid) }},
+		{"ledger labels", func() error { return q.RenameLedgerAccounts(ctx, &uid) }},
+		{"profile", func() error { return q.EraseUser(ctx, privacydb.EraseUserParams{ID: uid, Now: now}) }},
+	}
+	for _, st := range steps {
+		if err := st.run(); err != nil {
+			return fmt.Errorf("erase %s: %w", st.name, err)
+		}
+	}
+	return nil
 }

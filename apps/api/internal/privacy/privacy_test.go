@@ -491,3 +491,41 @@ func TestMoneyArrivingAfterTheRequestRejectsTheErasure(t *testing.T) {
 		t.Fatal("a rejected erasure changed the customer")
 	}
 }
+
+func TestOldDemoCustomersAreRetiredWithTheirMoneyReturned(t *testing.T) {
+	t.Parallel()
+	f := newFixture(t)
+	old, fresh, real := f.customer("Olu"), f.customer("Fresh"), f.customer("Real")
+	f.fund(old.account, 7_500_000)
+	f.fund(fresh.account, 1_000_000)
+	ctx := t.Context()
+	if _, err := f.pool.Exec(ctx, `UPDATE users SET is_demo = true WHERE id = ANY($1)`, []uuid.UUID{old.id, fresh.id}); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := f.pool.Exec(ctx, `UPDATE users SET created_at = $2 WHERE id = ANY($1)`, []uuid.UUID{old.id, real.id}, f.clock().Add(-3*DemoRetention)); err != nil {
+		t.Fatal(err)
+	}
+
+	if err := f.svc.PurgeDemo(ctx); err != nil {
+		t.Fatal(err)
+	}
+	if f.count(`SELECT count(*) FROM users WHERE id = $1 AND deleted_at IS NOT NULL AND first_name = 'Deleted'`, old.id) != 1 {
+		t.Fatal("the old demo customer was not erased")
+	}
+	if f.count(`SELECT count(*) FROM ledger_accounts WHERE owner_id = $1 AND balance_minor <> 0`, old.id) != 0 {
+		t.Fatal("the old demo customer kept money")
+	}
+	if f.count(`SELECT count(*) FROM users WHERE id = ANY($1) AND deleted_at IS NULL`, []uuid.UUID{fresh.id, real.id}) != 2 {
+		t.Fatal("a recent demo customer or a real customer was erased")
+	}
+	if f.count(`SELECT count(*) FROM (SELECT currency FROM postings GROUP BY currency HAVING sum(amount_minor) <> 0) x`) != 0 {
+		t.Fatal("the ledger no longer balances")
+	}
+	if f.count(`SELECT count(*) FROM audit_log WHERE action = 'demo.purge' AND resource_id = $1`, old.id.String()) != 1 {
+		t.Fatal("the clean-up was not logged")
+	}
+	// A second pass finds nothing left to do.
+	if err := f.svc.PurgeDemo(ctx); err != nil {
+		t.Fatal(err)
+	}
+}
