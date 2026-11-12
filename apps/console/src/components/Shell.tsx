@@ -1,6 +1,7 @@
 import { Link, Outlet, useRouter } from '@tanstack/react-router';
 import { useEffect } from 'react';
 
+import { useDemoControls } from '@/data/provider';
 import { canCall } from '@/features/auth/access';
 import { isActive, useSession } from '@/features/auth/session';
 
@@ -8,6 +9,7 @@ import { StaffMenu } from './StaffMenu';
 import { ThemeSelect } from './ThemeSelect';
 
 export function Shell() {
+  const demo = useDemoControls();
   const session = useSession((s) => s.session);
   const roles = session?.staff.roles ?? [];
   const router = useRouter();
@@ -104,7 +106,9 @@ export function Shell() {
       </aside>
       <div className="main">
         <p className="demo-banner">
-          Demo console: simulated bank data, no real customers or money.
+          {demo
+            ? 'Demo console: simulated bank data, no real customers or money.'
+            : 'Sandbox console: simulated money and test customers only.'}
         </p>
         <header className="topbar">
           <ThemeSelect />

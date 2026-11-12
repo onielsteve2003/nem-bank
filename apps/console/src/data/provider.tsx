@@ -2,7 +2,10 @@ import type { StaffRole, StaffSession } from '@nem/contracts';
 import { createContext, useContext, useMemo, type ReactNode } from 'react';
 
 import { currentAccessToken } from '@/features/auth/session';
+import { developerTokens } from '@/features/developer/developerSession';
+import { env as appEnv, type Env } from '@/lib/env';
 
+import { createHttpDispatcher } from './http/client';
 import { createMockDispatcher, type MockOptions } from './mock';
 import { tamperAudit } from './mock/audit';
 import { switchDemoRole } from './mock/auth';
@@ -37,6 +40,8 @@ export interface TestCard {
 interface DataValue {
   repositories: Repositories;
   demo: DemoControls | null;
+  /** The API's origin, or null on the mock bank. Links the API serves are relative to it. */
+  apiUrl: string | null;
 }
 
 const DataContext = createContext<DataValue | null>(null);
@@ -45,14 +50,28 @@ type Props = {
   children: ReactNode;
   /** Tests pass their own mock options (state, latency). */
   mock?: MockOptions;
+  /** Overrides the build's environment (tests). */
+  env?: Env;
 };
+
+/** Repositories over the Go API; no demo shortcuts exist against the real bank. */
+function httpData(apiUrl: string): DataValue {
+  const dispatch = createHttpDispatcher({
+    baseUrl: apiUrl,
+    staffToken: currentAccessToken,
+    customer: developerTokens,
+  });
+  return { repositories: repositoriesFromDispatcher(dispatch), demo: null, apiUrl };
+}
 
 /**
  * Pages reach data through feature hooks → TanStack Query → these repositories, never
- * fetch. Phase 2 adds an http dispatcher chosen by VITE_API_MODE; until then it is mock.
+ * fetch. VITE_API_MODE picks the dispatcher: the in-browser mock bank (default) or the
+ * Go API.
  */
-export function RepositoryProvider({ children, mock }: Props) {
+export function RepositoryProvider({ children, mock, env = appEnv }: Props) {
   const value = useMemo<DataValue>(() => {
+    if (env.apiMode === 'http' && !mock) return httpData(env.apiUrl);
     const state = mock?.state ?? createMockState();
     const dispatch = createMockDispatcher({
       getAccessToken: currentAccessToken,
@@ -61,6 +80,7 @@ export function RepositoryProvider({ children, mock }: Props) {
     });
     return {
       repositories: repositoriesFromDispatcher(dispatch),
+      apiUrl: null,
       demo: {
         switchRole: (role) => switchDemoRole(state, role),
         totpSecretFor: (email) => findAccountByEmail(state, email)?.totpSecret ?? null,
@@ -79,7 +99,7 @@ export function RepositoryProvider({ children, mock }: Props) {
           })),
       },
     };
-  }, [mock]);
+  }, [mock, env]);
   return <DataContext.Provider value={value}>{children}</DataContext.Provider>;
 }
 
@@ -91,3 +111,4 @@ function useData(): DataValue {
 
 export const useRepositories = (): Repositories => useData().repositories;
 export const useDemoControls = (): DemoControls | null => useData().demo;
+export const useApiUrl = (): string | null => useData().apiUrl;

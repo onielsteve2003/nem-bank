@@ -10,7 +10,12 @@ import { DOMAINS, REPOSITORY_METHODS, repositoriesFromDispatcher } from './repos
 describe('console repositories', () => {
   it('maps only to staff and developer operations that exist in the contract', () => {
     for (const domain of DOMAINS) {
-      const prefix = domain === 'developer' ? '/v1/developer/' : '/v1/admin/';
+      const prefix =
+        domain === 'developer'
+          ? '/v1/developer/'
+          : domain === 'developerAuth'
+            ? '/v1/auth/'
+            : '/v1/admin/';
       for (const operationId of Object.values(REPOSITORY_METHODS[domain])) {
         const meta = OPERATIONS[operationId as keyof typeof OPERATIONS];
         expect(meta, operationId).toBeDefined();

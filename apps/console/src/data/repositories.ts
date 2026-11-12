@@ -63,6 +63,14 @@ export const REPOSITORY_METHODS = {
     getBankPartner: 'getBankPartnerSimulator',
     setBankPartner: 'setBankPartnerSimulator',
   },
+  // Signing in to the developer portal as a business customer (real API only; the mock
+  // portal has no sign-in).
+  developerAuth: {
+    login: 'login',
+    startStepUp: 'startStepUp',
+    verifyStepUp: 'verifyStepUp',
+    logout: 'logout',
+  },
   // The developer portal: business customers' own keys and webhooks, not staff operations.
   developer: {
     listKeys: 'listApiKeys',

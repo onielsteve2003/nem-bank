@@ -1,9 +1,21 @@
 import { Link, Outlet } from '@tanstack/react-router';
 
 import { ThemeSelect } from '@/components/ThemeSelect';
+import { useDemoControls } from '@/data/provider';
+
+import { useDeveloperSession } from './developerSession';
+import { DeveloperSignIn } from './DeveloperSignIn';
+import { useDeveloperSignOut } from './useDeveloper';
 
 /** The developer portal's own frame: a business customer's view, not the back office. */
 export function DeveloperShell() {
+  const demo = useDemoControls();
+  const session = useDeveloperSession((s) => s.session);
+  const signOut = useDeveloperSignOut();
+
+  // The mock portal is always "signed in" as the demo business; the real one needs a customer.
+  if (!demo && !session) return <DeveloperSignIn />;
+
   return (
     <div className="shell">
       <aside className="sidebar">
@@ -32,11 +44,20 @@ export function DeveloperShell() {
       </aside>
       <div className="main">
         <p className="demo-banner">
-          Sandbox: signed in as the demo business Dayo&apos;s Store. Keys start with nem_test_ and
-          only reach the sandbox.
+          {demo
+            ? "Sandbox: signed in as the demo business Dayo's Store. Keys start with nem_test_ and only reach the sandbox."
+            : 'Sandbox: keys start with nem_test_ and only reach the sandbox.'}
         </p>
         <header className="topbar">
           <ThemeSelect />
+          {session && (
+            <div className="topbar-actions">
+              <span className="muted">{session.user.email}</span>
+              <button type="button" className="btn btn-small" onClick={() => void signOut()}>
+                Sign out
+              </button>
+            </div>
+          )}
         </header>
         <main className="content">
           <Outlet />

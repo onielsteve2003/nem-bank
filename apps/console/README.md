@@ -10,6 +10,14 @@ pnpm install          # from the repo root
 pnpm console          # http://localhost:5173
 ```
 
+## Run it against the Go API
+
+By default the console runs on an in-browser mock bank. To use the real API, copy
+`.env.example` to `.env.local` and set `VITE_API_MODE=http` and `VITE_API_URL`. Staff sign
+in with their password and an authenticator code. The developer portal (`/developers`)
+signs in as a business _customer_, because the API's key and webhook routes belong to
+customers; creating a key asks for that customer's transaction PIN.
+
 ## How it is put together
 
 - **Design tokens** come from `@nem/shared`, the same Volt Noir palette and scales the

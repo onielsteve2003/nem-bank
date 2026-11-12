@@ -61,6 +61,13 @@ function Result({ tx }: { tx: CardTransaction }) {
   );
 }
 
+function typedCard(t: { pan: string; cvv: string; month: string; year: string }) {
+  const month = Number(t.month);
+  if (t.pan.length < 13 || t.cvv.length !== 3 || t.year.length !== 4) return undefined;
+  if (!Number.isInteger(month) || month < 1 || month > 12) return undefined;
+  return { pan: t.pan, cvv: t.cvv, expiryMonth: month, expiryYear: Number(t.year) };
+}
+
 export function MerchantSimulator() {
   const demo = useDemoControls();
   const [cards, setCards] = useState<TestCard[]>(() => demo?.testCards() ?? []);
@@ -74,7 +81,12 @@ export function MerchantSimulator() {
   const charge = useChargeCard();
   const settle = useSettleCharge();
 
-  const card = cards.find((c) => c.id === cardId);
+  // Against the real API there are no seeded test cards: the customer's card details come
+  // from the app's reveal screen and are typed in, as a merchant's form would take them.
+  const [typed, setTyped] = useState({ pan: '', cvv: '', month: '', year: '' });
+  const card: Pick<TestCard, 'pan' | 'cvv' | 'expiryMonth' | 'expiryYear'> | undefined = demo
+    ? cards.find((c) => c.id === cardId)
+    : typedCard(typed);
   const merchant = MERCHANTS.find((m) => m.id === merchantId)!;
   let parsed: ReturnType<typeof parseMajor> | null = null;
   try {
@@ -132,22 +144,54 @@ export function MerchantSimulator() {
       </div>
 
       <form className="stack" onSubmit={submit} aria-label="Charge a card">
-        <label className="field">
-          Test card
-          <select className="select" value={cardId} onChange={(e) => setCardId(e.target.value)}>
-            {cards.map((c) => (
-              <option key={c.id} value={c.id}>
-                {c.label}: {c.purpose}
-              </option>
-            ))}
-          </select>
-        </label>
-        {card && (
-          <p className="muted hint num">
-            {card.pan.replace(/(\d{4})(?=\d)/g, '$1 ')} ·{' '}
-            {String(card.expiryMonth).padStart(2, '0')}/{String(card.expiryYear).slice(-2)} · CVV{' '}
-            {card.cvv}
-          </p>
+        {demo ? (
+          <>
+            <label className="field">
+              Test card
+              <select className="select" value={cardId} onChange={(e) => setCardId(e.target.value)}>
+                {cards.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.label}: {c.purpose}
+                  </option>
+                ))}
+              </select>
+            </label>
+            {card && (
+              <p className="muted hint num">
+                {card.pan.replace(/(\d{4})(?=\d)/g, '$1 ')} ·{' '}
+                {String(card.expiryMonth).padStart(2, '0')}/{String(card.expiryYear).slice(-2)} ·
+                CVV {card.cvv}
+              </p>
+            )}
+          </>
+        ) : (
+          <fieldset className="choices">
+            <legend className="field">Card details (from the customer&apos;s Reveal screen)</legend>
+            <div className="row filters">
+              {(
+                [
+                  ['pan', 'Card number', 19],
+                  ['month', 'Expiry month', 2],
+                  ['year', 'Expiry year', 4],
+                  ['cvv', 'CVV', 3],
+                ] as const
+              ).map(([field, label, max]) => (
+                <label key={field} className="field">
+                  {label}
+                  <input
+                    className="input num"
+                    inputMode="numeric"
+                    autoComplete="off"
+                    maxLength={max}
+                    value={typed[field]}
+                    onChange={(e) =>
+                      setTyped((t) => ({ ...t, [field]: e.target.value.replace(/\D/g, '') }))
+                    }
+                  />
+                </label>
+              ))}
+            </div>
+          </fieldset>
         )}
         <div className="row filters">
           <label className="field">

@@ -19,6 +19,7 @@ export function LoginPage() {
   const [password, setPassword] = useState('');
   const [challenge, setChallenge] = useState<StaffLoginChallenge | null>(null);
   const login = useStaffLogin();
+  const demo = useDemoControls();
 
   const onSubmit = (event: FormEvent) => {
     event.preventDefault();
@@ -83,7 +84,7 @@ export function LoginPage() {
             </button>
           </form>
         )}
-        {!challenge && (
+        {!challenge && demo && (
           <DemoAccounts
             onPick={(pickedEmail) => {
               setEmail(pickedEmail);
@@ -108,8 +109,8 @@ function TotpStep({
   const [code, setCode] = useState('');
   const verify = useVerifyTotp();
   const demo = useDemoControls();
-  const navigate = useNavigate();
   const { redirect } = useSearch({ from: '/login' });
+  const navigate = useNavigate();
   const secret = demo?.totpSecretFor(email) ?? null;
   const restartNeeded =
     isApiError(verify.error, 'otp_expired') || isApiError(verify.error, 'rate_limited');

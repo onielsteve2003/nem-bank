@@ -11,6 +11,7 @@ import { SecretOnce } from './SecretOnce';
 import {
   useApiKeys,
   useCreateApiKey,
+  useDeveloperStepUp,
   useRevokeApiKey,
   type ApiKey,
   type ApiKeyScope,
@@ -26,6 +27,7 @@ export const SCOPES: readonly [ApiKeyScope, string][] = [
 
 function CreateKeyForm({ onCreated }: { onCreated: (secret: string) => void }) {
   const demo = useDemoControls();
+  const stepUp = useDeveloperStepUp();
   const create = useCreateApiKey();
   const [name, setName] = useState('');
   const [scopes, setScopes] = useState<ApiKeyScope[]>(['accounts_read', 'transactions_read']);
@@ -36,13 +38,15 @@ function CreateKeyForm({ onCreated }: { onCreated: (secret: string) => void }) {
   const toggle = (scope: ApiKeyScope) =>
     setScopes((s) => (s.includes(scope) ? s.filter((x) => x !== scope) : [...s, scope]));
 
-  const submit = (event: FormEvent) => {
+  const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (!valid) return;
     // Creating a key is sensitive, so it needs a fresh step-up: the PIN again.
-    const stepUpToken = demo?.developerStepUp(pin) ?? null;
-    if (!stepUpToken) {
-      setPinError('That PIN is not right.');
+    let stepUpToken: string;
+    try {
+      stepUpToken = await stepUp(pin);
+    } catch (error) {
+      setPinError(isApiError(error) ? error.message : 'Could not check your PIN. Try again.');
       return;
     }
     setPinError(null);
@@ -98,7 +102,10 @@ function CreateKeyForm({ onCreated }: { onCreated: (secret: string) => void }) {
         />
       </label>
       <span id="pin-hint" className={pinError ? 'field-error' : 'muted hint'}>
-        {pinError ?? `Demo business PIN: ${DEMO_DEVELOPER_PIN}`}
+        {pinError ??
+          (demo
+            ? `Demo business PIN: ${DEMO_DEVELOPER_PIN}`
+            : 'The transaction PIN you set in the Nem app.')}
       </span>
       {create.error != null && (
         <p className="field-error" role="alert">

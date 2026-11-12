@@ -2,6 +2,7 @@ import type { Schema } from '@nem/contracts';
 import { useState } from 'react';
 
 import { Badge } from '@/components/Badge';
+import { useApiUrl } from '@/data/provider';
 
 import { DOCUMENT_LABELS, QUALITY_LABELS } from './labels';
 
@@ -13,8 +14,17 @@ const DOC_STATUS = {
   rejected: ['Rejected', 'danger'],
 } as const;
 
+/**
+ * The API serves a document at a signed path on its own origin ("/v1/admin/kyc/documents/…"),
+ * which would resolve against the console's origin; the mock's links are already absolute.
+ */
+export function documentSrc(url: string, apiUrl: string | null): string {
+  return apiUrl && url.startsWith('/') ? `${apiUrl}${url}` : url;
+}
+
 /** One document at a time, large enough to check, with zoom and rotate for phone photos. */
 export function DocumentViewer({ documents }: { documents: Document[] }) {
+  const apiUrl = useApiUrl();
   const [selectedId, setSelectedId] = useState(documents[0]?.id);
   const [zoomed, setZoomed] = useState(false);
   const [turns, setTurns] = useState(0);
@@ -57,7 +67,7 @@ export function DocumentViewer({ documents }: { documents: Document[] }) {
       </div>
       <div className="doc-stage" data-zoomed={zoomed}>
         <img
-          src={doc.url}
+          src={documentSrc(doc.url, apiUrl)}
           alt={`${DOCUMENT_LABELS[doc.kind]} uploaded by the customer`}
           style={{ transform: `rotate(${turns * 90}deg)` }}
         />

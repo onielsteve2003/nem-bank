@@ -7,7 +7,72 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 
-import { useRepositories } from '@/data/provider';
+import { useCallback } from 'react';
+
+import { problem } from '@/data/errors';
+import { useDemoControls, useRepositories } from '@/data/provider';
+
+import { browserDevice, useDeveloperSession } from './developerSession';
+
+/** Real API only: signs the browser in as a business customer, on its own device. */
+export function useDeveloperLogin() {
+  const { developerAuth } = useRepositories();
+  const signIn = useDeveloperSession((s) => s.signIn);
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: (input: { identifier: string; password: string }) =>
+      developerAuth.login({ body: { ...input, device: browserDevice() } }),
+    onSuccess: (session) => {
+      queryClient.clear();
+      signIn(session);
+    },
+  });
+}
+
+/** Ends the portal session at the bank, then here even if that call fails. */
+export function useDeveloperSignOut() {
+  const { developerAuth } = useRepositories();
+  const signOut = useDeveloperSession((s) => s.signOut);
+  const queryClient = useQueryClient();
+  return useCallback(async () => {
+    try {
+      await developerAuth.logout({ body: { all_devices: false } });
+    } catch {
+      // The session is forgotten here either way.
+    } finally {
+      signOut();
+      queryClient.clear();
+    }
+  }, [developerAuth, signOut, queryClient]);
+}
+
+/**
+ * Turns the customer's PIN into a single-use step-up token for creating an API key.
+ * The demo checks its own PIN; the real API starts a step-up and verifies the PIN.
+ */
+export function useDeveloperStepUp(): (pin: string) => Promise<string> {
+  const demo = useDemoControls();
+  const { developerAuth } = useRepositories();
+  return useCallback(
+    async (pin: string) => {
+      if (demo) {
+        const token = demo.developerStepUp(pin);
+        if (!token) throw problem(403, 'wrong_pin', 'That PIN is not right.');
+        return token;
+      }
+      const challenge = await developerAuth.startStepUp({ body: { purpose: 'api_key' } });
+      if (!challenge.methods.includes('pin')) {
+        throw problem(409, 'pin_not_set', 'Set a transaction PIN in the Nem app first');
+      }
+      const result = await developerAuth.verifyStepUp({
+        path: { step_up_id: challenge.step_up_id },
+        body: { pin },
+      });
+      return result.step_up_token;
+    },
+    [demo, developerAuth],
+  );
+}
 
 export type ApiKey = Schema<'ApiKey'>;
 export type ApiKeyScope = Schema<'ApiKeyScope'>;
