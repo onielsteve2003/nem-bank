@@ -61,6 +61,13 @@ type SandboxNIP struct {
 	http   *http.Client
 	log    *slog.Logger
 	now    func() time.Time
+	// forceFail, when set, is asked about each new payment: true makes it fail at the bank.
+	forceFail func(ctx context.Context, reference string) bool
+}
+
+// SetForceFail registers the demo's one-shot failure switch. Call it before serving requests.
+func (s *SandboxNIP) SetForceFail(f func(ctx context.Context, reference string) bool) {
+	s.forceFail = f
 }
 
 var _ BankPartner = (*SandboxNIP)(nil)
@@ -135,6 +142,9 @@ func (s *SandboxNIP) Send(ctx context.Context, p Payment) (Submission, error) {
 	}
 	outcome, code := "settled", (*string)(nil)
 	switch roll := draw(10_000); {
+	case s.forceFail != nil && s.forceFail(ctx, p.Reference):
+		// The demo armed a failure for this customer's next transfer (DEMO-1).
+		outcome, code = "failed", &failureCodes[0]
 	case roll < set.FailureRateBps:
 		outcome, code = "failed", &failureCodes[draw(len(failureCodes))]
 	case roll < set.FailureRateBps+set.TimeoutRateBps:

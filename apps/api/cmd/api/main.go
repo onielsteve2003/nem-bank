@@ -366,10 +366,12 @@ func run() error {
 	// signing seed under its own label, like the other link keys.
 	privacyMAC := hmac.New(sha256.New, cfg.JWTSigningKey)
 	privacyMAC.Write([]byte("nem privacy export link signing key v1"))
-	demoSvc, err := demo.NewService(demo.Config{Pool: pool, Identity: identitySvc})
+	demoSvc, err := demo.NewService(demo.Config{Pool: pool, Identity: identitySvc, Rules: limitsSvc, KYC: kycSvc})
 	if err != nil {
 		return err
 	}
+	sandbox.SetForceFail(demoSvc.ConsumeFailNext)
+	kycSvc.SetAfterSubmit(demoSvc.AutoReview)
 	panicSvc, err := panicmode.NewService(panicmode.Config{Pool: pool, StepUps: identitySvc})
 	if err != nil {
 		return err

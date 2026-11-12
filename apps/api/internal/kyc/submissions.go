@@ -106,6 +106,13 @@ func (s *Service) Submit(ctx context.Context, req SubmitRequest) (api.KycSubmiss
 	if err != nil {
 		return api.KycSubmission{}, err
 	}
+	if s.afterSubmit != nil {
+		if err := s.afterSubmit(ctx, p.UserID, out.ID); err != nil {
+			s.log.Warn("after submit failed", "error", err)
+		} else if again, err := s.q.GetSubmissionAny(ctx, out.ID); err == nil {
+			out = again
+		}
+	}
 	return SubmissionJSON(out), nil
 }
 

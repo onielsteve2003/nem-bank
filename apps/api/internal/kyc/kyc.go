@@ -120,6 +120,15 @@ type Service struct {
 	samples  map[string]bool
 	log      *slog.Logger
 	now      func() time.Time
+	// afterSubmit runs once a Tier 3 submission is stored; see SetAfterSubmit.
+	afterSubmit func(ctx context.Context, userID, submissionID uuid.UUID) error
+}
+
+// SetAfterSubmit registers a step that runs after a Tier 3 submission is stored, outside its
+// transaction. The demo's sandbox reviewer uses it to rule at once; a failure is logged and
+// leaves the submission waiting for staff. Call it before serving requests.
+func (s *Service) SetAfterSubmit(f func(ctx context.Context, userID, submissionID uuid.UUID) error) {
+	s.afterSubmit = f
 }
 
 // NewService builds the service.

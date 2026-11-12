@@ -39,7 +39,7 @@ func newService(t *testing.T) (*Service, *pgxpool.Pool) {
 	if err != nil {
 		t.Fatal(err)
 	}
-	svc, err := NewService(Config{Pool: pool, Identity: id})
+	svc, err := NewService(Config{Pool: pool, Identity: id, Rules: fixedRules{}, KYC: &reviewer{}})
 	if err != nil {
 		t.Fatal(err)
 	}

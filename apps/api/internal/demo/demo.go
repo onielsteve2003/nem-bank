@@ -24,26 +24,31 @@ const Pin = "2580"
 type Config struct {
 	Pool     *pgxpool.Pool
 	Identity *identity.Service
+	// Rules supplies the tier balance caps and KYC the sandbox reviewer.
+	Rules Rules
+	KYC   Reviewer
 	// Now defaults to time.Now.
 	Now func() time.Time
 }
 
 // Service implements the demo operations.
 type Service struct {
-	pool *pgxpool.Pool
-	id   *identity.Service
-	now  func() time.Time
+	pool  *pgxpool.Pool
+	id    *identity.Service
+	rules Rules
+	kyc   Reviewer
+	now   func() time.Time
 }
 
 // NewService checks the configuration and returns the service.
 func NewService(cfg Config) (*Service, error) {
-	if cfg.Pool == nil || cfg.Identity == nil {
-		return nil, errors.New("demo: pool and identity are required")
+	if cfg.Pool == nil || cfg.Identity == nil || cfg.Rules == nil || cfg.KYC == nil {
+		return nil, errors.New("demo: pool, identity, rules and kyc are required")
 	}
 	if cfg.Now == nil {
 		cfg.Now = time.Now
 	}
-	return &Service{pool: cfg.Pool, id: cfg.Identity, now: cfg.Now}, nil
+	return &Service{pool: cfg.Pool, id: cfg.Identity, rules: cfg.Rules, kyc: cfg.KYC, now: cfg.Now}, nil
 }
 
 // ErrUnknownPersona is a persona the demo does not have.
