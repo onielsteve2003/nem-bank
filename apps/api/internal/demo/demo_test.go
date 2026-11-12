@@ -78,7 +78,7 @@ func TestStartBuildsAWholePersona(t *testing.T) {
 			SELECT count(*), count(DISTINCT date_trunc('month', created_at)), min(created_at), max(created_at),
 			       coalesce(sum(amount_minor) FILTER (WHERE direction = 'credit'), 0),
 			       coalesce(sum(amount_minor) FILTER (WHERE direction = 'debit'), 0)
-			FROM transactions WHERE user_id = $1`, res.User.ID).Scan(&lines, &months, &oldest, &newest, &credits, &debits); err != nil {
+			FROM transactions WHERE user_id = $1 AND currency = 'NGN'`, res.User.ID).Scan(&lines, &months, &oldest, &newest, &credits, &debits); err != nil {
 			t.Fatal(err)
 		}
 		if lines < 40 || months < 6 {
@@ -89,7 +89,7 @@ func TestStartBuildsAWholePersona(t *testing.T) {
 		}
 
 		var acct [16]byte
-		if err := pool.QueryRow(ctx, `SELECT account_id FROM customer_accounts WHERE user_id = $1`, res.User.ID).Scan(&acct); err != nil {
+		if err := pool.QueryRow(ctx, `SELECT account_id FROM customer_accounts WHERE user_id = $1 AND currency = 'NGN'`, res.User.ID).Scan(&acct); err != nil {
 			t.Fatal(err)
 		}
 		b, err := ledger.GetBalances(ctx, pool, acct)
@@ -104,7 +104,7 @@ func TestStartBuildsAWholePersona(t *testing.T) {
 			t.Fatalf("%s: balance %d is above the tier cap %d", name, balance, p.cap)
 		}
 		var salaries int
-		if err := pool.QueryRow(ctx, `SELECT count(*) FROM transactions WHERE user_id = $1 AND category = 'salary_income'`, res.User.ID).Scan(&salaries); err != nil {
+		if err := pool.QueryRow(ctx, `SELECT count(*) FROM transactions WHERE user_id = $1 AND currency = 'NGN' AND category = 'salary_income'`, res.User.ID).Scan(&salaries); err != nil {
 			t.Fatal(err)
 		}
 		if salaries < 6 {
@@ -171,5 +171,40 @@ func TestStartRefusesAnUnknownPersonaAndASecondUserKeepsItsOwnData(t *testing.T)
 	}
 	if err := pool.QueryRow(ctx, `SELECT count(*) FROM users WHERE is_demo`).Scan(&n); err != nil || n != 4 {
 		t.Fatalf("demo users = %d (%v), want 4: the refused tap must leave nothing behind", n, err)
+	}
+}
+
+func TestPersonasWithDollarIncomeGetAFundedUSDWallet(t *testing.T) {
+	svc, pool := newService(t)
+	ctx := t.Context()
+	for name, p := range personas {
+		res, err := svc.Start(ctx, name, device(t))
+		if err != nil {
+			t.Fatalf("%s: %v", name, err)
+		}
+		var wallets int
+		var usd int64
+		if err := pool.QueryRow(ctx, `
+			SELECT count(*), coalesce(sum(l.balance_minor), 0)
+			FROM customer_accounts a JOIN ledger_accounts l ON l.id = a.account_id
+			WHERE a.user_id = $1 AND a.currency = 'USD'`, res.User.ID).Scan(&wallets, &usd); err != nil {
+			t.Fatal(err)
+		}
+		if len(p.usd) == 0 {
+			if wallets != 0 {
+				t.Fatalf("%s: has a USD wallet but no dollar income", name)
+			}
+			continue
+		}
+		var want int64
+		for _, pay := range p.usd {
+			want += pay.cents
+		}
+		if wallets != 1 || usd != want {
+			t.Fatalf("%s: %d USD wallets holding %d, want 1 holding %d", name, wallets, usd, want)
+		}
+		if p.tier < 2 {
+			t.Fatalf("%s: a Tier 1 persona must not hold a wallet", name)
+		}
 	}
 }

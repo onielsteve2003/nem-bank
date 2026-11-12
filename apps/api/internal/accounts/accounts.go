@@ -404,3 +404,14 @@ func (s *Service) Naira(ctx context.Context, userID uuid.UUID) (accountsdb.Custo
 	}
 	return a, nil
 }
+
+// OpenWalletTx opens a foreign-currency wallet for a customer inside the caller's transaction,
+// without the KYC check: for seeding the demo personas, whose tier is set by the demo itself.
+func OpenWalletTx(ctx context.Context, tx pgx.Tx, userID uuid.UUID, currency money.Currency) (accountsdb.CustomerAccount, error) {
+	q := accountsdb.New(tx)
+	serial, err := q.NextWalletSerial(ctx)
+	if err != nil {
+		return accountsdb.CustomerAccount{}, fmt.Errorf("wallet serial: %w", err)
+	}
+	return open(ctx, q, userID, currency, walletNumberFor(serial))
+}

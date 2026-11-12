@@ -68,6 +68,9 @@ func (s *Service) Start(ctx context.Context, persona string, device identity.Dev
 		FirstName: p.first, LastName: p.last, NemtagBase: p.tagBase, DateOfBirth: p.born,
 		KycTier: p.tier, KycStatus: p.kycStatus, Pin: Pin,
 	}, device, func(ctx context.Context, tx pgx.Tx, userID uuid.UUID) error {
-		return p.seed(ctx, tx, userID, now)
+		if err := p.seed(ctx, tx, userID, now); err != nil {
+			return err
+		}
+		return p.seedUSD(ctx, tx, userID, now)
 	})
 }

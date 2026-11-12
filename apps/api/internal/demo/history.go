@@ -66,6 +66,9 @@ type persona struct {
 	rent, save int64
 	// cap is the NGN balance the persona's KYC tier allows; 0 means none.
 	cap int64
+	// usd is the persona's dollar income: each payment lands in a USD wallet in the given month
+	// of the story (1 is the first month after the story starts). Empty means no USD wallet.
+	usd []usdPayment
 	// scale multiplies how much and how often this persona spends.
 	scale float64
 }
@@ -74,6 +77,7 @@ var personas = map[string]persona{
 	"tolu": {
 		first: "Tolulope", last: "Adebayo", tagBase: "tolu",
 		born: date(1996, 3, 14), tier: 2, employer: "Paystack Payments Ltd", salary: naira(420000), salaryDay: 25, scale: 1, rent: naira(150000), save: naira(55000), cap: naira(500000),
+		usd: []usdPayment{{1, 10, 65000, "Upwork Escrow Inc"}, {3, 12, 48000, "Toptal Payments"}, {5, 9, 82000, "Upwork Escrow Inc"}},
 	},
 	"mama_ngozi": {
 		first: "Ngozi", last: "Okafor", tagBase: "mamangozi",
@@ -82,6 +86,7 @@ var personas = map[string]persona{
 	"emeka": {
 		first: "Emeka", last: "Nwosu", tagBase: "emeka",
 		born: date(1989, 11, 21), tier: 3, kycStatus: "approved", employer: "Flutterwave Technology", salary: naira(950000), salaryDay: 28, scale: 1.8, rent: naira(300000), save: naira(150000),
+		usd: []usdPayment{{2, 15, 150000, "Stripe Payouts"}, {4, 15, 150000, "Stripe Payouts"}},
 	},
 	"bisi": {
 		first: "Bisola", last: "Alade", tagBase: "bisi",
@@ -218,6 +223,54 @@ func (p persona) seed(ctx context.Context, tx pgx.Tx, userID uuid.UUID, now time
 			Counterparty: cp, At: e.at,
 		}); err != nil {
 			return fmt.Errorf("record demo history: %w", err)
+		}
+	}
+	return nil
+}
+
+// usdPayment is one dollar payment in a persona's story: the month after the story starts, the
+// day of that month, the cents and who paid.
+type usdPayment struct {
+	month, day int
+	cents      int64
+	payer      string
+}
+
+// seedUSD opens the persona's USD wallet and fills it with their dollar income, as real ledger
+// entries from the demo funding account. A persona with no dollar income gets no wallet.
+func (p persona) seedUSD(ctx context.Context, tx pgx.Tx, userID uuid.UUID, now time.Time) error {
+	if len(p.usd) == 0 {
+		return nil
+	}
+	wallet, err := accounts.OpenWalletTx(ctx, tx, userID, money.USD)
+	if err != nil {
+		return fmt.Errorf("demo usd wallet: %w", err)
+	}
+	bank, err := ledger.SystemAccount(ctx, tx, ledger.KindDemoFunding, string(money.USD))
+	if err != nil {
+		return err
+	}
+	start := now.AddDate(0, -historyMonths, 0)
+	for i, pay := range p.usd {
+		at := time.Date(start.Year(), start.Month()+time.Month(pay.month), pay.day, 11, 0, 0, 0, time.UTC)
+		if at.After(now) {
+			continue
+		}
+		amount := money.New(pay.cents, money.USD)
+		ref := fmt.Sprintf("DEMO-%s-USD%02d", strings.ToUpper(userID.String()[24:32]), i)
+		posted, err := ledger.Post(ctx, tx, ledger.Entry{
+			Kind: "demo_funding", Reference: ref,
+			Legs: []ledger.Leg{ledger.Debit(bank.ID, amount), ledger.Credit(wallet.AccountID, amount)},
+		})
+		if err != nil {
+			return fmt.Errorf("post demo dollars: %w", err)
+		}
+		if _, err := accounts.Record(ctx, tx, accounts.Line{
+			UserID: userID, AccountID: wallet.AccountID, Type: "transfer_in", Direction: "credit", Status: "completed",
+			Amount: amount, Entry: &posted, Narration: "Freelance payment", Reference: ref, Category: "salary_income",
+			Counterparty: api.Counterparty{Name: pay.payer}, At: at,
+		}); err != nil {
+			return fmt.Errorf("record demo dollars: %w", err)
 		}
 	}
 	return nil
