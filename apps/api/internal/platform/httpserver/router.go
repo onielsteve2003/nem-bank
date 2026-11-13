@@ -173,7 +173,7 @@ func NewRouter(opts Options) (*gin.Engine, error) {
 	// Tracing comes before AccessLog so its log line carries the trace ID. Probes and scrapes
 	// are not traced: they would bury real requests under thousands of identical spans.
 	r.Use(
-		RequestID(),
+		RequestID(), SecurityHeaders(), BodyLimit(),
 		otelgin.Middleware(observability.ServiceName, otelgin.WithGinFilter(func(c *gin.Context) bool {
 			return !isProbe(c.FullPath())
 		})),

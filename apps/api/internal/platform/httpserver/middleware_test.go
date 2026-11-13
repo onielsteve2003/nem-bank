@@ -5,6 +5,7 @@ import (
 	"io"
 	"log/slog"
 	"net/http"
+	"net/http/httptest"
 	"strings"
 	"testing"
 
@@ -102,4 +103,62 @@ func TestCORS(t *testing.T) {
 			t.Fatalf("got %d %v", rec.Code, rec.Header())
 		}
 	})
+}
+
+func TestSecurityHeadersAreOnEveryResponse(t *testing.T) {
+	t.Parallel()
+
+	rec := do(t, newTestRouter(t, io.Discard), http.MethodGet, "/v1/health", nil)
+	for k, want := range map[string]string{
+		"X-Content-Type-Options": "nosniff",
+		"Cache-Control":          "no-store",
+		"X-Frame-Options":        "DENY",
+		"Referrer-Policy":        "no-referrer",
+	} {
+		if got := rec.Header().Get(k); got != want {
+			t.Errorf("%s = %q, want %q", k, got, want)
+		}
+	}
+	if !strings.Contains(rec.Header().Get("Strict-Transport-Security"), "max-age=") ||
+		!strings.Contains(rec.Header().Get("Content-Security-Policy"), "frame-ancestors 'none'") {
+		t.Fatalf("headers = %v", rec.Header())
+	}
+	// Unknown routes get them too: the middleware runs before routing.
+	if do(t, newTestRouter(t, io.Discard), http.MethodGet, "/nope", nil).Header().Get("X-Content-Type-Options") != "nosniff" {
+		t.Fatal("404 response has no security headers")
+	}
+}
+
+func TestBodyLimit(t *testing.T) {
+	t.Parallel()
+
+	r := gin.New()
+	r.Use(RequestID(), BodyLimit())
+	r.POST("/echo", func(c *gin.Context) {
+		if _, err := io.Copy(io.Discard, c.Request.Body); err != nil {
+			c.Status(http.StatusRequestEntityTooLarge)
+			return
+		}
+		c.Status(http.StatusNoContent)
+	})
+	post := func(contentType string, size int) int {
+		req := httptest.NewRequest(http.MethodPost, "/echo", bytes.NewReader(make([]byte, size)))
+		req.Header.Set("Content-Type", contentType)
+		rec := httptest.NewRecorder()
+		r.ServeHTTP(rec, req)
+		return rec.Code
+	}
+
+	if got := post("application/json", 1<<20); got != http.StatusNoContent {
+		t.Errorf("1 MiB JSON = %d, want 204", got)
+	}
+	if got := post("application/json", 1<<20+1); got != http.StatusRequestEntityTooLarge {
+		t.Errorf("over 1 MiB JSON = %d, want 413", got)
+	}
+	if got := post("multipart/form-data; boundary=x", 6<<20); got != http.StatusNoContent {
+		t.Errorf("6 MiB upload = %d, want 204", got)
+	}
+	if got := post("multipart/form-data; boundary=x", 8<<20+1); got != http.StatusRequestEntityTooLarge {
+		t.Errorf("over 8 MiB upload = %d, want 413", got)
+	}
 }
