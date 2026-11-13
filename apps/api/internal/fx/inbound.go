@@ -13,6 +13,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts/accountsdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger/money"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
@@ -100,6 +101,14 @@ func (s *Service) DemoInbound(ctx context.Context, in InboundRequest) (accountsd
 			UserID: p.UserID, AccountID: to.AccountID, Type: "transfer_in", Direction: "credit", Status: "completed",
 			Amount: in.Amount, Fee: &levy, FeeCode: "emtl", Entry: &posted, Narration: narration, Reference: ref,
 			Category: "transfers", Counterparty: cp,
+		})
+		if err != nil {
+			return err
+		}
+		// Tell the customer's open app the balance moved, as any other credit does.
+		_, err = jobs.Write(ctx, tx, jobs.Event{
+			Topic: topicInbound, AggregateType: "account", AggregateID: to.AccountID.String(),
+			Payload: map[string]any{"user_id": p.UserID, "account_id": to.AccountID},
 		})
 		return err
 	})

@@ -12,10 +12,12 @@ import (
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgtype"
 
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx/fxdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/ledger"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/realtime"
 )
@@ -27,6 +29,8 @@ const (
 	alertKeep = 7 * 24 * time.Hour
 	// topicAlert is the outbox topic of a fired alert.
 	topicAlert = "fx.alert_triggered"
+	// topicInbound is the outbox topic of a demo inbound credit.
+	topicInbound = "demo.inbound_received"
 )
 
 var (
@@ -186,8 +190,11 @@ func (s *Service) fire(ctx context.Context, pair string, midE8 int64, now time.T
 func (s *Service) RealtimeSubscriber(hub *realtime.Hub) jobs.Subscriber {
 	return jobs.Subscriber{
 		Name:   "realtime_fx_alerts",
-		Topics: []string{topicAlert},
-		Handle: func(_ context.Context, d jobs.Delivery) error {
+		Topics: []string{topicAlert, topicInbound},
+		Handle: func(ctx context.Context, d jobs.Delivery) error {
+			if d.Topic == topicInbound {
+				return s.pushInbound(ctx, hub, d)
+			}
 			var p struct {
 				UserID uuid.UUID   `json:"user_id"`
 				Alert  api.FxAlert `json:"alert"`
@@ -201,4 +208,25 @@ func (s *Service) RealtimeSubscriber(hub *realtime.Hub) jobs.Subscriber {
 			})
 		},
 	}
+}
+
+// pushInbound sends the new balance of an account a demo credit landed in.
+func (s *Service) pushInbound(ctx context.Context, hub *realtime.Hub, d jobs.Delivery) error {
+	var p struct {
+		UserID    uuid.UUID `json:"user_id"`
+		AccountID uuid.UUID `json:"account_id"`
+	}
+	if err := json.Unmarshal(d.Payload, &p); err != nil {
+		return fmt.Errorf("inbound event payload: %w", err)
+	}
+	b, err := ledger.GetBalances(ctx, s.pool, p.AccountID)
+	if err != nil {
+		return fmt.Errorf("balances of %s: %w", p.AccountID, err)
+	}
+	return hub.Publish(p.UserID, realtime.Event{
+		ID: d.ID, Type: "account.balance_updated", OccurredAt: d.CreatedAt.UTC(),
+		Data: map[string]any{
+			"account_id": p.AccountID, "ledger_balance": accounts.Money(b.Ledger), "available_balance": accounts.Money(b.Available),
+		},
+	})
 }

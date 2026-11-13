@@ -113,6 +113,9 @@ func TestDemoInboundCreditsWalletsAndTakesEMTLOnLargeNaira(t *testing.T) {
 	if _, err := f.svc.DemoInbound(c.ctx, InboundRequest{Account: c.ngn, Amount: amount, SenderName: "Ada"}); err != nil {
 		t.Fatal(err)
 	}
+	if n := f.outboxCount(topicInbound); n != 2 {
+		t.Fatalf("inbound events = %d, want 2", n)
+	}
 	levy := limitRules{}.Rules().EMTL(amount).Amount()
 	if levy <= 0 || f.balance(c.ngn) != amount.Amount()-levy {
 		t.Fatalf("ngn balance %d, want %d less levy %d", f.balance(c.ngn), amount.Amount(), levy)
