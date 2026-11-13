@@ -2,7 +2,7 @@
 # Build context is apps/api: `docker build -t nem-api apps/api`.
 
 # ---- build ----
-FROM golang:1.27.3-bookworm AS build
+FROM golang:1.27.4-bookworm AS build
 WORKDIR /src
 
 # Dependencies first, so code edits reuse this layer.
