@@ -2,6 +2,7 @@ package httpserver
 
 import (
 	"bytes"
+	"context"
 	"io"
 	"log/slog"
 	"net/http"
@@ -142,7 +143,7 @@ func TestBodyLimit(t *testing.T) {
 		c.Status(http.StatusNoContent)
 	})
 	post := func(contentType string, size int) int {
-		req := httptest.NewRequest(http.MethodPost, "/echo", bytes.NewReader(make([]byte, size)))
+		req := httptest.NewRequestWithContext(context.Background(), http.MethodPost, "/echo", bytes.NewReader(make([]byte, size)))
 		req.Header.Set("Content-Type", contentType)
 		rec := httptest.NewRecorder()
 		r.ServeHTTP(rec, req)

@@ -255,6 +255,9 @@ def sms(seed: int = 7, path: Path | None = None) -> pd.DataFrame:
 
 def build(seed: int = 7, sms_path: Path | None = None) -> pd.DataFrame:
     df = pd.concat([nigeria(seed), sms(seed, sms_path)], ignore_index=True)
+    # Without the SMS file its empty frame is all object columns, which would make the label
+    # column object too (and sklearn refuses it as a target).
+    df["label"] = df["label"].astype(int)
     return df.sample(frac=1.0, random_state=seed).reset_index(drop=True)
 
 
