@@ -2,10 +2,16 @@ import { useCallback, useEffect, useState } from 'react';
 
 import { useRepositories } from '@/data';
 import { getBiometrics, NO_BIOMETRICS, type Biometrics } from '@/lib/biometrics';
-import { createDeviceKey, getDeviceKeyInfo, setDeviceId, signWithDeviceKey } from '@/lib/deviceKey';
+import {
+  createDeviceKey,
+  getDeviceKeyInfo,
+  setDeviceId,
+  signWithDeviceKey,
+  type DeviceKeyInfo,
+} from '@/lib/deviceKey';
 import { useLockStore, useSessionStore } from '@/stores';
 
-import { deviceRegistration } from '../device';
+import { deviceRegistration, isKeyInUse } from '../device';
 
 import type { LoginFormValues } from '../loginForm';
 import i18n from '@/lib/i18n';
@@ -21,15 +27,25 @@ export function usePasswordLogin() {
   return useCallback(
     async ({ identifier, password }: LoginFormValues) => {
       // A new device's key stays PIN-only: biometrics are turned on from Security.
-      const key = (await getDeviceKeyInfo()) ?? (await createDeviceKey({ biometric: false }));
-      const auth = await repos.auth.login({
-        body: {
-          identifier,
-          password,
-          ...(key.deviceId ? { device_id: key.deviceId } : {}),
-          device: deviceRegistration(key),
-        },
-      });
+      const attempt = (key: DeviceKeyInfo) =>
+        repos.auth.login({
+          body: {
+            identifier,
+            password,
+            ...(key.deviceId ? { device_id: key.deviceId } : {}),
+            device: deviceRegistration(key),
+          },
+        });
+      let key = (await getDeviceKeyInfo()) ?? (await createDeviceKey({ biometric: false }));
+      let auth;
+      try {
+        auth = await attempt(key);
+      } catch (error) {
+        if (!isKeyInUse(error)) throw error;
+        // This phone's key is on a demo customer: a fresh one is bound to the real account.
+        key = await createDeviceKey({ biometric: false });
+        auth = await attempt(key);
+      }
       await setDeviceId(auth.device.id);
       setSession(auth, { newDevice: auth.device.id !== key.deviceId });
     },

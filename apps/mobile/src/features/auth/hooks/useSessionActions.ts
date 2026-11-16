@@ -8,7 +8,7 @@ import { env } from '@/lib/env';
 import { useRepoMutation } from '@/lib/query';
 import { useSessionStore } from '@/stores';
 
-import { deviceRegistration } from '../device';
+import { deviceRegistration, isKeyInUse } from '../device';
 
 type Persona = NonNullable<Schema<'DemoSessionRequest'>['persona']>;
 
@@ -25,9 +25,10 @@ const PERSONA_BY_FIRST_NAME: Record<string, Persona> = {
  * phone's own device key, so its money requests can be signed here; the offline demo
  * needs no device.
  */
-async function demoBody(persona: Persona): Promise<Schema<'DemoSessionRequest'>> {
+async function demoBody(persona: Persona, fresh = false): Promise<Schema<'DemoSessionRequest'>> {
   if (env.apiMode !== 'http') return { persona };
-  const key = (await getDeviceKeyInfo()) ?? (await createDeviceKey({ biometric: false }));
+  const key =
+    (!fresh && (await getDeviceKeyInfo())) || (await createDeviceKey({ biometric: false }));
   return { persona, device: deviceRegistration(key) };
 }
 
@@ -53,7 +54,18 @@ export function useDemoSignIn() {
       // required, and the Welcome screen shows that instead of doing nothing.
       void demoBody(persona)
         .catch(() => ({ persona }))
-        .then((body) => mutate({ body }));
+        .then((body) =>
+          mutate(
+            { body },
+            {
+              // The key is on a real account: the demo gets a key of its own, once.
+              onError: (error) => {
+                if (!isKeyInUse(error)) return;
+                void demoBody(persona, true).then((fresh) => mutate({ body: fresh }));
+              },
+            },
+          ),
+        );
     },
     [mutate],
   );
@@ -69,7 +81,12 @@ export function useRestartDemo(): () => Promise<void> {
   return useCallback(async () => {
     const me = await repos.users.getMe({}).catch(() => null);
     const persona = PERSONA_BY_FIRST_NAME[me?.first_name ?? ''] ?? 'tolu';
-    const auth = await repos.auth.startDemoSession({ body: await demoBody(persona) });
+    const start = (fresh: boolean) =>
+      demoBody(persona, fresh).then((body) => repos.auth.startDemoSession({ body }));
+    const auth = await start(false).catch((error: unknown) => {
+      if (!isKeyInUse(error)) throw error;
+      return start(true);
+    });
     await rememberDevice(auth);
     useSessionStore.getState().setSession(auth);
   }, [repos]);

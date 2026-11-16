@@ -2,7 +2,7 @@ import { QueryClient } from '@tanstack/react-query';
 import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
-import { repositoriesFromDispatcher, RepositoryProvider, type Dispatcher } from '@/data';
+import { ApiError, repositoriesFromDispatcher, RepositoryProvider, type Dispatcher } from '@/data';
 import { deleteDeviceKey, getDeviceKeyInfo } from '@/lib/deviceKey';
 import { QueryProvider } from '@/lib/query';
 import { useSessionStore } from '@/stores';
@@ -35,12 +35,22 @@ const demoAuth = {
 type Call = Parameters<Dispatcher>[0];
 let calls: Call[] = [];
 let me: { first_name: string } | Error = { first_name: 'Tolulope' };
+let keyInUseOnce = false;
 
 const dispatch: Dispatcher = async (call) => {
   calls.push(call);
   if (call.operationId === 'getMe') {
     if (me instanceof Error) throw me;
     return me;
+  }
+  if (call.operationId === 'startDemoSession' && keyInUseOnce) {
+    keyInUseOnce = false;
+    throw new ApiError({
+      type: 'about:blank',
+      title: 'This device key is linked to another account.',
+      status: 409,
+      code: 'device_key_in_use',
+    });
   }
   return call.operationId === 'startDemoSession' ? demoAuth : undefined;
 };
@@ -57,6 +67,7 @@ const demoCalls = () => calls.filter((c) => c.operationId === 'startDemoSession'
 
 beforeEach(async () => {
   calls = [];
+  keyInUseOnce = false;
   me = { first_name: 'Tolulope' };
   mockEnv.apiMode = 'http';
   useSessionStore.setState({ status: 'signedOut', session: null });
@@ -73,6 +84,19 @@ describe('demo sign-in', () => {
     expect(body.persona).toBe('tolu');
     expect(body.device).toMatchObject({ public_key: expect.stringMatching(/^[\w-]{43}$/) });
     expect((await getDeviceKeyInfo())?.deviceId).toBe('device-from-bank');
+  });
+
+  it('retries with a fresh key when this phone’s key is on a real account', async () => {
+    keyInUseOnce = true;
+    const { result } = await renderHook(() => useDemoSignIn(), { wrapper });
+    await act(async () => result.current.start('tolu'));
+    await waitFor(() => expect(useSessionStore.getState().status).toBe('signedIn'));
+
+    const keys = demoCalls().map(
+      (c) => (c.input as { body: { device: { public_key: string } } }).body.device.public_key,
+    );
+    expect(keys).toHaveLength(2);
+    expect(keys[1]).not.toBe(keys[0]);
   });
 
   it('sends no device to the offline demo, which has none to bind', async () => {
