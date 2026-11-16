@@ -18,6 +18,18 @@ in with their password and an authenticator code. The developer portal (`/develo
 signs in as a business _customer_, because the API's key and webhook routes belong to
 customers; creating a key asks for that customer's transaction PIN.
 
+## Two deployments
+
+The same code is deployed twice on Vercel, with different environment variables:
+
+| Project            | `VITE_API_MODE`   | Who it is for                                                                   |
+| ------------------ | ----------------- | ------------------------------------------------------------------------------- |
+| `nem-console`      | `http` (live API) | Real staff only. Accounts are made with `create-staff`; nobody else can sign in |
+| `nem-console-demo` | unset (mock bank) | Anyone: seeded data and demo staff accounts, no database, nothing real to touch |
+
+The build is skipped unless `apps/console`, `packages/` or the lockfile changed, so a change
+outside them does not redeploy either project.
+
 ## How it is put together
 
 - **Design tokens** come from `@nem/shared`, the same Volt Noir palette and scales the
