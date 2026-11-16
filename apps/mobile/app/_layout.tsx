@@ -53,8 +53,10 @@ export default function RootLayout() {
         <QueryProvider>
           <StoredThemeProvider>
             <PhoneFrame>
-              <BottomSheetModalProvider>
-                <ToastProvider>
+              {/* Toasts outside sheets: a sheet's content renders in the sheet provider's
+                  portal host, which must sit inside the toast context (useToast in a sheet). */}
+              <ToastProvider>
+                <BottomSheetModalProvider>
                   <SessionWatcher />
                   <BankWarmup />
                   <ScreenBannerProvider value={offlineBanner}>
@@ -64,8 +66,8 @@ export default function RootLayout() {
                     <AppLock />
                     <BankWakingOverlay />
                   </ScreenBannerProvider>
-                </ToastProvider>
-              </BottomSheetModalProvider>
+                </BottomSheetModalProvider>
+              </ToastProvider>
             </PhoneFrame>
           </StoredThemeProvider>
         </QueryProvider>
