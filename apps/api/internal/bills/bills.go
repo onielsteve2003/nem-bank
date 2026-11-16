@@ -182,6 +182,9 @@ type PayRequest struct {
 	CustomerID string
 	Amount     money.Money
 	Source     uuid.UUID
+	// Scheduled marks a payment made by a schedule runner: it has no device, so the new-device
+	// cool-off (which belongs to the device in a request) does not apply.
+	Scheduled bool
 }
 
 // Payment is a bill payment (contract BillPayment).
@@ -242,9 +245,11 @@ func (s *Service) Pay(ctx context.Context, req PayRequest) (Payment, error) {
 	if prof.Panic && !prof.InDuress {
 		return Payment{}, identity.ErrOutgoingBlocked
 	}
-	coolOff, err := s.customers.CoolOff(ctx)
-	if err != nil {
-		return Payment{}, fmt.Errorf("cool-off: %w", err)
+	var coolOff identity.CoolOff
+	if !req.Scheduled {
+		if coolOff, err = s.customers.CoolOff(ctx); err != nil {
+			return Payment{}, fmt.Errorf("cool-off: %w", err)
+		}
 	}
 	id, err := uuid.NewV7()
 	if err != nil {
@@ -492,13 +497,19 @@ func (w *sweepWorker) Work(ctx context.Context, _ *river.Job[SweepArgs]) error {
 }
 
 // Register adds the bills workers (jobs.Options.Workers).
-func (s *Service) Register(w *river.Workers) { river.AddWorker(w, &sweepWorker{s: s}) }
+func (s *Service) Register(w *river.Workers) {
+	river.AddWorker(w, &sweepWorker{s: s})
+	river.AddWorker(w, &scheduleWorker{s: s})
+}
 
 // PeriodicJobs are the bills clocks (jobs.Options.Periodic).
 func (s *Service) PeriodicJobs() []*river.PeriodicJob {
 	return []*river.PeriodicJob{
 		river.NewPeriodicJob(river.PeriodicInterval(5*time.Minute),
 			func() (river.JobArgs, *river.InsertOpts) { return SweepArgs{}, &river.InsertOpts{MaxAttempts: 3} },
+			&river.PeriodicJobOpts{RunOnStart: true}),
+		river.NewPeriodicJob(river.PeriodicInterval(time.Minute),
+			func() (river.JobArgs, *river.InsertOpts) { return ScheduleArgs{}, nil },
 			&river.PeriodicJobOpts{RunOnStart: true}),
 	}
 }

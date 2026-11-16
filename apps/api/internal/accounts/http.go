@@ -3,6 +3,8 @@ package accounts
 import (
 	"bytes"
 	"context"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -349,4 +351,62 @@ func (a *API) VerifyStatement(ctx context.Context, req api.VerifyStatementReques
 		Currency: api.CurrencyCode(v.Currency), PeriodFrom: api.Date{Time: v.From}, PeriodTo: api.Date{Time: v.To},
 		Sha256: v.SHA256, IssuedAt: v.IssuedAt.UTC(), Demo: true,
 	}, nil
+}
+
+// receiptBank is the name the receipt gives for the customer's own side and for transfers inside Nem.
+const receiptBank = "Nem Bank"
+
+func maskedNumber(n string) string {
+	if len(n) <= 4 {
+		return "—"
+	}
+	return strings.Repeat("*", len(n)-4) + n[len(n)-4:]
+}
+
+// GetReceipt is GET /v1/transactions/{transaction_id}/receipt (JSON; the app builds its own PDF).
+func (a *API) GetReceipt(ctx context.Context, req api.GetReceiptRequestObject) (api.GetReceiptResponseObject, error) {
+	d, err := a.svc.Transaction(ctx, req.TransactionId)
+	if err != nil {
+		return nil, err
+	}
+	t, err := TransactionJSON(d.Transaction)
+	if err != nil {
+		return nil, err
+	}
+	us := api.ReceiptParty{Name: "Account holder", AccountNumberMasked: "—", BankName: receiptBank}
+	views, err := a.svc.List(ctx)
+	if err != nil {
+		return nil, err
+	}
+	for _, v := range views {
+		if v.AccountID == d.AccountID {
+			us.Name, us.AccountNumberMasked = v.AccountName, maskedNumber(v.AccountNumber)
+		}
+	}
+	them := api.ReceiptParty{Name: t.Counterparty.Name, AccountNumberMasked: "—", BankName: receiptBank}
+	if t.Counterparty.AccountNumberMasked != nil {
+		them.AccountNumberMasked = *t.Counterparty.AccountNumberMasked
+	}
+	if t.Counterparty.BankName != nil {
+		them.BankName = *t.Counterparty.BankName
+	}
+	from, to := them, us
+	if t.Direction == api.DirectionDebit {
+		from, to = us, them
+	}
+	fee := minor(0, d.Currency)
+	if t.Fee != nil {
+		fee = *t.Fee
+	}
+	sum := sha256.Sum256([]byte(t.Id.String() + ":" + t.Reference))
+	out := api.Receipt{
+		TransactionId: t.Id, Reference: t.Reference, Status: t.Status, Amount: t.Amount, Fee: fee,
+		From: from, To: to, Narration: t.Narration, CreatedAt: t.CreatedAt,
+		VerificationCode: strings.ToUpper(hex.EncodeToString(sum[:]))[:10],
+	}
+	if t.Status == api.TransactionStatusCompleted {
+		done := d.UpdatedAt.UTC()
+		out.CompletedAt = &done
+	}
+	return api.GetReceipt200JSONResponse(out), nil
 }
