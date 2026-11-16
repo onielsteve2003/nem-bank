@@ -319,3 +319,21 @@ func (a *API) LoginWithDevice(ctx context.Context, req api.LoginWithDeviceReques
 	}
 	return api.LoginWithDevice200JSONResponse(a.sessionJSON(r)), nil
 }
+
+// CheckNemtag is GET /v1/users/nemtags/{nemtag}/availability.
+func (a *API) CheckNemtag(ctx context.Context, req api.CheckNemtagRequestObject) (api.CheckNemtagResponseObject, error) {
+	r, err := a.svc.CheckNemtag(ctx, req.Nemtag)
+	if err != nil {
+		return nil, err
+	}
+	return api.CheckNemtag200JSONResponse{Nemtag: r.Nemtag, Available: r.Available, Suggestions: r.Suggestions}, nil
+}
+
+// SetNemtag is PUT /v1/users/me/nemtag.
+func (a *API) SetNemtag(ctx context.Context, req api.SetNemtagRequestObject) (api.SetNemtagResponseObject, error) {
+	u, err := a.svc.SetNemtag(ctx, req.Body.Nemtag)
+	if err != nil {
+		return nil, err
+	}
+	return api.SetNemtag200JSONResponse(userJSON(u)), nil
+}
