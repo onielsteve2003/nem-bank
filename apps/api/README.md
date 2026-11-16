@@ -40,11 +40,11 @@ curl localhost:8080/v1/health
 
 ## Health probes and Docker
 
-| Path | Meaning |
-|---|---|
-| `GET /healthz` | Liveness: 200 while the process serves HTTP. Never checks dependencies, so a database outage does not get a healthy process restarted. |
-| `GET /readyz` | Readiness: pings the database (3 s timeout). 200 when every check passes, 503 with the failing check names otherwise. Error details go to the log, not the public body. |
-| `GET /v1/health` | The contract's health operation (version and server time) for app clients. |
+| Path             | Meaning                                                                                                                                                                 |
+| ---------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `GET /healthz`   | Liveness: 200 while the process serves HTTP. Never checks dependencies, so a database outage does not get a healthy process restarted.                                  |
+| `GET /readyz`    | Readiness: pings the database (3 s timeout). 200 when every check passes, 503 with the failing check names otherwise. Error details go to the log, not the public body. |
+| `GET /v1/health` | The contract's health operation (version and server time) for app clients.                                                                                              |
 
 The `Dockerfile` is multi-stage: a Go build stage with cached modules, then
 `gcr.io/distroless/static-debian12:nonroot` (static binary, no shell, uid 65532).
@@ -85,35 +85,35 @@ curl -H "Authorization: Bearer $METRICS_TOKEN" localhost:8080/metrics
 Settings come from environment variables. Copy `.env.example` to `.env` for local overrides.
 The API refuses to start on a bad value and lists every problem at once.
 
-| Variable | Default | Notes |
-|---|---|---|
-| `APP_ENV` | `development` | `development`, `test` or `production` |
-| `PORT` | `8080` | Render sets this |
-| `LOG_LEVEL` | `info` | `debug`, `info`, `warn`, `error` |
-| `SHUTDOWN_TIMEOUT` | `15s` | How long in-flight requests get after SIGTERM |
-| `CORS_ALLOWED_ORIGINS` | Expo web + console dev servers | Exact origins, comma-separated. Required (https only) in production; no wildcards |
-| `DATABASE_URL` | the docker-compose database | Required in production (Neon) |
-| `DB_MAX_CONNS` | `10` | Pool size; Neon's free tier allows few connections |
-| `MIGRATE_ON_START` | `true` | Apply pending migrations at boot (Render free has no pre-deploy step) |
-| `OTEL_EXPORTER_OTLP_ENDPOINT` | empty | OTLP/HTTP URL for traces (Grafana Cloud free). Empty keeps spans local |
-| `OTEL_EXPORTER_OTLP_HEADERS` | empty | Read by the exporter itself, e.g. `Authorization=Basic ...` |
-| `TRACE_SAMPLE_RATIO` | `1` | Share of new traces kept, 0 to 1. Sampled parents are always kept |
-| `CLIENT_IP_HEADER` | empty | Header the host's proxy sets to the caller's address (e.g. `CF-Connecting-IP`), for per-address rate limits. Empty uses the TCP peer; `X-Forwarded-For` is never trusted as sent |
-| `SENTRY_DSN` | empty | Error tracking (Sentry free). Empty turns it off |
-| `METRICS_TOKEN` | empty | Bearer token for `/metrics`. Required in production |
-| `BREVO_API_KEY` | empty | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production |
-| `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `no-reply@nem.bank` / `Nem Bank` | Sender; must be verified in Brevo |
-| `JWT_SIGNING_KEY` | fixed dev key | Base64 32-byte Ed25519 seed that signs access tokens. Required in production |
-| `STAFF_JWT_SIGNING_KEY` | fixed dev key | A different 32-byte Ed25519 seed for console (staff) tokens; refused if it equals `JWT_SIGNING_KEY`. Required in production |
-| `FIELD_ENCRYPTION_KEYS` | fixed dev key | `1:<base64 32 bytes>,2:<...>`: AES-256 keys by version for BVN/NIN/ID numbers; the highest encrypts. Keep old versions until `Rewrap` reports 0. Required in production |
-| `FIELD_INDEX_KEY` | fixed dev key | Base64, 32+ bytes: HMAC key for the blind indexes (one owner per BVN). Never rotated with the field keys. Required in production |
-| `OTP_KEY` | fixed dev key | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production |
-| `RISK_MODE` | `enforce` | Fraud risk engine (AI-1): `enforce` stops transfers it flags (step-up or hold), `shadow` scores and records every transfer without stopping any, `off` skips scoring |
-| `BANK_PARTNER` | `sandbox_nip` | Interbank rail: `sandbox_nip` (simulated NIP: delays, failures, timeouts and signed callbacks, tuned from the console's Bank Partner Simulator) or `paystack_test` (Paystack test mode) |
-| `PAYSTACK_SECRET_KEY` | empty | Paystack **test** key (`sk_test_…`), required for `paystack_test`. A live key is refused |
-| `SANDBOX_NIP_WEBHOOK_SECRET` | fixed dev key | Base64, 32+ bytes: HMAC secret the sandbox signs callbacks with and the partner webhook verifies. Required in production |
-| `SANDBOX_NIP_CALLBACK_URL` | loopback | Where the sandbox posts callbacks; default `http://127.0.0.1:$PORT/v1/partner-webhooks/sandbox_nip` |
-| `PUBLIC_URL` | `http://127.0.0.1:$PORT` | Where this API is reachable from outside; emails use it for links (the data export download). Set it in production |
+| Variable                             | Default                          | Notes                                                                                                                                                                                        |
+| ------------------------------------ | -------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `APP_ENV`                            | `development`                    | `development`, `test` or `production`                                                                                                                                                        |
+| `PORT`                               | `8080`                           | Render sets this                                                                                                                                                                             |
+| `LOG_LEVEL`                          | `info`                           | `debug`, `info`, `warn`, `error`                                                                                                                                                             |
+| `SHUTDOWN_TIMEOUT`                   | `15s`                            | How long in-flight requests get after SIGTERM                                                                                                                                                |
+| `CORS_ALLOWED_ORIGINS`               | Expo web + console dev servers   | Exact origins, comma-separated. Required (https only) in production; no wildcards                                                                                                            |
+| `DATABASE_URL`                       | the docker-compose database      | Required in production (Neon)                                                                                                                                                                |
+| `DB_MAX_CONNS`                       | `10`                             | Pool size; Neon's free tier allows few connections                                                                                                                                           |
+| `MIGRATE_ON_START`                   | `true`                           | Apply pending migrations at boot (Render free has no pre-deploy step)                                                                                                                        |
+| `OTEL_EXPORTER_OTLP_ENDPOINT`        | empty                            | Full OTLP/HTTP traces URL, ending in `/v1/traces` (Grafana Cloud free: `https://otlp-gateway-<region>.grafana.net/otlp/v1/traces`). Used as given: no path is added. Empty keeps spans local |
+| `OTEL_EXPORTER_OTLP_HEADERS`         | empty                            | Read by the exporter itself, e.g. `Authorization=Basic%20<token>` (a space must be written `%20`)                                                                                            |
+| `TRACE_SAMPLE_RATIO`                 | `1`                              | Share of new traces kept, 0 to 1. Sampled parents are always kept                                                                                                                            |
+| `CLIENT_IP_HEADER`                   | empty                            | Header the host's proxy sets to the caller's address (e.g. `CF-Connecting-IP`), for per-address rate limits. Empty uses the TCP peer; `X-Forwarded-For` is never trusted as sent             |
+| `SENTRY_DSN`                         | empty                            | Error tracking (Sentry free). Empty turns it off                                                                                                                                             |
+| `METRICS_TOKEN`                      | empty                            | Bearer token for `/metrics`. Required in production                                                                                                                                          |
+| `BREVO_API_KEY`                      | empty                            | Brevo (free, 300 emails/day). Empty logs emails instead of sending them. Required in production                                                                                              |
+| `MAIL_FROM_EMAIL` / `MAIL_FROM_NAME` | `no-reply@nem.bank` / `Nem Bank` | Sender; must be verified in Brevo                                                                                                                                                            |
+| `JWT_SIGNING_KEY`                    | fixed dev key                    | Base64 32-byte Ed25519 seed that signs access tokens. Required in production                                                                                                                 |
+| `STAFF_JWT_SIGNING_KEY`              | fixed dev key                    | A different 32-byte Ed25519 seed for console (staff) tokens; refused if it equals `JWT_SIGNING_KEY`. Required in production                                                                  |
+| `FIELD_ENCRYPTION_KEYS`              | fixed dev key                    | `1:<base64 32 bytes>,2:<...>`: AES-256 keys by version for BVN/NIN/ID numbers; the highest encrypts. Keep old versions until `Rewrap` reports 0. Required in production                      |
+| `FIELD_INDEX_KEY`                    | fixed dev key                    | Base64, 32+ bytes: HMAC key for the blind indexes (one owner per BVN). Never rotated with the field keys. Required in production                                                             |
+| `OTP_KEY`                            | fixed dev key                    | Base64, 32+ bytes (`openssl rand -base64 32`): HMAC key for stored one-time codes. Required in production                                                                                    |
+| `RISK_MODE`                          | `enforce`                        | Fraud risk engine (AI-1): `enforce` stops transfers it flags (step-up or hold), `shadow` scores and records every transfer without stopping any, `off` skips scoring                         |
+| `BANK_PARTNER`                       | `sandbox_nip`                    | Interbank rail: `sandbox_nip` (simulated NIP: delays, failures, timeouts and signed callbacks, tuned from the console's Bank Partner Simulator) or `paystack_test` (Paystack test mode)      |
+| `PAYSTACK_SECRET_KEY`                | empty                            | Paystack **test** key (`sk_test_…`), required for `paystack_test`. A live key is refused                                                                                                     |
+| `SANDBOX_NIP_WEBHOOK_SECRET`         | fixed dev key                    | Base64, 32+ bytes: HMAC secret the sandbox signs callbacks with and the partner webhook verifies. Required in production                                                                     |
+| `SANDBOX_NIP_CALLBACK_URL`           | loopback                         | Where the sandbox posts callbacks; default `http://127.0.0.1:$PORT/v1/partner-webhooks/sandbox_nip`                                                                                          |
+| `PUBLIC_URL`                         | `http://127.0.0.1:$PORT`         | Where this API is reachable from outside; emails use it for links (the data export download). Set it in production                                                                           |
 
 ## Database
 
@@ -363,7 +363,7 @@ a transfer with the same rules and reserves nothing. The numbers live in `limits
 the console's configuration (ADM-8).
 
 **Beneficiaries, cooling-off and schedules** (migration 00018). `/v1/beneficiaries` saves
-payees under the bank's name (name enquiry), one per account. A payee is *new* if never
+payees under the bank's name (name enquiry), one per account. A payee is _new_ if never
 saved, or saved in the last 24 h and not yet paid; a transfer to a new payee above ₦100k
 is **delayed** 30 min with the money held, and a `transfer_release` River job sends it when
 the wait ends. `X-Step-Up-Token` on the transfer, or `POST /v1/transfers/{id}/step-up`,
