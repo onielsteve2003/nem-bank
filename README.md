@@ -19,6 +19,7 @@ A mobile-first digital bank for Nigerians, with multi-currency wallets, scam and
 | iPhone / Android (Expo Go) | [EAS Update `preview` channel](https://expo.dev/accounts/onielsteve/projects/nem-bank): install Expo Go, open the latest update and scan its QR code                                                  |
 | Android APK (EAS Build)    | [Install page](https://expo.dev/accounts/onielsteve/projects/nem-bank/builds/3ce0be78-39c3-4950-8588-8f23f3ee79e7): open it on an Android phone, tap **Install** and allow installs from your browser |
 | Staff console (Vercel)     | https://nem-console.vercel.app: pick a demo staff account on the login page (password `nem-console-demo`, code from the on-page authenticator)                                                        |
+| API (Render)               | https://nem-bank-api.onrender.com: reference at `/docs`. The free host sleeps, so the first request can take a while                                                                                  |
 | Developer portal           | https://nem-console.vercel.app/developers · [API reference](https://nem-console.vercel.app/api-reference.html)                                                                                        |
 
 The web demo and the console redeploy on every push to `main` (the console only when it or a shared package changed).
@@ -58,7 +59,7 @@ flowchart LR
     W[Web demo<br/>Expo web export]
     C[Console<br/>Vite + React]
   end
-  subgraph API["Go API (Gin) · Phase 2"]
+  subgraph API["Go API (Gin) · Render"]
     H[HTTP handlers<br/>oapi-codegen strict server]
     S[Domain services]
     L[Double-entry ledger]
@@ -74,9 +75,12 @@ flowchart LR
   K -. generates types .-> M & C & H
 ```
 
-- **Contract first.** `packages/contracts/openapi.yaml` is the single source of truth. The apps import types generated from it, and the Go server will be generated from the same file.
-- **Repositories behind interfaces.** Screens talk to repositories, never to `fetch`. Today every client runs against an in-app **mock bank** that implements the contract with seeded data, so the demos work with no server. Pointing the app at the real API is a config change (`EXPO_PUBLIC_API_MODE=http`), not a rewrite.
-- **Modular monolith.** The Go API (Phase 2, not built yet) is one service with domain packages (ledger, transfers, fx, cards, savings, ajo, risk and more) on one Postgres, with jobs running in-process.
+- **Contract first.** `packages/contracts/openapi.yaml` is the single source of truth. The apps import types generated from it, and the Go server is generated from the same file.
+- **Repositories behind interfaces.** Screens talk to repositories, never to `fetch`. The app can run against an in-app **mock bank** that implements the contract with seeded data (no server needed), or against the real API with `EXPO_PUBLIC_API_MODE=http`. The live web demo uses the real API.
+- **Modular monolith.** The Go API is one service with domain packages (ledger, transfers, fx, cards, savings, ajo, risk and more) on one Postgres, with jobs and an outbox running in-process.
+
+More: [architecture and diagrams](docs/architecture.md) · [architecture decision records](docs/adr/README.md) · [case study](docs/case-study.md) · [security review](docs/security/security-review.md) · [threat model](docs/security/threat-model.md)
+
 - **Expo Go only.** The mobile app uses only modules that ship in Expo Go, so it runs on a real iPhone without a Mac or a paid Apple account.
 
 ## Repository layout
@@ -87,7 +91,8 @@ A [pnpm workspaces](https://pnpm.io/workspaces) monorepo:
 | -------------------- | --------------------------------------------------------------------------------- |
 | `apps/mobile`        | The customer app: Expo + React Native, running in Expo Go, Android and on the web |
 | `apps/console`       | Staff back-office and developer portal (Vite + React)                             |
-| `apps/api`           | Go API with a double-entry ledger and PostgreSQL (Phase 2)                        |
+| `apps/api`           | Go API with a double-entry ledger and PostgreSQL                                  |
+| `ml`                 | Python training for the fraud, category, scam and credit models                   |
 | `packages/shared`    | `@nem/shared`: the money type, currencies, validation schemas and design tokens   |
 | `packages/contracts` | `@nem/contracts`: the OpenAPI contract and the TypeScript types generated from it |
 | `docs`               | Screenshots and project documentation                                             |
