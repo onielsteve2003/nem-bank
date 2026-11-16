@@ -54,7 +54,7 @@ Money, the interbank rail, BVN/NIN checks, FX inbound and billers are simulated 
 - The risk limiter is in memory, so it resets on restart and does not span several instances.
 - The security review was a code review and pattern scan, not a penetration test.
 - The ML models are trained on synthetic data.
-- No monitoring or alerting is wired up yet (planned: uptime checks and dashboards).
+- Monitoring is basic: uptime checks every 5 minutes, one Grafana dashboard and one 5xx alert by email. See [monitoring](monitoring/README.md).
 
 ## Stack
 

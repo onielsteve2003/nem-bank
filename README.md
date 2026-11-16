@@ -79,7 +79,7 @@ flowchart LR
 - **Repositories behind interfaces.** Screens talk to repositories, never to `fetch`. The app can run against an in-app **mock bank** that implements the contract with seeded data (no server needed), or against the real API with `EXPO_PUBLIC_API_MODE=http`. The live web demo uses the real API.
 - **Modular monolith.** The Go API is one service with domain packages (ledger, transfers, fx, cards, savings, ajo, risk and more) on one Postgres, with jobs and an outbox running in-process.
 
-More: [architecture and diagrams](docs/architecture.md) · [architecture decision records](docs/adr/README.md) · [case study](docs/case-study.md) · [security review](docs/security/security-review.md) · [threat model](docs/security/threat-model.md)
+More: [monitoring](docs/monitoring/README.md) · [architecture and diagrams](docs/architecture.md) · [architecture decision records](docs/adr/README.md) · [case study](docs/case-study.md) · [security review](docs/security/security-review.md) · [threat model](docs/security/threat-model.md)
 
 - **Expo Go only.** The mobile app uses only modules that ship in Expo Go, so it runs on a real iPhone without a Mac or a paid Apple account.
 
