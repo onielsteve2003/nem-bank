@@ -1,0 +1,54 @@
+name: Database backup
+
+# Nightly pg_dump of the production database (Neon). The repository is public and workflow
+# artifacts of public repositories can be downloaded by anyone signed in to GitHub, so the dump
+# is encrypted with a passphrase before it is uploaded. Neon free also keeps its own short
+# point-in-time history; this is the copy we control.
+on:
+  schedule:
+    - cron: "17 2 * * *" # 02:17 UTC daily
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: db-backup
+  cancel-in-progress: false
+
+jobs:
+  backup:
+    name: pg_dump
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Check secrets
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          test -n "$DATABASE_URL" || { echo "BACKUP_DATABASE_URL is not set"; exit 1; }
+          test -n "$PASSPHRASE" || { echo "BACKUP_PASSPHRASE is not set"; exit 1; }
+
+      # A newer pg_dump can read an older server, so the latest image works whatever Neon runs.
+      - name: Dump and encrypt
+        env:
+          DATABASE_URL: ${{ secrets.BACKUP_DATABASE_URL }}
+          PASSPHRASE: ${{ secrets.BACKUP_PASSPHRASE }}
+        run: |
+          set -euo pipefail
+          docker run --rm -e DATABASE_URL postgres:18 \
+            sh -c 'pg_dump --format=custom --no-owner --no-privileges "$DATABASE_URL"' > nem.dump
+          test -s nem.dump
+          openssl enc -aes-256-cbc -pbkdf2 -iter 600000 -salt -pass env:PASSPHRASE \
+            -in nem.dump -out nem-$(date -u +%Y%m%d).dump.enc
+          rm nem.dump
+          ls -l nem-*.dump.enc
+
+      - name: Upload
+        uses: actions/upload-artifact@v4
+        with:
+          name: nem-db-backup
+          path: nem-*.dump.enc
+          retention-days: 14
+          if-no-files-found: error
