@@ -12,6 +12,7 @@ import (
 
 	"github.com/google/uuid"
 	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgxpool"
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/accounts"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
@@ -109,6 +110,10 @@ type Config struct {
 	Beneficiaries Beneficiaries
 	Cards         Cards
 	Customers     Customers
+	// Pool and Executor let the customer confirm a prepared action; without them confirming
+	// answers 503 and everything else works.
+	Pool     *pgxpool.Pool
+	Executor Executor
 	// Enabled is the customer's "Nem Assistant" setting; nil means on.
 	Enabled func(ctx context.Context) bool
 	Logger  *slog.Logger
@@ -125,6 +130,8 @@ type Service struct {
 	beneficiaries Beneficiaries
 	cards         Cards
 	customers     Customers
+	pool          *pgxpool.Pool
+	exec          Executor
 	enabled       func(context.Context) bool
 	log           *slog.Logger
 	now           func() time.Time
@@ -138,7 +145,7 @@ func NewService(cfg Config) (*Service, error) {
 	}
 	s := &Service{
 		store: cfg.Store, gateway: cfg.Gateway, accounts: cfg.Accounts, forecast: cfg.Forecast,
-		beneficiaries: cfg.Beneficiaries, cards: cfg.Cards, customers: cfg.Customers, enabled: cfg.Enabled,
+		beneficiaries: cfg.Beneficiaries, cards: cfg.Cards, customers: cfg.Customers, pool: cfg.Pool, exec: cfg.Executor, enabled: cfg.Enabled,
 		log: cfg.Logger.With("component", "assistant"), now: cfg.Now,
 	}
 	if s.now == nil {

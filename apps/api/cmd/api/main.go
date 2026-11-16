@@ -37,6 +37,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast/forecastdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/help"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/insights"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
@@ -285,6 +286,7 @@ func run() error {
 	assistantSvc, err := assistant.NewService(assistant.Config{
 		Store: assistantdb.New(pool), Gateway: assistant.NewGateway(llm...), Accounts: accountsSvc, Forecast: forecastSvc,
 		Beneficiaries: assistant.BeneficiariesFrom(transfersSvc), Cards: assistant.CardsFrom(cardsSvc), Customers: identitySvc, Logger: log,
+		Pool: pool, Executor: assistant.ExecutorFrom(transfersSvc, cardsSvc),
 	})
 	if err != nil {
 		return err
@@ -419,6 +421,7 @@ func run() error {
 		Scam:               scam.NewAPI(scamSvc),
 		Forecast:           forecast.NewAPI(forecastSvc),
 		Insights:           insights.NewAPI(insightsSvc),
+		Help:               help.NewAPI(),
 		Assistant:          assistant.NewAPI(assistantSvc),
 		KYCPrefill:         kyc.NewPrefillAPI(prefill),
 		KYC:                kyc.NewAPI(kycSvc),

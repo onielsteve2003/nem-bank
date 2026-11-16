@@ -155,3 +155,15 @@ func (s stream) VisitSendAssistantMessageResponse(w http.ResponseWriter) error {
 	}
 	return send("message", msg)
 }
+
+// ConfirmAssistantAction is POST /v1/assistant/actions/{action_id}/confirm.
+func (a *API) ConfirmAssistantAction(ctx context.Context, req api.ConfirmAssistantActionRequestObject) (api.ConfirmAssistantActionResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	act, err := a.svc.Confirm(ctx, req.ActionId)
+	if err != nil {
+		return nil, err
+	}
+	return api.ConfirmAssistantAction200JSONResponse(act), nil
+}
