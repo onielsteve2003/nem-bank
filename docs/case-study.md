@@ -2,7 +2,7 @@
 
 Nem Bank is a mobile-first digital bank for Nigerians: naira, dollar, pound and euro wallets, transfers with the fee shown first, scam and fraud protection, digital ajo (rotating savings), and an AI assistant that can prepare a payment but never send one. It is a portfolio project. No real money moves, and every screen says so.
 
-**Try it:** https://nem-bank-fodx.vercel.app (tap _Try the demo_, PIN `2580`). Staff console: https://nem-console.vercel.app.
+**Try it:** https://nem-bank-fodx.vercel.app (tap _Try the demo_, PIN `2580`). Staff console (demo data): https://nem-bank-nine.vercel.app.
 
 ## The goal
 

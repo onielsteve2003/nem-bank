@@ -13,14 +13,14 @@ A mobile-first digital bank for Nigerians, with multi-currency wallets, scam and
 
 ## Live demo
 
-| Where                      | Link                                                                                                                                                                                                  |
-| -------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Web demo (Vercel)          | https://nem-bank-fodx.vercel.app: tap **Try the demo**. The demo PIN is `2580`                                                                                                                        |
-| iPhone / Android (Expo Go) | [EAS Update `preview` channel](https://expo.dev/accounts/onielsteve/projects/nem-bank): install Expo Go, open the latest update and scan its QR code                                                  |
-| Android APK (EAS Build)    | [Install page](https://expo.dev/accounts/onielsteve/projects/nem-bank/builds/3ce0be78-39c3-4950-8588-8f23f3ee79e7): open it on an Android phone, tap **Install** and allow installs from your browser |
-| Staff console (Vercel)     | https://nem-console.vercel.app: pick a demo staff account on the login page (password `nem-console-demo`, code from the on-page authenticator)                                                        |
-| API (Render)               | https://nem-bank-api.onrender.com: reference at `/docs`. The free host sleeps, so the first request can take a while                                                                                  |
-| Developer portal           | https://nem-console.vercel.app/developers · [API reference](https://nem-console.vercel.app/api-reference.html)                                                                                        |
+| Where                       | Link                                                                                                                                                                                                  |
+| --------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Web demo (Vercel)           | https://nem-bank-fodx.vercel.app: tap **Try the demo**. The demo PIN is `2580`                                                                                                                        |
+| iPhone / Android (Expo Go)  | [EAS Update `preview` channel](https://expo.dev/accounts/onielsteve/projects/nem-bank): install Expo Go, open the latest update and scan its QR code                                                  |
+| Android APK (EAS Build)     | [Install page](https://expo.dev/accounts/onielsteve/projects/nem-bank/builds/3ce0be78-39c3-4950-8588-8f23f3ee79e7): open it on an Android phone, tap **Install** and allow installs from your browser |
+| Staff console demo (Vercel) | https://nem-bank-nine.vercel.app: pick a demo staff account on the login page (password `nem-console-demo`, code from the on-page authenticator)                                                      |
+| API (Render)                | https://nem-bank-api.onrender.com: reference at `/docs`. The free host sleeps, so the first request can take a while                                                                                  |
+| Developer portal            | https://nem-bank-nine.vercel.app/developers · [API reference](https://nem-bank-nine.vercel.app/api-reference.html)                                                                                    |
 
 The web demo and the console redeploy on every push to `main` (the console only when it or a shared package changed).
 

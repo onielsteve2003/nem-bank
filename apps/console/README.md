@@ -22,10 +22,10 @@ customers; creating a key asks for that customer's transaction PIN.
 
 The same code is deployed twice on Vercel, with different environment variables:
 
-| Project            | `VITE_API_MODE`   | Who it is for                                                                   |
-| ------------------ | ----------------- | ------------------------------------------------------------------------------- |
-| `nem-console`      | `http` (live API) | Real staff only. Accounts are made with `create-staff`; nobody else can sign in |
-| `nem-console-demo` | unset (mock bank) | Anyone: seeded data and demo staff accounts, no database, nothing real to touch |
+| Project                       | `VITE_API_MODE`   | Who it is for                                                                   |
+| ----------------------------- | ----------------- | ------------------------------------------------------------------------------- |
+| `nem-console`                 | `http` (live API) | Real staff only. Accounts are made with `create-staff`; nobody else can sign in |
+| `nem-bank-nine` (public demo) | unset (mock bank) | Anyone: seeded data and demo staff accounts, no database, nothing real to touch |
 
 The build is skipped unless `apps/console`, `packages/` or the lockfile changed, so a change
 outside them does not redeploy either project.

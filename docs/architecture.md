@@ -99,4 +99,4 @@ The full review is in [security/security-review.md](security/security-review.md)
 
 ## API documentation
 
-The running API serves its reference at `/docs` (Scalar) over `/openapi.json`. The console hosts the same reference at https://nem-console.vercel.app/api-reference.html.
+The running API serves its reference at `/docs` (Scalar) over `/openapi.json`. The console hosts the same reference at https://nem-bank-nine.vercel.app/api-reference.html.
