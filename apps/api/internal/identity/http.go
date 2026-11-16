@@ -2,6 +2,7 @@ package identity
 
 import (
 	"context"
+	"strconv"
 	"time"
 
 	"github.com/google/uuid"
@@ -9,6 +10,7 @@ import (
 
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/api"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity/identitydb"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/platform/problem"
 )
 
 // API adapts the service to the contract's strict server. The router embeds it, so each
@@ -77,6 +79,12 @@ func userJSON(u identitydb.User) api.User {
 		t := u.NemtagChangedAt.Add(30 * 24 * time.Hour).UTC()
 		out.NemtagChangeableAt = &t
 	}
+	return out
+}
+
+func profileJSON(p Profile) api.User {
+	out := userJSON(p.User)
+	out.AvatarUrl = p.Avatar
 	return out
 }
 
@@ -161,11 +169,11 @@ func (a *API) Logout(ctx context.Context, req api.LogoutRequestObject) (api.Logo
 
 // GetMe is GET /v1/users/me.
 func (a *API) GetMe(ctx context.Context, _ api.GetMeRequestObject) (api.GetMeResponseObject, error) {
-	u, err := a.svc.Me(ctx)
+	pr, err := a.svc.ProfileMe(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return api.GetMe200JSONResponse(userJSON(u)), nil
+	return api.GetMe200JSONResponse(profileJSON(pr)), nil
 }
 
 // ListDevices is GET /v1/devices.
@@ -331,9 +339,116 @@ func (a *API) CheckNemtag(ctx context.Context, req api.CheckNemtagRequestObject)
 
 // SetNemtag is PUT /v1/users/me/nemtag.
 func (a *API) SetNemtag(ctx context.Context, req api.SetNemtagRequestObject) (api.SetNemtagResponseObject, error) {
-	u, err := a.svc.SetNemtag(ctx, req.Body.Nemtag)
+	if _, err := a.svc.SetNemtag(ctx, req.Body.Nemtag); err != nil {
+		return nil, err
+	}
+	pr, err := a.svc.ProfileMe(ctx)
 	if err != nil {
 		return nil, err
 	}
-	return api.SetNemtag200JSONResponse(userJSON(u)), nil
+	return api.SetNemtag200JSONResponse(profileJSON(pr)), nil
+}
+
+// UpdateMe is PATCH /v1/users/me.
+func (a *API) UpdateMe(ctx context.Context, req api.UpdateMeRequestObject) (api.UpdateMeResponseObject, error) {
+	pr, err := a.svc.UpdateMe(ctx, req.Body.PreferredName, req.Body.AvatarUrl)
+	if err != nil {
+		return nil, err
+	}
+	return api.UpdateMe200JSONResponse(profileJSON(pr)), nil
+}
+
+// SetSecurityQuestion is PUT /v1/security/question.
+func (a *API) SetSecurityQuestion(ctx context.Context, req api.SetSecurityQuestionRequestObject) (api.SetSecurityQuestionResponseObject, error) {
+	answer := ""
+	if req.Body.Answer != nil {
+		answer = *req.Body.Answer
+	}
+	if err := a.svc.SetSecurityQuestion(ctx, req.Body.Question, answer); err != nil {
+		return nil, err
+	}
+	return api.SetSecurityQuestion204Response{}, nil
+}
+
+// GetSecurityCheckup is GET /v1/security/checkup.
+func (a *API) GetSecurityCheckup(ctx context.Context, _ api.GetSecurityCheckupRequestObject) (api.GetSecurityCheckupResponseObject, error) {
+	score, items, err := a.svc.Checkup(ctx)
+	if err != nil {
+		return nil, err
+	}
+	out := api.SecurityCheckup{Score: score, Items: make([]api.CheckupItem, len(items))}
+	for i, it := range items {
+		out.Items[i] = api.CheckupItem{Id: api.CheckupItemId(it.ID), Title: it.Title, Description: it.Description, Done: it.Done, Points: it.Points}
+	}
+	return api.GetSecurityCheckup200JSONResponse(out), nil
+}
+
+func alertsJSON(a AlertPreferences) api.AlertPreferences {
+	return api.AlertPreferences{
+		LoginAlerts: a.LoginAlerts, NewDeviceAlerts: a.NewDeviceAlerts,
+		TransactionAlertThreshold: api.Money{AmountMinor: strconv.FormatInt(a.ThresholdMinor, 10), Currency: "NGN"},
+	}
+}
+
+// GetAlertPreferences is GET /v1/security/alerts.
+func (a *API) GetAlertPreferences(ctx context.Context, _ api.GetAlertPreferencesRequestObject) (api.GetAlertPreferencesResponseObject, error) {
+	prefs, err := a.svc.GetAlertPreferences(ctx)
+	if err != nil {
+		return nil, err
+	}
+	return api.GetAlertPreferences200JSONResponse(alertsJSON(prefs)), nil
+}
+
+// SetAlertPreferences is PUT /v1/security/alerts.
+func (a *API) SetAlertPreferences(ctx context.Context, req api.SetAlertPreferencesRequestObject) (api.SetAlertPreferencesResponseObject, error) {
+	t := req.Body.TransactionAlertThreshold
+	minor, err := strconv.ParseInt(t.AmountMinor, 10, 64)
+	if err != nil || t.Currency != "NGN" {
+		return nil, problem.Validation(problem.Field("/transaction_alert_threshold", "invalid", "Use a naira amount of zero or more"))
+	}
+	prefs, err := a.svc.SetAlertPreferences(ctx, AlertPreferences{
+		LoginAlerts: req.Body.LoginAlerts, NewDeviceAlerts: req.Body.NewDeviceAlerts, ThresholdMinor: minor,
+	})
+	if err != nil {
+		return nil, err
+	}
+	return api.SetAlertPreferences200JSONResponse(alertsJSON(prefs)), nil
+}
+
+// BindDevice is POST /v1/devices.
+func (a *API) BindDevice(ctx context.Context, req api.BindDeviceRequestObject) (api.BindDeviceResponseObject, error) {
+	b := req.Body
+	reg := DeviceRegistration{Name: b.Name, Platform: string(b.Platform), PublicKey: b.PublicKey}
+	if b.AppVersion != nil {
+		reg.AppVersion = b.AppVersion
+	}
+	if b.HardwareBacked != nil {
+		reg.HardwareBacked = *b.HardwareBacked
+	}
+	d, current, err := a.svc.BindDevice(ctx, req.Params.XStepUpToken, reg)
+	if err != nil {
+		return nil, err
+	}
+	return api.BindDevice201JSONResponse(deviceJSON(d, current, a.svc.now())), nil
+}
+
+// ForgotPassword is POST /v1/auth/password/forgot.
+func (a *API) ForgotPassword(ctx context.Context, req api.ForgotPasswordRequestObject) (api.ForgotPasswordResponseObject, error) {
+	c, err := a.svc.ForgotPassword(ctx, string(req.Body.Email))
+	if err != nil {
+		return nil, err
+	}
+	return api.ForgotPassword202JSONResponse(challengeJSON(c)), nil
+}
+
+// ResetPassword is POST /v1/auth/password/reset.
+func (a *API) ResetPassword(ctx context.Context, req api.ResetPasswordRequestObject) (api.ResetPasswordResponseObject, error) {
+	password := ""
+	if req.Body.NewPassword != nil {
+		password = string(*req.Body.NewPassword)
+	}
+	if err := a.svc.ResetPassword(ctx, req.Body.ChallengeId, req.Body.Code, password); err != nil {
+		return nil, err
+	}
+	return api.ResetPassword204Response{}, nil
 }
