@@ -38,6 +38,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast/forecastdb"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/insights"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/jobs"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/limits"
@@ -261,6 +262,10 @@ func run() error {
 	if err != nil {
 		return err
 	}
+	insightsSvc, err := insights.NewService(insights.Config{Pool: pool, Customers: identitySvc})
+	if err != nil {
+		return fmt.Errorf("insights: %w", err)
+	}
 	forecastSvc, err := forecast.NewService(forecast.Config{Queries: forecastdb.New(pool), Accounts: accountsSvc, Customers: identitySvc})
 	if err != nil {
 		return err
@@ -413,6 +418,7 @@ func run() error {
 		Credit:             credit.NewAPI(creditSvc),
 		Scam:               scam.NewAPI(scamSvc),
 		Forecast:           forecast.NewAPI(forecastSvc),
+		Insights:           insights.NewAPI(insightsSvc),
 		Assistant:          assistant.NewAPI(assistantSvc),
 		KYCPrefill:         kyc.NewPrefillAPI(prefill),
 		KYC:                kyc.NewAPI(kycSvc),
