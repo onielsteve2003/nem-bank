@@ -429,3 +429,13 @@ func (a *API) CancelScheduledTransfer(ctx context.Context, req api.CancelSchedul
 	}
 	return api.CancelScheduledTransfer204Response{}, nil
 }
+
+// CreateInternationalTransfer is POST /v1/transfers/international. It is fully designed but needs
+// a licensed remittance partner, which costs money, so it answers with the paid-feature notice
+// until the international_transfers flag is switched on (TRF-14, PRD section 11).
+func (a *API) CreateInternationalTransfer(_ context.Context, _ api.CreateInternationalTransferRequestObject) (api.CreateInternationalTransferResponseObject, error) {
+	if a == nil {
+		return nil, api.ErrNotImplemented
+	}
+	return nil, problem.PaidFeatureRequired("international_transfers")
+}

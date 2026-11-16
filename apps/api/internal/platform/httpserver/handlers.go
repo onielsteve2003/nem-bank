@@ -24,6 +24,7 @@ import (
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/family"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/forecast"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/fx"
+	"github.com/onielsteve2003/nem-bank/apps/api/internal/help"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/identity"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/insights"
 	"github.com/onielsteve2003/nem-bank/apps/api/internal/kyc"
@@ -62,6 +63,7 @@ type handlers struct {
 	*scamAPI
 	*forecastAPI
 	*insightsAPI
+	*helpAPI
 	*assistantAPI
 	*prefillAPI
 	*kycAPI
@@ -96,6 +98,7 @@ type (
 	scamAPI      = scam.API
 	forecastAPI  = forecast.API
 	insightsAPI  = insights.API
+	helpAPI      = help.API
 	assistantAPI = assistant.API
 	prefillAPI   = kyc.PrefillAPI
 	kycAPI       = kyc.API
